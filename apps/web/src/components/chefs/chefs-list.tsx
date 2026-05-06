@@ -1,26 +1,49 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createServerClient, getActiveStorefronts, searchStorefronts } from '@ridendine/db';
+import type { StorefrontSortBy, ChefAvailabilityRow } from '@ridendine/db';
 
 interface ChefsListProps {
   search?: string;
   cuisines?: string[];
   minRating?: number;
+  sortBy?: string;
 }
 
-export async function ChefsList({ search, cuisines, minRating }: ChefsListProps = {}) {
+function isOpenNow(availability?: ChefAvailabilityRow[]): boolean {
+  if (!availability || availability.length === 0) return false;
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const todaySlots = availability.filter((a) => a.day_of_week === dayOfWeek && a.is_available);
+  if (todaySlots.length === 0) return false;
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  return todaySlots.some((slot) => {
+    const [openH, openM] = slot.start_time.split(':').map(Number);
+    const [closeH, closeM] = slot.end_time.split(':').map(Number);
+    const openMinutes = (openH ?? 0) * 60 + (openM ?? 0);
+    const closeMinutes = (closeH ?? 0) * 60 + (closeM ?? 0);
+    return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+  });
+}
+
+const hasActiveFilters = (search?: string, cuisines?: string[], minRating?: number, sortBy?: string): boolean =>
+  Boolean(search || (cuisines && cuisines.length > 0) || minRating || (sortBy && sortBy !== 'default'));
+
+export async function ChefsList({ search, cuisines, minRating, sortBy = 'default' }: ChefsListProps = {}) {
   const cookieStore = await cookies();
   const supabase = createServerClient(cookieStore);
+  const sort = (sortBy as StorefrontSortBy) || 'default';
 
   let chefs: Awaited<ReturnType<typeof getActiveStorefronts>> = [];
 
   try {
     if (search) {
-      chefs = await searchStorefronts(supabase as any, search, 20);
+      chefs = await searchStorefronts(supabase as any, search, 20, sort);
     } else {
       chefs = await getActiveStorefronts(supabase as any, {
         limit: 20,
         cuisineTypes: cuisines && cuisines.length > 0 ? cuisines : undefined,
+        sortBy: sort,
       });
     }
 
@@ -31,16 +54,39 @@ export async function ChefsList({ search, cuisines, minRating }: ChefsListProps 
     console.error('Failed to fetch chefs:', error);
   }
 
+  const filtersActive = hasActiveFilters(search, cuisines, minRating, sortBy);
+
   if (chefs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 py-20 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
           <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            {filtersActive ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            )}
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">No chefs available yet</h3>
-        <p className="mt-2 text-gray-500">Check back soon — more chefs are joining RideNDine!</p>
+        <h3 className="text-lg font-semibold text-gray-900">
+          {filtersActive ? 'No chefs match your search' : 'No chefs available yet'}
+        </h3>
+        <p className="mt-2 text-gray-500">
+          {filtersActive
+            ? 'Try adjusting your filters or search terms.'
+            : 'Check back soon — more chefs are joining RideNDine!'}
+        </p>
+        {filtersActive && (
+          <Link
+            href="/chefs"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#E85D26] px-4 py-2 text-sm font-medium text-white hover:bg-[#d44e1e] transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Clear all filters
+          </Link>
+        )}
       </div>
     );
   }
@@ -66,6 +112,16 @@ export async function ChefsList({ search, cuisines, minRating }: ChefsListProps 
               {chef.is_featured && (
                 <div className="absolute top-3 left-3 rounded-full bg-[#E85D26] px-3 py-1 text-xs font-semibold text-white shadow">
                   Featured
+                </div>
+              )}
+              {isOpenNow(chef.chef_availability) ? (
+                <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-green-500 px-2.5 py-1 text-xs font-semibold text-white shadow">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                  Open
+                </div>
+              ) : (
+                <div className="absolute top-3 right-3 rounded-full bg-gray-600/80 px-2.5 py-1 text-xs font-medium text-white shadow">
+                  Closed
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />

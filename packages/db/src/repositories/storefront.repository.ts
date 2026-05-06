@@ -3,6 +3,13 @@ import type { Tables } from '../generated/database.types';
 
 export type ChefStorefront = Tables<'chef_storefronts'>;
 
+export interface ChefAvailabilityRow {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+}
+
 export interface StorefrontWithChef extends ChefStorefront {
   chef_profiles: {
     id: string;
@@ -10,7 +17,10 @@ export interface StorefrontWithChef extends ChefStorefront {
     profile_image_url: string | null;
     status: string;
   };
+  chef_availability?: ChefAvailabilityRow[];
 }
+
+export type StorefrontSortBy = 'rating' | 'newest' | 'popular' | 'default';
 
 export async function getActiveStorefronts(
   client: SupabaseClient,
@@ -19,6 +29,7 @@ export async function getActiveStorefronts(
     offset?: number;
     cuisineTypes?: string[];
     featured?: boolean;
+    sortBy?: StorefrontSortBy;
   } = {}
 ): Promise<StorefrontWithChef[]> {
   let query = client
@@ -30,6 +41,12 @@ export async function getActiveStorefronts(
         display_name,
         profile_image_url,
         status
+      ),
+      chef_availability (
+        day_of_week,
+        start_time,
+        end_time,
+        is_available
       )
     `)
     .eq('is_active', true)
@@ -51,8 +68,22 @@ export async function getActiveStorefronts(
     query = query.range(options.offset, options.offset + (options.limit ?? 20) - 1);
   }
 
-  query = query.order('is_featured', { ascending: false })
-    .order('average_rating', { ascending: false, nullsFirst: false });
+  switch (options.sortBy) {
+    case 'newest':
+      query = query.order('created_at', { ascending: false });
+      break;
+    case 'popular':
+      query = query.order('total_orders', { ascending: false, nullsFirst: false });
+      break;
+    case 'rating':
+      query = query.order('average_rating', { ascending: false, nullsFirst: false });
+      break;
+    default:
+      query = query
+        .order('is_featured', { ascending: false })
+        .order('average_rating', { ascending: false, nullsFirst: false });
+      break;
+  }
 
   const { data, error } = await query;
 
@@ -157,9 +188,10 @@ export async function updateStorefront(
 export async function searchStorefronts(
   client: SupabaseClient,
   query: string,
-  limit = 20
+  limit = 20,
+  sortBy: StorefrontSortBy = 'default'
 ): Promise<StorefrontWithChef[]> {
-  const { data, error } = await client
+  let q = client
     .from('chef_storefronts')
     .select(`
       *,
@@ -168,12 +200,35 @@ export async function searchStorefronts(
         display_name,
         profile_image_url,
         status
+      ),
+      chef_availability (
+        day_of_week,
+        start_time,
+        end_time,
+        is_available
       )
     `)
     .eq('is_active', true)
     .eq('chef_profiles.status', 'approved')
-    .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+    .or(`name.ilike.%${query}%,description.ilike.%${query}%,cuisine_types.cs.{"${query}"}`)
     .limit(limit);
+
+  switch (sortBy) {
+    case 'newest':
+      q = q.order('created_at', { ascending: false });
+      break;
+    case 'popular':
+      q = q.order('total_orders', { ascending: false, nullsFirst: false });
+      break;
+    case 'rating':
+      q = q.order('average_rating', { ascending: false, nullsFirst: false });
+      break;
+    default:
+      q = q.order('average_rating', { ascending: false, nullsFirst: false });
+      break;
+  }
+
+  const { data, error } = await q;
 
   if (error) throw error;
   return data as unknown as StorefrontWithChef[];

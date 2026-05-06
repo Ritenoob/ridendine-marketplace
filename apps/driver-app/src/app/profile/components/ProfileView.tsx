@@ -1,10 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Card, Button } from '@ridendine/ui';
+import { Card, Button, Badge } from '@ridendine/ui';
+import { createBrowserClient } from '@ridendine/db';
 import type { Driver } from '@ridendine/db';
+
+interface PayoutAccount {
+  id: string;
+  stripe_account_id: string;
+  status: 'pending' | 'active' | 'restricted';
+}
 
 interface ProfileViewProps {
   driver: Driver;
@@ -12,13 +19,54 @@ interface ProfileViewProps {
 
 export default function ProfileView({ driver }: ProfileViewProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [payoutAccount, setPayoutAccount] = useState<PayoutAccount | null>(null);
+  const [payoutLoading, setPayoutLoading] = useState(true);
+  const [setupLoading, setSetupLoading] = useState(false);
   const [formData, setFormData] = useState({
     first_name: driver.first_name,
     last_name: driver.last_name,
     phone: driver.phone,
   });
+
+  const supabase = useMemo(() => createBrowserClient(), []);
+
+  // Fetch payout account status
+  useEffect(() => {
+    if (!supabase) { setPayoutLoading(false); return; }
+    async function loadPayoutAccount() {
+      const { data } = await supabase
+        .from('driver_payout_accounts')
+        .select('id, stripe_account_id, status')
+        .eq('driver_id', driver.id)
+        .maybeSingle();
+      setPayoutAccount(data as PayoutAccount | null);
+      setPayoutLoading(false);
+    }
+    loadPayoutAccount();
+  }, [supabase, driver.id]);
+
+  // Show success message after Stripe onboarding return
+  const payoutSetupSuccess = searchParams.get('payout_setup') === 'success';
+
+  const handleSetupPayouts = async () => {
+    setSetupLoading(true);
+    try {
+      const res = await fetch('/api/payouts/setup', { method: 'POST' });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || 'Failed to start payout setup');
+      }
+    } catch {
+      alert('Failed to start payout setup. Please try again.');
+    } finally {
+      setSetupLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -174,6 +222,56 @@ export default function ProfileView({ driver }: ProfileViewProps) {
               </Button>
             )}
           </div>
+        </Card>
+
+        {/* Payout Account */}
+        <Card className="border-0 shadow-sm">
+          <h2 className="text-[17px] font-semibold text-[#1a1a1a] mb-4">Payouts</h2>
+          {payoutLoading ? (
+            <div className="h-12 animate-pulse rounded bg-gray-100" />
+          ) : payoutSetupSuccess && !payoutAccount ? (
+            <div className="rounded-lg bg-green-50 border border-green-200 p-4">
+              <p className="text-sm font-medium text-green-800">Payout account setup initiated!</p>
+              <p className="text-xs text-green-700 mt-1">Verification may take a few minutes. Refresh to check status.</p>
+            </div>
+          ) : !payoutAccount ? (
+            <div className="rounded-lg bg-orange-50 border border-orange-200 p-4">
+              <p className="text-sm font-medium text-orange-900">Connect your bank account to receive earnings</p>
+              <p className="text-xs text-orange-700 mt-1">Set up Stripe to get paid for deliveries</p>
+              <Button
+                onClick={handleSetupPayouts}
+                disabled={setupLoading}
+                className="mt-3 w-full rounded-lg bg-[#E85D26] py-2.5 text-[14px] font-semibold text-white hover:bg-[#d44e1e]"
+              >
+                {setupLoading ? 'Setting up...' : 'Set Up Payouts'}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[14px] text-[#6b7280]">Account Status</span>
+                <Badge variant={payoutAccount.status === 'active' ? 'success' : payoutAccount.status === 'restricted' ? 'warning' : 'info'}>
+                  {payoutAccount.status === 'active' ? 'Active' : payoutAccount.status === 'restricted' ? 'Needs Verification' : 'Pending'}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[14px] text-[#6b7280]">Stripe Account</span>
+                <span className="text-[14px] font-medium text-[#1a1a1a]">
+                  {payoutAccount.stripe_account_id.slice(0, 12)}...
+                </span>
+              </div>
+              {payoutAccount.status === 'restricted' && (
+                <Button
+                  onClick={handleSetupPayouts}
+                  disabled={setupLoading}
+                  variant="outline"
+                  className="w-full mt-2 rounded-lg text-[14px]"
+                >
+                  {setupLoading ? 'Loading...' : 'Complete Verification'}
+                </Button>
+              )}
+            </div>
+          )}
         </Card>
 
         <Card className="border-0 shadow-sm">

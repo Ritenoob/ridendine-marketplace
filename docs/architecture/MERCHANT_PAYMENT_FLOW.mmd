@@ -1,0 +1,19 @@
+%% Ridendine Merchant Payment Flow (Mermaid .mmd file)
+%% This diagram shows the end-to-end payment process for chefs/merchants
+
+flowchart TD
+  O1[Customer Places Order] --> O2[Payment Authorized]
+  O2 --> O3[Order Created: Pending]
+  O3 --> O4[Chef Accepts Order]
+  O4 --> O5[Order Prepared & Delivered]
+  O5 --> O6[Order Marked Delivered]
+  O6 --> O7[Funds Settled to Platform]
+  O7 --> O8[Platform Calculates Chef Payout]
+  O8 --> O9[Chef Payout Scheduled]
+  O9 --> O10[Chef Receives Payment]
+
+%% Notes:
+%% - Payment authorization occurs before the order is sent to the chef.
+%% - Platform fees/commissions are deducted before payout.
+%% - Payouts may be batched (daily/weekly).
+%% - Refunds/disputes may interrupt the flow.
