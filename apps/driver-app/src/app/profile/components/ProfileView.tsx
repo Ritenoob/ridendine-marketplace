@@ -36,8 +36,9 @@ export default function ProfileView({ driver }: ProfileViewProps) {
   // Fetch payout account status
   useEffect(() => {
     if (!supabase) { setPayoutLoading(false); return; }
+    const client = supabase;
     async function loadPayoutAccount() {
-      const { data } = await supabase
+      const { data } = await client
         .from('driver_payout_accounts')
         .select('id, stripe_account_id, status')
         .eq('driver_id', driver.id)
