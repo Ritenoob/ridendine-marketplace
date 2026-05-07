@@ -326,9 +326,15 @@ export class OperationsCommandGateway {
     }
 
     const pausedIds = (activeStorefronts || []).map((s: { id: string }) => s.id);
+    const { data: settings } = await (client.from('platform_settings') as any)
+      .select('setting_value')
+      .limit(1)
+      .single();
+
     await (client.from('platform_settings') as any)
       .update({
         setting_value: {
+          ...(settings?.setting_value ?? {}),
           maintenance_mode: true,
           maintenance_message: maintenanceMessage,
           maintenance_activated_at: now,
@@ -389,7 +395,16 @@ export class OperationsCommandGateway {
     }
 
     await (client.from('platform_settings') as any)
-      .update({ setting_value: { maintenance_mode: false } })
+      .update({
+        setting_value: {
+          ...(settings?.setting_value ?? {}),
+          maintenance_mode: false,
+          maintenance_message: '',
+          maintenance_activated_at: null,
+          maintenance_activated_by: null,
+          paused_storefront_ids: [],
+        },
+      })
       .not('id', 'is', null);
 
     await (client.from('system_alerts') as any).insert({
@@ -424,7 +439,8 @@ export class OperationsCommandGateway {
       .select('setting_value')
       .limit(1)
       .single();
-    const currentRules = settings?.setting_value?.automation_rules || DEFAULT_RULES;
+    const storedRules = settings?.setting_value?.automation_rules;
+    const currentRules = Array.isArray(storedRules) && storedRules.length > 0 ? storedRules : DEFAULT_RULES;
     const ruleIndex = currentRules.findIndex((rule: { id: string }) => rule.id === ruleId);
     if (ruleIndex === -1) return fail('NOT_FOUND', 'Rule not found');
 

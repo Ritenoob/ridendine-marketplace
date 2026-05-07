@@ -46,6 +46,22 @@ export default function PromosPage() {
     } catch { setError('Failed to update'); }
   };
 
+  const deletePromo = async (id: string, code: string) => {
+    if (!window.confirm(`Delete promo code ${code}?`)) return;
+    try {
+      const res = await fetch('/api/promos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      fetchPromos();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete');
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-6xl space-y-6">
@@ -111,11 +127,18 @@ export default function PromosPage() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
-                        <Button variant="outline" size="sm"
-                          onClick={() => toggleActive(promo.id, promo.is_active)}
-                          className="border-gray-600 text-gray-300 hover:bg-white/10">
-                          {promo.is_active ? 'Disable' : 'Enable'}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm"
+                            onClick={() => toggleActive(promo.id, promo.is_active)}
+                            className="border-gray-600 text-gray-300 hover:bg-white/10">
+                            {promo.is_active ? 'Disable' : 'Enable'}
+                          </Button>
+                          <Button variant="outline" size="sm"
+                            onClick={() => deletePromo(promo.id, promo.code)}
+                            className="border-red-500/40 text-red-300 hover:bg-red-500/10">
+                            Delete
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );

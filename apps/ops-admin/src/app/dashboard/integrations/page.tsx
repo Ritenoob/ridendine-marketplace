@@ -23,7 +23,7 @@ export default function IntegrationsPage() {
       name: 'Stripe Webhook',
       status: process.env.STRIPE_WEBHOOK_SECRET ? 'active' : 'inactive',
       type: 'Payment events → Engine',
-      url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://ridendine.ca'}/api/webhooks/stripe`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://ridendine.ca'}/api/stripe/webhook`,
       configured: !!process.env.STRIPE_WEBHOOK_SECRET,
     },
     {

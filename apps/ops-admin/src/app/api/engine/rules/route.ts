@@ -80,7 +80,9 @@ export async function GET() {
   const client = createAdminClient() as any;
   const { data: settings } = await client.from('platform_settings').select('setting_value').limit(1).single();
 
-  const rules: AutomationRule[] = settings?.setting_value?.automation_rules || DEFAULT_RULES;
+  const storedRules = settings?.setting_value?.automation_rules;
+  const rules: AutomationRule[] =
+    Array.isArray(storedRules) && storedRules.length > 0 ? storedRules : DEFAULT_RULES;
 
   return NextResponse.json({ success: true, data: rules });
 }

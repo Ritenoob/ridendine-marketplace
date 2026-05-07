@@ -97,7 +97,9 @@ export default function AutomationPage() {
                       </p>
                     )}
                   </div>
-                  <button onClick={() => toggleRule(rule.id, rule.enabled)}
+                  <button
+                    onClick={() => toggleRule(rule.id, rule.enabled)}
+                    aria-label={`${rule.enabled ? 'Disable' : 'Enable'} ${rule.name}`}
                     className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ${
                       rule.enabled ? 'bg-emerald-500' : 'bg-gray-600'
                     }`}>

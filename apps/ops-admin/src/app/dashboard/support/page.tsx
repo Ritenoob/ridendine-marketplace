@@ -3,6 +3,7 @@ import { Badge, Card } from '@ridendine/ui';
 import { createAdminClient, getOpsSupportQueue, type SupabaseClient } from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getEngine, getOpsActorContext, hasPlatformApiCapability } from '@/lib/engine';
+import { SupportTicketActions } from './support-ticket-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -153,6 +154,7 @@ export default async function SupportPage({
                       View linked order &rarr;
                     </Link>
                   )}
+                  <SupportTicketActions ticketId={ticket.id} status={ticket.status} />
                 </div>
               ))}
             </div>

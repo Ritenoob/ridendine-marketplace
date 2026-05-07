@@ -74,3 +74,21 @@ export async function PATCH(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true, data });
 }
+
+export async function DELETE(request: NextRequest) {
+  const actor = await getOpsActorContext();
+  const denied = guardPlatformApi(actor, 'promos');
+  if (denied) return denied;
+
+  const { id } = await request.json();
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+
+  const client = createAdminClient() as any;
+  const { error } = await client
+    .from('promo_codes')
+    .delete()
+    .eq('id', id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
+}
