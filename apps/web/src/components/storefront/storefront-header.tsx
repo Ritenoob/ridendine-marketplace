@@ -1,3 +1,6 @@
+const TYPICAL_DRIVE_MINUTES = 15;
+const DELIVERY_BUFFER_MINUTES = 5;
+
 interface StorefrontHeaderProps {
   storefront: {
     name: string;
@@ -17,7 +20,19 @@ interface StorefrontHeaderProps {
   };
 }
 
+function computeDeliveryEta(prepMin: number, prepMax: number): { min: number; max: number } {
+  return {
+    min: prepMin + TYPICAL_DRIVE_MINUTES,
+    max: prepMax + TYPICAL_DRIVE_MINUTES + DELIVERY_BUFFER_MINUTES,
+  };
+}
+
 export function StorefrontHeader({ storefront }: StorefrontHeaderProps) {
+  const deliveryEta = computeDeliveryEta(
+    storefront.estimatedPrepTimeMin,
+    storefront.estimatedPrepTimeMax
+  );
+
   return (
     <div className="bg-white border-b border-gray-100">
       {/* Cover Image */}
@@ -75,12 +90,17 @@ export function StorefrontHeader({ storefront }: StorefrontHeaderProps) {
                 </div>
               )}
 
-              {/* Prep Time */}
+              {/* Delivery ETA */}
               <div className="flex items-center gap-1 text-gray-500">
                 <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>{storefront.estimatedPrepTimeMin}–{storefront.estimatedPrepTimeMax} min prep</span>
+                <span>
+                  {deliveryEta.min}–{deliveryEta.max} min delivery
+                  <span className="ml-1 text-xs text-gray-400">
+                    ({storefront.estimatedPrepTimeMin}–{storefront.estimatedPrepTimeMax} min prep)
+                  </span>
+                </span>
               </div>
 
               {/* Min Order */}

@@ -30,6 +30,21 @@ jest.mock('@ridendine/ui', () => ({
       {children}
     </div>
   ),
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    loading,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+    loading?: boolean;
+  }) => (
+    <button onClick={onClick} disabled={disabled || loading}>
+      {children}
+    </button>
+  ),
 }));
 
 import { LiveOrderTracker } from '../../src/components/tracking/live-order-tracker';

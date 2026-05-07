@@ -56,6 +56,27 @@ export * from './orchestrators/risk.engine';
 // Analytics services
 export * from './services/ops-analytics.service';
 
+// Geocoding and delivery zone validation
+export {
+  geocodeAddress,
+  isWithinDeliveryZone,
+  buildAddressString,
+  type Coordinates,
+} from './services/geocoding.service';
+
+// Distance-based delivery fee calculation
+export {
+  calculateDeliveryFee,
+  estimateDistance,
+  DELIVERY_BASE_FEE_CENTS,
+  DELIVERY_PER_KM_CENTS,
+  DELIVERY_MAX_FEE_CENTS,
+  SMALL_ORDER_THRESHOLD_CENTS,
+  SMALL_ORDER_SURCHARGE_CENTS,
+  type DeliveryFeeResult,
+  type DeliveryFeeBreakdown,
+} from './services/delivery-fee.service';
+
 // Legacy services (for backwards compatibility)
 export * from './services/orders.service';
 export * from './services/chefs.service';

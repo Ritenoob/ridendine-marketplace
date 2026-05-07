@@ -4,6 +4,18 @@ import { computeProgressPct, estimateRemainingSeconds } from './progress';
 import type { Point } from './types';
 
 const PROVIDER_TAG = 'osrm';
+const DEFAULT_PREP_MINUTES = 20;
+const BUFFER_MINUTES = 5;
+const ETA_RANGE_HALF = 5;
+const FALLBACK_MIN = 30;
+const FALLBACK_MAX = 45;
+
+export type PreOrderEta = {
+  minMinutes: number;
+  maxMinutes: number;
+  prepTime: number;
+  driveTime: number;
+};
 
 function toPoint(lat: unknown, lng: unknown): Point | null {
   const la = typeof lat === 'number' ? lat : typeof lat === 'string' ? Number.parseFloat(lat) : Number.NaN;
@@ -191,6 +203,68 @@ export class EtaService {
       .eq('id', deliveryId);
 
     return { progressPct, remainingSeconds, etaDropoffAt };
+  }
+
+  /**
+   * Lightweight pre-order ETA estimate for checkout and storefront display.
+   * Does NOT write to DB. Gracefully falls back to 30-45 min on any failure.
+   */
+  async estimatePreOrder(storefrontId: string, customerAddressId: string): Promise<PreOrderEta> {
+    try {
+      return await this.computePreOrderEta(storefrontId, customerAddressId);
+    } catch {
+      return { minMinutes: FALLBACK_MIN, maxMinutes: FALLBACK_MAX, prepTime: DEFAULT_PREP_MINUTES, driveTime: 0 };
+    }
+  }
+
+  private async computePreOrderEta(storefrontId: string, customerAddressId: string): Promise<PreOrderEta> {
+    const { data: sf } = await this.db
+      .from('chef_storefronts')
+      .select('kitchen_id, estimated_prep_time_min, estimated_prep_time_max')
+      .eq('id', storefrontId)
+      .maybeSingle();
+
+    if (!sf?.kitchen_id) {
+      return { minMinutes: FALLBACK_MIN, maxMinutes: FALLBACK_MAX, prepTime: DEFAULT_PREP_MINUTES, driveTime: 0 };
+    }
+
+    const { data: kitchen } = await this.db
+      .from('chef_kitchens')
+      .select('lat, lng')
+      .eq('id', sf.kitchen_id as string)
+      .maybeSingle();
+
+    const kitchenPoint = toPoint(kitchen?.lat, kitchen?.lng);
+    if (!kitchenPoint) {
+      return { minMinutes: FALLBACK_MIN, maxMinutes: FALLBACK_MAX, prepTime: DEFAULT_PREP_MINUTES, driveTime: 0 };
+    }
+
+    const addressPoint = await this.loadAddressPoint(customerAddressId);
+    if (!addressPoint) {
+      return { minMinutes: FALLBACK_MIN, maxMinutes: FALLBACK_MAX, prepTime: DEFAULT_PREP_MINUTES, driveTime: 0 };
+    }
+
+    let driveTime = 0;
+    try {
+      const route = await this.provider.route(kitchenPoint, addressPoint);
+      driveTime = Math.round(route.seconds / 60);
+    } catch {
+      return { minMinutes: FALLBACK_MIN, maxMinutes: FALLBACK_MAX, prepTime: DEFAULT_PREP_MINUTES, driveTime: 0 };
+    }
+
+    const prepMin = typeof sf.estimated_prep_time_min === 'number' ? sf.estimated_prep_time_min : null;
+    const prepMax = typeof sf.estimated_prep_time_max === 'number' ? sf.estimated_prep_time_max : null;
+    const prepTime = prepMin !== null && prepMax !== null
+      ? Math.round((prepMin + prepMax) / 2)
+      : DEFAULT_PREP_MINUTES;
+
+    const midpoint = prepTime + driveTime + BUFFER_MINUTES;
+    return {
+      minMinutes: midpoint - ETA_RANGE_HALF,
+      maxMinutes: midpoint + ETA_RANGE_HALF,
+      prepTime,
+      driveTime,
+    };
   }
 
   async rankDrivers(

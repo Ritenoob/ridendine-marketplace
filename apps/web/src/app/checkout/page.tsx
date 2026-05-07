@@ -9,7 +9,9 @@ import { Header } from '@/components/layout/header';
 import { Button, Card, Input } from '@ridendine/ui';
 import { StripePaymentForm } from '@/components/checkout/stripe-payment-form';
 import { CheckoutSkeleton } from '@/components/checkout/checkout-skeleton';
+import { DeliveryTimePicker } from '@/components/checkout/delivery-time-picker';
 import { orderConfirmationPath } from '@/lib/customer-ordering';
+import { useEta } from '@/hooks/use-eta';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -55,6 +57,7 @@ interface OrderBreakdown {
   tax: number;
   tip: number;
   discount: number;
+  deliveryDistanceKm?: number;
 }
 
 function mapCheckoutError(code?: string, fallback?: string): string {
@@ -102,6 +105,7 @@ function CheckoutContent() {
   const [promoStatus, setPromoStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
   const [promoMessage, setPromoMessage] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
+  const [scheduledFor, setScheduledFor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const promoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -112,6 +116,7 @@ function CheckoutContent() {
   const [breakdown, setBreakdown] = useState<OrderBreakdown | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<'details' | 'payment'>('details');
   const [creatingPayment, setCreatingPayment] = useState(false);
+  const { eta: deliveryEta, loading: etaLoading } = useEta(storefrontId, selectedAddress || null);
 
   useEffect(() => {
     async function loadData() {
@@ -246,6 +251,7 @@ function CheckoutContent() {
           specialInstructions: deliveryInstructions,
           tip: tipDollars(),
           promoCode: promoStatus === 'valid' ? promoCode : null,
+          scheduledFor: scheduledFor ?? null,
         }),
       });
 
@@ -360,6 +366,12 @@ function CheckoutContent() {
                   />
                 </div>
               </Card>
+
+              {/* Delivery Time */}
+              <DeliveryTimePicker
+                selected={scheduledFor}
+                onSelect={setScheduledFor}
+              />
 
               {/* Tip */}
               <Card>
@@ -526,7 +538,15 @@ function CheckoutContent() {
               <svg className="h-4 w-4 flex-shrink-0 text-[#E85D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-sm text-gray-700">Est. delivery: <strong>~30–45 min</strong></span>
+              {etaLoading ? (
+                <span className="text-sm text-gray-400">Calculating delivery time...</span>
+              ) : deliveryEta ? (
+                <span className="text-sm text-gray-700">
+                  Est. delivery: <strong>{deliveryEta.minMinutes}–{deliveryEta.maxMinutes} min</strong>
+                </span>
+              ) : (
+                <span className="text-sm text-gray-700">Est. delivery: <strong>~30–45 min</strong></span>
+              )}
             </div>
             <div className="mt-4 space-y-2">
               {checkoutStep === 'details' && !hasApiBreakdown ? (
@@ -565,7 +585,14 @@ function CheckoutContent() {
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Delivery fee</span>
+                    <span className="text-gray-600">
+                      Delivery fee
+                      {breakdown.deliveryDistanceKm !== undefined && (
+                        <span className="ml-1 text-xs text-gray-400">
+                          ({breakdown.deliveryDistanceKm.toFixed(1)} km)
+                        </span>
+                      )}
+                    </span>
                     <span className="text-gray-900">
                       ${Number(breakdown.deliveryFee).toFixed(2)}
                     </span>

@@ -58,6 +58,8 @@ export const checkoutSchema = z.object({
   tip: z.number().min(0).optional().default(0),
   promoCode: z.string().optional(),
   specialInstructions: z.string().optional(),
+  /** ISO timestamp for scheduled delivery. Null / absent means ASAP. */
+  scheduledFor: z.string().datetime({ offset: true }).nullable().optional(),
   // Optional client-calculated totals for tamper detection only.
   clientSubtotal: z.number().min(0).optional(),
   clientDeliveryFee: z.number().min(0).optional(),
@@ -73,3 +75,4 @@ export type UpdateCustomerAddressInput = z.infer<typeof updateCustomerAddressSch
 export type AddToCartInput = z.infer<typeof addToCartSchema>;
 export type UpdateCartItemInput = z.infer<typeof updateCartItemSchema>;
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
+export type ScheduledFor = CheckoutInput['scheduledFor'];

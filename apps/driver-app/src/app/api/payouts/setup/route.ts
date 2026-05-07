@@ -4,6 +4,64 @@ import { createServerClient } from '@ridendine/db';
 import { getStripeClient } from '@ridendine/engine';
 import { getDriverActorContext } from '@/lib/engine';
 
+export async function GET() {
+  try {
+    const ctx = await getDriverActorContext({ requireApproved: false });
+    if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const cookieStore = await cookies();
+    const supabase = createServerClient(cookieStore);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { data: driver } = await supabase
+      .from('drivers')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!driver) {
+      return NextResponse.json({ error: 'Driver profile not found' }, { status: 404 });
+    }
+
+    const { data: account } = await supabase
+      .from('driver_payout_accounts')
+      .select('id, stripe_account_id, status, onboarding_completed_at')
+      .eq('driver_id', driver.id)
+      .maybeSingle();
+
+    if (!account) {
+      return NextResponse.json({ connected: false, status: 'not_started' });
+    }
+
+    const stripe = getStripeClient();
+    const stripeAccount = await stripe.accounts.retrieve(account.stripe_account_id);
+
+    const status = stripeAccount.payouts_enabled
+      ? 'active'
+      : stripeAccount.details_submitted
+      ? 'pending'
+      : 'not_started';
+
+    return NextResponse.json({
+      connected: true,
+      status,
+      charges_enabled: stripeAccount.charges_enabled,
+      payouts_enabled: stripeAccount.payouts_enabled,
+      stripe_account_id: account.stripe_account_id,
+    });
+  } catch (error) {
+    console.error('Error fetching driver payout account status:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch payout account status' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST() {
   try {
     const ctx = await getDriverActorContext();

@@ -60,6 +60,159 @@ function chainMock(rows: Record<string, unknown>[]) {
   };
 }
 
+describe('EtaService.estimatePreOrder', () => {
+  function makeProvider(seconds: number): RoutingProvider {
+    return {
+      id: 'osrm',
+      async route(): Promise<Route> {
+        return {
+          meters: 5000,
+          seconds,
+          polyline: 'abc',
+          legs: [{ meters: 5000, seconds, from: { lat: 0, lng: 0 }, to: { lat: 1, lng: 1 } }],
+        };
+      },
+      async matrix(sources: Point[], targets: Point[]) {
+        return { sources, targets, durations: [[seconds]] };
+      },
+    };
+  }
+
+  function makeDb(opts: {
+    storefrontKitchenId?: string | null;
+    kitchenLat?: number | null;
+    kitchenLng?: number | null;
+    addressLat?: number | null;
+    addressLng?: number | null;
+    prepTimeMin?: number | null;
+    prepTimeMax?: number | null;
+  }) {
+    return {
+      from: (table: string) => {
+        if (table === 'chef_storefronts') {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    kitchen_id: opts.storefrontKitchenId ?? 'k1',
+                    estimated_prep_time_min: opts.prepTimeMin ?? null,
+                    estimated_prep_time_max: opts.prepTimeMax ?? null,
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'chef_kitchens') {
+          const kitLat = 'kitchenLat' in opts ? opts.kitchenLat : 43.65;
+          const kitLng = 'kitchenLng' in opts ? opts.kitchenLng : -79.4;
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: { lat: kitLat, lng: kitLng },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'customer_addresses') {
+          const addrLat = 'addressLat' in opts ? opts.addressLat : 43.7;
+          const addrLng = 'addressLng' in opts ? opts.addressLng : -79.45;
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: { lat: addrLat, lng: addrLng },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({ data: null, error: null }),
+            }),
+          }),
+        };
+      },
+    } as unknown as SupabaseClient;
+  }
+
+  it('returns minMinutes and maxMinutes based on prep time and drive time', async () => {
+    const driveSeconds = 600; // 10 min
+    const provider = makeProvider(driveSeconds);
+    const db = makeDb({ prepTimeMin: 15, prepTimeMax: 25 });
+    const eta = new EtaService(provider, db);
+
+    const result = await eta.estimatePreOrder('sf1', 'addr1');
+
+    // prepTime midpoint 20 + driveTime 10 + buffer 5 = 35 min
+    // range ±5: 30-40 min
+    expect(result.minMinutes).toBeLessThan(result.maxMinutes);
+    expect(result.minMinutes).toBeGreaterThan(0);
+    expect(result.maxMinutes - result.minMinutes).toBe(10); // ±5 = 10 spread
+    expect(result.prepTime).toBeGreaterThan(0);
+    expect(result.driveTime).toBe(10);
+  });
+
+  it('falls back to default 30-45 when routing fails', async () => {
+    const provider: RoutingProvider = {
+      id: 'osrm',
+      async route() { throw new Error('Network error'); },
+      async matrix() { throw new Error('Network error'); },
+    };
+    const db = makeDb({});
+    const eta = new EtaService(provider, db);
+
+    const result = await eta.estimatePreOrder('sf1', 'addr1');
+
+    expect(result.minMinutes).toBe(30);
+    expect(result.maxMinutes).toBe(45);
+  });
+
+  it('falls back to default 30-45 when kitchen coords are missing', async () => {
+    const provider = makeProvider(600);
+    const db = makeDb({ kitchenLat: null, kitchenLng: null });
+    const eta = new EtaService(provider, db);
+
+    const result = await eta.estimatePreOrder('sf1', 'addr1');
+
+    expect(result.minMinutes).toBe(30);
+    expect(result.maxMinutes).toBe(45);
+  });
+
+  it('falls back to default 30-45 when address coords are missing', async () => {
+    const provider = makeProvider(600);
+    const db = makeDb({ addressLat: null, addressLng: null });
+    const eta = new EtaService(provider, db);
+
+    const result = await eta.estimatePreOrder('sf1', 'addr1');
+
+    expect(result.minMinutes).toBe(30);
+    expect(result.maxMinutes).toBe(45);
+  });
+
+  it('uses default prep time of 20 min when storefront has no prep time set', async () => {
+    const driveSeconds = 0;
+    const provider = makeProvider(driveSeconds);
+    const db = makeDb({ prepTimeMin: null, prepTimeMax: null });
+    const eta = new EtaService(provider, db);
+
+    const result = await eta.estimatePreOrder('sf1', 'addr1');
+
+    // Default prep 20 + drive 0 + buffer 5 = 25 min => range 20-30
+    expect(result.prepTime).toBe(20);
+    expect(result.minMinutes).toBe(20);
+    expect(result.maxMinutes).toBe(30);
+  });
+});
+
 describe('EtaService', () => {
   it('computeInitial writes dropoff columns', async () => {
     const route: Route = {

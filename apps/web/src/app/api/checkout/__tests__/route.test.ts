@@ -16,6 +16,7 @@ const mockCancelOrder = jest.fn();
 const mockAuditLog = jest.fn();
 const mockGetCustomerActorContext = jest.fn();
 const mockEvaluateRateLimit = jest.fn();
+const mockIsWithinDeliveryZone = jest.fn();
 
 jest.mock('@ridendine/db', () => ({
   createAdminClient: () => mockCreateAdminClient(),
@@ -27,6 +28,7 @@ jest.mock('@ridendine/engine', () => ({
   getStripeClient: () => mockGetStripeClient(),
   assertStripeConfigured: () => mockAssertStripeConfigured(),
   evaluateCheckoutRisk: (...args: unknown[]) => mockEvaluateCheckoutRisk(...args),
+  isWithinDeliveryZone: (...args: unknown[]) => mockIsWithinDeliveryZone(...args),
   BASE_DELIVERY_FEE: 500,
   SERVICE_FEE_PERCENT: 8,
   HST_RATE: 13,
@@ -157,6 +159,18 @@ function createAdminClientMock() {
           }),
         };
       }
+      if (table === 'customer_addresses') {
+        return {
+          select: () => ({
+            eq: () => ({
+              single: async () => ({
+                data: { lat: 43.2557, lng: -79.8711 },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
       return {
         select: () => ({
           eq: () => ({
@@ -192,6 +206,7 @@ describe('POST /api/checkout Phase C hardening', () => {
       cart_items: [{ menu_item_id: 'menu-1', quantity: 1, unit_price: 12 }],
     });
     mockEvaluateCheckoutRisk.mockReturnValue({ allowed: true, reasons: [], auditPayload: {} });
+    mockIsWithinDeliveryZone.mockResolvedValue(true);
     mockValidateReadiness.mockResolvedValue({ ok: true });
     mockCreateOrder.mockResolvedValue({
       success: true,
@@ -352,5 +367,37 @@ describe('POST /api/checkout Phase C hardening', () => {
     const b1 = await first.json();
     const b2 = await second.json();
     expect(b1.data.clientSecret).not.toBe(b2.data.clientSecret);
+  });
+
+  it('rejects checkout when delivery address is outside delivery zone', async () => {
+    mockIsWithinDeliveryZone.mockResolvedValue(false);
+
+    const res = await POST(
+      buildRequest({
+        storefrontId: '11111111-1111-1111-1111-111111111111',
+        deliveryAddressId: '22222222-2222-2222-2222-222222222222',
+        tip: 0,
+      })
+    );
+    const body = await res.json();
+    expect(res.status).toBe(400);
+    expect(body.code).toBe('OUTSIDE_DELIVERY_ZONE');
+    expect(body.error).toContain('Hamilton');
+    expect(mockCreateOrder).not.toHaveBeenCalled();
+  });
+
+  it('allows checkout when delivery address is within delivery zone', async () => {
+    mockIsWithinDeliveryZone.mockResolvedValue(true);
+
+    const res = await POST(
+      buildRequest({
+        storefrontId: '11111111-1111-1111-1111-111111111111',
+        deliveryAddressId: '22222222-2222-2222-2222-222222222222',
+        tip: 0,
+      })
+    );
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.success).toBe(true);
   });
 });

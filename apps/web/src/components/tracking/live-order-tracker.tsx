@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Card } from '@ridendine/ui';
+import { Card, Button } from '@ridendine/ui';
 import { useOrderStream } from '@/lib/orders/use-order-stream';
 import { OrderProgressStepper } from '@/components/orders/order-progress-stepper';
+import { formatScheduledTime, isScheduledOrder } from '@/lib/checkout/scheduling';
 
 const OrderTrackingMap = dynamic(
   () => import('./order-tracking-map'),
@@ -33,6 +34,8 @@ export interface LiveOrderTrackerProps {
   driverPhone?: string | null;
   /** ISO timestamp of when order was created */
   createdAt?: string | null;
+  /** ISO timestamp for scheduled delivery. Null means ASAP. */
+  scheduledFor?: string | null;
 }
 
 const PUBLIC_STEPS = [
@@ -207,6 +210,108 @@ function DeliveryDetails({
   );
 }
 
+interface CancelOrderSectionProps {
+  orderId: string;
+  canCancel: boolean;
+}
+
+function CancelOrderSection({ orderId, canCancel }: CancelOrderSectionProps) {
+  const [showDialog, setShowDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [cancelSuccess, setCancelSuccess] = useState<string | null>(null);
+
+  const handleCancelClick = useCallback(() => {
+    setCancelError(null);
+    setShowDialog(true);
+  }, []);
+
+  const handleDismiss = useCallback(() => {
+    setShowDialog(false);
+    setCancelError(null);
+  }, []);
+
+  const handleConfirmCancel = useCallback(async () => {
+    setIsLoading(true);
+    setCancelError(null);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/cancel`, { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) {
+        const msg = json?.error?.message ?? 'Something went wrong. Please try again.';
+        setCancelError(msg);
+        return;
+      }
+      const successMsg = json?.data?.message ?? 'Your order has been cancelled. Your payment will be refunded.';
+      setCancelSuccess(successMsg);
+      setShowDialog(false);
+    } catch {
+      setCancelError('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [orderId]);
+
+  if (!canCancel && !cancelSuccess) return null;
+
+  if (cancelSuccess) {
+    return (
+      <Card className="border-green-200 bg-green-50 p-4">
+        <p className="text-sm font-medium text-green-800">{cancelSuccess}</p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {cancelError && (
+        <Card className="border-red-200 bg-red-50 p-3">
+          <p className="text-sm text-red-800">{cancelError}</p>
+        </Card>
+      )}
+      <Button
+        variant="outline"
+        onClick={handleCancelClick}
+        className="w-full border-red-300 text-red-600 hover:bg-red-50"
+      >
+        Cancel Order
+      </Button>
+      {showDialog && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        >
+          <Card className="w-full max-w-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900">Are you sure?</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Your payment will be refunded within 3–5 business days.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <Button
+                variant="outline"
+                onClick={handleDismiss}
+                disabled={isLoading}
+                className="flex-1"
+              >
+                Keep Order
+              </Button>
+              <Button
+                onClick={handleConfirmCancel}
+                disabled={isLoading}
+                loading={isLoading}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                Yes, Cancel
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function LiveOrderTracker({
   orderId,
   orderNumber,
@@ -225,6 +330,7 @@ export function LiveOrderTracker({
   driverFirstName,
   driverPhone,
   createdAt,
+  scheduledFor,
 }: LiveOrderTrackerProps) {
   const {
     stage,
@@ -258,6 +364,8 @@ export function LiveOrderTracker({
   const isDelivered = publicStage === 'delivered';
   const onTheWay = publicStage === 'on_the_way';
   const showMap = Boolean(deliveryId) && onTheWay && !isDelivered;
+  // Only allow cancel when order is still in 'placed' public stage (pending/payment_authorized engine status)
+  const canCancel = publicStage === 'placed' && !terminal;
 
   const heading = terminal
     ? terminal === 'cancelled'
@@ -286,6 +394,20 @@ export function LiveOrderTracker({
           <p className="mt-1 text-sm opacity-80">From {storefrontName}</p>
         </div>
       </Card>
+
+      {isScheduledOrder(scheduledFor) && (
+        <Card className="border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-center gap-2">
+            <svg className="h-4 w-4 flex-shrink-0 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm text-blue-800">
+              <span className="font-medium">Scheduled for </span>
+              {formatScheduledTime(scheduledFor)}
+            </p>
+          </div>
+        </Card>
+      )}
 
       <OrderProgressStepper
         status={legacyStatus ?? initialStatus}
@@ -334,6 +456,8 @@ export function LiveOrderTracker({
         etaDropoffAt={etaDropoffAt}
         remainingSeconds={remainingSeconds}
       />
+
+      <CancelOrderSection orderId={orderId} canCancel={canCancel} />
     </div>
   );
 }

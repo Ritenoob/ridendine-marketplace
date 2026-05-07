@@ -13,6 +13,7 @@ import {
   updateCustomerAddressSchema,
 } from '@ridendine/validation';
 import { getCurrentCustomer, handleApiError } from '@/lib/auth-helpers';
+import { geocodeAddress, buildAddressString } from '@ridendine/engine';
 
 export async function GET() {
   try {
@@ -44,6 +45,25 @@ export async function POST(request: Request) {
 
     const customer = await getCurrentCustomer(supabase);
 
+    // Geocode address if lat/lng not provided
+    let lat = validated.lat ?? null;
+    let lng = validated.lng ?? null;
+
+    if (lat === null || lng === null) {
+      const addressString = buildAddressString({
+        streetAddress: validated.addressLine1,
+        city: validated.city,
+        state: validated.state,
+        postalCode: validated.postalCode,
+        country: validated.country || 'CA',
+      });
+      const coords = await geocodeAddress(addressString);
+      if (coords) {
+        lat = coords.latitude;
+        lng = coords.longitude;
+      }
+    }
+
     const address = await createAddress(supabase, {
       customer_id: customer.id,
       label: validated.label,
@@ -52,8 +72,8 @@ export async function POST(request: Request) {
       state: validated.state,
       postal_code: validated.postalCode,
       country: validated.country || 'CA',
-      lat: validated.lat || null,
-      lng: validated.lng || null,
+      lat,
+      lng,
       delivery_instructions: validated.deliveryInstructions || null,
       is_default: validated.isDefault || false,
     });
@@ -106,35 +126,45 @@ export async function PATCH(request: Request) {
     }
 
     const updates: any = {};
-    if (validated.label !== undefined) {
-      updates.label = validated.label;
-    }
-    if (validated.addressLine1 !== undefined) {
-      updates.street_address = validated.addressLine1;
-    }
-    if (validated.city !== undefined) {
-      updates.city = validated.city;
-    }
-    if (validated.state !== undefined) {
-      updates.state = validated.state;
-    }
-    if (validated.postalCode !== undefined) {
-      updates.postal_code = validated.postalCode;
-    }
-    if (validated.country !== undefined) {
-      updates.country = validated.country;
-    }
-    if (validated.lat !== undefined) {
-      updates.lat = validated.lat;
-    }
-    if (validated.lng !== undefined) {
-      updates.lng = validated.lng;
-    }
-    if (validated.deliveryInstructions !== undefined) {
-      updates.delivery_instructions = validated.deliveryInstructions;
-    }
-    if (validated.isDefault !== undefined) {
-      updates.is_default = validated.isDefault;
+    if (validated.label !== undefined) updates.label = validated.label;
+    if (validated.addressLine1 !== undefined) updates.street_address = validated.addressLine1;
+    if (validated.city !== undefined) updates.city = validated.city;
+    if (validated.state !== undefined) updates.state = validated.state;
+    if (validated.postalCode !== undefined) updates.postal_code = validated.postalCode;
+    if (validated.country !== undefined) updates.country = validated.country;
+    if (validated.lat !== undefined) updates.lat = validated.lat;
+    if (validated.lng !== undefined) updates.lng = validated.lng;
+    if (validated.deliveryInstructions !== undefined) updates.delivery_instructions = validated.deliveryInstructions;
+    if (validated.isDefault !== undefined) updates.is_default = validated.isDefault;
+
+    // Re-geocode if address fields changed and no explicit lat/lng provided
+    const addressFieldsChanged =
+      validated.addressLine1 !== undefined ||
+      validated.city !== undefined ||
+      validated.state !== undefined ||
+      validated.postalCode !== undefined;
+
+    if (addressFieldsChanged && validated.lat === undefined && validated.lng === undefined) {
+      const { data: current } = await supabase
+        .from('customer_addresses')
+        .select('street_address, city, state, postal_code, country')
+        .eq('id', addressId)
+        .single();
+
+      if (current) {
+        const addressString = buildAddressString({
+          streetAddress: updates.street_address ?? current.street_address,
+          city: updates.city ?? current.city,
+          state: updates.state ?? current.state,
+          postalCode: updates.postal_code ?? current.postal_code,
+          country: updates.country ?? current.country,
+        });
+        const coords = await geocodeAddress(addressString);
+        if (coords) {
+          updates.lat = coords.latitude;
+          updates.lng = coords.longitude;
+        }
+      }
     }
 
     const updatedAddress = await updateAddress(supabase, addressId, updates);

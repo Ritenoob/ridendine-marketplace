@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { createBrowserClient, customerNotificationsChannel } from '@ridendine/db';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 interface Notification {
   id: string;
@@ -47,10 +48,21 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const supabase = useMemo(() => createBrowserClient(), []);
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const { isSupported: pushSupported, permission: pushPermission, subscribe: pushSubscribe } =
+    usePushNotifications();
+
+  // Show push prompt once when user opens the bell and hasn't decided yet
+  useEffect(() => {
+    if (isOpen && pushSupported && pushPermission === 'default') {
+      setShowPushPrompt(true);
+    }
+  }, [isOpen, pushSupported, pushPermission]);
 
   useEffect(() => {
     if (!supabase) {
@@ -237,6 +249,31 @@ export function NotificationBell() {
               </button>
             )}
           </div>
+
+          {showPushPrompt && pushPermission === 'default' && (
+            <div className="border-b border-orange-100 bg-orange-50 px-4 py-3">
+              <p className="text-xs text-orange-800">
+                Enable notifications to track your orders in real time.
+              </p>
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={async () => {
+                    await pushSubscribe();
+                    setShowPushPrompt(false);
+                  }}
+                  className="rounded bg-[#E85D26] px-3 py-1 text-xs font-medium text-white hover:bg-[#d44e1e]"
+                >
+                  Enable
+                </button>
+                <button
+                  onClick={() => setShowPushPrompt(false)}
+                  className="rounded border border-orange-200 px-3 py-1 text-xs text-orange-700 hover:bg-orange-100"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="max-h-96 overflow-y-auto">
             {loading ? (

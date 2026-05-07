@@ -11,6 +11,10 @@ import {
   BASE_DELIVERY_FEE,
   SERVICE_FEE_PERCENT,
   HST_RATE,
+  isWithinDeliveryZone,
+  calculateDeliveryFee,
+  estimateDistance,
+  type Coordinates,
 } from '@ridendine/engine';
 import { checkoutSchema } from '@ridendine/validation';
 import {
@@ -25,6 +29,7 @@ import {
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
 import { createHash } from 'crypto';
+import { validateScheduledFor } from '@/lib/checkout/scheduling';
 
 interface PromoCodeRow {
   id: string;
@@ -58,6 +63,7 @@ interface CheckoutRequestInput {
   tip: number;
   promoCode?: string;
   specialInstructions?: string;
+  scheduledFor?: string | null;
   clientSubtotal?: number;
   clientDeliveryFee?: number;
   clientServiceFee?: number;
@@ -77,6 +83,7 @@ interface CheckoutResponsePayload {
     tax: number;
     tip: number;
     discount: number;
+    deliveryDistanceKm?: number;
   };
 }
 
@@ -110,8 +117,16 @@ function deriveIdempotencyKey(
   }).slice(0, 64);
 }
 
-function computeServerQuote(subtotal: number, tip: number, promoDiscount: number) {
-  const deliveryFee = BASE_DELIVERY_FEE / 100;
+function computeServerQuote(
+  subtotal: number,
+  tip: number,
+  promoDiscount: number,
+  deliveryFeeCents?: number
+) {
+  // Use dynamic fee if provided, otherwise fall back to static BASE_DELIVERY_FEE
+  const deliveryFee = deliveryFeeCents !== undefined
+    ? deliveryFeeCents / 100
+    : BASE_DELIVERY_FEE / 100;
   const serviceFee = roundMoney(subtotal * (SERVICE_FEE_PERCENT / 100));
   const tax = roundMoney((subtotal + deliveryFee + serviceFee) * (HST_RATE / 100));
   const preDiscountTotal = subtotal + deliveryFee + serviceFee + tax + tip;
@@ -126,6 +141,43 @@ function computeServerQuote(subtotal: number, tip: number, promoDiscount: number
     discount: roundMoney(promoDiscount),
     total,
   };
+}
+
+async function resolveDeliveryFeeCents(
+  adminClient: SupabaseClient,
+  deliveryAddressId: string,
+  storefrontId: string,
+  subtotalCents: number
+): Promise<{ feeCents: number; distanceKm: number | null }> {
+  try {
+    const [addressResult, kitchenResult] = await Promise.all([
+      (adminClient as any)
+        .from('customer_addresses')
+        .select('lat, lng')
+        .eq('id', deliveryAddressId)
+        .single(),
+      (adminClient as any)
+        .from('chef_kitchens')
+        .select('lat, lng')
+        .eq('storefront_id', storefrontId)
+        .maybeSingle(),
+    ]);
+
+    const addr = addressResult.data as { lat: number | null; lng: number | null } | null;
+    const kitchen = kitchenResult.data as { lat: number | null; lng: number | null } | null;
+
+    if (!addr?.lat || !addr?.lng || !kitchen?.lat || !kitchen?.lng) {
+      return { feeCents: calculateDeliveryFee(0, subtotalCents).feeCents, distanceKm: null };
+    }
+
+    const customerCoords: Coordinates = { latitude: addr.lat, longitude: addr.lng };
+    const chefCoords: Coordinates = { latitude: kitchen.lat, longitude: kitchen.lng };
+    const distanceKm = estimateDistance(customerCoords, chefCoords);
+
+    return { feeCents: calculateDeliveryFee(distanceKm, subtotalCents).feeCents, distanceKm };
+  } catch {
+    return { feeCents: calculateDeliveryFee(0, subtotalCents).feeCents, distanceKm: null };
+  }
 }
 
 async function upsertCheckoutIdempotencyRecord(
@@ -204,12 +256,20 @@ export async function POST(request: Request): Promise<Response> {
       tip = 0,
       promoCode,
       specialInstructions,
+      scheduledFor,
       clientSubtotal,
       clientDeliveryFee,
       clientServiceFee,
       clientTax,
       clientTotal,
     } = validationResult.data as CheckoutRequestInput;
+
+    // Validate scheduled_for if provided
+    const scheduleValidation = validateScheduledFor(scheduledFor ?? null);
+    if (!scheduleValidation.valid) {
+      return errorResponse('VALIDATION_ERROR', scheduleValidation.error, 400);
+    }
+    const resolvedScheduledFor = scheduleValidation.value;
 
     const adminClient = createAdminClient() as unknown as SupabaseClient;
     const engine = getEngine();
@@ -262,7 +322,36 @@ export async function POST(request: Request): Promise<Response> {
       authoritativeSubtotal += menu.price * cartItem.quantity;
     }
 
-    const serverQuoteNoPromo = computeServerQuote(authoritativeSubtotal, Number(tip || 0), 0);
+    const subtotalCents = Math.round(authoritativeSubtotal * 100);
+
+    // Validate delivery address is within Hamilton service area
+    const { data: deliveryAddress } = await adminClient
+      .from('customer_addresses')
+      .select('lat, lng')
+      .eq('id', deliveryAddressId)
+      .single();
+
+    if (deliveryAddress?.lat != null && deliveryAddress?.lng != null) {
+      const inZone = await isWithinDeliveryZone(deliveryAddress.lat, deliveryAddress.lng);
+      if (!inZone) {
+        return errorResponse(
+          'OUTSIDE_DELIVERY_ZONE',
+          "Sorry, we don't deliver to this address yet. We currently serve the Hamilton area.",
+          400
+        );
+      }
+    }
+
+    // Calculate distance-based delivery fee
+    const { feeCents: dynamicDeliveryFeeCents, distanceKm: deliveryDistanceKm } =
+      await resolveDeliveryFeeCents(adminClient, deliveryAddressId, storefrontId, subtotalCents);
+
+    const serverQuoteNoPromo = computeServerQuote(
+      authoritativeSubtotal,
+      Number(tip || 0),
+      0,
+      dynamicDeliveryFeeCents
+    );
     const clientSuppliedAnyTotals =
       clientSubtotal !== undefined ||
       clientDeliveryFee !== undefined ||
@@ -281,10 +370,6 @@ export async function POST(request: Request): Promise<Response> {
         return errorResponse('VALIDATION_ERROR', 'Client totals mismatch server quote', 400);
       }
     }
-
-    const subtotalCents = Math.round(
-      authoritativeSubtotal * 100
-    );
     const tipCents = Math.round(Number(tip || 0) * 100);
     const risk = evaluateCheckoutRisk({
       customerId: customerContext.customerId,
@@ -360,7 +445,12 @@ export async function POST(request: Request): Promise<Response> {
       }
     }
 
-    const serverQuote = computeServerQuote(authoritativeSubtotal, Number(tip || 0), promoDiscount);
+    const serverQuote = computeServerQuote(
+      authoritativeSubtotal,
+      Number(tip || 0),
+      promoDiscount,
+      dynamicDeliveryFeeCents
+    );
     const idempotencyKey = deriveIdempotencyKey(request, customerContext.customerId, cart.id, {
       storefrontId,
       deliveryAddressId,
@@ -445,18 +535,26 @@ export async function POST(request: Request): Promise<Response> {
       const order = orderResult.data!;
       createdOrderId = order.id;
 
-      // Persist promo-adjusted total in order record to keep payment/order reconciliation consistent.
+      // Persist promo-adjusted total and scheduling in order record.
+      const orderUpdate: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+      };
       if (serverQuote.total !== roundMoney(order.total)) {
-        const { error: syncTotalError } = await adminClient
+        orderUpdate.total = serverQuote.total;
+      }
+      if (resolvedScheduledFor) {
+        // scheduled_for column may not exist in generated types yet — use cast
+        (orderUpdate as Record<string, unknown>).scheduled_for = resolvedScheduledFor;
+        orderUpdate.status = 'scheduled';
+      }
+      if (Object.keys(orderUpdate).length > 1) {
+        const { error: syncTotalError } = await (adminClient as any)
           .from('orders')
-          .update({
-            total: serverQuote.total,
-            updated_at: new Date().toISOString(),
-          })
+          .update(orderUpdate)
           .eq('id', order.id);
 
         if (syncTotalError) {
-          return errorResponse('INTERNAL_ERROR', 'Failed to sync order totals', 500);
+          return errorResponse('INTERNAL_ERROR', 'Failed to sync order record', 500);
         }
       }
 
@@ -512,6 +610,9 @@ export async function POST(request: Request): Promise<Response> {
           tax: serverQuote.tax,
           tip: serverQuote.tip,
           discount: serverQuote.discount,
+          ...(deliveryDistanceKm !== null && {
+            deliveryDistanceKm: Math.round(deliveryDistanceKm * 10) / 10,
+          }),
         },
       };
 

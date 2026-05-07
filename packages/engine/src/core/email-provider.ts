@@ -2,11 +2,21 @@
 // RESEND EMAIL DELIVERY PROVIDER
 // Sends transactional emails when RESEND_API_KEY is configured.
 // Falls back gracefully when not configured — DB notifications still work.
-// Tier 1: FND-006 fix
+// Uses per-status rich HTML templates from @ridendine/notifications/email-templates.
 // ==========================================
 
 import type { NotificationType } from '@ridendine/types';
 import type { NotificationDeliveryProvider } from './notification-sender';
+import {
+  renderOrderConfirmedEmail,
+  renderChefAcceptedEmail,
+  renderOnTheWayEmail,
+  renderDeliveredEmail,
+  renderOrderCancelledEmail,
+  renderNewOrderEmail,
+  renderDeliveryOfferEmail,
+  renderEmailHtml,
+} from '@ridendine/notifications/email-templates';
 
 // Email subjects keyed by notification type
 const EMAIL_SUBJECTS: Partial<Record<NotificationType, string>> = {
@@ -24,28 +34,43 @@ const EMAIL_SUBJECTS: Partial<Record<NotificationType, string>> = {
   review_received: 'You Received a New Review',
 };
 
-function buildEmailHtml(title: string, body: string): string {
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background-color:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
-    <div style="background:white;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-      <div style="text-align:center;margin-bottom:24px;">
-        <span style="font-size:24px;font-weight:bold;">
-          <span style="color:#1a7a6e;">RideN</span><span style="color:#E85D26;">Dine</span>
-        </span>
-      </div>
-      <h1 style="font-size:20px;color:#1a1a2e;margin:0 0 16px;">${title}</h1>
-      <p style="font-size:16px;color:#4a5568;line-height:1.6;margin:0 0 24px;">${body}</p>
-      <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
-      <p style="font-size:12px;color:#a0aec0;text-align:center;margin:0;">
-        RideNDine — Chef-First Food Delivery
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+function buildRichHtml(
+  type: NotificationType,
+  title: string,
+  body: string,
+  data?: Record<string, unknown>,
+): string {
+  const orderNumber = String(data?.['orderNumber'] ?? data?.['order_number'] ?? '');
+  const customerName = String(data?.['customerName'] ?? '');
+  const driverName = String(data?.['driverName'] ?? '');
+  const reason = String(data?.['reason'] ?? '');
+  const eta = data?.['eta'] ? String(data['eta']) : undefined;
+  const storefrontName = String(data?.['storefrontName'] ?? '');
+  const pickupAddress = String(data?.['pickupAddress'] ?? '');
+  const earnings = data?.['earnings'] ? String(data['earnings']) : undefined;
+
+  switch (type) {
+    case 'order_placed':
+      return customerName
+        ? renderNewOrderEmail({ orderNumber, customerName })
+        : renderOrderConfirmedEmail({ orderNumber });
+    case 'order_accepted':
+      return renderChefAcceptedEmail({ orderNumber, eta });
+    case 'order_picked_up':
+      return renderOnTheWayEmail({ orderNumber, driverName, eta });
+    case 'order_delivered':
+      return renderDeliveredEmail({ orderNumber });
+    case 'order_cancelled':
+      return renderOrderCancelledEmail({ orderNumber, reason: reason || undefined });
+    case 'delivery_offer':
+      return renderDeliveryOfferEmail({ storefrontName, pickupAddress, earnings });
+    default:
+      return renderEmailHtml(title, `<p style="font-size:16px;color:#4a5568;line-height:1.6;margin:0 0 16px;">${escapeBody(body)}</p>`);
+  }
+}
+
+function escapeBody(body: string): string {
+  return body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function getRecipientEmail(data?: Record<string, unknown>): string | undefined {
@@ -53,7 +78,6 @@ function getRecipientEmail(data?: Record<string, unknown>): string | undefined {
 }
 
 export function createResendProvider(): NotificationDeliveryProvider {
-  // Lazily instantiated — avoids top-level import errors if resend is missing
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let resendInstance: any = null;
 
@@ -82,6 +106,7 @@ export function createResendProvider(): NotificationDeliveryProvider {
       }
 
       const subject = EMAIL_SUBJECTS[params.type] ?? params.title;
+      const html = buildRichHtml(params.type, params.title, params.body, params.data);
 
       try {
         if (!resendInstance) {
@@ -93,7 +118,7 @@ export function createResendProvider(): NotificationDeliveryProvider {
           from: 'RideNDine <noreply@ridendine.ca>',
           to: recipientEmail,
           subject,
-          html: buildEmailHtml(params.title, params.body),
+          html,
         });
 
         if (result.error) {
