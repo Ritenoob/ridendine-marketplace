@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Card } from '@ridendine/ui';
 import { useOrderStream } from '@/lib/orders/use-order-stream';
+import { OrderProgressStepper } from '@/components/orders/order-progress-stepper';
 
 const OrderTrackingMap = dynamic(
   () => import('./order-tracking-map'),
@@ -28,6 +29,10 @@ export interface LiveOrderTrackerProps {
   initialRoutePolyline?: string | null;
   /** Driver first name only — no last name, no photo, no coords */
   driverFirstName?: string | null;
+  /** Driver contact phone for call-to-action link */
+  driverPhone?: string | null;
+  /** ISO timestamp of when order was created */
+  createdAt?: string | null;
 }
 
 const PUBLIC_STEPS = [
@@ -218,6 +223,8 @@ export function LiveOrderTracker({
   initialRemainingSeconds,
   initialRoutePolyline,
   driverFirstName,
+  driverPhone,
+  createdAt,
 }: LiveOrderTrackerProps) {
   const {
     stage,
@@ -277,15 +284,16 @@ export function LiveOrderTracker({
             {isDelivered ? 'Delivered!' : heading}
           </h2>
           <p className="mt-1 text-sm opacity-80">From {storefrontName}</p>
-          {onTheWay && driverFirstName && (
-            <p className="mt-2 text-sm font-medium bg-white/10 inline-flex items-center gap-1.5 rounded-full px-3 py-1">
-              <span className="opacity-80">Your driver:</span>
-              <span>{driverFirstName}</span>
-            </p>
-          )}
         </div>
-        <StepIndicator currentIndex={currentStepIndex} terminal={terminal} />
       </Card>
+
+      <OrderProgressStepper
+        status={legacyStatus ?? initialStatus}
+        createdAt={createdAt ?? new Date().toISOString()}
+        estimatedDeliveryMinutes={estimatedDeliveryMinutes}
+        driverFirstName={driverFirstName}
+        driverPhone={driverPhone}
+      />
 
       {showMap && (
         <Card className="overflow-hidden">

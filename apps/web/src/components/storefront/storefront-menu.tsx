@@ -174,7 +174,7 @@ export function StorefrontMenu({ storefrontId, menuItems }: StorefrontMenuProps)
                         <button
                           onClick={() => handleAddToCart(item)}
                           disabled={loading || addingItemId === item.id}
-                          className="flex items-center gap-1.5 rounded-xl bg-[#E85D26] px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[#d44e1e] disabled:opacity-60"
+                          className="flex items-center gap-1.5 rounded-xl bg-[#E85D26] px-3 py-1.5 text-sm font-semibold text-white transition-all hover:bg-[#d44e1e] active:scale-95 disabled:opacity-60"
                         >
                           {addingItemId === item.id ? (
                             <>
@@ -229,7 +229,7 @@ export function StorefrontMenu({ storefrontId, menuItems }: StorefrontMenuProps)
               <p className="font-semibold text-gray-900">{formatPrice(subtotal)}</p>
             </div>
             <Link href={`/cart?storefrontId=${storefrontId}`} className="flex-1">
-              <button className="w-full rounded-xl bg-[#E85D26] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#d44e1e]">
+              <button className="w-full rounded-xl bg-[#E85D26] py-3 text-sm font-semibold text-white transition-all hover:bg-[#d44e1e] active:scale-95">
                 View Cart ({itemCount})
               </button>
             </Link>
@@ -315,13 +315,13 @@ function CartSidebar({
             </div>
 
             <Link href={`/cart?storefrontId=${storefrontId}`}>
-              <button className="mt-4 w-full rounded-xl border border-[#E85D26] bg-white py-2.5 text-sm font-semibold text-[#E85D26] transition-colors hover:bg-[#fff0e8]">
+              <button className="mt-4 w-full rounded-xl border border-[#E85D26] bg-white py-2.5 text-sm font-semibold text-[#E85D26] transition-all hover:bg-[#fff0e8] active:scale-95">
                 View Cart ({itemCount})
               </button>
             </Link>
 
             <Link href={`/checkout?storefrontId=${storefrontId}`}>
-              <button className="mt-2 w-full rounded-xl bg-[#E85D26] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#d44e1e]">
+              <button className="mt-2 w-full rounded-xl bg-[#E85D26] py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#d44e1e] active:scale-95">
                 Checkout →
               </button>
             </Link>

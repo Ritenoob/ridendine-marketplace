@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Button } from '@ridendine/ui';
 import { Header } from '@/components/layout/header';
 import { FeaturedChefs } from '@/components/home/featured-chefs';
+import { ScrollRevealSection } from '@/components/home/scroll-reveal-section';
 import { createAdminClient } from '@ridendine/db';
 
 // Opt out of static generation due to auth context requirements
@@ -134,51 +135,57 @@ export default async function HomePage() {
       {/* How It Works */}
       <section className="py-20 bg-gray-50">
         <div className="container">
-          <div className="text-center mb-12">
+          <ScrollRevealSection className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
               How RideNDine Works
             </h2>
             <p className="mt-4 text-lg text-gray-600">
               From discovery to delivery in three simple steps
             </p>
-          </div>
+          </ScrollRevealSection>
           <div className="grid gap-8 md:grid-cols-3">
-            <div className="relative text-center rounded-2xl bg-white p-8 shadow-sm border border-gray-100">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#fff0e8]">
-                <svg className="h-8 w-8 text-[#E85D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+            <ScrollRevealSection delay={0}>
+              <div className="relative text-center rounded-2xl bg-white p-8 shadow-sm border border-gray-100">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#fff0e8]">
+                  <svg className="h-8 w-8 text-[#E85D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <div className="absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#E85D26] text-sm font-bold text-white">1</div>
+                <h3 className="text-xl font-semibold text-gray-900">Discover</h3>
+                <p className="mt-3 text-gray-600">
+                  Browse local home chefs and explore their unique menus and cuisines.
+                </p>
               </div>
-              <div className="absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#E85D26] text-sm font-bold text-white">1</div>
-              <h3 className="text-xl font-semibold text-gray-900">Discover</h3>
-              <p className="mt-3 text-gray-600">
-                Browse local home chefs and explore their unique menus and cuisines.
-              </p>
-            </div>
-            <div className="relative text-center rounded-2xl bg-white p-8 shadow-sm border border-gray-100">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#fff0e8]">
-                <svg className="h-8 w-8 text-[#E85D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+            </ScrollRevealSection>
+            <ScrollRevealSection delay={100}>
+              <div className="relative text-center rounded-2xl bg-white p-8 shadow-sm border border-gray-100">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#fff0e8]">
+                  <svg className="h-8 w-8 text-[#E85D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#E85D26] text-sm font-bold text-white">2</div>
+                <h3 className="text-xl font-semibold text-gray-900">Order</h3>
+                <p className="mt-3 text-gray-600">
+                  Select your favourite dishes and place your order with just a few taps.
+                </p>
               </div>
-              <div className="absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#E85D26] text-sm font-bold text-white">2</div>
-              <h3 className="text-xl font-semibold text-gray-900">Order</h3>
-              <p className="mt-3 text-gray-600">
-                Select your favourite dishes and place your order with just a few taps.
-              </p>
-            </div>
-            <div className="relative text-center rounded-2xl bg-white p-8 shadow-sm border border-gray-100">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#fff0e8]">
-                <svg className="h-8 w-8 text-[#E85D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
+            </ScrollRevealSection>
+            <ScrollRevealSection delay={200}>
+              <div className="relative text-center rounded-2xl bg-white p-8 shadow-sm border border-gray-100">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#fff0e8]">
+                  <svg className="h-8 w-8 text-[#E85D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                  </svg>
+                </div>
+                <div className="absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#E85D26] text-sm font-bold text-white">3</div>
+                <h3 className="text-xl font-semibold text-gray-900">Enjoy</h3>
+                <p className="mt-3 text-gray-600">
+                  Get fresh, home-cooked meals delivered right to your door by our drivers.
+                </p>
               </div>
-              <div className="absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#E85D26] text-sm font-bold text-white">3</div>
-              <h3 className="text-xl font-semibold text-gray-900">Enjoy</h3>
-              <p className="mt-3 text-gray-600">
-                Get fresh, home-cooked meals delivered right to your door by our drivers.
-              </p>
-            </div>
+            </ScrollRevealSection>
           </div>
         </div>
       </section>
@@ -186,7 +193,7 @@ export default async function HomePage() {
       {/* Featured Chefs */}
       <section className="py-20 bg-white">
         <div className="container">
-          <div className="flex items-center justify-between mb-8">
+          <ScrollRevealSection className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Our Chefs</h2>
               <p className="mt-2 text-gray-600">Meet the talented home chefs behind RideNDine</p>
@@ -200,7 +207,7 @@ export default async function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </Link>
-          </div>
+          </ScrollRevealSection>
           <FeaturedChefs limit={3} />
           <div className="mt-8 text-center sm:hidden">
             <Link href="/chefs">
@@ -215,7 +222,7 @@ export default async function HomePage() {
       {/* Community Banner */}
       <section className="py-16 bg-gradient-to-br from-[#1a7a6e] to-[#0d5c52]">
         <div className="container">
-          <div className="mx-auto max-w-3xl text-center text-white">
+          <ScrollRevealSection className="mx-auto max-w-3xl text-center text-white">
             <h2 className="text-3xl font-bold sm:text-4xl">Real Chefs. Real Kitchens.</h2>
             <p className="mt-4 text-lg text-white/80">
               Every meal on RideNDine is crafted by a verified home chef in Hamilton. No ghost kitchens. No mass production. Just authentic, home-cooked food made with care.
@@ -230,13 +237,14 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
-          </div>
+          </ScrollRevealSection>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="py-20 bg-white">
         <div className="container">
+          <ScrollRevealSection>
           <div className="rounded-3xl bg-gradient-to-br from-[#E85D26] to-[#d44e1e] px-8 py-16 text-center text-white md:px-16 md:py-20">
             <h2 className="text-3xl font-bold sm:text-4xl">Ready to Share Your Cooking?</h2>
             <p className="mt-4 text-lg text-orange-100">
@@ -262,6 +270,7 @@ export default async function HomePage() {
               </Link>
             </div>
           </div>
+          </ScrollRevealSection>
         </div>
       </section>
 

@@ -17,3 +17,17 @@
     @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
   }
 }
+
+@layer utilities {
+  /* Scroll-reveal: elements start hidden and fade in when data-visible is set */
+  .animate-on-scroll {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .animate-on-scroll[data-visible='true'] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

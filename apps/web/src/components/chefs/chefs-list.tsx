@@ -93,8 +93,13 @@ export async function ChefsList({ search, cuisines, minRating, sortBy = 'default
 
   return (
     <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-      {chefs.map((chef) => (
-        <Link key={chef.id} href={`/chefs/${chef.slug}`} className="group">
+      {chefs.map((chef, index) => (
+        <Link
+          key={chef.id}
+          href={`/chefs/${chef.slug}`}
+          className="group animate-fade-in-up"
+          style={{ animationDelay: `${index * 60}ms` }}
+        >
           <div className="h-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
             {/* Cover Image */}
             <div

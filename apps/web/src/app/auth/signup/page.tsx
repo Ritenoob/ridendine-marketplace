@@ -7,11 +7,56 @@ import { useAuth } from '@ridendine/auth';
 import { Button, Input, PasswordStrength } from '@ridendine/ui';
 import { AuthLayout } from '../../../components/auth/auth-layout';
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+type FormData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
+type FieldErrors = Partial<Record<keyof FormData, string>>;
+type FieldTouched = Partial<Record<keyof FormData, boolean>>;
+
+function validateField(field: keyof FormData, value: string, formData: FormData): string | undefined {
+  switch (field) {
+    case 'firstName':
+      return value.trim() ? undefined : 'First name is required';
+    case 'lastName':
+      return value.trim() ? undefined : 'Last name is required';
+    case 'email':
+      if (!value) return 'Email is required';
+      if (!isValidEmail(value)) return 'Enter a valid email address';
+      return undefined;
+    case 'password':
+      if (!value) return 'Password is required';
+      if (value.length < 8) return 'At least 8 characters required';
+      return undefined;
+    case 'confirmPassword':
+      if (!value) return 'Please confirm your password';
+      if (value !== formData.password) return 'Passwords do not match';
+      return undefined;
+    default:
+      return undefined;
+  }
+}
+
+function validateAll(formData: FormData): FieldErrors {
+  const fields: (keyof FormData)[] = ['firstName', 'lastName', 'email', 'password', 'confirmPassword'];
+  return Object.fromEntries(
+    fields.map((f) => [f, validateField(f, formData[f], formData)])
+  ) as FieldErrors;
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const { signUp, loading, error } = useAuth();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
     email: '',
@@ -19,33 +64,50 @@ export default function SignupPage() {
     confirmPassword: '',
   });
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [validationError, setValidationError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<FieldTouched>({});
+  const [termsError, setTermsError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
+    const { name, value } = e.target;
+    const field = name as keyof FormData;
+
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
+    if (touched[field]) {
+      const updated = { ...formData, [field]: value };
+      setFieldErrors((prev) => ({
+        ...prev,
+        [field]: validateField(field, value, updated),
+      }));
+    }
+  };
+
+  const handleBlur = (field: keyof FormData) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    setFieldErrors((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [field]: validateField(field, formData[field], formData),
     }));
-    setValidationError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setValidationError('');
+    setTermsError('');
 
-    // Validation
+    const errors = validateAll(formData);
+    const allTouched = Object.fromEntries(
+      Object.keys(formData).map((k) => [k, true])
+    ) as FieldTouched;
+
+    setFieldErrors(errors);
+    setTouched(allTouched);
+
+    const hasErrors = Object.values(errors).some(Boolean);
+    if (hasErrors) return;
+
     if (!agreedToTerms) {
-      setValidationError('You must agree to the Terms of Service');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setValidationError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setValidationError('Password must be at least 8 characters');
+      setTermsError('You must agree to the Terms of Service');
       return;
     }
 
@@ -60,15 +122,15 @@ export default function SignupPage() {
     }
   };
 
+  const isFieldValid = (field: keyof FormData) =>
+    !!touched[field] && !fieldErrors[field] && !!formData[field];
+
   return (
-    <AuthLayout
-      title="Create your account"
-      subtitle="Join RideNDine and discover amazing home chefs"
-    >
+    <AuthLayout title="Create your account" subtitle="Join RideNDine and discover amazing home chefs">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {(error || validationError) && (
+        {(error || termsError) && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {error || validationError}
+            {error || termsError}
           </div>
         )}
 
@@ -78,18 +140,22 @@ export default function SignupPage() {
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
+            onBlur={() => handleBlur('firstName')}
             placeholder="John"
-            required
             autoComplete="given-name"
+            error={touched.firstName ? fieldErrors.firstName : undefined}
+            valid={isFieldValid('firstName')}
           />
           <Input
             label="Last Name"
             name="lastName"
             value={formData.lastName}
             onChange={handleChange}
+            onBlur={() => handleBlur('lastName')}
             placeholder="Doe"
-            required
             autoComplete="family-name"
+            error={touched.lastName ? fieldErrors.lastName : undefined}
+            valid={isFieldValid('lastName')}
           />
         </div>
 
@@ -99,9 +165,11 @@ export default function SignupPage() {
           name="email"
           value={formData.email}
           onChange={handleChange}
+          onBlur={() => handleBlur('email')}
           placeholder="you@example.com"
-          required
           autoComplete="email"
+          error={touched.email ? fieldErrors.email : undefined}
+          valid={isFieldValid('email')}
         />
 
         <div>
@@ -111,10 +179,11 @@ export default function SignupPage() {
             name="password"
             value={formData.password}
             onChange={handleChange}
+            onBlur={() => handleBlur('password')}
             placeholder="••••••••"
-            hint="At least 8 characters"
-            required
             autoComplete="new-password"
+            error={touched.password ? fieldErrors.password : undefined}
+            valid={isFieldValid('password')}
           />
           <PasswordStrength password={formData.password} />
         </div>
@@ -125,9 +194,11 @@ export default function SignupPage() {
           name="confirmPassword"
           value={formData.confirmPassword}
           onChange={handleChange}
+          onBlur={() => handleBlur('confirmPassword')}
           placeholder="••••••••"
-          required
           autoComplete="new-password"
+          error={touched.confirmPassword ? fieldErrors.confirmPassword : undefined}
+          valid={isFieldValid('confirmPassword')}
         />
 
         <div className="flex items-start gap-2">

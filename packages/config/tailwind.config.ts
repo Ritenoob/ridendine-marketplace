@@ -55,6 +55,9 @@ const config: Config = {
         'fade-in': 'fadeIn 0.2s ease-out',
         'slide-up': 'slideUp 0.3s ease-out',
         'spin-slow': 'spin 2s linear infinite',
+        'badge-bounce': 'badgeBounce 0.3s ease-out',
+        'fade-in-up': 'fadeInUp 0.4s ease-out both',
+        'fade-in-scroll': 'fadeInScroll 0.5s ease-out both',
       },
       keyframes: {
         fadeIn: {
@@ -63,6 +66,19 @@ const config: Config = {
         },
         slideUp: {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        badgeBounce: {
+          '0%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.3)' },
+          '100%': { transform: 'scale(1)' },
+        },
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        fadeInScroll: {
+          '0%': { opacity: '0', transform: 'translateY(24px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },

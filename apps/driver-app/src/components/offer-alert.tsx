@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Button } from '@ridendine/ui';
+import { Button, type LiveIndicatorStatus } from '@ridendine/ui';
 import { createBrowserClient } from '@ridendine/db';
 
 interface DeliveryOffer {
@@ -17,6 +17,7 @@ interface DeliveryOffer {
 interface OfferAlertProps {
   driverId: string;
   isOnline: boolean;
+  onChannelStatus?: (status: LiveIndicatorStatus) => void;
 }
 
 function mapBroadcastToOffer(payload: Record<string, unknown>): DeliveryOffer | null {
@@ -135,7 +136,7 @@ function OfferStats({
   );
 }
 
-export function OfferAlert({ driverId, isOnline }: OfferAlertProps) {
+export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertProps) {
   const [offer, setOffer] = useState<DeliveryOffer | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [responding, setResponding] = useState(false);

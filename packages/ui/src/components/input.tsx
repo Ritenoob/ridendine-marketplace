@@ -7,10 +7,11 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   label?: string;
   error?: string;
   hint?: string;
+  valid?: boolean;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, label, error, hint, id, ...props }, ref) => {
+  ({ className, type, label, error, hint, valid, id, ...props }, ref) => {
     const inputId = id || React.useId();
 
     return (
@@ -32,7 +33,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             'focus:outline-none focus:ring-2 focus:ring-offset-0',
             error
               ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
-              : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500/20',
+              : valid
+                ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20'
+                : 'border-gray-300 focus:border-brand-500 focus:ring-brand-500/20',
             'disabled:cursor-not-allowed disabled:opacity-50',
             className
           )}

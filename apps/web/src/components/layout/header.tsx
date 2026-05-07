@@ -5,12 +5,23 @@ import Image from 'next/image';
 import { useAuthContext } from '@ridendine/auth';
 import { Button, Avatar } from '@ridendine/ui';
 import { useCart } from '@/contexts/cart-context';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export function Header() {
   const { user, loading } = useAuthContext();
   const { itemCount } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Track previous itemCount to trigger badge bounce only when count increases
+  const prevItemCount = useRef(itemCount);
+  const [badgeKey, setBadgeKey] = useState(0);
+
+  useEffect(() => {
+    if (itemCount > prevItemCount.current) {
+      setBadgeKey((k) => k + 1);
+    }
+    prevItemCount.current = itemCount;
+  }, [itemCount]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
@@ -73,7 +84,10 @@ export function Header() {
                   />
                 </svg>
                 {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#E85D26] text-xs font-bold text-white">
+                  <span
+                    key={badgeKey}
+                    className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#E85D26] text-xs font-bold text-white animate-badge-bounce"
+                  >
                     {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}

@@ -6,54 +6,92 @@ import { useSearchParams } from 'next/navigation';
 import { Button, Input } from '@ridendine/ui';
 import { AuthLayout } from '../../../components/auth/auth-layout';
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+type FieldErrors = { email?: string; password?: string };
+type FieldTouched = { email: boolean; password: boolean };
+
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<FieldTouched>({ email: false, password: false });
+
+  const validateEmail = (value: string): string | undefined => {
+    if (!value) return 'Email is required';
+    if (!isValidEmail(value)) return 'Enter a valid email address';
+    return undefined;
+  };
+
+  const validatePassword = (value: string): string | undefined => {
+    if (!value) return 'Password is required';
+    return undefined;
+  };
+
+  const validateAll = (): FieldErrors => ({
+    email: validateEmail(email),
+    password: validatePassword(password),
+  });
+
+  const handleBlur = (field: keyof FieldTouched) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    if (field === 'email') {
+      setFieldErrors((prev) => ({ ...prev, email: validateEmail(email) }));
+    }
+    if (field === 'password') {
+      setFieldErrors((prev) => ({ ...prev, password: validatePassword(password) }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerError(null);
+
+    const errors = validateAll();
+    const hasErrors = Object.values(errors).some(Boolean);
+
+    setFieldErrors(errors);
+    setTouched({ email: true, password: true });
+
+    if (hasErrors) return;
 
     setLoading(true);
-    setError(null);
 
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Sign in failed');
+        setServerError(data.error || 'Sign in failed');
         return;
       }
 
       const redirect = searchParams.get('redirect');
       window.location.assign(redirect || '/chefs');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed');
+      setServerError(err instanceof Error ? err.message : 'Sign in failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to your account"
-    >
+    <AuthLayout title="Welcome back" subtitle="Sign in to your account">
       <form onSubmit={handleSubmit} className="space-y-5">
-        {error && (
+        {serverError && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {error}
+            {serverError}
           </div>
         )}
 
@@ -61,20 +99,34 @@ export default function LoginPage() {
           label="Email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (touched.email) {
+              setFieldErrors((prev) => ({ ...prev, email: validateEmail(e.target.value) }));
+            }
+          }}
+          onBlur={() => handleBlur('email')}
           placeholder="you@example.com"
-          required
           autoComplete="email"
+          error={touched.email ? fieldErrors.email : undefined}
+          valid={touched.email && !fieldErrors.email && !!email}
         />
 
         <Input
           label="Password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (touched.password) {
+              setFieldErrors((prev) => ({ ...prev, password: validatePassword(e.target.value) }));
+            }
+          }}
+          onBlur={() => handleBlur('password')}
           placeholder="••••••••"
-          required
           autoComplete="current-password"
+          error={touched.password ? fieldErrors.password : undefined}
+          valid={touched.password && !fieldErrors.password && !!password}
         />
 
         <div className="flex items-center justify-between">

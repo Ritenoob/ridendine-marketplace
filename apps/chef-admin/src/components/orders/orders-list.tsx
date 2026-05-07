@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Card, Badge, Button } from '@ridendine/ui';
+import { Card, Badge, Button, LiveIndicator, type LiveIndicatorStatus } from '@ridendine/ui';
 import { chefStorefrontOrdersChannel, createBrowserClient, parseOrdersRealtimeRow } from '@ridendine/db';
 import { OrderToast, type ToastMsg } from './order-toast';
 
@@ -81,6 +81,7 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
   const [error, setError] = useState<string | null>(null);
   const [playSound, setPlaySound] = useState(false);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const [realtimeStatus, setRealtimeStatus] = useState<LiveIndicatorStatus>('connecting');
 
   const addToast = useCallback((message: string) => {
     const id = Date.now().toString();
@@ -130,7 +131,15 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setRealtimeStatus('connected');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          setRealtimeStatus('disconnected');
+        } else {
+          setRealtimeStatus('connecting');
+        }
+      });
 
     return () => {
       db.removeChannel(channel);
@@ -260,7 +269,11 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
         </div>
       )}
 
-      <div className="mt-6 flex gap-2 flex-wrap">
+      <div className="flex items-center justify-between mt-6">
+        <LiveIndicator status={realtimeStatus} />
+      </div>
+
+      <div className="mt-3 flex gap-2 flex-wrap">
         {['all', 'pending', 'accepted', 'preparing', 'ready_for_pickup'].map((status) => (
           <Button
             key={status}
