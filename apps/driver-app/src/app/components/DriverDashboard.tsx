@@ -259,6 +259,26 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
         </div>
       )}
 
+      {/* No active deliveries empty state */}
+      {!currentDelivery && activeDeliveries.length === 0 && (
+        <div className="px-4 pt-4">
+          <div className="rounded-2xl bg-white p-8 shadow-sm border border-gray-100 text-center">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#fff0e8]">
+              <svg className="h-10 w-10 text-[#E85D26]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1.5.5M13 16H3m10 0h3m3-3V9.5a1 1 0 00-.293-.707L16 6H13v10h6z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">No active deliveries</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              New delivery offers will appear here when available
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Waiting state */}
       {isOnline && !currentDelivery && (
         <div className="px-4 pt-4">

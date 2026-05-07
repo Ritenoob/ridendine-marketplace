@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@ridendine/ui';
+import { ReviewsSkeleton } from './reviews-skeleton';
 
 interface Review {
   id: string;
@@ -36,7 +37,7 @@ export function ReviewsList({ storefrontId }: ReviewsListProps) {
     fetchReviews();
   }, [storefrontId]);
 
-  if (loading) return <div className="animate-pulse h-32 bg-gray-100 rounded-lg" />;
+  if (loading) return <ReviewsSkeleton />;
 
   if (reviews.length === 0) {
     return <Card className="p-6 text-center"><p className="text-gray-500">No reviews yet. Be the first!</p></Card>;

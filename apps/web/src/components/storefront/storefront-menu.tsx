@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/contexts/cart-context';
+import { useToast } from '@ridendine/ui';
 
 interface MenuItem {
   id: string;
@@ -50,19 +51,18 @@ function formatPrice(price: number): string {
 
 export function StorefrontMenu({ storefrontId, menuItems }: StorefrontMenuProps) {
   const { addToCart, loading, cart, itemCount } = useCart();
+  const { showToast } = useToast();
   const [addingItemId, setAddingItemId] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState('');
 
   const handleAddToCart = async (item: MenuItem) => {
     setAddingItemId(item.id);
-    setSuccessMessage('');
 
     try {
       await addToCart(storefrontId, item.id, 1);
-      setSuccessMessage(`${item.name} added to cart!`);
-      setTimeout(() => setSuccessMessage(''), 2500);
+      showToast({ message: `${item.name} added to cart!`, variant: 'success' });
     } catch (error) {
       console.error('Failed to add to cart:', error);
+      showToast({ message: 'Failed to add item to cart', variant: 'error' });
     } finally {
       setAddingItemId(null);
     }
@@ -97,16 +97,6 @@ export function StorefrontMenu({ storefrontId, menuItems }: StorefrontMenuProps)
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
-      {/* Toast notification */}
-      {successMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-white shadow-xl animate-fade-in">
-          <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          <span className="text-sm font-medium">{successMessage}</span>
-        </div>
-      )}
-
       {/* Menu Items */}
       <div className="lg:col-span-2 space-y-10">
         {categories.map(([categoryId, { name, items }]) => (
@@ -226,6 +216,28 @@ export function StorefrontMenu({ storefrontId, menuItems }: StorefrontMenuProps)
           storefrontId={storefrontId}
         />
       </div>
+
+      {/* Sticky mobile View Cart bar — visible below lg only */}
+      {itemCount > 0 && (
+        <div
+          data-testid="sticky-mobile-view-cart-bar"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white p-4 shadow-lg lg:hidden"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs text-gray-500">Subtotal</p>
+              <p className="font-semibold text-gray-900">{formatPrice(subtotal)}</p>
+            </div>
+            <Link href={`/cart?storefrontId=${storefrontId}`} className="flex-1">
+              <button className="w-full rounded-xl bg-[#E85D26] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#d44e1e]">
+                View Cart ({itemCount})
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
+      {/* Bottom padding so content is not obscured by the sticky bar */}
+      {itemCount > 0 && <div className="h-24 lg:hidden" />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@ridendine/auth';
 import { CartProvider } from '@/contexts/cart-context';
+import { ToastProvider } from '@ridendine/ui';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -21,7 +22,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-gray-50 font-sans antialiased">
         <AuthProvider>
-          <CartProvider>{children}</CartProvider>
+          <CartProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

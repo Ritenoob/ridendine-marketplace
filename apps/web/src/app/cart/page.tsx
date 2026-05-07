@@ -196,6 +196,28 @@ export default function CartPage() {
           </div>
         )}
       </main>
+
+      {/* Sticky mobile checkout bar — visible below lg only */}
+      {cartItems.length > 0 && (
+        <div
+          data-testid="sticky-mobile-checkout-bar"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white p-4 shadow-lg lg:hidden"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs text-gray-500">Total</p>
+              <p className="font-semibold text-gray-900">${total.toFixed(2)}</p>
+            </div>
+            <Link href={`/checkout?storefrontId=${cart?.storefront_id}`} className="flex-1">
+              <Button className="w-full bg-[#E85D26] text-white hover:bg-[#d44e1e]" size="lg">
+                Proceed to Checkout
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+      {/* Bottom padding so content is not obscured by the sticky bar */}
+      {cartItems.length > 0 && <div className="h-24 lg:hidden" />}
     </div>
   );
 }

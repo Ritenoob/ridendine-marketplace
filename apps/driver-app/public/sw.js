@@ -28,22 +28,43 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Skip non-GET and API requests
-  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
     return;
   }
 
+  // Network-first for API calls — never serve stale API data
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(event.request).catch(() => new Response(JSON.stringify({ error: 'offline' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+    );
+    return;
+  }
+
+  // Cache-first for static assets, offline fallback for navigation
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Cache successful responses
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => {
+          // Offline fallback: serve offline.html for navigation requests
+          if (event.request.mode === 'navigate') {
+            return caches.match('/offline.html');
+          }
+          return new Response('', { status: 408 });
+        });
+    })
   );
 });
 

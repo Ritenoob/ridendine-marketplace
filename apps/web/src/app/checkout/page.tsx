@@ -8,6 +8,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { Header } from '@/components/layout/header';
 import { Button, Card, Input } from '@ridendine/ui';
 import { StripePaymentForm } from '@/components/checkout/stripe-payment-form';
+import { CheckoutSkeleton } from '@/components/checkout/checkout-skeleton';
 import { orderConfirmationPath } from '@/lib/customer-ordering';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -277,13 +278,7 @@ function CheckoutContent() {
   };
 
   if (loading) {
-    return (
-      <main className="container py-8">
-        <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E85D26] border-t-transparent" />
-        </div>
-      </main>
-    );
+    return <CheckoutSkeleton />;
   }
 
   if (!cart || cart.items.length === 0) {
@@ -664,13 +659,7 @@ function CheckoutContent() {
 }
 
 function LoadingFallback() {
-  return (
-    <main className="container py-8">
-      <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E85D26] border-t-transparent" />
-      </div>
-    </main>
-  );
+  return <CheckoutSkeleton />;
 }
 
 export default function CheckoutPage() {

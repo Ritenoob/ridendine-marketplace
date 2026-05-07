@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>You're Offline — RideNDine Driver</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      max-width: 360px;
+      width: 100%;
+    }
+
+    .icon-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #fff0e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+
+    .icon-wrap svg {
+      width: 40px;
+      height: 40px;
+      color: #E85D26;
+    }
+
+    .brand {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 1.25rem;
+    }
+
+    .brand-ride { color: #1a7a6e; }
+    .brand-dine { color: #E85D26; }
+
+    h1 {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      font-size: 0.9375rem;
+      color: #6b7280;
+      line-height: 1.55;
+      margin-bottom: 1.75rem;
+    }
+
+    .retry-btn {
+      display: inline-block;
+      background: #E85D26;
+      color: #ffffff;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.75rem 2rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .retry-btn:hover { background: #d44e1e; }
+    .retry-btn:active { background: #c04519; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-wrap">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <!-- Truck icon -->
+        <rect x="1" y="3" width="15" height="13" rx="1" />
+        <path d="M16 8h4l3 5v4h-7V8z" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+    </div>
+
+    <div class="brand">
+      <span class="brand-ride">RideN</span><span class="brand-dine">Dine</span>
+      <span style="margin-left:.375rem;font-size:.75rem;font-weight:500;color:#9ca3af;
+                   background:#f3f4f6;padding:.1rem .5rem;border-radius:999px;">Driver</span>
+    </div>
+
+    <h1>You're offline</h1>
+    <p>No internet connection detected.<br />Check your signal and try again.</p>
+
+    <button class="retry-btn" onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>
