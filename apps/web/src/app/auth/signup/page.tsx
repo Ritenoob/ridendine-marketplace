@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@ridendine/auth';
 import { Button, Input, PasswordStrength } from '@ridendine/ui';
 import { AuthLayout } from '../../../components/auth/auth-layout';
@@ -54,6 +54,7 @@ function validateAll(formData: FormData): FieldErrors {
 
 export default function SignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signUp, loading, error } = useAuth();
 
   const [formData, setFormData] = useState<FormData>({
@@ -67,6 +68,13 @@ export default function SignupPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<FieldTouched>({});
   const [termsError, setTermsError] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [referralError, setReferralError] = useState('');
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) setReferralCode(ref.toUpperCase());
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -89,6 +97,23 @@ export default function SignupPage() {
       ...prev,
       [field]: validateField(field, formData[field], formData),
     }));
+  };
+
+  const applyReferralCode = async (code: string) => {
+    setReferralError('');
+    try {
+      const res = await fetch('/api/referrals/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, userType: 'customer' }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setReferralError(body?.error?.message ?? 'Invalid referral code');
+      }
+    } catch {
+      // Non-blocking — don't fail signup over referral errors
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,6 +143,9 @@ export default function SignupPage() {
     });
 
     if (result.success) {
+      if (referralCode.trim()) {
+        await applyReferralCode(referralCode.trim());
+      }
       router.push('/chefs');
     }
   };
@@ -200,6 +228,18 @@ export default function SignupPage() {
           error={touched.confirmPassword ? fieldErrors.confirmPassword : undefined}
           valid={isFieldValid('confirmPassword')}
         />
+
+        <div>
+          <Input
+            label="Referral Code (optional)"
+            name="referralCode"
+            value={referralCode}
+            onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+            placeholder="e.g. ABC12345"
+            autoComplete="off"
+            error={referralError || undefined}
+          />
+        </div>
 
         <div className="flex items-start gap-2">
           <input

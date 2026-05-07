@@ -3,10 +3,11 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { KpiTile, PageHeader } from '@ridendine/ui';
 import { EventMetrics } from './components/event-metrics';
 import { TrendCharts } from './components/trend-charts';
+import { PlatformMetricsClient } from './components/platform-metrics-client';
 
 export const dynamic = 'force-dynamic';
 
-async function getAnalyticsData() {
+async function getLiveStats() {
   const supabase = createAdminClient() as unknown as SupabaseClient;
 
   const now = new Date();
@@ -69,51 +70,63 @@ async function getAnalyticsData() {
 }
 
 export default async function AnalyticsPage() {
-  const data = await getAnalyticsData();
+  const stats = await getLiveStats();
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto max-w-7xl space-y-8">
         <PageHeader
           title="Analytics"
-          subtitle="Historical trends, revenue analysis, and operational reporting."
+          subtitle="Platform-wide metrics, revenue analysis, and operational reporting."
         />
 
-        {/* Top KPIs */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiTile
-            label="Total Revenue (30d)"
-            value={`$${data.totalRevenue.toFixed(2)}`}
-            className="border-gray-800 bg-opsPanel"
-          />
-          <KpiTile
-            label="Order Volume (30d)"
-            value={data.totalOrders.toLocaleString()}
-            className="border-gray-800 bg-opsPanel"
-          />
-          <KpiTile
-            label="Completion Rate"
-            value={`${data.completionRate.toFixed(1)}%`}
-            className="border-gray-800 bg-opsPanel"
-          />
-          <KpiTile
-            label="Drivers Online"
-            value={`${data.onlineDrivers}/${data.approvedDrivers}`}
-            className="border-gray-800 bg-opsPanel"
-          />
-        </div>
+        {/* 30-day snapshot KPIs (server-rendered) */}
+        <section>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            30-Day Snapshot
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <KpiTile
+              label="Total Revenue (30d)"
+              value={`$${(stats.totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+              className="border-gray-800 bg-opsPanel"
+            />
+            <KpiTile
+              label="Order Volume (30d)"
+              value={stats.totalOrders.toLocaleString()}
+              className="border-gray-800 bg-opsPanel"
+            />
+            <KpiTile
+              label="Completion Rate"
+              value={`${stats.completionRate.toFixed(1)}%`}
+              className="border-gray-800 bg-opsPanel"
+            />
+            <KpiTile
+              label="Drivers Online"
+              value={`${stats.onlineDrivers}/${stats.approvedDrivers}`}
+              className="border-gray-800 bg-opsPanel"
+            />
+          </div>
+        </section>
 
-        {/* Trend charts — uses existing client component with custom bar charts */}
+        {/* Interactive platform metrics with period selector */}
+        <section>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            Platform Metrics
+          </h2>
+          <PlatformMetricsClient />
+        </section>
+
+        {/* Trend charts */}
         <TrendCharts />
 
         {/* Event metrics */}
         <EventMetrics />
 
-        {/* Scope note */}
         <div className="rounded-lg border border-gray-800 bg-opsPanel p-4">
           <p className="text-xs text-gray-500">
-            This analytics surface reports live operational counts, recent financial totals, and
-            historical trend charts. Cohort analysis and deep forecasting are not yet implemented.
+            Platform metrics report live operational counts, financial totals, and historical
+            trends. Cohort analysis and deep forecasting are not yet implemented.
           </p>
         </div>
       </div>

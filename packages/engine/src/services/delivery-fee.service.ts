@@ -20,6 +20,7 @@ export interface DeliveryFeeBreakdown {
   baseFee: number;
   distanceFee: number;
   smallOrderSurcharge: number;
+  surgeMultiplier: number;
 }
 
 export interface DeliveryFeeResult {
@@ -28,15 +29,17 @@ export interface DeliveryFeeResult {
 }
 
 /**
- * Calculate delivery fee based on distance and order subtotal.
- * Formula: base fee + per-km fee, capped at max, plus small order surcharge.
+ * Calculate delivery fee based on distance, order subtotal, and optional surge.
+ * Surge applies to the distance portion only. Cap applies after surge.
  */
 export function calculateDeliveryFee(
   distanceKm: number,
-  subtotalCents: number
+  subtotalCents: number,
+  surgeMultiplier = 1.0
 ): DeliveryFeeResult {
   const baseFee = DELIVERY_BASE_FEE_CENTS;
-  const distanceFee = Math.round(distanceKm * DELIVERY_PER_KM_CENTS);
+  const rawDistanceFee = Math.round(distanceKm * DELIVERY_PER_KM_CENTS);
+  const distanceFee = Math.round(rawDistanceFee * surgeMultiplier);
   const smallOrderSurcharge =
     subtotalCents < SMALL_ORDER_THRESHOLD_CENTS ? SMALL_ORDER_SURCHARGE_CENTS : 0;
 
@@ -45,7 +48,7 @@ export function calculateDeliveryFee(
 
   return {
     feeCents,
-    breakdown: { baseFee, distanceFee, smallOrderSurcharge },
+    breakdown: { baseFee, distanceFee, smallOrderSurcharge, surgeMultiplier },
   };
 }
 

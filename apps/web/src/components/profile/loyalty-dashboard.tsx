@@ -1,0 +1,216 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import type { LoyaltyBalance, LoyaltyTier } from '@ridendine/engine';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface LoyaltyTransaction {
+  id: string;
+  points: number;
+  type: 'earn' | 'redeem' | 'bonus' | 'expire';
+  description: string | null;
+  order_id: string | null;
+  created_at: string;
+}
+
+interface LoyaltyData extends LoyaltyBalance {
+  recentTransactions: LoyaltyTransaction[];
+}
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const TIER_CONFIG: Record<LoyaltyTier, { label: string; color: string; bg: string; emoji: string }> = {
+  bronze: { label: 'Bronze', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', emoji: '🥉' },
+  silver: { label: 'Silver', color: 'text-slate-600', bg: 'bg-slate-50 border-slate-200', emoji: '🥈' },
+  gold: { label: 'Gold', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200', emoji: '🥇' },
+};
+
+const TIER_MULTIPLIER: Record<LoyaltyTier, string> = {
+  bronze: '1x',
+  silver: '1.25x',
+  gold: '1.5x',
+};
+
+const TX_TYPE_LABELS: Record<string, string> = {
+  earn: 'Earned',
+  redeem: 'Redeemed',
+  bonus: 'Bonus',
+  expire: 'Expired',
+};
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function TierBadge({ tier }: { tier: LoyaltyTier }) {
+  const cfg = TIER_CONFIG[tier];
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm font-semibold ${cfg.bg} ${cfg.color}`}
+    >
+      {cfg.emoji} {cfg.label}
+    </span>
+  );
+}
+
+function ProgressBar({ current, max, label }: { current: number; max: number; label: string }) {
+  const pct = Math.min(100, Math.round((current / max) * 100));
+  return (
+    <div>
+      <div className="mb-1 flex justify-between text-xs text-slate-500">
+        <span>{label}</span>
+        <span>{pct}%</span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+        <div
+          className="h-full rounded-full bg-[#E85D26] transition-all"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function TransactionRow({ tx }: { tx: LoyaltyTransaction }) {
+  const isPositive = tx.points > 0;
+  const date = new Date(tx.created_at).toLocaleDateString('en-CA', {
+    month: 'short',
+    day: 'numeric',
+  });
+
+  return (
+    <div className="flex items-center justify-between border-t border-slate-100 py-3">
+      <div>
+        <p className="text-sm text-slate-700">{tx.description ?? TX_TYPE_LABELS[tx.type]}</p>
+        <p className="text-xs text-slate-400">{date}</p>
+      </div>
+      <span
+        className={`text-sm font-semibold ${isPositive ? 'text-green-600' : 'text-red-500'}`}
+      >
+        {isPositive ? '+' : ''}{tx.points} pts
+      </span>
+    </div>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4">
+      <div className="h-28 rounded-lg bg-slate-100" />
+      <div className="h-16 rounded-lg bg-slate-100" />
+      <div className="h-40 rounded-lg bg-slate-100" />
+    </div>
+  );
+}
+
+function ErrorMessage({ message }: { message: string }) {
+  return (
+    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+      {message}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
+export function LoyaltyDashboard() {
+  const [data, setData] = useState<LoyaltyData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/loyalty');
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error?.message ?? 'Failed to load loyalty data');
+      setData(body.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load loyalty data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (loading) return <LoadingSkeleton />;
+  if (error) return <ErrorMessage message={error} />;
+  if (!data) return null;
+
+  const tierCfg = TIER_CONFIG[data.tier];
+  const multiplier = TIER_MULTIPLIER[data.tier];
+  const discountValue = (data.pointsBalance * 0.10).toFixed(2);
+
+  return (
+    <div className="space-y-6">
+      {/* Header card */}
+      <div className={`rounded-lg border p-6 shadow-sm ${tierCfg.bg}`}>
+        <div className="flex items-start justify-between">
+          <div>
+            <TierBadge tier={data.tier} />
+            <p className="mt-3 text-4xl font-bold text-slate-800">
+              {data.pointsBalance.toLocaleString()}
+              <span className="ml-2 text-base font-normal text-slate-500">points</span>
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              Worth <span className="font-semibold text-[#E85D26]">${discountValue}</span> off your next order
+            </p>
+          </div>
+          <div className="text-right text-sm text-slate-500">
+            <p className="font-medium">{data.lifetimePoints.toLocaleString()}</p>
+            <p>lifetime pts</p>
+          </div>
+        </div>
+
+        <div className="mt-4 text-xs text-slate-500">
+          You earn {multiplier} points per $1 spent as a {tierCfg.label} member
+        </div>
+      </div>
+
+      {/* Progress to next tier */}
+      {data.nextTierPoints !== null && (
+        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="mb-3 text-sm font-medium text-slate-700">Progress to Next Tier</p>
+          <ProgressBar
+            current={data.lifetimePoints}
+            max={data.lifetimePoints + data.nextTierPoints}
+            label={`${data.nextTierPoints} pts to next tier`}
+          />
+        </div>
+      )}
+
+      {data.tier === 'gold' && (
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-700">
+          You have reached Gold status — the highest tier! Enjoy 1.5x points on every order.
+        </div>
+      )}
+
+      {/* Recent transactions */}
+      <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 px-4 py-3">
+          <h4 className="text-sm font-semibold text-slate-700">Recent Activity</h4>
+        </div>
+        <div className="px-4">
+          {data.recentTransactions.length === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-400">
+              No transactions yet. Place an order to start earning points!
+            </p>
+          ) : (
+            data.recentTransactions.map((tx) => (
+              <TransactionRow key={tx.id} tx={tx} />
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

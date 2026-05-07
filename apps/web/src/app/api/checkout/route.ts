@@ -8,12 +8,15 @@ import {
   getStripeClient,
   evaluateCheckoutRisk,
   assertStripeConfigured,
+  getOrCreateStripeCustomer,
   BASE_DELIVERY_FEE,
   SERVICE_FEE_PERCENT,
   HST_RATE,
   isWithinDeliveryZone,
   calculateDeliveryFee,
   estimateDistance,
+  getSurgeMultiplier,
+  createLoyaltyService,
   type Coordinates,
 } from '@ridendine/engine';
 import { checkoutSchema } from '@ridendine/validation';
@@ -69,6 +72,8 @@ interface CheckoutRequestInput {
   clientServiceFee?: number;
   clientTax?: number;
   clientTotal?: number;
+  saveCard?: boolean;
+  savedPaymentMethodId?: string | null;
 }
 
 interface CheckoutResponsePayload {
@@ -84,6 +89,8 @@ interface CheckoutResponsePayload {
     tip: number;
     discount: number;
     deliveryDistanceKm?: number;
+    surgeMultiplier?: number;
+    surgeActive?: boolean;
   };
 }
 
@@ -143,12 +150,27 @@ function computeServerQuote(
   };
 }
 
+async function resolveServiceAreaSurge(adminClient: SupabaseClient): Promise<number> {
+  try {
+    const { data } = await (adminClient as any)
+      .from('service_areas')
+      .select('id, surge_multiplier')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (!data?.id) return 1.0;
+    return getSurgeMultiplier(data.id, adminClient as any);
+  } catch {
+    return 1.0;
+  }
+}
+
 async function resolveDeliveryFeeCents(
   adminClient: SupabaseClient,
   deliveryAddressId: string,
   storefrontId: string,
   subtotalCents: number
-): Promise<{ feeCents: number; distanceKm: number | null }> {
+): Promise<{ feeCents: number; distanceKm: number | null; surgeMultiplier: number }> {
   try {
     const [addressResult, kitchenResult] = await Promise.all([
       (adminClient as any)
@@ -167,16 +189,21 @@ async function resolveDeliveryFeeCents(
     const kitchen = kitchenResult.data as { lat: number | null; lng: number | null } | null;
 
     if (!addr?.lat || !addr?.lng || !kitchen?.lat || !kitchen?.lng) {
-      return { feeCents: calculateDeliveryFee(0, subtotalCents).feeCents, distanceKm: null };
+      return { feeCents: calculateDeliveryFee(0, subtotalCents).feeCents, distanceKm: null, surgeMultiplier: 1.0 };
     }
 
     const customerCoords: Coordinates = { latitude: addr.lat, longitude: addr.lng };
     const chefCoords: Coordinates = { latitude: kitchen.lat, longitude: kitchen.lng };
     const distanceKm = estimateDistance(customerCoords, chefCoords);
+    const surgeMultiplier = await resolveServiceAreaSurge(adminClient);
 
-    return { feeCents: calculateDeliveryFee(distanceKm, subtotalCents).feeCents, distanceKm };
+    return {
+      feeCents: calculateDeliveryFee(distanceKm, subtotalCents, surgeMultiplier).feeCents,
+      distanceKm,
+      surgeMultiplier,
+    };
   } catch {
-    return { feeCents: calculateDeliveryFee(0, subtotalCents).feeCents, distanceKm: null };
+    return { feeCents: calculateDeliveryFee(0, subtotalCents).feeCents, distanceKm: null, surgeMultiplier: 1.0 };
   }
 }
 
@@ -262,6 +289,8 @@ export async function POST(request: Request): Promise<Response> {
       clientServiceFee,
       clientTax,
       clientTotal,
+      saveCard = false,
+      savedPaymentMethodId = null,
     } = validationResult.data as CheckoutRequestInput;
 
     // Validate scheduled_for if provided
@@ -342,9 +371,12 @@ export async function POST(request: Request): Promise<Response> {
       }
     }
 
-    // Calculate distance-based delivery fee
-    const { feeCents: dynamicDeliveryFeeCents, distanceKm: deliveryDistanceKm } =
-      await resolveDeliveryFeeCents(adminClient, deliveryAddressId, storefrontId, subtotalCents);
+    // Calculate distance-based delivery fee with surge multiplier
+    const {
+      feeCents: dynamicDeliveryFeeCents,
+      distanceKm: deliveryDistanceKm,
+      surgeMultiplier: deliverySurgeMultiplier,
+    } = await resolveDeliveryFeeCents(adminClient, deliveryAddressId, storefrontId, subtotalCents);
 
     const serverQuoteNoPromo = computeServerQuote(
       authoritativeSubtotal,
@@ -562,22 +594,46 @@ export async function POST(request: Request): Promise<Response> {
       // This ensures delivery is only created for orders that proceed past payment
       const stripe = getStripeClient();
       const totalCents = Math.round(serverQuote.total * 100);
-      const paymentIntent = await stripe.paymentIntents.create(
-        {
-          amount: totalCents,
-          currency: 'cad',
-          automatic_payment_methods: { enabled: true },
-          metadata: {
-            order_id: order.id,
-            order_number: order.order_number,
-            customer_id: customerContext.customerId,
-            storefront_id: storefrontId,
-            ...(promoCodeId && { promo_code_id: promoCodeId }),
-          },
+
+      // Resolve Stripe customer for saved payment method support
+      const customerRecord = await (adminClient as any)
+        .from('customers')
+        .select('email, first_name, last_name')
+        .eq('id', customerContext.customerId)
+        .maybeSingle();
+      const stripeCustomerId = await getOrCreateStripeCustomer({
+        ridendineCustomerId: customerContext.customerId,
+        email: customerRecord.data?.email ?? '',
+        name:
+          `${customerRecord.data?.first_name ?? ''} ${customerRecord.data?.last_name ?? ''}`.trim() ||
+          undefined,
+      }).catch(() => null);
+
+      const piParams: Record<string, unknown> = {
+        amount: totalCents,
+        currency: 'cad',
+        metadata: {
+          order_id: order.id,
+          order_number: order.order_number,
+          customer_id: customerContext.customerId,
+          storefront_id: storefrontId,
+          ...(promoCodeId && { promo_code_id: promoCodeId }),
         },
-        {
-          idempotencyKey: `checkout:${customerContext.customerId}:${idempotencyKey}`,
+      };
+      if (stripeCustomerId) piParams.customer = stripeCustomerId;
+      if (savedPaymentMethodId) {
+        piParams.payment_method = savedPaymentMethodId;
+        piParams.confirm = true;
+      } else {
+        piParams.automatic_payment_methods = { enabled: true };
+        if (saveCard && stripeCustomerId) {
+          piParams.setup_future_usage = 'off_session';
         }
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create(
+        piParams as Parameters<typeof stripe.paymentIntents.create>[0],
+        { idempotencyKey: `checkout:${customerContext.customerId}:${idempotencyKey}` }
       );
 
       // Authorize payment via engine
@@ -598,6 +654,12 @@ export async function POST(request: Request): Promise<Response> {
       // Clear the cart
       await clearCart(adminClient, cart.id);
 
+      // Fire-and-forget: award loyalty points (does not block response)
+      const totalCentsForLoyalty = Math.round(serverQuote.subtotal * 100);
+      createLoyaltyService(adminClient as any)
+        .earnPoints(customerContext.customerId, order.id, totalCentsForLoyalty)
+        .catch((err) => console.error('[loyalty] earnPoints failed:', err));
+
       const responsePayload: CheckoutResponsePayload = {
         clientSecret: paymentIntent.client_secret,
         orderId: order.id,
@@ -613,6 +675,8 @@ export async function POST(request: Request): Promise<Response> {
           ...(deliveryDistanceKm !== null && {
             deliveryDistanceKm: Math.round(deliveryDistanceKm * 10) / 10,
           }),
+          surgeMultiplier: deliverySurgeMultiplier,
+          surgeActive: deliverySurgeMultiplier > 1.0,
         },
       };
 

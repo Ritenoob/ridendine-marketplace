@@ -48,3 +48,41 @@ export function getStripeClient(): Stripe {
 export function __resetStripeClientForTests(): void {
   stripeSingleton = null;
 }
+
+/**
+ * Get or create a Stripe Customer for a Ridendine customer.
+ * Searches by metadata ridendine_id first to avoid duplicates.
+ * Returns the Stripe customer ID string, or null if Stripe is not configured.
+ */
+export async function getOrCreateStripeCustomer(params: {
+  ridendineCustomerId: string;
+  email: string;
+  name?: string;
+}): Promise<string | null> {
+  try {
+    assertStripeConfigured();
+  } catch {
+    return null;
+  }
+
+  const stripe = getStripeClient();
+
+  // Search for existing customer by ridendine_id metadata
+  const existing = await stripe.customers.search({
+    query: `metadata['ridendine_id']:'${params.ridendineCustomerId}'`,
+    limit: 1,
+  });
+
+  if (existing.data.length > 0) {
+    return existing.data[0].id;
+  }
+
+  // Create new Stripe customer
+  const customer = await stripe.customers.create({
+    email: params.email,
+    name: params.name,
+    metadata: { ridendine_id: params.ridendineCustomerId },
+  });
+
+  return customer.id;
+}

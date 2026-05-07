@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@ridendine/auth';
 import { Header } from '@/components/layout/header';
 import { Button, Card, Input } from '@ridendine/ui';
+import { SavedCards } from '@/components/profile/saved-cards';
 
 export default function SettingsPage() {
   const router = useRouter();

@@ -58,6 +58,8 @@ interface OrderBreakdown {
   tip: number;
   discount: number;
   deliveryDistanceKm?: number;
+  surgeMultiplier?: number;
+  surgeActive?: boolean;
 }
 
 function mapCheckoutError(code?: string, fallback?: string): string {
@@ -597,6 +599,14 @@ function CheckoutContent() {
                       ${Number(breakdown.deliveryFee).toFixed(2)}
                     </span>
                   </div>
+                  {breakdown.surgeActive && breakdown.surgeMultiplier !== undefined && (
+                    <div className="flex items-center gap-2 rounded-lg bg-orange-50 border border-orange-200 px-3 py-2 text-xs">
+                      <span className="text-orange-600 font-medium">High demand</span>
+                      <span className="text-orange-500">
+                        Busy area — delivery fee is {breakdown.surgeMultiplier.toFixed(2)}x higher than usual
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Service fee</span>
                     <span className="text-gray-900">

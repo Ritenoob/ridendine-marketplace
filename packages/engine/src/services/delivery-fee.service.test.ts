@@ -102,6 +102,48 @@ describe('calculateDeliveryFee', () => {
 });
 
 // ==========================================
+// calculateDeliveryFee with surgeMultiplier
+// ==========================================
+
+describe('calculateDeliveryFee with surgeMultiplier', () => {
+  it('applies no change when surgeMultiplier is 1.0', () => {
+    const base = calculateDeliveryFee(2, 2000);
+    const surged = calculateDeliveryFee(2, 2000, 1.0);
+    expect(surged.feeCents).toBe(base.feeCents);
+  });
+
+  it('applies surge to distance fee only, not base fee', () => {
+    // 2km: distanceFee = 100, baseFee = 399
+    // 1.5x surge on distanceFee: 100 * 1.5 = 150 → total = 399 + 150 = 549
+    const result = calculateDeliveryFee(2, 2000, 1.5);
+    expect(result.feeCents).toBe(549);
+    expect(result.breakdown.surgeMultiplier).toBe(1.5);
+  });
+
+  it('applies 2.0x surge to distance fee', () => {
+    // 2km: distanceFee = 100 * 2.0 = 200, baseFee = 399 → 599
+    const result = calculateDeliveryFee(2, 2000, 2.0);
+    expect(result.feeCents).toBe(599);
+  });
+
+  it('cap still applies after surge', () => {
+    // 50km with 2.0x surge would be massive — still capped at 999
+    const result = calculateDeliveryFee(50, 2000, 2.0);
+    expect(result.feeCents).toBe(999);
+  });
+
+  it('defaults to 1.0x surge when not provided', () => {
+    const result = calculateDeliveryFee(2, 2000);
+    expect(result.breakdown.surgeMultiplier).toBe(1.0);
+  });
+
+  it('includes surgeMultiplier in breakdown', () => {
+    const result = calculateDeliveryFee(2, 2000, 1.25);
+    expect(result.breakdown).toHaveProperty('surgeMultiplier', 1.25);
+  });
+});
+
+// ==========================================
 // estimateDistance (Haversine × 1.3 road factor)
 // ==========================================
 

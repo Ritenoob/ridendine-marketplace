@@ -56,6 +56,21 @@ export * from './orchestrators/risk.engine';
 // Analytics services
 export * from './services/ops-analytics.service';
 
+// Loyalty Program
+export {
+  LoyaltyService,
+  createLoyaltyService,
+  computeTier,
+  computeMultiplier,
+  computePointsEarned,
+  TIER_THRESHOLDS,
+  type LoyaltyTier,
+  type LoyaltyAccount,
+  type LoyaltyBalance,
+  type EarnResult,
+  type RedeemResult,
+} from './services/loyalty.service';
+
 // Geocoding and delivery zone validation
 export {
   geocodeAddress,
@@ -77,6 +92,20 @@ export {
   type DeliveryFeeBreakdown,
 } from './services/delivery-fee.service';
 
+// Surge / demand-based pricing
+export {
+  getSurgeMultiplier,
+  calculateSurgeMultiplier,
+  SURGE_CAP,
+  SURGE_TIER_NORMAL,
+  SURGE_TIER_BUSY,
+  SURGE_TIER_VERY_BUSY,
+  SURGE_TIER_PEAK,
+  RATIO_BUSY,
+  RATIO_VERY_BUSY,
+  RATIO_PEAK,
+} from './services/surge-pricing.service';
+
 // Legacy services (for backwards compatibility)
 export * from './services/orders.service';
 export * from './services/chefs.service';
@@ -90,6 +119,7 @@ export {
   getStripeClient,
   assertStripeConfigured,
   STRIPE_API_VERSION,
+  getOrCreateStripeCustomer,
 } from './services/stripe.service';
 
 export {
@@ -129,6 +159,18 @@ export {
   createTaxConfigService,
   type TaxRates,
 } from './services/tax-config.service';
+
+// Referral system
+export {
+  ReferralService,
+  createReferralService,
+  REFERRAL_REWARD_CENTS,
+  type ReferralCode,
+  type ReferralSignup,
+  type ReferralStats,
+  type ReferralSignupSummary,
+  type CompleteReferralResult,
+} from './services/referral.service';
 
 // Constants
 export * from './constants';
