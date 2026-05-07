@@ -74,7 +74,7 @@ export async function getOrCreateStripeCustomer(params: {
   });
 
   if (existing.data.length > 0) {
-    return existing.data[0].id;
+    return existing.data[0]!.id;
   }
 
   // Create new Stripe customer
