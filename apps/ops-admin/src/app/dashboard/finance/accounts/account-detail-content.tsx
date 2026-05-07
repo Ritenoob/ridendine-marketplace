@@ -23,8 +23,8 @@ export async function FinanceAccountDetailContent({ type, id }: { type: AccountD
 
   let title = id;
   if (type === 'chefs') {
-    const { data: sf } = await admin.from('chef_storefronts').select('name').eq('id', id).maybeSingle();
-    title = (sf?.name as string) ?? id;
+    const { data: chef } = await admin.from('chef_profiles').select('display_name').eq('id', id).maybeSingle();
+    title = (chef?.display_name as string) ?? id;
   } else {
     const { data: d } = await admin.from('drivers').select('first_name, last_name').eq('id', id).maybeSingle();
     title =
@@ -34,7 +34,7 @@ export async function FinanceAccountDetailContent({ type, id }: { type: AccountD
   const { data: entries, error: ledErr } = await admin
     .from('ledger_entries')
     .select('id, created_at, entry_type, amount_cents, description, order_id, metadata')
-    .eq('entity_type', type === 'chefs' ? 'storefront' : 'driver')
+    .eq('entity_type', type === 'chefs' ? 'chef' : 'driver')
     .eq('entity_id', id)
     .order('created_at', { ascending: false })
     .limit(100);

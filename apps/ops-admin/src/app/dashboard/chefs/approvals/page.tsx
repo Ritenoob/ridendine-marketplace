@@ -34,7 +34,7 @@ export default function ChefApprovalsPage() {
     try {
       const response = await fetch('/api/chefs?status=pending');
       const result = await response.json();
-      setPendingChefs(result.data || []);
+      setPendingChefs(Array.isArray(result.data) ? result.data : result.data?.items ?? []);
     } catch (error) {
       console.error('Failed to fetch pending chefs:', error);
     } finally {

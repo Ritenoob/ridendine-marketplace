@@ -39,6 +39,16 @@ type CustomerStatsRow = {
   created_at: string;
 };
 
+type CustomerAddressRow = {
+  id: string;
+  label: string;
+  street_address: string | null;
+  city: string;
+  state: string;
+  postal_code: string;
+  is_default: boolean;
+};
+
 export async function getCustomerByUserId(
   client: SupabaseClient,
   userId: string
@@ -146,7 +156,7 @@ export async function getOpsCustomerDetail(
   const [addressesResult, recentOrdersResult, allOrdersResult] = await Promise.all([
     client
       .from('customer_addresses')
-      .select('id, label, address_line1, address_line2, city, state, postal_code, is_default')
+      .select('id, label, street_address, city, state, postal_code, is_default')
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false }),
     client
@@ -169,7 +179,11 @@ export async function getOpsCustomerDetail(
 
   return {
     ...(customer as Customer),
-    addresses: (addressesResult.data ?? []) as OpsCustomerDetail['addresses'],
+    addresses: ((addressesResult.data ?? []) as CustomerAddressRow[]).map((address) => ({
+      ...address,
+      address_line1: address.street_address ?? '',
+      address_line2: null,
+    })) as OpsCustomerDetail['addresses'],
     recent_orders: (recentOrdersResult.data ?? []) as OpsCustomerDetail['recent_orders'],
     stats: {
       totalOrders: allOrders.length,

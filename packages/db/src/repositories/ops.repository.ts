@@ -417,9 +417,9 @@ export async function getDeliveryInterventionDetailReadModel(
     await Promise.all([
       (client.from('assignment_attempts').select('*').eq('delivery_id', deliveryId).order('offered_at', { ascending: false }) as any),
       (client.from('order_exceptions').select('id, exception_type, status, created_at').eq('delivery_id', deliveryId).order('created_at', { ascending: false }) as any),
-      (client.from('admin_notes').select('id, content, created_at, created_by').eq('entity_type', 'delivery').eq('entity_id', deliveryId).order('created_at', { ascending: false }) as any),
+      (client.from('admin_notes').select('id, note, created_at, created_by').eq('entity_type', 'delivery').eq('entity_id', deliveryId).order('created_at', { ascending: false }) as any),
       (client.from('delivery_tracking_events').select('id, lat, lng, recorded_at').eq('delivery_id', deliveryId).order('recorded_at', { ascending: false }).limit(25) as any),
-      (client.from('delivery_events').select('id, event_type, created_at, data').eq('delivery_id', deliveryId).order('created_at', { ascending: false }).limit(25) as any),
+      (client.from('delivery_events').select('id, event_type, created_at, event_data').eq('delivery_id', deliveryId).order('created_at', { ascending: false }).limit(25) as any),
       (client.from('refund_cases').select('approved_amount_cents, requested_amount_cents').eq('order_id', delivery.order?.id ?? '').in('status', ['pending', 'approved', 'processing', 'completed']) as any),
       (client.from('payout_adjustments').select('id').eq('order_id', delivery.order?.id ?? '').eq('status', 'pending') as any),
     ]);
@@ -501,7 +501,7 @@ export async function getDeliveryInterventionDetailReadModel(
         id: event.id,
         type: event.event_type,
         timestamp: event.created_at,
-        note: event.data?.notes ?? null,
+        note: event.event_data?.notes ?? event.event_data?.note ?? null,
       })),
       ...(exceptionsResult.data ?? []).map((exception: AnyRow) => ({
         id: exception.id,
@@ -512,7 +512,7 @@ export async function getDeliveryInterventionDetailReadModel(
     ].sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)),
     opsNotes: (notesResult.data ?? []).map((note: AnyRow) => ({
       id: note.id,
-      content: note.content,
+      content: note.note,
       createdAt: note.created_at,
       createdBy: note.created_by,
     })),

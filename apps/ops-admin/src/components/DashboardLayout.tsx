@@ -123,11 +123,14 @@ const QUICK_CREATES = [
 
 function useGroupOpen(groupId: string, defaultOpen = false) {
   const key = `opsadmin.nav.${groupId}`;
-  const [isOpen, setIsOpen] = useState(() => {
-    if (typeof window === 'undefined') return defaultOpen;
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  useEffect(() => {
     const stored = localStorage.getItem(key);
-    return stored !== null ? stored === 'true' : defaultOpen;
-  });
+    if (stored !== null && !defaultOpen) {
+      setIsOpen(stored === 'true');
+    }
+  }, [defaultOpen, key]);
 
   const toggle = useCallback(() => {
     setIsOpen((prev) => {
@@ -145,7 +148,6 @@ function NavGroupItem({ group, pathname, collapsed }: {
   pathname: string;
   collapsed: boolean;
 }) {
-  const [isOpen, toggle] = useGroupOpen(group.id, group.defaultOpen);
   const { Icon } = group;
 
   const isGroupActive = group.items.some(
@@ -153,6 +155,7 @@ function NavGroupItem({ group, pathname, collapsed }: {
       pathname === item.href ||
       (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'))
   );
+  const [isOpen, toggle] = useGroupOpen(group.id, Boolean(group.defaultOpen || isGroupActive));
 
   if (collapsed) {
     return (
@@ -177,6 +180,7 @@ function NavGroupItem({ group, pathname, collapsed }: {
     <div className="mb-1">
       <button
         onClick={toggle}
+        aria-expanded={isOpen}
         className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-widest transition-colors ${
           isGroupActive ? 'text-gray-300' : 'text-gray-600 hover:text-gray-400'
         }`}

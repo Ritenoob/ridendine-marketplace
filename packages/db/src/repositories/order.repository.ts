@@ -204,7 +204,7 @@ export async function getOpsOrderDetail(
         chef:chef_profiles (id, display_name, phone)
       ),
       delivery_address:customer_addresses (
-        address_line1, address_line2, city, state, postal_code
+        id, label, street_address, city, state, postal_code, country, lat, lng, delivery_instructions, is_default
       ),
       items:order_items (
         id, quantity, unit_price, total_price,
@@ -223,7 +223,24 @@ export async function getOpsOrderDetail(
     throw error;
   }
 
-  return data as unknown as OpsOrderDetail;
+  const order = data as unknown as OpsOrderDetail & {
+    delivery_address:
+      | (OpsOrderDetail['delivery_address'] & { street_address?: string | null })
+      | null;
+  };
+
+  if (order.delivery_address) {
+    order.delivery_address = {
+      ...order.delivery_address,
+      address_line1:
+        order.delivery_address.address_line1 ??
+        order.delivery_address.street_address ??
+        '',
+      address_line2: order.delivery_address.address_line2 ?? null,
+    };
+  }
+
+  return order;
 }
 
 export async function createOrder(

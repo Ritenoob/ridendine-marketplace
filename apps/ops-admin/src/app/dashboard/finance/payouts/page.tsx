@@ -2,8 +2,7 @@ import Link from 'next/link';
 import { createAdminClient } from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getOpsActorContext, hasRequiredRole } from '@/lib/engine';
-import { PageHeader, DataTable, EmptyState, StatusBadge } from '@ridendine/ui';
-import type { ColumnDef } from '@ridendine/ui';
+import { PageHeader, EmptyState, StatusBadge } from '@ridendine/ui';
 import { FinanceSubnav } from '../_components/FinanceSubnav';
 import { FinanceAccessDenied } from '../_components/FinanceAccessDenied';
 import { FINANCE_PAGE_ROLES } from '../_lib/roles';
@@ -22,75 +21,17 @@ type PayoutRun = {
   created_at: string;
 };
 
+function formatCents(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
 function getPayoutStatus(status: string): 'success' | 'danger' | 'warning' | 'active' | 'idle' {
   if (status === 'completed') return 'success';
   if (status === 'failed') return 'danger';
-  if (status === 'partial') return 'warning';
-  if (status === 'running') return 'active';
+  if (status === 'processing') return 'active';
+  if (status === 'pending') return 'warning';
   return 'idle';
 }
-
-const columns: ColumnDef<PayoutRun>[] = [
-  {
-    key: 'created_at',
-    header: 'Created',
-    sortable: true,
-    cell: (row) => (
-      <span className="whitespace-nowrap text-xs text-gray-300">
-        {new Date(row.created_at).toLocaleString()}
-      </span>
-    ),
-  },
-  {
-    key: 'run_type',
-    header: 'Type',
-    sortable: true,
-    cell: (row) => <span className="font-medium text-gray-200">{row.run_type}</span>,
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    sortable: true,
-    cell: (row) => (
-      <StatusBadge status={getPayoutStatus(row.status)} label={row.status} />
-    ),
-  },
-  {
-    key: 'period_start',
-    header: 'Period',
-    cell: (row) => (
-      <span className="text-xs text-gray-400">
-        {row.period_start?.slice(0, 10)} → {row.period_end?.slice(0, 10)}
-      </span>
-    ),
-  },
-  {
-    key: 'successful_payouts',
-    header: 'Success / Fail',
-    sortable: true,
-    cell: (row) => (
-      <span className="text-sm text-gray-300">
-        <span className="text-emerald-400">{row.successful_payouts}</span>
-        {' / '}
-        <span className={row.failed_payouts > 0 ? 'text-red-400' : 'text-gray-500'}>
-          {row.failed_payouts}
-        </span>
-      </span>
-    ),
-  },
-  {
-    key: 'id',
-    header: '',
-    cell: (row) => (
-      <Link
-        href={`/dashboard/finance/payouts/${row.id}`}
-        className="text-xs text-[#E85D26] hover:underline"
-      >
-        Detail
-      </Link>
-    ),
-  },
-];
 
 export default async function FinancePayoutRunsPage() {
   const actor = await getOpsActorContext();
@@ -128,18 +69,62 @@ export default async function FinancePayoutRunsPage() {
                 {(runs ?? []).length}
               </span>
             </div>
-            <DataTable
-              columns={columns}
-              data={(runs ?? []) as PayoutRun[]}
-              keyExtractor={(r) => r.id}
-              emptyState={
+            {(runs ?? []).length === 0 ? (
                 <EmptyState
                   title="No payout runs yet"
                   description="Payout runs will appear here once triggered."
                 />
-              }
-              className="border-gray-800 bg-transparent"
-            />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-800 text-xs uppercase tracking-wide text-gray-500">
+                      <th className="py-3 pr-4">Created</th>
+                      <th className="py-3 pr-4">Type</th>
+                      <th className="py-3 pr-4">Status</th>
+                      <th className="py-3 pr-4">Period</th>
+                      <th className="py-3 pr-4">Amount</th>
+                      <th className="py-3 pr-4">Success / Fail</th>
+                      <th className="py-3" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {((runs ?? []) as PayoutRun[]).map((run) => (
+                      <tr key={run.id} className="border-b border-gray-900 text-gray-300">
+                        <td className="py-3 pr-4 whitespace-nowrap text-xs">
+                          {new Date(run.created_at).toLocaleString()}
+                        </td>
+                        <td className="py-3 pr-4 font-medium text-gray-200">{run.run_type}</td>
+                        <td className="py-3 pr-4">
+                          <StatusBadge status={getPayoutStatus(run.status)} label={run.status} />
+                        </td>
+                        <td className="py-3 pr-4 text-xs text-gray-400">
+                          {run.period_start?.slice(0, 10)} - {run.period_end?.slice(0, 10)}
+                        </td>
+                        <td className="py-3 pr-4 font-mono text-emerald-300">
+                          {formatCents(Number(run.total_amount))}
+                        </td>
+                        <td className="py-3 pr-4">
+                          <span className="text-emerald-400">{run.successful_payouts}</span>
+                          {' / '}
+                          <span className={run.failed_payouts > 0 ? 'text-red-400' : 'text-gray-500'}>
+                            {run.failed_payouts}
+                          </span>
+                        </td>
+                        <td className="py-3 text-right">
+                          <Link
+                            href={`/dashboard/finance/payouts/${run.id}`}
+                            className="text-xs text-[#E85D26] hover:underline"
+                          >
+                            Detail
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

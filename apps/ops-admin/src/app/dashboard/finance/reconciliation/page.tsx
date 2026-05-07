@@ -1,8 +1,7 @@
 import { createAdminClient } from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getOpsActorContext, hasRequiredRole } from '@/lib/engine';
-import { PageHeader, StatusBadge, DataTable, EmptyState } from '@ridendine/ui';
-import type { ColumnDef } from '@ridendine/ui';
+import { PageHeader, StatusBadge, EmptyState } from '@ridendine/ui';
 import { FinanceSubnav } from '../_components/FinanceSubnav';
 import { FinanceAccessDenied } from '../_components/FinanceAccessDenied';
 import { FINANCE_PAGE_ROLES } from '../_lib/roles';
@@ -22,65 +21,9 @@ type ReconciliationRow = {
 function getReconciliationStatus(status: string): 'success' | 'danger' | 'warning' | 'idle' {
   if (status === 'matched') return 'success';
   if (status === 'unmatched') return 'danger';
-  if (status === 'partial') return 'warning';
+  if (status === 'disputed') return 'warning';
   return 'idle';
 }
-
-const columns: ColumnDef<ReconciliationRow>[] = [
-  {
-    key: 'created_at',
-    header: 'Created',
-    sortable: true,
-    cell: (row) => (
-      <span className="whitespace-nowrap text-xs text-gray-300">
-        {new Date(row.created_at).toLocaleString()}
-      </span>
-    ),
-  },
-  {
-    key: 'stripe_event_id',
-    header: 'Stripe Event',
-    cell: (row) => (
-      <span className="font-mono text-xs text-gray-400">
-        {row.stripe_event_id?.slice(0, 24)}…
-      </span>
-    ),
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    sortable: true,
-    cell: (row) => (
-      <StatusBadge status={getReconciliationStatus(row.status)} label={row.status} />
-    ),
-  },
-  {
-    key: 'variance_cents',
-    header: 'Variance (¢)',
-    sortable: true,
-    cell: (row) => (
-      <span className={`font-mono text-sm ${row.variance_cents !== 0 ? 'text-red-400' : 'text-gray-400'}`}>
-        {row.variance_cents}
-      </span>
-    ),
-  },
-  {
-    key: 'ledger_entry_ids',
-    header: 'Ledger IDs',
-    cell: (row) => (
-      <span className="text-xs text-gray-500">
-        {Array.isArray(row.ledger_entry_ids) ? row.ledger_entry_ids.length : 0}
-      </span>
-    ),
-  },
-  {
-    key: 'notes',
-    header: 'Notes',
-    cell: (row) => (
-      <span className="max-w-xs truncate text-xs text-gray-400">{row.notes ?? '—'}</span>
-    ),
-  },
-];
 
 export default async function FinanceReconciliationPage() {
   const actor = await getOpsActorContext();
@@ -135,13 +78,46 @@ export default async function FinanceReconciliationPage() {
                 {(rows ?? []).length}
               </span>
             </div>
-            <DataTable
-              columns={columns}
-              data={(rows ?? []) as ReconciliationRow[]}
-              keyExtractor={(r) => r.id}
-              emptyState={<EmptyState title="No reconciliation rows" description="No data to display." />}
-              className="border-gray-800 bg-transparent"
-            />
+            {(rows ?? []).length === 0 ? (
+              <EmptyState title="No reconciliation rows" description="No data to display." />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-800 text-xs uppercase tracking-wide text-gray-500">
+                      <th className="py-3 pr-4">Created</th>
+                      <th className="py-3 pr-4">Stripe Event</th>
+                      <th className="py-3 pr-4">Status</th>
+                      <th className="py-3 pr-4">Variance</th>
+                      <th className="py-3 pr-4">Ledger IDs</th>
+                      <th className="py-3">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {((rows ?? []) as ReconciliationRow[]).map((row) => (
+                      <tr key={row.id} className="border-b border-gray-900 text-gray-300">
+                        <td className="py-3 pr-4 whitespace-nowrap text-xs">
+                          {new Date(row.created_at).toLocaleString()}
+                        </td>
+                        <td className="py-3 pr-4 font-mono text-xs text-gray-400">
+                          {row.stripe_event_id?.slice(0, 24)}
+                        </td>
+                        <td className="py-3 pr-4">
+                          <StatusBadge status={getReconciliationStatus(row.status)} label={row.status} />
+                        </td>
+                        <td className={`py-3 pr-4 font-mono ${row.variance_cents !== 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {row.variance_cents}
+                        </td>
+                        <td className="py-3 pr-4 text-xs text-gray-500">
+                          {Array.isArray(row.ledger_entry_ids) ? row.ledger_entry_ids.length : 0}
+                        </td>
+                        <td className="py-3 text-xs text-gray-400">{row.notes ?? '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

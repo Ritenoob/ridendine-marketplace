@@ -1,7 +1,6 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getEngine, getOpsActorContext, hasRequiredRole } from '@/lib/engine';
-import { KpiTile, PageHeader, DataTable, EmptyState } from '@ridendine/ui';
-import type { ColumnDef } from '@ridendine/ui';
+import { KpiTile, PageHeader, EmptyState } from '@ridendine/ui';
 import { FinanceActions } from './finance-actions';
 import { PayoutActions } from './payout-actions';
 import { FinanceSubnav } from './_components/FinanceSubnav';
@@ -30,61 +29,79 @@ type LiabilityItem = {
   amount: number;
 };
 
-const ledgerColumns: ColumnDef<LedgerEntry>[] = [
-  {
-    key: 'createdAt',
-    header: 'Date',
-    sortable: true,
-    cell: (row) => (
-      <span className="text-xs text-gray-400">
-        {new Date(row.createdAt).toLocaleString()}
-      </span>
-    ),
-  },
-  {
-    key: 'entryType',
-    header: 'Type',
-    cell: (row) => <span className="text-gray-300">{row.entryType}</span>,
-  },
-  {
-    key: 'entityType',
-    header: 'Entity',
-    cell: (row) => (
-      <span className="text-gray-400 text-xs">
-        {row.entityType ? `${row.entityType}:${row.entityId ?? 'n/a'}` : 'platform'}
-      </span>
-    ),
-  },
-  {
-    key: 'description',
-    header: 'Description',
-    cell: (row) => (
-      <span className="text-gray-300 text-xs">{row.description ?? 'No description'}</span>
-    ),
-  },
-  {
-    key: 'amountCents',
-    header: 'Amount',
-    sortable: true,
-    cell: (row) => (
-      <span className="font-medium text-emerald-400">{formatCurrency(row.amountCents / 100)}</span>
-    ),
-  },
-];
+function LiabilityTable({
+  rows,
+  emptyTitle,
+  emptyDescription,
+}: {
+  rows: LiabilityItem[];
+  emptyTitle: string;
+  emptyDescription: string;
+}) {
+  if (rows.length === 0) {
+    return <EmptyState title={emptyTitle} description={emptyDescription} />;
+  }
 
-const liabilityColumns: ColumnDef<LiabilityItem>[] = [
-  {
-    key: 'name',
-    header: 'Name',
-    cell: (row) => <span className="font-medium text-white">{row.name}</span>,
-  },
-  {
-    key: 'amount',
-    header: 'Amount',
-    sortable: true,
-    cell: (row) => <span className="text-emerald-400 font-medium">{formatCurrency(row.amount)}</span>,
-  },
-];
+  return (
+    <table className="w-full text-left text-sm">
+      <thead>
+        <tr className="border-b border-gray-800 text-xs uppercase tracking-wide text-gray-500">
+          <th className="py-3 pr-4">Name</th>
+          <th className="py-3 text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.id} className="border-b border-gray-900">
+            <td className="py-3 pr-4 font-medium text-white">{row.name}</td>
+            <td className="py-3 text-right font-medium text-emerald-400">
+              {formatCurrency(row.amount)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function LedgerTable({ rows }: { rows: LedgerEntry[] }) {
+  if (rows.length === 0) {
+    return <EmptyState title="No ledger entries" description="Ledger activity will appear here." />;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-gray-800 text-xs uppercase tracking-wide text-gray-500">
+            <th className="py-3 pr-4">Date</th>
+            <th className="py-3 pr-4">Type</th>
+            <th className="py-3 pr-4">Entity</th>
+            <th className="py-3 pr-4">Description</th>
+            <th className="py-3 text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id} className="border-b border-gray-900">
+              <td className="py-3 pr-4 whitespace-nowrap text-xs text-gray-400">
+                {new Date(row.createdAt).toLocaleString()}
+              </td>
+              <td className="py-3 pr-4 text-gray-300">{row.entryType}</td>
+              <td className="py-3 pr-4 text-xs text-gray-400">
+                {row.entityType ? `${row.entityType}:${row.entityId ?? 'n/a'}` : 'platform'}
+              </td>
+              <td className="py-3 pr-4 text-xs text-gray-300">{row.description ?? 'No description'}</td>
+              <td className="py-3 text-right font-medium text-emerald-400">
+                {formatCurrency(row.amountCents / 100)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export default async function FinancePage() {
   const actor = await getOpsActorContext();
@@ -177,12 +194,10 @@ export default async function FinancePage() {
                 {data.chefLiabilities.length}
               </span>
             </div>
-            <DataTable
-              columns={liabilityColumns}
-              data={data.chefLiabilities}
-              keyExtractor={(r) => r.id}
-              emptyState={<EmptyState title="No chef payables" description="No outstanding chef liabilities." />}
-              className="border-gray-800 bg-transparent"
+            <LiabilityTable
+              rows={data.chefLiabilities}
+              emptyTitle="No chef payables"
+              emptyDescription="No outstanding chef liabilities."
             />
           </div>
 
@@ -193,12 +208,10 @@ export default async function FinancePage() {
                 {data.driverLiabilities.length}
               </span>
             </div>
-            <DataTable
-              columns={liabilityColumns}
-              data={data.driverLiabilities}
-              keyExtractor={(r) => r.id}
-              emptyState={<EmptyState title="No driver payables" description="No outstanding driver liabilities." />}
-              className="border-gray-800 bg-transparent"
+            <LiabilityTable
+              rows={data.driverLiabilities}
+              emptyTitle="No driver payables"
+              emptyDescription="No outstanding driver liabilities."
             />
           </div>
         </div>
@@ -223,13 +236,7 @@ export default async function FinancePage() {
               {data.recentLedger.length}
             </span>
           </div>
-          <DataTable
-            columns={ledgerColumns}
-            data={data.recentLedger as LedgerEntry[]}
-            keyExtractor={(r) => r.id}
-            emptyState={<EmptyState title="No ledger entries" description="Ledger activity will appear here." />}
-            className="border-gray-800 bg-transparent"
-          />
+          <LedgerTable rows={data.recentLedger as LedgerEntry[]} />
         </div>
 
         <PayoutActions />
