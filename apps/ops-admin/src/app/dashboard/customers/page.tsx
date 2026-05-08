@@ -82,8 +82,12 @@ export default function CustomersPage() {
     try {
       const response = await fetch('/api/customers');
       const result = await response.json();
-      setCustomers(result.data || []);
-    } catch { /* silent */ }
+      const payload = result?.data;
+      setCustomers(Array.isArray(payload) ? payload : payload?.items ?? []);
+    } catch (error) {
+      console.error('Failed to fetch customers:', error);
+      setCustomers([]);
+    }
     finally { setLoading(false); }
   }
 
