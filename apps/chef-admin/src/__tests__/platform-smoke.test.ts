@@ -47,4 +47,18 @@ describe('chef-admin smoke wiring', () => {
     expect(src).toContain('No ');
     expect(src).toContain('orders');
   });
+
+  it('menu editor exposes inventory controls through the API', () => {
+    const modal = read('components/menu/item-modal.tsx');
+    const list = read('components/menu/menu-list.tsx');
+    const createRoute = read('app/api/menu/route.ts');
+    const updateRoute = read('app/api/menu/[id]/route.ts');
+
+    expect(modal).toContain('Daily Limit');
+    expect(modal).toContain('Sold Today');
+    expect(modal).toContain('Restock At');
+    expect(list).toContain('Sold Out');
+    expect(createRoute).toContain('daily_limit');
+    expect(updateRoute).toContain('sold_out_at');
+  });
 });

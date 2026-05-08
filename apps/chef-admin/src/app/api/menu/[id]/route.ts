@@ -112,6 +112,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       category_id,
       is_available,
       is_featured,
+      is_sold_out,
+      daily_limit,
+      daily_sold,
+      restock_at,
       image_url,
       sort_order,
       dietary_tags,
@@ -138,6 +142,16 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
     if (is_available !== undefined) updates.is_available = is_available;
     if (is_featured !== undefined) updates.is_featured = is_featured;
+    if (is_sold_out !== undefined) {
+      const wasSoldOut = Boolean(existingItem.is_sold_out);
+      const nextSoldOut = Boolean(is_sold_out);
+      updates.is_sold_out = nextSoldOut;
+      updates.sold_out_at = nextSoldOut && !wasSoldOut ? new Date().toISOString() : nextSoldOut ? existingItem.sold_out_at : null;
+      if (!nextSoldOut && restock_at === undefined) updates.restock_at = null;
+    }
+    if (daily_limit !== undefined) updates.daily_limit = daily_limit;
+    if (daily_sold !== undefined) updates.daily_sold = daily_sold;
+    if (restock_at !== undefined) updates.restock_at = restock_at;
     if (image_url !== undefined) updates.image_url = image_url;
     if (sort_order !== undefined) updates.sort_order = sort_order;
     if (dietary_tags !== undefined) updates.dietary_tags = dietary_tags;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, Badge, Button } from '@ridendine/ui';
+import { Edit3, PackageCheck, PackageX, Plus, Trash2 } from 'lucide-react';
 import { CategoryModal } from './category-modal';
 import { ItemModal } from './item-modal';
 
@@ -13,6 +14,13 @@ interface MenuItem {
   image_url: string | null;
   is_available: boolean;
   is_featured: boolean;
+  is_sold_out: boolean | null;
+  sold_out_at: string | null;
+  restock_at: string | null;
+  daily_limit: number | null;
+  daily_sold: number | null;
+  prep_time_minutes: number | null;
+  dietary_tags: string[] | null;
   category_id: string;
 }
 
@@ -68,6 +76,37 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
     }
   };
 
+  const updateSoldOutStatus = async (itemId: string, isSoldOut: boolean) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/menu/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          is_sold_out: isSoldOut,
+          restock_at: isSoldOut ? null : null,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update sold out status');
+      }
+
+      const { menuItem: updatedItem } = await response.json();
+      setCategories(categories.map(cat => ({
+        ...cat,
+        items: cat.items.map(item => item.id === itemId ? updatedItem : item),
+      })));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const deleteItem = async (itemId: string) => {
     if (!confirm('Are you sure you want to delete this item?')) return;
 
@@ -105,9 +144,11 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Button variant="outline" className="min-h-10" onClick={() => setShowCategoryModal(true)}>
+          <Plus className="mr-2 h-4 w-4" />
           Add Category
         </Button>
         <Button className="min-h-10" onClick={() => setShowItemModal(true)}>
+          <Plus className="mr-2 h-4 w-4" />
           Add Item
         </Button>
       </div>
@@ -139,6 +180,7 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
                       setShowItemModal(true);
                     }}
                   >
+                    <Plus className="mr-2 h-4 w-4" />
                     Add Item
                   </Button>
                 </div>
@@ -181,9 +223,26 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
                           {item.description && (
                             <p className="mt-0.5 text-sm text-gray-500 line-clamp-2">{item.description}</p>
                           )}
-                          <p className="mt-1 text-sm font-medium text-[#E85D26]">
-                            ${item.price.toFixed(2)}
-                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                            <span className="font-medium text-[#E85D26]">${item.price.toFixed(2)}</span>
+                            {item.prep_time_minutes ? (
+                              <span className="text-gray-500">{item.prep_time_minutes} min prep</span>
+                            ) : null}
+                            {item.daily_limit != null ? (
+                              <span className="text-gray-500">
+                                {item.daily_sold ?? 0}/{item.daily_limit} sold today
+                              </span>
+                            ) : null}
+                          </div>
+                          {item.dietary_tags && item.dietary_tags.length > 0 ? (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {item.dietary_tags.map((tag) => (
+                                <Badge key={tag} variant="default" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
@@ -201,12 +260,32 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
                           variant="outline"
                           size="sm"
                           className="min-h-10"
+                          onClick={() => updateSoldOutStatus(item.id, !(item.is_sold_out ?? false))}
+                          disabled={loading}
+                        >
+                          {item.is_sold_out ? (
+                            <>
+                              <PackageCheck className="mr-2 h-4 w-4" />
+                              Restock
+                            </>
+                          ) : (
+                            <>
+                              <PackageX className="mr-2 h-4 w-4" />
+                              Sold Out
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="min-h-10"
                           onClick={() => {
                             setEditingItem(item);
                             setShowItemModal(true);
                           }}
                           disabled={loading}
                         >
+                          <Edit3 className="mr-2 h-4 w-4" />
                           Edit
                         </Button>
                         <Button
@@ -216,6 +295,7 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
                           onClick={() => deleteItem(item.id)}
                           disabled={loading}
                         >
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </Button>
                       </div>
