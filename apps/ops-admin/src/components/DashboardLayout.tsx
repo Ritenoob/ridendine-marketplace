@@ -29,6 +29,7 @@ import {
   Puzzle,
   UserCog,
   HeadphonesIcon,
+  HeartPulse,
   UserCheck,
   Plus,
   X,
@@ -62,6 +63,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/dashboard/dispatch', label: 'Dispatch', Icon: Zap },
       { href: '/dashboard/map', label: 'Live Map', Icon: Map },
       { href: '/dashboard/activity', label: 'Activity Log', Icon: ClipboardList },
+      { href: '/dashboard/health', label: 'Health', Icon: HeartPulse },
     ],
   },
   {

@@ -4,6 +4,8 @@ import Link from 'next/link';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { fetchApiItems, fetchJson } from '@/lib/client-api';
+import { getLocationHealth, locationHealthClass } from '@/lib/location-health';
 import { PageHeader, DataTable, EmptyState, Modal, StatusBadge, Button } from '@ridendine/ui';
 import type { ColumnDef } from '@ridendine/ui';
 import { UserCheck, UserX, UserMinus } from 'lucide-react';
@@ -17,6 +19,17 @@ type Driver = {
   status: string;
   vehicle_type: string | null;
   created_at: string;
+  driver_presence?: {
+    status?: string | null;
+    last_location_at?: string | null;
+    last_location_update?: string | null;
+    updated_at?: string | null;
+  } | Array<{
+    status?: string | null;
+    last_location_at?: string | null;
+    last_location_update?: string | null;
+    updated_at?: string | null;
+  }> | null;
 };
 
 type DriverForm = {
@@ -54,10 +67,11 @@ export default function DriversPage() {
 
   async function fetchDrivers() {
     try {
-      const response = await fetch('/api/drivers');
-      const result = await response.json();
-      setDrivers(result.data?.items || []);
-    } catch { /* silent */ }
+      setError('');
+      setDrivers(await fetchApiItems<Driver>('/api/drivers', undefined, 'Failed to load drivers'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load drivers');
+    }
     finally { setLoading(false); }
   }
 
@@ -66,13 +80,11 @@ export default function DriversPage() {
     setSaving(true);
     setError('');
     try {
-      const response = await fetch('/api/drivers', {
+      await fetchJson('/api/drivers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error?.message || result.error || 'Failed to add driver');
+      }, 'Failed to add driver');
       setShowCreate(false);
       setForm(INITIAL_FORM);
       void fetchDrivers();
@@ -85,13 +97,16 @@ export default function DriversPage() {
 
   async function handleStatusChange(id: string, status: string) {
     try {
-      await fetch(`/api/drivers/${id}`, {
+      setError('');
+      await fetchJson(`/api/drivers/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
-      });
+      }, 'Failed to update driver');
       void fetchDrivers();
-    } catch { /* silent */ }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update driver');
+    }
   }
 
   const filtered = statusFilter === 'all'
@@ -99,6 +114,24 @@ export default function DriversPage() {
     : drivers.filter((d) => d.status === statusFilter);
 
   const columns: ColumnDef<Driver>[] = [
+    {
+      key: 'gps',
+      header: 'GPS',
+      cell: (row) => {
+        const presence = Array.isArray(row.driver_presence)
+          ? row.driver_presence[0]
+          : row.driver_presence;
+        const health = getLocationHealth(
+          presence?.last_location_update ?? presence?.last_location_at ?? presence?.updated_at,
+          presence?.status
+        );
+        return (
+          <span className={`rounded-full px-2 py-1 text-xs ${locationHealthClass(health.status)}`}>
+            {health.label}
+          </span>
+        );
+      },
+    },
     {
       key: 'first_name',
       header: 'Name',
@@ -221,6 +254,12 @@ export default function DriversPage() {
             </div>
           }
         />
+
+        {error && !showCreate && (
+          <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {error}
+          </div>
+        )}
 
         {/* Status filter chips */}
         <div className="flex flex-wrap gap-2">

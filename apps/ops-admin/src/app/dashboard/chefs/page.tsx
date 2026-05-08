@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { fetchApiItems, fetchJson } from '@/lib/client-api';
 import { PageHeader, DataTable, EmptyState, Modal, StatusBadge, Button } from '@ridendine/ui';
 import type { ColumnDef } from '@ridendine/ui';
 import { UserCheck, UserX, UserMinus } from 'lucide-react';
@@ -57,11 +58,10 @@ export default function ChefsPage() {
 
   async function fetchChefs() {
     try {
-      const response = await fetch('/api/chefs');
-      const result = await response.json();
-      setChefs(result.data?.items || []);
-    } catch {
-      // silent
+      setError('');
+      setChefs(await fetchApiItems<ChefProfile>('/api/chefs', undefined, 'Failed to load chefs'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load chefs');
     } finally {
       setLoading(false);
     }
@@ -72,13 +72,11 @@ export default function ChefsPage() {
     setSaving(true);
     setError('');
     try {
-      const response = await fetch('/api/chefs', {
+      await fetchJson('/api/chefs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, phone: form.phone || undefined }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error?.message || result.error || 'Failed to add chef');
+      }, 'Failed to add chef');
       setShowCreate(false);
       setForm(INITIAL_FORM);
       void fetchChefs();
@@ -91,13 +89,16 @@ export default function ChefsPage() {
 
   async function handleChefAction(id: string, action: 'approve' | 'reject' | 'suspend' | 'unsuspend') {
     try {
-      await fetch(`/api/chefs/${id}`, {
+      setError('');
+      await fetchJson(`/api/chefs/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
-      });
+      }, 'Failed to update chef');
       void fetchChefs();
-    } catch { /* silent */ }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update chef');
+    }
   }
 
   const filtered = statusFilter === 'all'
@@ -225,6 +226,12 @@ export default function ChefsPage() {
             </div>
           }
         />
+
+        {error && !showCreate && (
+          <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {error}
+          </div>
+        )}
 
         {/* Status filter chips */}
         <div className="flex flex-wrap gap-2">

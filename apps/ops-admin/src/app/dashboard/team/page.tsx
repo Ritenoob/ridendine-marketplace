@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, Badge, Button, Input } from '@ridendine/ui';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { fetchApiItems, fetchJson } from '@/lib/client-api';
 
 interface TeamMember {
   id: string;
@@ -30,10 +31,11 @@ export default function TeamPage() {
 
   const fetchTeam = async () => {
     try {
-      const res = await fetch('/api/team');
-      const data = await res.json();
-      if (data.success) setMembers(data.data);
-    } catch { /* silent */ }
+      setError('');
+      setMembers(await fetchApiItems<TeamMember>('/api/team', undefined, 'Failed to load team'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load team');
+    }
     finally { setLoading(false); }
   };
 
@@ -41,24 +43,26 @@ export default function TeamPage() {
 
   const toggleActive = async (id: string, currentActive: boolean) => {
     try {
-      await fetch('/api/team', {
+      setError('');
+      await fetchJson('/api/team', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, is_active: !currentActive }),
-      });
+      }, 'Failed to update team member');
       fetchTeam();
-    } catch { setError('Failed to update'); }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed to update'); }
   };
 
   const changeRole = async (id: string, newRole: string) => {
     try {
-      await fetch('/api/team', {
+      setError('');
+      await fetchJson('/api/team', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, role: newRole }),
-      });
+      }, 'Failed to update team member');
       fetchTeam();
-    } catch { setError('Failed to update'); }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed to update'); }
   };
 
   return (
@@ -142,13 +146,11 @@ function InviteModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (
     if (form.password.length < 8) { setError('Password must be at least 8 characters'); return; }
     setLoading(true); setError('');
     try {
-      const res = await fetch('/api/team', {
+      await fetchJson('/api/team', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      }, 'Failed to create account');
       onSuccess();
     } catch (err) { setError(err instanceof Error ? err.message : 'Failed'); }
     finally { setLoading(false); }

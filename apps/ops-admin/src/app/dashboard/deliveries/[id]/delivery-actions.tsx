@@ -99,6 +99,22 @@ export function DeliveryActions({
               Retry Auto-Assign
             </button>
           )}
+          {!isTerminal && assignedDriverId && (
+            <button
+              type="button"
+              onClick={() =>
+                void runDispatchAction({
+                  action: 'add_ops_note',
+                  deliveryId,
+                  note: 'Ops requested driver offer expiry review before rerun',
+                })
+              }
+              disabled={submitting}
+              className="rounded-lg border border-gray-600 px-4 py-2 text-sm text-gray-200 disabled:opacity-50"
+            >
+              Flag Offer Issue
+            </button>
+          )}
           {!isTerminal && (
             <button
               type="button"
@@ -177,7 +193,7 @@ export function DeliveryActions({
             </select>
           )}
 
-          {(mode === 'reassign' || mode === 'escalate' || mode === 'cancel' || mode === 'note') && (
+          {(mode === 'assign' || mode === 'reassign' || mode === 'escalate' || mode === 'cancel' || mode === 'note') && (
             <textarea
               value={reason}
               onChange={(event) => setReason(event.target.value)}
@@ -216,14 +232,16 @@ export function DeliveryActions({
               onClick={() => {
                 if (mode === 'assign') {
                   void runDispatchAction({
-                    action: 'manual_assign',
+                    action: reason.trim() ? 'force_assign' : 'manual_assign',
                     deliveryId,
                     driverId: selectedDriverId,
+                    ...(reason.trim() ? { reason } : {}),
                   });
                 } else if (mode === 'reassign') {
                   void runDispatchAction({
-                    action: 'reassign',
+                    action: 'force_assign',
                     deliveryId,
+                    driverId: selectedDriverId,
                     reason,
                   });
                 } else if (mode === 'escalate') {

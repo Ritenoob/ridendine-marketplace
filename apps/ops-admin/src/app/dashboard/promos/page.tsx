@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, Badge, Button, Input } from '@ridendine/ui';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { fetchApiItems, fetchJson } from '@/lib/client-api';
 
 interface PromoCode {
   id: string;
@@ -26,10 +27,11 @@ export default function PromosPage() {
 
   const fetchPromos = async () => {
     try {
-      const res = await fetch('/api/promos');
-      const data = await res.json();
-      if (data.success) setPromos(data.data);
-    } catch { /* silent */ }
+      setError('');
+      setPromos(await fetchApiItems<PromoCode>('/api/promos', undefined, 'Failed to load promos'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load promos');
+    }
     finally { setLoading(false); }
   };
 
@@ -37,25 +39,24 @@ export default function PromosPage() {
 
   const toggleActive = async (id: string, currentActive: boolean) => {
     try {
-      await fetch('/api/promos', {
+      setError('');
+      await fetchJson('/api/promos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, is_active: !currentActive }),
-      });
+      }, 'Failed to update promo');
       fetchPromos();
-    } catch { setError('Failed to update'); }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed to update'); }
   };
 
   const deletePromo = async (id: string, code: string) => {
     if (!window.confirm(`Delete promo code ${code}?`)) return;
     try {
-      const res = await fetch('/api/promos', {
+      await fetchJson('/api/promos', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      }, 'Failed to delete');
       fetchPromos();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete');
@@ -168,7 +169,7 @@ function CreatePromoModal({ onClose, onSuccess }: { onClose: () => void; onSucce
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      const res = await fetch('/api/promos', {
+      await fetchJson('/api/promos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -179,9 +180,7 @@ function CreatePromoModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           usageLimit: form.usageLimit ? parseInt(form.usageLimit) : null,
           expiresAt: form.expiresAt || null,
         }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      }, 'Failed to create promo');
       onSuccess();
     } catch (err) { setError(err instanceof Error ? err.message : 'Failed'); }
     finally { setLoading(false); }

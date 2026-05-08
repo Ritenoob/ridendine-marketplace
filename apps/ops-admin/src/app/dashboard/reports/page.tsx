@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Card, Button } from '@ridendine/ui';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { fetchJson } from '@/lib/client-api';
 
 type ReportType = 'revenue' | 'orders' | 'chefs' | 'drivers' | 'customers';
 
@@ -18,25 +19,27 @@ export default function ReportsPage() {
   const [data, setData] = useState<any>(null);
   const [compareData, setCompareData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [_reportType, _setReportType] = useState<ReportType>('revenue');
 
   const fetchReport = async () => {
     setLoading(true);
+    setError('');
     try {
       const days = Math.ceil((new Date(endDate!).getTime() - new Date(startDate!).getTime()) / (86400000));
-      const res = await fetch(`/api/analytics/trends?days=${days}`);
-      const d = await res.json();
-      if (d.success) setData(d.data);
+      const d = await fetchJson<{ data?: unknown }>(`/api/analytics/trends?days=${days}`, undefined, 'Failed to load report');
+      if ('data' in d) setData(d.data);
 
       if (showCompare && compareStartDate && compareEndDate) {
         const compareDays = Math.ceil((new Date(compareEndDate).getTime() - new Date(compareStartDate).getTime()) / (86400000));
-        const cRes = await fetch(`/api/analytics/trends?days=${compareDays}`);
-        const cD = await cRes.json();
-        if (cD.success) setCompareData(cD.data);
+        const cD = await fetchJson<{ data?: unknown }>(`/api/analytics/trends?days=${compareDays}`, undefined, 'Failed to load comparison');
+        if ('data' in cD) setCompareData(cD.data);
       } else {
         setCompareData(null);
       }
-    } catch { /* silent */ }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load report');
+    }
     finally { setLoading(false); }
   };
 
@@ -71,6 +74,12 @@ export default function ReportsPage() {
         </div>
 
         {/* Date Range Controls */}
+        {error && (
+          <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {error}
+          </div>
+        )}
+
         <Card className="border-gray-800 bg-opsPanel p-4">
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex gap-2">
