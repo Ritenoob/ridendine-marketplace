@@ -41,15 +41,71 @@ export function StorefrontForm({ storefront: initialStorefront }: StorefrontForm
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
   const formRef = useRef<HTMLFormElement>(null);
+
+  function getFormValues(form: HTMLFormElement) {
+    const formData = new FormData(form);
+    return {
+      name: String(formData.get('name') ?? '').trim(),
+      description: String(formData.get('description') ?? ''),
+      minOrderAmount: Number.parseFloat(String(formData.get('min_order_amount') ?? '0')),
+      prepTimeMin: Number.parseInt(String(formData.get('estimated_prep_time_min') ?? '0'), 10),
+      prepTimeMax: Number.parseInt(String(formData.get('estimated_prep_time_max') ?? '0'), 10),
+    };
+  }
+
+  function validateForm(form: HTMLFormElement) {
+    const values = getFormValues(form);
+    const nextErrors: Record<string, string> = {};
+
+    if (!values.name) nextErrors.name = 'Name is required';
+    if (!Number.isFinite(values.minOrderAmount) || values.minOrderAmount < 0) {
+      nextErrors.min_order_amount = 'Minimum order amount must be 0 or greater';
+    }
+    if (
+      !Number.isFinite(values.prepTimeMin) ||
+      !Number.isFinite(values.prepTimeMax) ||
+      values.prepTimeMax <= values.prepTimeMin
+    ) {
+      nextErrors.estimated_prep_time_max = 'Prep time max must be greater than min';
+    }
+
+    return nextErrors;
+  }
+
+  function handleFieldBlur(field: string) {
+    const form = formRef.current;
+    if (!form) return;
+    setTouchedFields((current) => ({ ...current, [field]: true }));
+    setFieldErrors(validateForm(form));
+  }
+
+  function fieldClass(field: string) {
+    if (fieldErrors[field]) return 'border-red-500';
+    if (touchedFields[field]) return 'border-green-500';
+    return 'border-gray-300';
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const nextErrors = validateForm(form);
+    setTouchedFields({
+      name: true,
+      min_order_amount: true,
+      estimated_prep_time_min: true,
+      estimated_prep_time_max: true,
+    });
+    setFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
     setLoading(true);
     setError(null);
     setSuccess(false);
 
-    const formData = new FormData(e.target as HTMLFormElement);
+    const formData = new FormData(form);
     const cuisineCheckboxes = formRef.current?.querySelectorAll('input[type="checkbox"]:checked');
     const selectedCuisines = Array.from(cuisineCheckboxes || []).map(
       (cb) => (cb as HTMLInputElement).value
@@ -86,7 +142,7 @@ export function StorefrontForm({ storefront: initialStorefront }: StorefrontForm
   };
 
   return (
-    <form onSubmit={handleSubmit} ref={formRef}>
+    <form onSubmit={handleSubmit} ref={formRef} noValidate>
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 p-4">
           <p className="text-sm text-red-800">{error}</p>
@@ -109,9 +165,13 @@ export function StorefrontForm({ storefront: initialStorefront }: StorefrontForm
                 type="text"
                 defaultValue={storefront.name}
                 placeholder="Your storefront name"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                required
+                onBlur={() => handleFieldBlur('name')}
+                onChange={() => {
+                  if (touchedFields.name && formRef.current) setFieldErrors(validateForm(formRef.current));
+                }}
+                className={`mt-1 w-full rounded-lg border px-3 py-2 ${fieldClass('name')}`}
               />
+              {fieldErrors.name && <p className="mt-1 text-xs text-red-600">{fieldErrors.name}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Description</label>
@@ -221,9 +281,15 @@ export function StorefrontForm({ storefront: initialStorefront }: StorefrontForm
                 min="0"
                 defaultValue={storefront.min_order_amount.toFixed(2)}
                 placeholder="0.00"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                required
+                onBlur={() => handleFieldBlur('min_order_amount')}
+                onChange={() => {
+                  if (touchedFields.min_order_amount && formRef.current) setFieldErrors(validateForm(formRef.current));
+                }}
+                className={`mt-1 w-full rounded-lg border px-3 py-2 ${fieldClass('min_order_amount')}`}
               />
+              {fieldErrors.min_order_amount && (
+                <p className="mt-1 text-xs text-red-600">{fieldErrors.min_order_amount}</p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -234,8 +300,13 @@ export function StorefrontForm({ storefront: initialStorefront }: StorefrontForm
                   min="0"
                   defaultValue={storefront.estimated_prep_time_min}
                   placeholder="15"
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                  required
+                  onBlur={() => handleFieldBlur('estimated_prep_time_min')}
+                  onChange={() => {
+                    if (touchedFields.estimated_prep_time_min && formRef.current) {
+                      setFieldErrors(validateForm(formRef.current));
+                    }
+                  }}
+                  className={`mt-1 w-full rounded-lg border px-3 py-2 ${fieldClass('estimated_prep_time_min')}`}
                 />
               </div>
               <div>
@@ -246,9 +317,17 @@ export function StorefrontForm({ storefront: initialStorefront }: StorefrontForm
                   min="0"
                   defaultValue={storefront.estimated_prep_time_max}
                   placeholder="45"
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                  required
+                  onBlur={() => handleFieldBlur('estimated_prep_time_max')}
+                  onChange={() => {
+                    if (touchedFields.estimated_prep_time_max && formRef.current) {
+                      setFieldErrors(validateForm(formRef.current));
+                    }
+                  }}
+                  className={`mt-1 w-full rounded-lg border px-3 py-2 ${fieldClass('estimated_prep_time_max')}`}
                 />
+                {fieldErrors.estimated_prep_time_max && (
+                  <p className="mt-1 text-xs text-red-600">{fieldErrors.estimated_prep_time_max}</p>
+                )}
               </div>
             </div>
           </div>

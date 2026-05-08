@@ -57,7 +57,7 @@ describe('StorefrontForm inline validation', () => {
     fireEvent.click(submitBtns[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/name is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/name is required/i)).toBeTruthy();
     });
 
     expect(fetch).not.toHaveBeenCalled();
@@ -77,7 +77,7 @@ describe('StorefrontForm inline validation', () => {
     fireEvent.click(submitBtns[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/max must be greater than min/i)).toBeInTheDocument();
+      expect(screen.getByText(/max must be greater than min/i)).toBeTruthy();
     });
 
     expect(fetch).not.toHaveBeenCalled();
@@ -94,7 +94,7 @@ describe('StorefrontForm inline validation', () => {
     fireEvent.click(submitBtns[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/must be 0 or greater/i)).toBeInTheDocument();
+      expect(screen.getByText(/must be 0 or greater/i)).toBeTruthy();
     });
 
     expect(fetch).not.toHaveBeenCalled();
