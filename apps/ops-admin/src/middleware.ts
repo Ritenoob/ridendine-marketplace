@@ -4,6 +4,7 @@ export const middleware = createAuthMiddleware({
   publicRoutes: ['/auth/login', '/api/engine/processors', '/api/ops/live-board'],
   loginRoute: '/auth/login',
   authenticatedRedirect: '/',
+  authRoutes: [],
 });
 
 export const config = {
