@@ -31,9 +31,13 @@ describe('chef-admin smoke wiring', () => {
 
   it('dashboard exposes chef command center and readiness wiring', () => {
     const src = read('app/dashboard/page.tsx');
-    expect(src).toContain('Chef Command Center');
-    expect(src).toContain('Business Readiness');
-    expect(src).toContain('Menu Operations');
+    expect(src).toContain('Chef operating dashboard');
+    expect(src).toContain('Today&apos;s Action Queue');
+    expect(src).toContain('Prep Timeline');
+    expect(src).toContain('Menu Health');
+    expect(src).toContain('Storefront Readiness');
+    expect(src).toContain('Quick Tools');
+    expect(src).toContain('Business Snapshot');
     expect(src).toContain('getMenuItemsByStorefront');
     expect(src).toContain('chef_availability');
   });
