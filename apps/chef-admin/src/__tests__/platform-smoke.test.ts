@@ -29,6 +29,15 @@ describe('chef-admin smoke wiring', () => {
     expect(dashboardAvailability.length).toBeGreaterThan(100);
   });
 
+  it('dashboard exposes chef command center and readiness wiring', () => {
+    const src = read('app/dashboard/page.tsx');
+    expect(src).toContain('Chef Command Center');
+    expect(src).toContain('Business Readiness');
+    expect(src).toContain('Menu Operations');
+    expect(src).toContain('getMenuItemsByStorefront');
+    expect(src).toContain('chef_availability');
+  });
+
   it('orders list uses protected action payloads and empty state', () => {
     const src = read('components/orders/orders-list.tsx');
     expect(src).toContain("action: 'accept'");

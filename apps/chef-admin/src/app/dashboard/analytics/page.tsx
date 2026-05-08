@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@ridendine/ui';
-import { formatHourRange } from '@/app/api/analytics/utils';
 
 type Period = 'week' | 'month' | 'year';
 
@@ -297,6 +296,3 @@ function AnalyticsSkeleton() {
     </div>
   );
 }
-
-// Re-export for use in tests and other modules
-export { formatHourRange };
