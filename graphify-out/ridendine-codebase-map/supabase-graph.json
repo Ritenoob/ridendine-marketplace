@@ -1,0 +1,1941 @@
+{
+  "nodes": [
+    {
+      "id": "app:web",
+      "label": "Customer Web",
+      "type": "app"
+    },
+    {
+      "id": "app:chef-admin",
+      "label": "Chef Admin",
+      "type": "app"
+    },
+    {
+      "id": "app:driver-app",
+      "label": "Driver App",
+      "type": "app"
+    },
+    {
+      "id": "app:ops-admin",
+      "label": "Ops Admin",
+      "type": "app"
+    },
+    {
+      "id": "app:packages",
+      "label": "Shared Packages",
+      "type": "app"
+    },
+    {
+      "id": "table:chef_profiles",
+      "label": "chef_profiles",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:chef_kitchens",
+      "label": "chef_kitchens",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:chef_storefronts",
+      "label": "chef_storefronts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:chef_documents",
+      "label": "chef_documents",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:chef_payout_accounts",
+      "label": "chef_payout_accounts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:chef_availability",
+      "label": "chef_availability",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:chef_delivery_zones",
+      "label": "chef_delivery_zones",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:menu_categories",
+      "label": "menu_categories",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:menu_items",
+      "label": "menu_items",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:menu_item_options",
+      "label": "menu_item_options",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:menu_item_option_values",
+      "label": "menu_item_option_values",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:menu_item_availability",
+      "label": "menu_item_availability",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:customers",
+      "label": "customers",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:customer_addresses",
+      "label": "customer_addresses",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:carts",
+      "label": "carts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:cart_items",
+      "label": "cart_items",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:favorites",
+      "label": "favorites",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:orders",
+      "label": "orders",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:order_items",
+      "label": "order_items",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:order_item_modifiers",
+      "label": "order_item_modifiers",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:order_status_history",
+      "label": "order_status_history",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:reviews",
+      "label": "reviews",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:promo_codes",
+      "label": "promo_codes",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:support_tickets",
+      "label": "support_tickets",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:drivers",
+      "label": "drivers",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:driver_documents",
+      "label": "driver_documents",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:driver_vehicles",
+      "label": "driver_vehicles",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:driver_shifts",
+      "label": "driver_shifts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:driver_presence",
+      "label": "driver_presence",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:driver_locations",
+      "label": "driver_locations",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:driver_earnings",
+      "label": "driver_earnings",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:driver_payouts",
+      "label": "driver_payouts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:deliveries",
+      "label": "deliveries",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:delivery_assignments",
+      "label": "delivery_assignments",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:delivery_events",
+      "label": "delivery_events",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:delivery_tracking_events",
+      "label": "delivery_tracking_events",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:platform_users",
+      "label": "platform_users",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:admin_notes",
+      "label": "admin_notes",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:notifications",
+      "label": "notifications",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:audit_logs",
+      "label": "audit_logs",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:payout_runs",
+      "label": "payout_runs",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:platform_settings",
+      "label": "platform_settings",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:push_subscriptions",
+      "label": "push_subscriptions",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:chef_payouts",
+      "label": "chef_payouts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:domain_events",
+      "label": "domain_events",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:order_exceptions",
+      "label": "order_exceptions",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:sla_timers",
+      "label": "sla_timers",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:kitchen_queue_entries",
+      "label": "kitchen_queue_entries",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:ledger_entries",
+      "label": "ledger_entries",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:assignment_attempts",
+      "label": "assignment_attempts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:ops_override_logs",
+      "label": "ops_override_logs",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:refund_cases",
+      "label": "refund_cases",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:payout_adjustments",
+      "label": "payout_adjustments",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:storefront_state_changes",
+      "label": "storefront_state_changes",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:system_alerts",
+      "label": "system_alerts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:analytics_events",
+      "label": "analytics_events",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:stripe_events_processed",
+      "label": "stripe_events_processed",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:checkout_idempotency_keys",
+      "label": "checkout_idempotency_keys",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:platform_accounts",
+      "label": "platform_accounts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:stripe_reconciliation",
+      "label": "stripe_reconciliation",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:service_areas",
+      "label": "service_areas",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:instant_payout_requests",
+      "label": "instant_payout_requests",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:ops_processor_runs",
+      "label": "ops_processor_runs",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:driver_payout_accounts",
+      "label": "driver_payout_accounts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:loyalty_accounts",
+      "label": "loyalty_accounts",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:loyalty_transactions",
+      "label": "loyalty_transactions",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:referral_codes",
+      "label": "referral_codes",
+      "type": "supabase_table"
+    },
+    {
+      "id": "table:referral_signups",
+      "label": "referral_signups",
+      "type": "supabase_table"
+    },
+    {
+      "id": "rpc:update_updated_at_column",
+      "label": "update_updated_at_column",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:is_ops_admin",
+      "label": "is_ops_admin",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:get_chef_id",
+      "label": "get_chef_id",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:get_customer_id",
+      "label": "get_customer_id",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:get_driver_id",
+      "label": "get_driver_id",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:populate_order_item_name",
+      "label": "populate_order_item_name",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:log_audit_change",
+      "label": "log_audit_change",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:increment_queue_size",
+      "label": "increment_queue_size",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:decrement_queue_size",
+      "label": "decrement_queue_size",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:increment_order_exception_count",
+      "label": "increment_order_exception_count",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:get_orders_needing_dispatch",
+      "label": "get_orders_needing_dispatch",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:get_available_drivers_near",
+      "label": "get_available_drivers_near",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:get_ops_dashboard_stats",
+      "label": "get_ops_dashboard_stats",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:get_order_timeline",
+      "label": "get_order_timeline",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:get_financial_summary",
+      "label": "get_financial_summary",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:sync_order_status_history",
+      "label": "sync_order_status_history",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:sync_driver_presence_location",
+      "label": "sync_driver_presence_location",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:sync_notification_body",
+      "label": "sync_notification_body",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:sync_promo_code_fields",
+      "label": "sync_promo_code_fields",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:increment_promo_usage",
+      "label": "increment_promo_usage",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:sync_kitchen_address",
+      "label": "sync_kitchen_address",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:orders_public_stage_from_engine",
+      "label": "orders_public_stage_from_engine",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:orders_sync_public_stage_from_engine",
+      "label": "orders_sync_public_stage_from_engine",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:ledger_entries_touch_platform_accounts",
+      "label": "ledger_entries_touch_platform_accounts",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:is_platform_staff",
+      "label": "is_platform_staff",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:is_finance_staff",
+      "label": "is_finance_staff",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:is_support_staff",
+      "label": "is_support_staff",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "rpc:update_loyalty_account_updated_at",
+      "label": "update_loyalty_account_updated_at",
+      "type": "supabase_rpc"
+    },
+    {
+      "id": "table:driver_profiles",
+      "label": "driver_profiles",
+      "type": "missing_table_reference"
+    },
+    {
+      "id": "rpc:public.get_ops_dashboard_stats",
+      "label": "public.get_ops_dashboard_stats",
+      "type": "missing_rpc_reference"
+    },
+    {
+      "id": "rpc:public.increment_promo_usage",
+      "label": "public.increment_promo_usage",
+      "type": "missing_rpc_reference"
+    },
+    {
+      "id": "rpc:public.increment_order_exception_count",
+      "label": "public.increment_order_exception_count",
+      "type": "missing_rpc_reference"
+    }
+  ],
+  "edges": [
+    {
+      "from": "table:admin_notes",
+      "to": "table:auth.users",
+      "label": "fk:created_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:assignment_attempts",
+      "to": "table:deliveries",
+      "label": "fk:delivery_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:assignment_attempts",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:audit_logs",
+      "to": "table:auth.users",
+      "label": "fk:user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:cart_items",
+      "to": "table:carts",
+      "label": "fk:cart_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:cart_items",
+      "to": "table:menu_items",
+      "label": "fk:menu_item_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:carts",
+      "to": "table:customers",
+      "label": "fk:customer_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:carts",
+      "to": "table:chef_storefronts",
+      "label": "fk:storefront_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:checkout_idempotency_keys",
+      "to": "table:customers",
+      "label": "fk:customer_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:checkout_idempotency_keys",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_availability",
+      "to": "table:chef_storefronts",
+      "label": "fk:storefront_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_delivery_zones",
+      "to": "table:chef_storefronts",
+      "label": "fk:storefront_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_documents",
+      "to": "table:chef_profiles",
+      "label": "fk:chef_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_documents",
+      "to": "table:auth.users",
+      "label": "fk:reviewed_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_kitchens",
+      "to": "table:chef_profiles",
+      "label": "fk:chef_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_payout_accounts",
+      "to": "table:chef_profiles",
+      "label": "fk:chef_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_payouts",
+      "to": "table:auth.users",
+      "label": "fk:approved_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_payouts",
+      "to": "table:chef_profiles",
+      "label": "fk:chef_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_payouts",
+      "to": "table:auth.users",
+      "label": "fk:executed_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_payouts",
+      "to": "table:payout_runs",
+      "label": "fk:payout_run_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_profiles",
+      "to": "table:auth.users",
+      "label": "fk:user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_storefronts",
+      "to": "table:chef_profiles",
+      "label": "fk:chef_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_storefronts",
+      "to": "table:chef_kitchens",
+      "label": "fk:kitchen_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:chef_storefronts",
+      "to": "table:auth.users",
+      "label": "fk:paused_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:customer_addresses",
+      "to": "table:customers",
+      "label": "fk:customer_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:customers",
+      "to": "table:auth.users",
+      "label": "fk:user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:deliveries",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:deliveries",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:delivery_assignments",
+      "to": "table:deliveries",
+      "label": "fk:delivery_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:delivery_assignments",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:delivery_events",
+      "to": "table:deliveries",
+      "label": "fk:delivery_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:delivery_tracking_events",
+      "to": "table:deliveries",
+      "label": "fk:delivery_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:delivery_tracking_events",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:domain_events",
+      "to": "table:auth.users",
+      "label": "fk:actor_user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_documents",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_documents",
+      "to": "table:auth.users",
+      "label": "fk:reviewed_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_earnings",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_earnings",
+      "to": "table:driver_shifts",
+      "label": "fk:shift_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_locations",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_locations",
+      "to": "table:driver_shifts",
+      "label": "fk:shift_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_payout_accounts",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_payouts",
+      "to": "table:auth.users",
+      "label": "fk:approved_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_payouts",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_payouts",
+      "to": "table:auth.users",
+      "label": "fk:executed_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_presence",
+      "to": "table:driver_shifts",
+      "label": "fk:current_shift_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_presence",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_shifts",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_vehicles",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:drivers",
+      "to": "table:auth.users",
+      "label": "fk:user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:favorites",
+      "to": "table:customers",
+      "label": "fk:customer_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:favorites",
+      "to": "table:chef_storefronts",
+      "label": "fk:storefront_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:instant_payout_requests",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:kitchen_queue_entries",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:kitchen_queue_entries",
+      "to": "table:chef_storefronts",
+      "label": "fk:storefront_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:ledger_entries",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:loyalty_accounts",
+      "to": "table:customers",
+      "label": "fk:customer_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:loyalty_transactions",
+      "to": "table:loyalty_accounts",
+      "label": "fk:loyalty_account_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:loyalty_transactions",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:menu_categories",
+      "to": "table:chef_storefronts",
+      "label": "fk:storefront_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:menu_item_availability",
+      "to": "table:menu_items",
+      "label": "fk:menu_item_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:menu_item_option_values",
+      "to": "table:menu_item_options",
+      "label": "fk:option_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:menu_item_options",
+      "to": "table:menu_items",
+      "label": "fk:menu_item_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:menu_items",
+      "to": "table:menu_categories",
+      "label": "fk:category_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:menu_items",
+      "to": "table:chef_storefronts",
+      "label": "fk:storefront_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:notifications",
+      "to": "table:auth.users",
+      "label": "fk:user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:ops_override_logs",
+      "to": "table:auth.users",
+      "label": "fk:actor_user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:ops_override_logs",
+      "to": "table:auth.users",
+      "label": "fk:approved_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_exceptions",
+      "to": "table:platform_users",
+      "label": "fk:assigned_to",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_exceptions",
+      "to": "table:chef_profiles",
+      "label": "fk:chef_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_exceptions",
+      "to": "table:customers",
+      "label": "fk:customer_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_exceptions",
+      "to": "table:deliveries",
+      "label": "fk:delivery_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_exceptions",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_exceptions",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_exceptions",
+      "to": "table:auth.users",
+      "label": "fk:resolved_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_item_modifiers",
+      "to": "table:order_items",
+      "label": "fk:order_item_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_items",
+      "to": "table:menu_items",
+      "label": "fk:menu_item_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_items",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_status_history",
+      "to": "table:auth.users",
+      "label": "fk:changed_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:order_status_history",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:orders",
+      "to": "table:auth.users",
+      "label": "fk:cancelled_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:orders",
+      "to": "table:customers",
+      "label": "fk:customer_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:orders",
+      "to": "table:customer_addresses",
+      "label": "fk:delivery_address_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:orders",
+      "to": "table:chef_storefronts",
+      "label": "fk:storefront_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:payout_adjustments",
+      "to": "table:auth.users",
+      "label": "fk:created_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:payout_adjustments",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:payout_adjustments",
+      "to": "table:refund_cases",
+      "label": "fk:refund_case_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:payout_runs",
+      "to": "table:auth.users",
+      "label": "fk:initiated_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:platform_settings",
+      "to": "table:auth.users",
+      "label": "fk:updated_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:platform_users",
+      "to": "table:auth.users",
+      "label": "fk:user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:push_subscriptions",
+      "to": "table:auth.users",
+      "label": "fk:user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:referral_codes",
+      "to": "table:auth.users",
+      "label": "fk:user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:referral_signups",
+      "to": "table:orders",
+      "label": "fk:first_order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:referral_signups",
+      "to": "table:referral_codes",
+      "label": "fk:referral_code_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:referral_signups",
+      "to": "table:auth.users",
+      "label": "fk:referred_user_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:refund_cases",
+      "to": "table:order_exceptions",
+      "label": "fk:exception_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:refund_cases",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:refund_cases",
+      "to": "table:auth.users",
+      "label": "fk:requested_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:refund_cases",
+      "to": "table:auth.users",
+      "label": "fk:reviewed_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:reviews",
+      "to": "table:customers",
+      "label": "fk:customer_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:reviews",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:reviews",
+      "to": "table:chef_storefronts",
+      "label": "fk:storefront_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:storefront_state_changes",
+      "to": "table:auth.users",
+      "label": "fk:changed_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:storefront_state_changes",
+      "to": "table:chef_storefronts",
+      "label": "fk:storefront_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:stripe_events_processed",
+      "to": "table:orders",
+      "label": "fk:related_order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:stripe_reconciliation",
+      "to": "table:platform_users",
+      "label": "fk:resolved_by",
+      "status": "mapped"
+    },
+    {
+      "from": "table:stripe_reconciliation",
+      "to": "table:stripe_events_processed",
+      "label": "fk:stripe_event_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:support_tickets",
+      "to": "table:auth.users",
+      "label": "fk:assigned_to",
+      "status": "mapped"
+    },
+    {
+      "from": "table:support_tickets",
+      "to": "table:chef_profiles",
+      "label": "fk:chef_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:support_tickets",
+      "to": "table:customers",
+      "label": "fk:customer_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:support_tickets",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:system_alerts",
+      "to": "table:auth.users",
+      "label": "fk:acknowledged_by",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:orders",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:orders",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:orders",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:orders",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:orders",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:order_items",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:order_items",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:reviews",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:reviews",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:reviews",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:chef_profiles",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:chef_profiles",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:chef_profiles",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:customers",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:customers",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:customers",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:customers",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:customer_addresses",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:customer_addresses",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:customer_addresses",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:chef_payout_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:chef_payout_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:chef_payout_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:chef_availability",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:chef_availability",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:chef_storefronts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:chef_storefronts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:chef_storefronts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:chef_storefronts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:chef_kitchens",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:chef_kitchens",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:chef_kitchens",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:chef_payouts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:chef_payouts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:chef_payouts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:driver_presence",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:driver_presence",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:driver_presence",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:deliveries",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:deliveries",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:deliveries",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:assignment_attempts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:assignment_attempts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:assignment_attempts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:drivers",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:drivers",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:drivers",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:driver_locations",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:delivery_tracking_events",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:delivery_tracking_events",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:driver_payout_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:platform_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:platform_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:platform_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:platform_users",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:platform_users",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:platform_users",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:ledger_entries",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:ledger_entries",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:notifications",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:notifications",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:notifications",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:audit_logs",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:audit_logs",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:system_alerts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:system_alerts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:platform_settings",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:platform_settings",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:order_exceptions",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:order_exceptions",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:instant_payout_requests",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:instant_payout_requests",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:stripe_reconciliation",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:stripe_reconciliation",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:storefront_state_changes",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:storefront_state_changes",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:stripe_events_processed",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:stripe_events_processed",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:promo_codes",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:promo_codes",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:promo_codes",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:service_areas",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:service_areas",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:service_areas",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:ops_override_logs",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:ops_override_logs",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:analytics_events",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:analytics_events",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:chef_delivery_zones",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:payout_runs",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:payout_runs",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:driver_payouts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:driver_payouts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:ops_processor_runs",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:menu_items",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:menu_items",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:cart_items",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:cart_items",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:checkout_idempotency_keys",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:favorites",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:loyalty_transactions",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:loyalty_transactions",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:push_subscriptions",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:order_status_history",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:order_status_history",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:carts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:refund_cases",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:payout_adjustments",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:menu_categories",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:support_tickets",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:admin_notes",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:delivery_events",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:driver_profiles",
+      "label": "uses table",
+      "status": "review"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:domain_events",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:sla_timers",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:kitchen_queue_entries",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:loyalty_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:referral_codes",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:referral_signups",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "rpc:public.get_ops_dashboard_stats",
+      "label": "calls rpc",
+      "status": "review"
+    },
+    {
+      "from": "app:packages",
+      "to": "rpc:public.get_ops_dashboard_stats",
+      "label": "calls rpc",
+      "status": "review"
+    },
+    {
+      "from": "app:web",
+      "to": "rpc:public.increment_promo_usage",
+      "label": "calls rpc",
+      "status": "review"
+    },
+    {
+      "from": "app:packages",
+      "to": "rpc:public.increment_promo_usage",
+      "label": "calls rpc",
+      "status": "review"
+    },
+    {
+      "from": "app:packages",
+      "to": "rpc:public.increment_order_exception_count",
+      "label": "calls rpc",
+      "status": "review"
+    }
+  ]
+}
