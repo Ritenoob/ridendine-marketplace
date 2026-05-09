@@ -1,8 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, Badge, Button } from '@ridendine/ui';
-import { Edit3, PackageCheck, PackageX, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Badge, Button } from '@ridendine/ui';
+import {
+  AlertTriangle,
+  BarChart3,
+  Camera,
+  ChefHat,
+  Clock,
+  Copy,
+  Edit3,
+  Eye,
+  EyeOff,
+  Gauge,
+  PackageCheck,
+  PackageX,
+  Plus,
+  Search,
+  Trash2,
+  Utensils,
+} from 'lucide-react';
 import { CategoryModal } from './category-modal';
 import { ItemModal } from './item-modal';
 
@@ -33,9 +50,69 @@ interface MenuCategory {
 
 interface MenuListProps {
   categories: MenuCategory[];
+  storefrontName: string;
 }
 
-export function MenuList({ categories: initialCategories }: MenuListProps) {
+type MenuFilter = 'all' | 'available' | 'sold-out' | 'featured' | 'low-capacity' | 'needs-setup';
+
+const FILTERS: Array<{ id: MenuFilter; label: string }> = [
+  { id: 'all', label: 'All' },
+  { id: 'available', label: 'Available' },
+  { id: 'sold-out', label: 'Sold Out' },
+  { id: 'featured', label: 'Featured' },
+  { id: 'low-capacity', label: 'Low capacity' },
+  { id: 'needs-setup', label: 'Needs setup' },
+];
+
+function getRemaining(item: MenuItem) {
+  if (item.daily_limit == null) return null;
+  return Math.max(Number(item.daily_limit) - Number(item.daily_sold ?? 0), 0);
+}
+
+function isLowCapacity(item: MenuItem) {
+  const remaining = getRemaining(item);
+  return remaining != null && Number(item.daily_limit) > 0 && remaining <= 3;
+}
+
+function getSetupIssues(item: MenuItem) {
+  return [
+    !item.image_url ? 'photo' : null,
+    !item.description ? 'description' : null,
+    !item.prep_time_minutes ? 'prep time' : null,
+    item.daily_limit == null ? 'daily limit' : null,
+  ].filter(Boolean) as string[];
+}
+
+function getItemHealth(item: MenuItem) {
+  const issues = getSetupIssues(item);
+
+  if (item.is_sold_out) {
+    return { label: 'Sold Out', tone: 'bg-red-50 text-red-700 ring-red-200', detail: 'Restock before customers can order' };
+  }
+
+  if (!item.is_available) {
+    return { label: 'Hidden', tone: 'bg-slate-100 text-slate-700 ring-slate-200', detail: 'Not visible to customers' };
+  }
+
+  if (isLowCapacity(item)) {
+    return { label: 'Low capacity', tone: 'bg-amber-50 text-amber-700 ring-amber-200', detail: `${getRemaining(item)} portions left today` };
+  }
+
+  if (issues.length > 0) {
+    return { label: 'Needs setup', tone: 'bg-orange-50 text-orange-700 ring-orange-200', detail: `Missing ${issues.slice(0, 2).join(', ')}` };
+  }
+
+  return { label: 'Ready', tone: 'bg-emerald-50 text-emerald-700 ring-emerald-200', detail: 'Customer-ready and operational' };
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('en-CA', {
+    style: 'currency',
+    currency: 'CAD',
+  }).format(value);
+}
+
+export function MenuList({ categories: initialCategories, storefrontName }: MenuListProps) {
   const [categories, setCategories] = useState<MenuCategory[]>(initialCategories);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,12 +120,74 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
   const [showItemModal, setShowItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<MenuFilter>('all');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     setCategories(initialCategories);
   }, [initialCategories]);
 
-  const toggleAvailability = async (itemId: string, currentStatus: boolean) => {
+  const items = useMemo(
+    () => categories.flatMap((category) => category.items.map((item) => ({ ...item, categoryName: category.name }))),
+    [categories]
+  );
+
+  const filteredCategories = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return categories
+      .map((category) => ({
+        ...category,
+        items: category.items.filter((item) => {
+          const matchesQuery = !normalizedQuery ||
+            item.name.toLowerCase().includes(normalizedQuery) ||
+            category.name.toLowerCase().includes(normalizedQuery) ||
+            item.description?.toLowerCase().includes(normalizedQuery) ||
+            item.dietary_tags?.some((tag) => tag.toLowerCase().includes(normalizedQuery));
+
+          const matchesFilter =
+            filter === 'all' ||
+            (filter === 'available' && item.is_available && !item.is_sold_out) ||
+            (filter === 'sold-out' && Boolean(item.is_sold_out)) ||
+            (filter === 'featured' && item.is_featured) ||
+            (filter === 'low-capacity' && isLowCapacity(item)) ||
+            (filter === 'needs-setup' && getSetupIssues(item).length > 0);
+
+          return matchesQuery && matchesFilter;
+        }),
+      }))
+      .filter((category) => category.items.length > 0 || (filter === 'all' && !normalizedQuery));
+  }, [categories, filter, query]);
+
+  const operations = useMemo(() => {
+    const activeItems = items.filter((item) => item.is_available && !item.is_sold_out);
+    const totalCapacity = items.reduce((sum, item) => sum + Number(item.daily_limit ?? 0), 0);
+    const soldToday = items.reduce((sum, item) => sum + Number(item.daily_sold ?? 0), 0);
+    const remainingCapacity = items.reduce((sum, item) => sum + Number(getRemaining(item) ?? 0), 0);
+    const avgPrep = activeItems.length
+      ? Math.round(activeItems.reduce((sum, item) => sum + Number(item.prep_time_minutes ?? 0), 0) / activeItems.length)
+      : 0;
+    const revenueCapacity = items.reduce((sum, item) => sum + (Number(getRemaining(item) ?? 0) * Number(item.price)), 0);
+
+    return {
+      activeItems: activeItems.length,
+      totalCapacity,
+      soldToday,
+      remainingCapacity,
+      avgPrep,
+      revenueCapacity,
+      setupIssues: items.filter((item) => getSetupIssues(item).length > 0).length,
+    };
+  }, [items]);
+
+  const updateItem = (updatedItem: MenuItem) => {
+    setCategories((current) => current.map((cat) => ({
+      ...cat,
+      items: cat.items.map((item) => item.id === updatedItem.id ? updatedItem : item),
+    })));
+  };
+
+  const patchItem = async (itemId: string, payload: Partial<MenuItem>) => {
     setLoading(true);
     setError(null);
 
@@ -56,7 +195,7 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
       const response = await fetch(`/api/menu/${itemId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_available: !currentStatus }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -65,10 +204,7 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
       }
 
       const { menuItem: updatedItem } = await response.json();
-      setCategories(categories.map(cat => ({
-        ...cat,
-        items: cat.items.map(item => item.id === itemId ? updatedItem : item),
-      })));
+      updateItem(updatedItem);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -76,30 +212,40 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
     }
   };
 
-  const updateSoldOutStatus = async (itemId: string, isSoldOut: boolean) => {
+  const duplicateItem = async (item: MenuItem) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/menu/${itemId}`, {
-        method: 'PATCH',
+      const response = await fetch('/api/menu', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          is_sold_out: isSoldOut,
-          restock_at: isSoldOut ? null : null,
+          name: `${item.name} Copy`,
+          description: item.description,
+          price: item.price,
+          category_id: item.category_id,
+          image_url: item.image_url,
+          is_available: false,
+          is_featured: false,
+          is_sold_out: false,
+          daily_limit: item.daily_limit,
+          daily_sold: 0,
+          restock_at: null,
+          dietary_tags: item.dietary_tags ?? [],
+          prep_time_minutes: item.prep_time_minutes,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to update sold out status');
+        throw new Error(data.error || 'Failed to duplicate item');
       }
 
-      const { menuItem: updatedItem } = await response.json();
-      setCategories(categories.map(cat => ({
-        ...cat,
-        items: cat.items.map(item => item.id === itemId ? updatedItem : item),
-      })));
+      const { menuItem } = await response.json();
+      setCategories((current) => current.map((cat) =>
+        cat.id === menuItem.category_id ? { ...cat, items: [...cat.items, menuItem] } : cat
+      ));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -108,7 +254,7 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
   };
 
   const deleteItem = async (itemId: string) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+    if (!confirm('Delete this menu item? This removes it from the chef and customer menu.')) return;
 
     setLoading(true);
     setError(null);
@@ -123,9 +269,9 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
         throw new Error(data.error || 'Failed to delete item');
       }
 
-      setCategories(categories.map(cat => ({
+      setCategories((current) => current.map((cat) => ({
         ...cat,
-        items: cat.items.filter(item => item.id !== itemId),
+        items: cat.items.filter((item) => item.id !== itemId),
       })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -137,176 +283,283 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
   return (
     <>
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 p-4">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm font-medium text-red-800">{error}</p>
         </div>
       )}
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        <Button variant="outline" className="min-h-10" onClick={() => setShowCategoryModal(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Category
-        </Button>
-        <Button className="min-h-10" onClick={() => setShowItemModal(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Item
-        </Button>
-      </div>
+      <section className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-950">Today&apos;s menu readiness</p>
+              <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                This is the live operating view for {storefrontName}: what can sell, what is constrained, and what needs chef or admin attention.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="min-h-10" onClick={() => setShowCategoryModal(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Category
+              </Button>
+              <Button className="min-h-10" onClick={() => setShowItemModal(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Menu item
+              </Button>
+            </div>
+          </div>
 
-      <div className="mt-6 space-y-6">
-        {categories.length === 0 ? (
-          <Card>
-            <p className="py-8 text-center text-sm text-gray-500">
-              No menu items yet. Click &quot;Add Category&quot; to get started.
-            </p>
-          </Card>
-        ) : (
-          categories.map((category) => (
-            <Card key={category.id}>
-              <div className="flex flex-col gap-3 border-b border-gray-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <h2 className="font-semibold text-gray-900">{category.name}</h2>
-                  {category.description && (
-                    <p className="mt-0.5 text-sm text-gray-500">{category.description}</p>
-                  )}
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              { icon: Utensils, label: 'Active items', value: operations.activeItems, helper: 'Ready to order' },
+              { icon: Gauge, label: 'Capacity left', value: operations.remainingCapacity, helper: `${operations.soldToday}/${operations.totalCapacity || 0} sold` },
+              { icon: Clock, label: 'Avg prep', value: `${operations.avgPrep}m`, helper: 'Active item average' },
+              { icon: BarChart3, label: 'Revenue room', value: formatCurrency(operations.revenueCapacity), helper: 'Remaining sellable capacity' },
+            ].map((metric) => {
+              const Icon = metric.icon;
+              return (
+                <div key={metric.label} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2 text-slate-500">
+                    <Icon className="h-4 w-4" />
+                    <p className="text-xs font-semibold uppercase tracking-wide">{metric.label}</p>
+                  </div>
+                  <p className="mt-2 text-2xl font-bold text-slate-950">{metric.value}</p>
+                  <p className="mt-1 text-xs text-slate-500">{metric.helper}</p>
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="min-h-10"
-                    onClick={() => {
-                      setSelectedCategoryId(category.id);
-                      setShowItemModal(true);
-                    }}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Item
-                  </Button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <p className="font-semibold text-slate-950">Ops watchlist</p>
+          </div>
+          <div className="mt-4 space-y-3">
+            {[
+              { label: 'Setup gaps', value: operations.setupIssues, helper: 'Items missing operational data' },
+              { label: 'Low capacity', value: items.filter(isLowCapacity).length, helper: 'Items near daily cap' },
+              { label: 'Hidden from customers', value: items.filter((item) => !item.is_available).length, helper: 'Unavailable menu records' },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 px-3 py-2">
+                <div>
+                  <p className="text-sm font-medium text-slate-900">{row.label}</p>
+                  <p className="text-xs text-slate-500">{row.helper}</p>
                 </div>
+                <span className="text-lg font-bold text-slate-950">{row.value}</span>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-              <div className="mt-4 space-y-3">
-                {category.items.length === 0 ? (
-                  <p className="py-4 text-center text-sm text-gray-400">
-                    No items in this category
-                  </p>
-                ) : (
-                  category.items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex flex-col gap-3 rounded-lg border border-gray-100 p-3 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
-                        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                          {item.image_url ? (
-                            <img
-                              src={item.image_url}
-                              alt={item.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-gray-400">
-                              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-gray-900">{item.name}</p>
-                            {item.is_featured && (
-                              <Badge variant="default" className="text-xs">Featured</Badge>
-                            )}
-                          </div>
-                          {item.description && (
-                            <p className="mt-0.5 text-sm text-gray-500 line-clamp-2">{item.description}</p>
-                          )}
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                            <span className="font-medium text-[#E85D26]">${item.price.toFixed(2)}</span>
-                            {item.prep_time_minutes ? (
-                              <span className="text-gray-500">{item.prep_time_minutes} min prep</span>
-                            ) : null}
-                            {item.daily_limit != null ? (
-                              <span className="text-gray-500">
-                                {item.daily_sold ?? 0}/{item.daily_limit} sold today
-                              </span>
-                            ) : null}
-                          </div>
-                          {item.dietary_tags && item.dietary_tags.length > 0 ? (
-                            <div className="mt-2 flex flex-wrap gap-1">
-                              {item.dietary_tags.map((tag) => (
-                                <Badge key={tag} variant="default" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          ) : null}
-                        </div>
+      <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 p-4">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="relative min-w-0 xl:w-80">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search items, categories, tags"
+                className="h-10 w-full rounded-lg border border-slate-300 pl-9 pr-3 text-sm outline-none focus:border-[#E85D26] focus:ring-2 focus:ring-[#E85D26]/20"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {FILTERS.map((entry) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => setFilter(entry.id)}
+                  className={`h-9 rounded-lg border px-3 text-sm font-medium transition ${
+                    filter === entry.id
+                      ? 'border-[#E85D26] bg-[#E85D26] text-white'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                  }`}
+                >
+                  {entry.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="divide-y divide-slate-200">
+          {filteredCategories.length === 0 ? (
+            <div className="p-10 text-center">
+              <ChefHat className="mx-auto h-10 w-10 text-slate-300" />
+              <p className="mt-3 font-medium text-slate-950">No matching menu items</p>
+              <p className="mt-1 text-sm text-slate-500">Clear the search or change the filter to see more of the menu.</p>
+            </div>
+          ) : (
+            filteredCategories.map((category) => {
+              const sellable = category.items.filter((item) => item.is_available && !item.is_sold_out).length;
+              const categoryCapacity = category.items.reduce((sum, item) => sum + Number(getRemaining(item) ?? 0), 0);
+
+              return (
+                <div key={category.id} className="p-4">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="font-semibold text-slate-950">{category.name}</h2>
+                        <Badge variant="default" className="text-xs">{sellable}/{category.items.length} sellable</Badge>
+                        <Badge variant="default" className="text-xs">{categoryCapacity} capacity left</Badge>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
-                        <button
-                          type="button"
-                          onClick={() => toggleAvailability(item.id, item.is_available)}
-                          disabled={loading}
-                          className="min-h-10 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#E85D26]"
-                        >
-                          <Badge variant={item.is_available ? 'success' : 'default'}>
-                            {item.is_available ? 'Available' : 'Unavailable'}
-                          </Badge>
-                        </button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="min-h-10"
-                          onClick={() => updateSoldOutStatus(item.id, !(item.is_sold_out ?? false))}
-                          disabled={loading}
-                        >
-                          {item.is_sold_out ? (
-                            <>
-                              <PackageCheck className="mr-2 h-4 w-4" />
-                              Restock
-                            </>
-                          ) : (
-                            <>
-                              <PackageX className="mr-2 h-4 w-4" />
-                              Sold Out
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="min-h-10"
-                          onClick={() => {
-                            setEditingItem(item);
-                            setShowItemModal(true);
-                          }}
-                          disabled={loading}
-                        >
-                          <Edit3 className="mr-2 h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="min-h-10"
-                          onClick={() => deleteItem(item.id)}
-                          disabled={loading}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </Button>
-                      </div>
+                      {category.description ? (
+                        <p className="mt-1 text-sm text-slate-500">{category.description}</p>
+                      ) : null}
                     </div>
-                  ))
-                )}
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-h-10"
+                      onClick={() => {
+                        setSelectedCategoryId(category.id);
+                        setShowItemModal(true);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add item
+                    </Button>
+                  </div>
+
+                  <div className="mt-4 overflow-hidden rounded-lg border border-slate-200">
+                    <div className="hidden grid-cols-[minmax(280px,1.5fr)_120px_150px_140px_180px] bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 lg:grid">
+                      <span>Item</span>
+                      <span>Price</span>
+                      <span>Production</span>
+                      <span>Status</span>
+                      <span className="text-right">Actions</span>
+                    </div>
+                    <div className="divide-y divide-slate-200">
+                      {category.items.map((item) => {
+                        const health = getItemHealth(item);
+                        const remaining = getRemaining(item);
+                        const setupIssues = getSetupIssues(item);
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="grid gap-4 px-4 py-4 lg:grid-cols-[minmax(280px,1.5fr)_120px_150px_140px_180px] lg:items-center"
+                          >
+                            <div className="flex min-w-0 gap-3">
+                              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                                {item.image_url ? (
+                                  <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                    <Camera className="h-5 w-5" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <p className="font-semibold text-slate-950">{item.name}</p>
+                                  {item.is_featured ? <Badge variant="default" className="text-xs">Featured</Badge> : null}
+                                </div>
+                                <p className="mt-1 line-clamp-2 text-sm text-slate-500">
+                                  {item.description || 'No customer-facing description yet.'}
+                                </p>
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {(item.dietary_tags ?? []).slice(0, 4).map((tag) => (
+                                    <span key={tag} className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                  {setupIssues.length > 0 ? (
+                                    <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700">
+                                      Missing {setupIssues[0]}
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-sm font-semibold text-slate-950">{formatCurrency(item.price)}</p>
+                              <p className="text-xs text-slate-500">Customer price</p>
+                            </div>
+
+                            <div className="space-y-1 text-sm">
+                              <p className="font-medium text-slate-950">
+                                {item.prep_time_minutes ? `${item.prep_time_minutes} min prep` : 'Prep time missing'}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {item.daily_limit != null
+                                  ? `${item.daily_sold ?? 0}/${item.daily_limit} sold today${remaining != null ? `, ${remaining} left` : ''}`
+                                  : 'No daily capacity set'}
+                              </p>
+                            </div>
+
+                            <div>
+                              <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${health.tone}`}>
+                                {health.label}
+                              </span>
+                              <p className="mt-1 text-xs text-slate-500">{health.detail}</p>
+                            </div>
+
+                            <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
+                              <button
+                                type="button"
+                                onClick={() => patchItem(item.id, { is_available: !item.is_available })}
+                                disabled={loading}
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                title={item.is_available ? 'Hide item' : 'Show item'}
+                              >
+                                {item.is_available ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => patchItem(item.id, { is_sold_out: !(item.is_sold_out ?? false), restock_at: null })}
+                                disabled={loading}
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                title={item.is_sold_out ? 'Restock item' : 'Mark sold out'}
+                              >
+                                {item.is_sold_out ? <PackageCheck className="h-4 w-4" /> : <PackageX className="h-4 w-4" />}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => duplicateItem(item)}
+                                disabled={loading}
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                title="Duplicate item"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingItem(item);
+                                  setShowItemModal(true);
+                                }}
+                                disabled={loading}
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                title="Edit item"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => deleteItem(item.id)}
+                                disabled={loading}
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                title="Delete item"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </section>
 
       {showCategoryModal && (
         <CategoryModal
@@ -330,12 +583,9 @@ export function MenuList({ categories: initialCategories }: MenuListProps) {
           }}
           onSuccess={(item) => {
             if (editingItem) {
-              setCategories(categories.map(cat => ({
-                ...cat,
-                items: cat.items.map(i => i.id === item.id ? item : i),
-              })));
+              updateItem(item);
             } else {
-              setCategories(categories.map(cat =>
+              setCategories(categories.map((cat) =>
                 cat.id === item.category_id
                   ? { ...cat, items: [...cat.items, item] }
                   : cat

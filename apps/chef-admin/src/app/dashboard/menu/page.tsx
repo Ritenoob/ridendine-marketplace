@@ -44,19 +44,55 @@ export default async function MenuPage() {
   }
 
   const menuCategories = await getMenuData(storefront.id);
+  const items = menuCategories.flatMap((category) => category.items);
+  const availableItems = items.filter((item) => item.is_available && !item.is_sold_out).length;
+  const soldOutItems = items.filter((item) => item.is_sold_out).length;
+  const lowCapacityItems = items.filter((item) => (
+    item.daily_limit != null &&
+    Number(item.daily_limit) > 0 &&
+    Number(item.daily_limit) - Number(item.daily_sold ?? 0) <= 3
+  )).length;
+  const missingSetupItems = items.filter((item) => (
+    !item.image_url ||
+    !item.description ||
+    !item.prep_time_minutes ||
+    item.daily_limit == null
+  )).length;
 
   return (
-    <div className="min-w-0 max-w-full">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="min-w-0 max-w-full space-y-6">
+      <div className="flex flex-col gap-3 border-b border-slate-200 pb-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-gray-900">Menu</h1>
-          <p className="mt-1 text-sm text-gray-500 sm:text-base">
-            Manage your menu categories and items
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#E85D26]">
+            Menu Operations
           </p>
+          <h1 className="mt-1 text-2xl font-bold text-gray-950">Production menu control</h1>
+          <p className="mt-1 max-w-3xl text-sm text-slate-600 sm:text-base">
+            Manage what customers can order, what the kitchen can produce today, and what ops can trust across storefront, admin, and delivery workflows.
+          </p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+          <p className="font-semibold text-slate-900">{storefront.name}</p>
+          <p className="mt-0.5 text-slate-500">/{storefront.slug}</p>
         </div>
       </div>
 
-      <MenuList categories={menuCategories} />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: 'Sellable now', value: availableItems, helper: 'Available and not sold out' },
+          { label: 'Sold out', value: soldOutItems, helper: 'Needs restock or hide' },
+          { label: 'Low capacity', value: lowCapacityItems, helper: 'Three or fewer portions left' },
+          { label: 'Needs setup', value: missingSetupItems, helper: 'Missing photo, prep, limit, or copy' },
+        ].map((metric) => (
+          <div key={metric.label} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-sm font-medium text-slate-500">{metric.label}</p>
+            <p className="mt-2 text-3xl font-bold text-slate-950">{metric.value}</p>
+            <p className="mt-1 text-xs text-slate-500">{metric.helper}</p>
+          </div>
+        ))}
+      </div>
+
+      <MenuList categories={menuCategories} storefrontName={storefront.name} />
     </div>
   );
 }
