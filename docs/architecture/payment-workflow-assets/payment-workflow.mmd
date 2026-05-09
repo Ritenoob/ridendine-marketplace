@@ -1,0 +1,30 @@
+flowchart TD
+  Customer["Customer Checkout"] --> Checkout["POST /api/checkout"]
+  Checkout --> Auth["Customer auth context"]
+  Checkout --> Cart["Read cart + cart_items"]
+  Checkout --> Menu["Validate menu_items"]
+  Checkout --> Quote["Server quote"]
+  Checkout --> Risk["Checkout risk check"]
+  Checkout --> Idem["checkout_idempotency_keys"]
+  Idem --> Order["Create order"]
+  Order --> Stripe["Stripe PaymentIntent"]
+  Stripe --> Authorize["Authorize payment"]
+  Authorize --> Client["Return client secret"]
+  Stripe -. async .-> Webhook["Stripe webhook"]
+  Webhook --> Signature["Verify signature"]
+  Signature --> Claim["Claim webhook event"]
+  Claim --> Success{"payment_intent.succeeded?"}
+  Success --> Kitchen["Submit to kitchen"]
+  Kitchen --> Finance["Finance webhook handler"]
+  Claim --> Failure{"payment_intent.payment_failed?"}
+  Failure --> PaymentFailure["Handle payment failure"]
+  PaymentFailure --> Finance
+  Claim --> Refund{"charge.refunded?"}
+  Refund --> RefundHandler["Handle external refund"]
+  RefundHandler --> Finance
+  Finance --> Ledger["ledger_entries"]
+  Ledger --> Capture["customer_charge_capture + tax_collected"]
+  Ledger --> Payables["chef_payable + driver_payable + platform_fee + tip_payable"]
+  Payables --> Accounts["platform_accounts"]
+  Accounts --> Payout["payout_runs + payouts"]
+  Payout --> Reconciliation["reconciliation"]

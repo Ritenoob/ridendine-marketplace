@@ -1,0 +1,13 @@
+{
+  "name": "RideNDine - Home-Cooked Food Delivery",
+  "short_name": "RideNDine",
+  "description": "Order home-cooked meals from local chefs in Hamilton",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#E85D26",
+  "icons": [
+    { "src": "/logo-icon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

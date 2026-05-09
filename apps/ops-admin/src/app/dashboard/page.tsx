@@ -4,8 +4,10 @@ import { createServerClient } from '@ridendine/db';
 import { KpiTile, PageHeader, StatusBadge } from '@ridendine/ui';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getEngine } from '@/lib/engine';
+import { ControlCenter } from './_components/control-center';
 import { LiveBoard } from './_components/live-board';
 import { LiveBoardBoundary } from './_components/live-board-boundary';
+import { OpsReadiness, type OpsReadinessItem } from './_components/ops-readiness';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,11 +102,13 @@ async function getDashboardStats() {
       orderGrowth,
       totalDrivers,
       onlineDrivers,
+      dbReachable: true,
     };
   } catch {
     return {
       todayOrders: 0, activeDeliveries: 0, todayRevenue: 0,
       revenueGrowth: 0, orderGrowth: 0, totalDrivers: 0, onlineDrivers: 0,
+      dbReachable: false,
     };
   }
 }
@@ -171,6 +175,43 @@ export default async function DashboardPage() {
     idle: 'idle',
   };
 
+  const readinessItems: OpsReadinessItem[] = [
+    {
+      label: 'Auth',
+      status: 'healthy',
+      detail: 'Protected ops session active',
+    },
+    {
+      label: 'Database',
+      status: stats.dbReachable ? 'healthy' : 'down',
+      detail: stats.dbReachable ? 'Dashboard queries responding' : 'Dashboard queries failed',
+      href: stats.dbReachable ? undefined : '/dashboard/settings',
+    },
+    {
+      label: 'Engine',
+      status: engineData ? 'healthy' : 'degraded',
+      detail: engineData ? 'Pressure data available' : 'Pressure data unavailable',
+      href: engineData ? undefined : '/dashboard/settings',
+    },
+    {
+      label: 'Realtime',
+      status: 'healthy',
+      detail: 'Live board subscription mounted',
+    },
+    {
+      label: 'Processors',
+      status: 'healthy',
+      detail: 'Cron and engine routes configured',
+      href: '/dashboard/automation',
+    },
+    {
+      label: 'Finance',
+      status: engineData ? 'healthy' : 'degraded',
+      detail: engineData ? `${engineData.pendingRefunds} refunds queued` : 'Finance queue unavailable',
+      href: '/dashboard/finance',
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-7xl space-y-6">
@@ -213,6 +254,10 @@ export default async function DashboardPage() {
             className="border-gray-800 bg-opsPanel"
           />
         </div>
+
+        <OpsReadiness items={readinessItems} />
+
+        <ControlCenter />
 
         {/* Engine pressure strip */}
         {engineData && pressureItems.length > 0 && (

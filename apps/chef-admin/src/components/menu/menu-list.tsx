@@ -180,10 +180,16 @@ export function MenuList({ categories: initialCategories, storefrontName }: Menu
     };
   }, [items]);
 
-  const updateItem = (updatedItem: MenuItem) => {
+  const updateItem = (updatedItem: MenuItem | null | undefined) => {
+    if (!updatedItem?.id) {
+      setError('Menu item update did not return a valid item. Refresh and try again.');
+      return;
+    }
+
+    const updatedItemId = updatedItem.id;
     setCategories((current) => current.map((cat) => ({
       ...cat,
-      items: cat.items.map((item) => item.id === updatedItem.id ? updatedItem : item),
+      items: cat.items.map((item) => item.id === updatedItemId ? updatedItem : item),
     })));
   };
 
@@ -203,7 +209,8 @@ export function MenuList({ categories: initialCategories, storefrontName }: Menu
         throw new Error(data.error || 'Failed to update item');
       }
 
-      const { menuItem: updatedItem } = await response.json();
+      const json = await response.json();
+      const updatedItem = json.menuItem ?? json.data?.menuItem ?? null;
       updateItem(updatedItem);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -242,7 +249,11 @@ export function MenuList({ categories: initialCategories, storefrontName }: Menu
         throw new Error(data.error || 'Failed to duplicate item');
       }
 
-      const { menuItem } = await response.json();
+      const json = await response.json();
+      const menuItem = json.menuItem ?? json.data?.menuItem ?? null;
+      if (!menuItem?.category_id) {
+        throw new Error('Menu item duplicate did not return a valid item');
+      }
       setCategories((current) => current.map((cat) =>
         cat.id === menuItem.category_id ? { ...cat, items: [...cat.items, menuItem] } : cat
       ));

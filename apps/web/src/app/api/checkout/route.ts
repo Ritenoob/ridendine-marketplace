@@ -632,7 +632,7 @@ export async function POST(request: Request): Promise<Response> {
       }
 
       const paymentIntent = await stripe.paymentIntents.create(
-        piParams as Parameters<typeof stripe.paymentIntents.create>[0],
+        piParams as unknown as Parameters<typeof stripe.paymentIntents.create>[0],
         { idempotencyKey: `checkout:${customerContext.customerId}:${idempotencyKey}` }
       );
 

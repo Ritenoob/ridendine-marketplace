@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { createServerClient, getStorefrontByChefId, getOrdersByStorefront } from '@ridendine/db';
+import { createServerClient, getStorefrontByChefId } from '@ridendine/db';
 import { OrdersList } from '@/components/orders/orders-list';
 
 export const dynamic = 'force-dynamic';
@@ -26,32 +26,30 @@ async function getOrdersWithCustomers(storefrontId: string) {
   const cookieStore = await cookies();
   const supabase = createServerClient(cookieStore);
 
-  const orders = await getOrdersByStorefront(supabase as any, storefrontId);
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      customer:customers (
+        id, first_name, last_name, phone, email
+      ),
+      address:customer_addresses (
+        id, street_address, city, state, postal_code, country, lat, lng, delivery_instructions
+      ),
+      items:order_items (
+        id, quantity, unit_price, total_price, special_instructions,
+        menu_item:menu_items (id, name, description)
+      ),
+      delivery:deliveries (
+        id, status, driver_id,
+        driver:drivers (first_name, last_name, phone)
+      )
+    `)
+    .eq('storefront_id', storefrontId)
+    .order('created_at', { ascending: false });
 
-  if (orders.length === 0) return [];
-
-  const customerIds = [...new Set(orders.map((o: any) => o.customer_id).filter(Boolean))];
-  const { data: customers }: any = customerIds.length > 0
-    ? await supabase
-        .from('customers')
-        .select('id, first_name, last_name, phone')
-        .in('id', customerIds)
-    : { data: [] };
-
-  // Fixed: use customer_addresses table with correct column names
-  const addressIds = [...new Set(orders.map((o: any) => o.delivery_address_id).filter(Boolean))];
-  const { data: addresses }: any = addressIds.length > 0
-    ? await supabase
-        .from('customer_addresses')
-        .select('id, street_address, city, state, postal_code')
-        .in('id', addressIds)
-    : { data: [] };
-
-  return orders.map((order: any) => ({
-    ...order,
-    customer: customers?.find((c: any) => c.id === order.customer_id) || null,
-    address: addresses?.find((a: any) => a.id === order.delivery_address_id) || null,
-  }));
+  if (error) throw error;
+  return data ?? [];
 }
 
 export default async function OrdersPage() {
@@ -71,8 +69,13 @@ export default async function OrdersPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-          <p className="mt-1 text-gray-500">Manage incoming and active orders</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#E85D26]">
+            Kitchen Order Log
+          </p>
+          <h1 className="mt-1 text-2xl font-bold text-gray-900">Orders</h1>
+          <p className="mt-1 text-gray-500">
+            Real customer orders with kitchen items, delivery context, payment status, and ops traceability.
+          </p>
         </div>
       </div>
 

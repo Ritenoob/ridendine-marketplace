@@ -10,6 +10,7 @@ import { Button, Card, Input } from '@ridendine/ui';
 import { StripePaymentForm } from '@/components/checkout/stripe-payment-form';
 import { CheckoutSkeleton } from '@/components/checkout/checkout-skeleton';
 import { DeliveryTimePicker } from '@/components/checkout/delivery-time-picker';
+import { SavedCardSelector } from '@/components/checkout/saved-card-selector';
 import { orderConfirmationPath } from '@/lib/customer-ordering';
 import { useEta } from '@/hooks/use-eta';
 
@@ -118,6 +119,10 @@ function CheckoutContent() {
   const [breakdown, setBreakdown] = useState<OrderBreakdown | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<'details' | 'payment'>('details');
   const [creatingPayment, setCreatingPayment] = useState(false);
+
+  // Saved payment method state
+  const [savedPaymentMethodId, setSavedPaymentMethodId] = useState<string | null>(null);
+  const [saveCard, setSaveCard] = useState(false);
   const { eta: deliveryEta, loading: etaLoading } = useEta(storefrontId, selectedAddress || null);
 
   useEffect(() => {
@@ -254,15 +259,24 @@ function CheckoutContent() {
           tip: tipDollars(),
           promoCode: promoStatus === 'valid' ? promoCode : null,
           scheduledFor: scheduledFor ?? null,
+          savedPaymentMethodId: savedPaymentMethodId ?? null,
+          saveCard,
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        setClientSecret(result.data.clientSecret);
         setOrderId(result.data.orderId);
         setBreakdown(result.data.breakdown);
+
+        // Saved card confirmed server-side — no client-secret needed
+        if (!result.data.clientSecret) {
+          router.push(orderConfirmationPath(result.data.orderId));
+          return;
+        }
+
+        setClientSecret(result.data.clientSecret);
         setCheckoutStep('payment');
       } else {
         setError(mapCheckoutError(result.code, result.error));
@@ -443,6 +457,19 @@ function CheckoutContent() {
                     <span className="ml-1 text-xs text-gray-400">({tipPercent}%)</span>
                   )}
                 </p>
+              </Card>
+
+              {/* Payment Method */}
+              <Card>
+                <h2 className="font-semibold text-gray-900">Payment Method</h2>
+                <div className="mt-4">
+                  <SavedCardSelector
+                    onSelect={(pmId, shouldSave) => {
+                      setSavedPaymentMethodId(pmId);
+                      setSaveCard(shouldSave);
+                    }}
+                  />
+                </div>
               </Card>
 
               {/* Promo Code */}
