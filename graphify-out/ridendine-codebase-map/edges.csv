@@ -1,0 +1,1113 @@
+from,to,label,status
+app:web,route:web:/about,owns route,WIRED
+route:web:/about,file:apps/web/src/app/about/page.tsx,implemented by,WIRED
+route:web:/about,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/account/addresses,owns route,PARTIAL
+route:web:/account/addresses,file:apps/web/src/app/account/addresses/page.tsx,implemented by,PARTIAL
+route:web:/account/addresses,package:@ridendine/auth,imports,PARTIAL
+route:web:/account/addresses,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/account/favorites,owns route,WIRED
+route:web:/account/favorites,file:apps/web/src/app/account/favorites/page.tsx,implemented by,WIRED
+route:web:/account/favorites,package:@ridendine/auth,imports,WIRED
+route:web:/account/favorites,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/account/orders,owns route,PARTIAL
+route:web:/account/orders,file:apps/web/src/app/account/orders/page.tsx,implemented by,PARTIAL
+route:web:/account/orders,package:@ridendine/auth,imports,PARTIAL
+route:web:/account/orders,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/account,owns route,WIRED
+route:web:/account,file:apps/web/src/app/account/page.tsx,implemented by,WIRED
+route:web:/account,package:@ridendine/auth,imports,WIRED
+route:web:/account,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/account/settings,owns route,PARTIAL
+route:web:/account/settings,file:apps/web/src/app/account/settings/page.tsx,implemented by,PARTIAL
+route:web:/account/settings,package:@ridendine/auth,imports,PARTIAL
+route:web:/account/settings,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/auth/forgot-password,owns route,PARTIAL
+route:web:/auth/forgot-password,file:apps/web/src/app/auth/forgot-password/page.tsx,implemented by,PARTIAL
+route:web:/auth/forgot-password,package:@ridendine/auth,imports,PARTIAL
+route:web:/auth/forgot-password,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/auth/login,owns route,PARTIAL
+route:web:/auth/login,file:apps/web/src/app/auth/login/page.tsx,implemented by,PARTIAL
+route:web:/auth/login,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/auth/signup,owns route,PARTIAL
+route:web:/auth/signup,file:apps/web/src/app/auth/signup/page.tsx,implemented by,PARTIAL
+route:web:/auth/signup,package:@ridendine/auth,imports,PARTIAL
+route:web:/auth/signup,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/cart,owns route,WIRED
+route:web:/cart,file:apps/web/src/app/cart/page.tsx,implemented by,WIRED
+route:web:/cart,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/checkout,owns route,PARTIAL
+route:web:/checkout,file:apps/web/src/app/checkout/page.tsx,implemented by,PARTIAL
+route:web:/checkout,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/chef-resources,owns route,WIRED
+route:web:/chef-resources,file:apps/web/src/app/chef-resources/page.tsx,implemented by,WIRED
+route:web:/chef-resources,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/chef-signup,owns route,PARTIAL
+route:web:/chef-signup,file:apps/web/src/app/chef-signup/page.tsx,implemented by,PARTIAL
+route:web:/chef-signup,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/chefs/:slug,owns route,WIRED
+route:web:/chefs/:slug,file:apps/web/src/app/chefs/[slug]/page.tsx,implemented by,WIRED
+route:web:/chefs/:slug,package:@ridendine/db,imports,WIRED
+app:web,route:web:/chefs,owns route,WIRED
+route:web:/chefs,file:apps/web/src/app/chefs/page.tsx,implemented by,WIRED
+app:web,route:web:/contact,owns route,PARTIAL
+route:web:/contact,file:apps/web/src/app/contact/page.tsx,implemented by,PARTIAL
+route:web:/contact,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/how-it-works,owns route,WIRED
+route:web:/how-it-works,file:apps/web/src/app/how-it-works/page.tsx,implemented by,WIRED
+route:web:/how-it-works,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/maintenance,owns route,WIRED
+route:web:/maintenance,file:apps/web/src/app/maintenance/page.tsx,implemented by,WIRED
+app:web,route:web:/order-confirmation/:orderId,owns route,WIRED
+route:web:/order-confirmation/:orderId,file:apps/web/src/app/order-confirmation/[orderId]/page.tsx,implemented by,WIRED
+app:web,route:web:/orders/:id/confirmation,owns route,WIRED
+route:web:/orders/:id/confirmation,file:apps/web/src/app/orders/[id]/confirmation/page.tsx,implemented by,WIRED
+route:web:/orders/:id/confirmation,table:orders,reads/writes table,WIRED
+route:web:/orders/:id/confirmation,package:@ridendine/db,imports,WIRED
+route:web:/orders/:id/confirmation,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/,owns route,WIRED
+route:web:/,file:apps/web/src/app/page.tsx,implemented by,WIRED
+route:web:/,table:chef_storefronts,reads/writes table,WIRED
+route:web:/,table:menu_items,reads/writes table,WIRED
+route:web:/,package:@ridendine/db,imports,WIRED
+route:web:/,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/privacy,owns route,PARTIAL
+route:web:/privacy,file:apps/web/src/app/privacy/page.tsx,implemented by,PARTIAL
+app:web,route:web:/terms,owns route,PARTIAL
+route:web:/terms,file:apps/web/src/app/terms/page.tsx,implemented by,PARTIAL
+app:ops-admin,route:ops-admin:/auth/login,owns route,PARTIAL
+route:ops-admin:/auth/login,file:apps/ops-admin/src/app/auth/login/page.tsx,implemented by,PARTIAL
+route:ops-admin:/auth/login,package:@ridendine/db,imports,PARTIAL
+route:ops-admin:/auth/login,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/activity,owns route,PARTIAL
+route:ops-admin:/dashboard/activity,file:apps/ops-admin/src/app/dashboard/activity/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/activity,table:audit_logs,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/activity,table:ops_override_logs,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/activity,table:platform_users,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/activity,package:@ridendine/db,imports,PARTIAL
+route:ops-admin:/dashboard/activity,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/analytics,owns route,PARTIAL
+route:ops-admin:/dashboard/analytics,file:apps/ops-admin/src/app/dashboard/analytics/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/analytics,table:driver_presence,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/analytics,table:drivers,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/analytics,table:orders,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/analytics,package:@ridendine/db,imports,PARTIAL
+route:ops-admin:/dashboard/analytics,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/announcements,owns route,PARTIAL
+route:ops-admin:/dashboard/announcements,file:apps/ops-admin/src/app/dashboard/announcements/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/announcements,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/automation,owns route,PARTIAL
+route:ops-admin:/dashboard/automation,file:apps/ops-admin/src/app/dashboard/automation/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/automation,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/chefs/:id,owns route,WIRED
+route:ops-admin:/dashboard/chefs/:id,file:apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/chefs/:id,table:chef_delivery_zones,reads/writes table,WIRED
+route:ops-admin:/dashboard/chefs/:id,package:@ridendine/db,imports,WIRED
+route:ops-admin:/dashboard/chefs/:id,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/chefs/approvals,owns route,PARTIAL
+route:ops-admin:/dashboard/chefs/approvals,file:apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/chefs/approvals,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/chefs,owns route,WIRED
+route:ops-admin:/dashboard/chefs,file:apps/ops-admin/src/app/dashboard/chefs/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/chefs,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/customers/:id,owns route,WIRED
+route:ops-admin:/dashboard/customers/:id,file:apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/customers/:id,package:@ridendine/db,imports,WIRED
+route:ops-admin:/dashboard/customers/:id,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/customers,owns route,PARTIAL
+route:ops-admin:/dashboard/customers,file:apps/ops-admin/src/app/dashboard/customers/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/customers,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/deliveries/:id,owns route,WIRED
+route:ops-admin:/dashboard/deliveries/:id,file:apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/deliveries/:id,package:@ridendine/db,imports,WIRED
+route:ops-admin:/dashboard/deliveries/:id,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/deliveries,owns route,PARTIAL
+route:ops-admin:/dashboard/deliveries,file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/deliveries,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/dispatch,owns route,PARTIAL
+route:ops-admin:/dashboard/dispatch,file:apps/ops-admin/src/app/dashboard/dispatch/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/dispatch,package:@ridendine/types,imports,PARTIAL
+route:ops-admin:/dashboard/dispatch,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/drivers/:id,owns route,WIRED
+route:ops-admin:/dashboard/drivers/:id,file:apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/drivers/:id,package:@ridendine/db,imports,WIRED
+route:ops-admin:/dashboard/drivers/:id,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/drivers,owns route,WIRED
+route:ops-admin:/dashboard/drivers,file:apps/ops-admin/src/app/dashboard/drivers/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/drivers,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/finance/accounts/chefs/:id,owns route,MISSING
+route:ops-admin:/dashboard/finance/accounts/chefs/:id,file:apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx,implemented by,MISSING
+app:ops-admin,route:ops-admin:/dashboard/finance/accounts/chefs,owns route,PARTIAL
+route:ops-admin:/dashboard/finance/accounts/chefs,file:apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/finance/accounts/chefs,table:chef_storefronts,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/finance/accounts/chefs,table:platform_accounts,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/finance/accounts/chefs,package:@ridendine/db,imports,PARTIAL
+route:ops-admin:/dashboard/finance/accounts/chefs,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/finance/accounts/drivers/:id,owns route,MISSING
+route:ops-admin:/dashboard/finance/accounts/drivers/:id,file:apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx,implemented by,MISSING
+app:ops-admin,route:ops-admin:/dashboard/finance/accounts/drivers,owns route,PARTIAL
+route:ops-admin:/dashboard/finance/accounts/drivers,file:apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/finance/accounts/drivers,table:drivers,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/finance/accounts/drivers,table:platform_accounts,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/finance/accounts/drivers,package:@ridendine/db,imports,PARTIAL
+route:ops-admin:/dashboard/finance/accounts/drivers,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/finance/instant-payouts,owns route,PARTIAL
+route:ops-admin:/dashboard/finance/instant-payouts,file:apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/finance/instant-payouts,table:instant_payout_requests,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/finance/instant-payouts,package:@ridendine/db,imports,PARTIAL
+route:ops-admin:/dashboard/finance/instant-payouts,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/finance,owns route,WIRED
+route:ops-admin:/dashboard/finance,file:apps/ops-admin/src/app/dashboard/finance/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/finance,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/finance/payouts/:runId,owns route,PARTIAL
+route:ops-admin:/dashboard/finance/payouts/:runId,file:apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/finance/payouts/:runId,table:driver_payouts,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/finance/payouts/:runId,table:ledger_entries,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/finance/payouts/:runId,table:payout_runs,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/finance/payouts/:runId,package:@ridendine/db,imports,PARTIAL
+route:ops-admin:/dashboard/finance/payouts/:runId,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/finance/payouts,owns route,PARTIAL
+route:ops-admin:/dashboard/finance/payouts,file:apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/finance/payouts,table:payout_runs,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/finance/payouts,package:@ridendine/db,imports,PARTIAL
+route:ops-admin:/dashboard/finance/payouts,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/finance/reconciliation,owns route,PARTIAL
+route:ops-admin:/dashboard/finance/reconciliation,file:apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/finance/reconciliation,table:stripe_reconciliation,reads/writes table,PARTIAL
+route:ops-admin:/dashboard/finance/reconciliation,package:@ridendine/db,imports,PARTIAL
+route:ops-admin:/dashboard/finance/reconciliation,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/finance/refunds,owns route,WIRED
+route:ops-admin:/dashboard/finance/refunds,file:apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/finance/refunds,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/health,owns route,PARTIAL
+route:ops-admin:/dashboard/health,file:apps/ops-admin/src/app/dashboard/health/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/health,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/integrations,owns route,WIRED
+route:ops-admin:/dashboard/integrations,file:apps/ops-admin/src/app/dashboard/integrations/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/integrations,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/map,owns route,WIRED
+route:ops-admin:/dashboard/map,file:apps/ops-admin/src/app/dashboard/map/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/map,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/orders/:id,owns route,WIRED
+route:ops-admin:/dashboard/orders/:id,file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/orders/:id,table:order_exceptions,reads/writes table,WIRED
+route:ops-admin:/dashboard/orders/:id,package:@ridendine/db,imports,WIRED
+route:ops-admin:/dashboard/orders/:id,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/orders,owns route,PARTIAL
+route:ops-admin:/dashboard/orders,file:apps/ops-admin/src/app/dashboard/orders/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/orders,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard,owns route,WIRED
+route:ops-admin:/dashboard,file:apps/ops-admin/src/app/dashboard/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard,table:deliveries,reads/writes table,WIRED
+route:ops-admin:/dashboard,table:driver_presence,reads/writes table,WIRED
+route:ops-admin:/dashboard,table:drivers,reads/writes table,WIRED
+route:ops-admin:/dashboard,table:orders,reads/writes table,WIRED
+route:ops-admin:/dashboard,package:@ridendine/db,imports,WIRED
+route:ops-admin:/dashboard,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/promos,owns route,PARTIAL
+route:ops-admin:/dashboard/promos,file:apps/ops-admin/src/app/dashboard/promos/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/promos,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/reports,owns route,WIRED
+route:ops-admin:/dashboard/reports,file:apps/ops-admin/src/app/dashboard/reports/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/reports,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/settings,owns route,WIRED
+route:ops-admin:/dashboard/settings,file:apps/ops-admin/src/app/dashboard/settings/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/settings,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/support,owns route,PARTIAL
+route:ops-admin:/dashboard/support,file:apps/ops-admin/src/app/dashboard/support/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/support,package:@ridendine/db,imports,PARTIAL
+route:ops-admin:/dashboard/support,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/team,owns route,PARTIAL
+route:ops-admin:/dashboard/team,file:apps/ops-admin/src/app/dashboard/team/page.tsx,implemented by,PARTIAL
+route:ops-admin:/dashboard/team,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/internal/command-center,owns route,WIRED
+route:ops-admin:/internal/command-center,file:apps/ops-admin/src/app/internal/command-center/page.tsx,implemented by,WIRED
+app:ops-admin,route:ops-admin:/,owns route,WIRED
+route:ops-admin:/,file:apps/ops-admin/src/app/page.tsx,implemented by,WIRED
+app:chef-admin,route:chef-admin:/auth/login,owns route,PARTIAL
+route:chef-admin:/auth/login,file:apps/chef-admin/src/app/auth/login/page.tsx,implemented by,PARTIAL
+route:chef-admin:/auth/login,package:@ridendine/auth,imports,PARTIAL
+route:chef-admin:/auth/login,package:@ridendine/ui,imports,PARTIAL
+app:chef-admin,route:chef-admin:/auth/signup,owns route,PARTIAL
+route:chef-admin:/auth/signup,file:apps/chef-admin/src/app/auth/signup/page.tsx,implemented by,PARTIAL
+route:chef-admin:/auth/signup,package:@ridendine/ui,imports,PARTIAL
+app:chef-admin,route:chef-admin:/dashboard/analytics,owns route,PARTIAL
+route:chef-admin:/dashboard/analytics,file:apps/chef-admin/src/app/dashboard/analytics/page.tsx,implemented by,PARTIAL
+route:chef-admin:/dashboard/analytics,package:@ridendine/ui,imports,PARTIAL
+app:chef-admin,route:chef-admin:/dashboard/availability,owns route,WIRED
+route:chef-admin:/dashboard/availability,file:apps/chef-admin/src/app/dashboard/availability/page.tsx,implemented by,WIRED
+app:chef-admin,route:chef-admin:/dashboard/menu,owns route,WIRED
+route:chef-admin:/dashboard/menu,file:apps/chef-admin/src/app/dashboard/menu/page.tsx,implemented by,WIRED
+route:chef-admin:/dashboard/menu,table:chef_profiles,reads/writes table,WIRED
+route:chef-admin:/dashboard/menu,package:@ridendine/db,imports,WIRED
+app:chef-admin,route:chef-admin:/dashboard/orders/:id,owns route,WIRED
+route:chef-admin:/dashboard/orders/:id,file:apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx,implemented by,WIRED
+route:chef-admin:/dashboard/orders/:id,table:chef_profiles,reads/writes table,WIRED
+route:chef-admin:/dashboard/orders/:id,table:chef_storefronts,reads/writes table,WIRED
+route:chef-admin:/dashboard/orders/:id,table:orders,reads/writes table,WIRED
+route:chef-admin:/dashboard/orders/:id,package:@ridendine/db,imports,WIRED
+route:chef-admin:/dashboard/orders/:id,package:@ridendine/ui,imports,WIRED
+app:chef-admin,route:chef-admin:/dashboard/orders,owns route,WIRED
+route:chef-admin:/dashboard/orders,file:apps/chef-admin/src/app/dashboard/orders/page.tsx,implemented by,WIRED
+route:chef-admin:/dashboard/orders,table:chef_profiles,reads/writes table,WIRED
+route:chef-admin:/dashboard/orders,table:orders,reads/writes table,WIRED
+route:chef-admin:/dashboard/orders,package:@ridendine/db,imports,WIRED
+app:chef-admin,route:chef-admin:/dashboard,owns route,WIRED
+route:chef-admin:/dashboard,file:apps/chef-admin/src/app/dashboard/page.tsx,implemented by,WIRED
+route:chef-admin:/dashboard,table:chef_availability,reads/writes table,WIRED
+route:chef-admin:/dashboard,table:chef_payout_accounts,reads/writes table,WIRED
+route:chef-admin:/dashboard,table:chef_profiles,reads/writes table,WIRED
+route:chef-admin:/dashboard,table:customers,reads/writes table,WIRED
+route:chef-admin:/dashboard,package:@ridendine/db,imports,WIRED
+app:chef-admin,route:chef-admin:/dashboard/payouts,owns route,WIRED
+route:chef-admin:/dashboard/payouts,file:apps/chef-admin/src/app/dashboard/payouts/page.tsx,implemented by,WIRED
+route:chef-admin:/dashboard/payouts,table:chef_payout_accounts,reads/writes table,WIRED
+route:chef-admin:/dashboard/payouts,table:chef_payouts,reads/writes table,WIRED
+route:chef-admin:/dashboard/payouts,table:chef_profiles,reads/writes table,WIRED
+route:chef-admin:/dashboard/payouts,table:chef_storefronts,reads/writes table,WIRED
+route:chef-admin:/dashboard/payouts,table:orders,reads/writes table,WIRED
+route:chef-admin:/dashboard/payouts,package:@ridendine/db,imports,WIRED
+route:chef-admin:/dashboard/payouts,package:@ridendine/ui,imports,WIRED
+app:chef-admin,route:chef-admin:/dashboard/reviews,owns route,PARTIAL
+route:chef-admin:/dashboard/reviews,file:apps/chef-admin/src/app/dashboard/reviews/page.tsx,implemented by,PARTIAL
+route:chef-admin:/dashboard/reviews,table:chef_profiles,reads/writes table,PARTIAL
+route:chef-admin:/dashboard/reviews,table:chef_storefronts,reads/writes table,PARTIAL
+route:chef-admin:/dashboard/reviews,table:reviews,reads/writes table,PARTIAL
+route:chef-admin:/dashboard/reviews,package:@ridendine/db,imports,PARTIAL
+route:chef-admin:/dashboard/reviews,package:@ridendine/ui,imports,PARTIAL
+app:chef-admin,route:chef-admin:/dashboard/settings,owns route,WIRED
+route:chef-admin:/dashboard/settings,file:apps/chef-admin/src/app/dashboard/settings/page.tsx,implemented by,WIRED
+route:chef-admin:/dashboard/settings,package:@ridendine/db,imports,WIRED
+app:chef-admin,route:chef-admin:/dashboard/storefront,owns route,WIRED
+route:chef-admin:/dashboard/storefront,file:apps/chef-admin/src/app/dashboard/storefront/page.tsx,implemented by,WIRED
+route:chef-admin:/dashboard/storefront,table:chef_profiles,reads/writes table,WIRED
+route:chef-admin:/dashboard/storefront,package:@ridendine/db,imports,WIRED
+route:chef-admin:/dashboard/storefront,package:@ridendine/ui,imports,WIRED
+app:chef-admin,route:chef-admin:/,owns route,WIRED
+route:chef-admin:/,file:apps/chef-admin/src/app/page.tsx,implemented by,WIRED
+app:driver-app,route:driver-app:/auth/login,owns route,PARTIAL
+route:driver-app:/auth/login,file:apps/driver-app/src/app/auth/login/page.tsx,implemented by,PARTIAL
+route:driver-app:/auth/login,package:@ridendine/ui,imports,PARTIAL
+app:driver-app,route:driver-app:/auth/signup,owns route,PARTIAL
+route:driver-app:/auth/signup,file:apps/driver-app/src/app/auth/signup/page.tsx,implemented by,PARTIAL
+route:driver-app:/auth/signup,package:@ridendine/ui,imports,PARTIAL
+app:driver-app,route:driver-app:/delivery/:id,owns route,WIRED
+route:driver-app:/delivery/:id,file:apps/driver-app/src/app/delivery/[id]/page.tsx,implemented by,WIRED
+route:driver-app:/delivery/:id,table:assignment_attempts,reads/writes table,WIRED
+route:driver-app:/delivery/:id,table:orders,reads/writes table,WIRED
+route:driver-app:/delivery/:id,package:@ridendine/db,imports,WIRED
+app:driver-app,route:driver-app:/earnings,owns route,WIRED
+route:driver-app:/earnings,file:apps/driver-app/src/app/earnings/page.tsx,implemented by,WIRED
+route:driver-app:/earnings,table:platform_accounts,reads/writes table,WIRED
+route:driver-app:/earnings,package:@ridendine/db,imports,WIRED
+app:driver-app,route:driver-app:/history,owns route,WIRED
+route:driver-app:/history,file:apps/driver-app/src/app/history/page.tsx,implemented by,WIRED
+route:driver-app:/history,package:@ridendine/db,imports,WIRED
+app:driver-app,route:driver-app:/,owns route,WIRED
+route:driver-app:/,file:apps/driver-app/src/app/page.tsx,implemented by,WIRED
+route:driver-app:/,package:@ridendine/db,imports,WIRED
+route:driver-app:/,package:@ridendine/ui,imports,WIRED
+app:driver-app,route:driver-app:/profile,owns route,WIRED
+route:driver-app:/profile,file:apps/driver-app/src/app/profile/page.tsx,implemented by,WIRED
+route:driver-app:/profile,package:@ridendine/db,imports,WIRED
+app:driver-app,route:driver-app:/settings,owns route,WIRED
+route:driver-app:/settings,file:apps/driver-app/src/app/settings/page.tsx,implemented by,WIRED
+route:driver-app:/settings,table:platform_accounts,reads/writes table,WIRED
+route:driver-app:/settings,package:@ridendine/db,imports,WIRED
+app:web,api:web:/api/addresses,owns API,WIRED
+api:web:/api/addresses,file:apps/web/src/app/api/addresses/route.ts,implemented by,WIRED
+api:web:/api/addresses,table:customer_addresses,touches table,WIRED
+api:web:/api/addresses,package:@ridendine/db,imports,WIRED
+api:web:/api/addresses,package:@ridendine/engine,imports,WIRED
+api:web:/api/addresses,package:@ridendine/validation,imports,WIRED
+api:web:/api/addresses,external:Supabase,calls external,WIRED
+app:web,api:web:/api/auth/login,owns API,WIRED
+api:web:/api/auth/login,file:apps/web/src/app/api/auth/login/route.ts,implemented by,WIRED
+api:web:/api/auth/login,package:@ridendine/db,imports,WIRED
+api:web:/api/auth/login,package:@ridendine/utils,imports,WIRED
+api:web:/api/auth/login,package:@ridendine/validation,imports,WIRED
+api:web:/api/auth/login,external:Supabase,calls external,WIRED
+app:web,api:web:/api/auth/signup,owns API,WIRED
+api:web:/api/auth/signup,file:apps/web/src/app/api/auth/signup/route.ts,implemented by,WIRED
+api:web:/api/auth/signup,package:@ridendine/db,imports,WIRED
+api:web:/api/auth/signup,package:@ridendine/utils,imports,WIRED
+api:web:/api/auth/signup,package:@ridendine/validation,imports,WIRED
+api:web:/api/auth/signup,external:Supabase,calls external,WIRED
+app:web,api:web:/api/cart,owns API,WIRED
+api:web:/api/cart,file:apps/web/src/app/api/cart/route.ts,implemented by,WIRED
+api:web:/api/cart,table:cart_items,touches table,WIRED
+api:web:/api/cart,table:menu_items,touches table,WIRED
+api:web:/api/cart,package:@ridendine/db,imports,WIRED
+api:web:/api/cart,package:@ridendine/validation,imports,WIRED
+api:web:/api/cart,external:Supabase,calls external,WIRED
+app:web,api:web:/api/checkout,owns API,PARTIAL
+api:web:/api/checkout,file:apps/web/src/app/api/checkout/route.ts,implemented by,PARTIAL
+api:web:/api/checkout,table:checkout_idempotency_keys,touches table,PARTIAL
+api:web:/api/checkout,table:chef_kitchens,touches table,PARTIAL
+api:web:/api/checkout,table:customer_addresses,touches table,PARTIAL
+api:web:/api/checkout,table:customers,touches table,PARTIAL
+api:web:/api/checkout,table:menu_items,touches table,PARTIAL
+api:web:/api/checkout,table:orders,touches table,PARTIAL
+api:web:/api/checkout,table:promo_codes,touches table,PARTIAL
+api:web:/api/checkout,table:service_areas,touches table,PARTIAL
+api:web:/api/checkout,package:@ridendine/db,imports,PARTIAL
+api:web:/api/checkout,package:@ridendine/engine,imports,PARTIAL
+api:web:/api/checkout,package:@ridendine/utils,imports,PARTIAL
+api:web:/api/checkout,package:@ridendine/validation,imports,PARTIAL
+api:web:/api/checkout,external:Stripe,calls external,PARTIAL
+api:web:/api/checkout,external:Supabase,calls external,PARTIAL
+app:web,api:web:/api/eta,owns API,PARTIAL
+api:web:/api/eta,file:apps/web/src/app/api/eta/route.ts,implemented by,PARTIAL
+api:web:/api/eta,package:@ridendine/db,imports,PARTIAL
+api:web:/api/eta,package:@ridendine/routing,imports,PARTIAL
+api:web:/api/eta,external:Routing provider,calls external,PARTIAL
+app:web,api:web:/api/favorites,owns API,WIRED
+api:web:/api/favorites,file:apps/web/src/app/api/favorites/route.ts,implemented by,WIRED
+api:web:/api/favorites,table:customers,touches table,WIRED
+api:web:/api/favorites,table:favorites,touches table,WIRED
+api:web:/api/favorites,package:@ridendine/db,imports,WIRED
+api:web:/api/favorites,package:@ridendine/engine/server,imports,WIRED
+api:web:/api/favorites,package:@ridendine/utils,imports,WIRED
+api:web:/api/favorites,external:Supabase,calls external,WIRED
+app:web,api:web:/api/health,owns API,PARTIAL
+api:web:/api/health,file:apps/web/src/app/api/health/route.ts,implemented by,PARTIAL
+api:web:/api/health,table:chef_storefronts,touches table,PARTIAL
+api:web:/api/health,package:@ridendine/db,imports,PARTIAL
+api:web:/api/health,package:@ridendine/utils,imports,PARTIAL
+api:web:/api/health,external:Stripe,calls external,PARTIAL
+api:web:/api/health,external:Supabase,calls external,PARTIAL
+app:web,api:web:/api/loyalty,owns API,PARTIAL
+api:web:/api/loyalty,file:apps/web/src/app/api/loyalty/route.ts,implemented by,PARTIAL
+api:web:/api/loyalty,table:loyalty_transactions,touches table,PARTIAL
+api:web:/api/loyalty,package:@ridendine/db,imports,PARTIAL
+api:web:/api/loyalty,package:@ridendine/engine,imports,PARTIAL
+app:web,api:web:/api/notifications,owns API,WIRED
+api:web:/api/notifications,file:apps/web/src/app/api/notifications/route.ts,implemented by,WIRED
+api:web:/api/notifications,table:notifications,touches table,WIRED
+api:web:/api/notifications,package:@ridendine/db,imports,WIRED
+api:web:/api/notifications,package:@ridendine/engine/server,imports,WIRED
+api:web:/api/notifications,external:Supabase,calls external,WIRED
+app:web,api:web:/api/notifications/subscribe,owns API,WIRED
+api:web:/api/notifications/subscribe,file:apps/web/src/app/api/notifications/subscribe/route.ts,implemented by,WIRED
+api:web:/api/notifications/subscribe,table:push_subscriptions,touches table,WIRED
+api:web:/api/notifications/subscribe,package:@ridendine/db,imports,WIRED
+api:web:/api/notifications/subscribe,external:Supabase,calls external,WIRED
+app:web,api:web:/api/orders/:id/cancel,owns API,PARTIAL
+api:web:/api/orders/:id/cancel,file:apps/web/src/app/api/orders/[id]/cancel/route.ts,implemented by,PARTIAL
+api:web:/api/orders/:id/cancel,table:orders,touches table,PARTIAL
+api:web:/api/orders/:id/cancel,package:@ridendine/db,imports,PARTIAL
+api:web:/api/orders/:id/cancel,package:@ridendine/utils,imports,PARTIAL
+app:web,api:web:/api/orders/:id,owns API,PARTIAL
+api:web:/api/orders/:id,file:apps/web/src/app/api/orders/[id]/route.ts,implemented by,PARTIAL
+api:web:/api/orders/:id,table:order_status_history,touches table,PARTIAL
+api:web:/api/orders/:id,table:orders,touches table,PARTIAL
+api:web:/api/orders/:id,package:@ridendine/db,imports,PARTIAL
+api:web:/api/orders/:id,package:@ridendine/utils,imports,PARTIAL
+api:web:/api/orders/:id,external:Supabase,calls external,PARTIAL
+app:web,api:web:/api/orders,owns API,PARTIAL
+api:web:/api/orders,file:apps/web/src/app/api/orders/route.ts,implemented by,PARTIAL
+api:web:/api/orders,table:orders,touches table,PARTIAL
+api:web:/api/orders,package:@ridendine/db,imports,PARTIAL
+app:web,api:web:/api/payment-methods,owns API,WIRED
+api:web:/api/payment-methods,file:apps/web/src/app/api/payment-methods/route.ts,implemented by,WIRED
+api:web:/api/payment-methods,package:@ridendine/db,imports,WIRED
+api:web:/api/payment-methods,package:@ridendine/engine,imports,WIRED
+api:web:/api/payment-methods,external:Stripe,calls external,WIRED
+api:web:/api/payment-methods,external:Supabase,calls external,WIRED
+app:web,api:web:/api/profile,owns API,WIRED
+api:web:/api/profile,file:apps/web/src/app/api/profile/route.ts,implemented by,WIRED
+api:web:/api/profile,package:@ridendine/db,imports,WIRED
+api:web:/api/profile,package:@ridendine/validation,imports,WIRED
+api:web:/api/profile,external:Supabase,calls external,WIRED
+app:web,api:web:/api/promos/validate,owns API,WIRED
+api:web:/api/promos/validate,file:apps/web/src/app/api/promos/validate/route.ts,implemented by,WIRED
+api:web:/api/promos/validate,table:promo_codes,touches table,WIRED
+api:web:/api/promos/validate,package:@ridendine/db,imports,WIRED
+api:web:/api/promos/validate,external:Supabase,calls external,WIRED
+app:web,api:web:/api/referrals/apply,owns API,WIRED
+api:web:/api/referrals/apply,file:apps/web/src/app/api/referrals/apply/route.ts,implemented by,WIRED
+api:web:/api/referrals/apply,package:@ridendine/db,imports,WIRED
+api:web:/api/referrals/apply,package:@ridendine/engine,imports,WIRED
+api:web:/api/referrals/apply,external:Supabase,calls external,WIRED
+app:web,api:web:/api/referrals,owns API,PARTIAL
+api:web:/api/referrals,file:apps/web/src/app/api/referrals/route.ts,implemented by,PARTIAL
+api:web:/api/referrals,package:@ridendine/db,imports,PARTIAL
+api:web:/api/referrals,package:@ridendine/engine,imports,PARTIAL
+api:web:/api/referrals,external:Supabase,calls external,PARTIAL
+app:web,api:web:/api/reviews,owns API,WIRED
+api:web:/api/reviews,file:apps/web/src/app/api/reviews/route.ts,implemented by,WIRED
+api:web:/api/reviews,table:chef_storefronts,touches table,WIRED
+api:web:/api/reviews,table:customers,touches table,WIRED
+api:web:/api/reviews,table:orders,touches table,WIRED
+api:web:/api/reviews,table:reviews,touches table,WIRED
+api:web:/api/reviews,package:@ridendine/db,imports,WIRED
+api:web:/api/reviews,package:@ridendine/engine/server,imports,WIRED
+api:web:/api/reviews,package:@ridendine/utils,imports,WIRED
+api:web:/api/reviews,external:Supabase,calls external,WIRED
+app:web,api:web:/api/support,owns API,PARTIAL
+api:web:/api/support,file:apps/web/src/app/api/support/route.ts,implemented by,PARTIAL
+api:web:/api/support,package:@ridendine/db,imports,PARTIAL
+api:web:/api/support,package:@ridendine/engine/server,imports,PARTIAL
+api:web:/api/support,package:@ridendine/utils,imports,PARTIAL
+api:web:/api/support,package:@ridendine/validation,imports,PARTIAL
+api:web:/api/support,external:Supabase,calls external,PARTIAL
+app:web,api:web:/api/support/tickets/:id,owns API,WIRED
+api:web:/api/support/tickets/:id,file:apps/web/src/app/api/support/tickets/[id]/route.ts,implemented by,WIRED
+api:web:/api/support/tickets/:id,package:@ridendine/db,imports,WIRED
+api:web:/api/support/tickets/:id,external:Supabase,calls external,WIRED
+app:web,api:web:/api/support/tickets,owns API,WIRED
+api:web:/api/support/tickets,file:apps/web/src/app/api/support/tickets/route.ts,implemented by,WIRED
+api:web:/api/support/tickets,package:@ridendine/db,imports,WIRED
+api:web:/api/support/tickets,external:Supabase,calls external,WIRED
+app:web,api:web:/api/upload,owns API,WIRED
+api:web:/api/upload,file:apps/web/src/app/api/upload/route.ts,implemented by,WIRED
+api:web:/api/upload,package:@ridendine/db,imports,WIRED
+api:web:/api/upload,package:@ridendine/engine/server,imports,WIRED
+api:web:/api/upload,package:@ridendine/utils,imports,WIRED
+api:web:/api/upload,external:Supabase,calls external,WIRED
+app:web,api:web:/api/webhooks/stripe,owns API,PARTIAL
+api:web:/api/webhooks/stripe,file:apps/web/src/app/api/webhooks/stripe/route.ts,implemented by,PARTIAL
+api:web:/api/webhooks/stripe,package:@ridendine/db,imports,PARTIAL
+api:web:/api/webhooks/stripe,package:@ridendine/engine,imports,PARTIAL
+api:web:/api/webhooks/stripe,package:@ridendine/utils,imports,PARTIAL
+api:web:/api/webhooks/stripe,external:Stripe,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/analytics,owns API,PARTIAL
+api:ops-admin:/api/analytics,file:apps/ops-admin/src/app/api/analytics/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/analytics,table:chef_storefronts,touches table,PARTIAL
+api:ops-admin:/api/analytics,table:deliveries,touches table,PARTIAL
+api:ops-admin:/api/analytics,table:drivers,touches table,PARTIAL
+api:ops-admin:/api/analytics,table:orders,touches table,PARTIAL
+api:ops-admin:/api/analytics,package:@ridendine/db,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/analytics/trends,owns API,PARTIAL
+api:ops-admin:/api/analytics/trends,file:apps/ops-admin/src/app/api/analytics/trends/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/analytics/trends,table:chef_profiles,touches table,PARTIAL
+api:ops-admin:/api/analytics/trends,table:ledger_entries,touches table,PARTIAL
+api:ops-admin:/api/analytics/trends,table:orders,touches table,PARTIAL
+api:ops-admin:/api/analytics/trends,package:@ridendine/db,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/announcements,owns API,PARTIAL
+api:ops-admin:/api/announcements,file:apps/ops-admin/src/app/api/announcements/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/announcements,table:chef_profiles,touches table,PARTIAL
+api:ops-admin:/api/announcements,table:customers,touches table,PARTIAL
+api:ops-admin:/api/announcements,table:drivers,touches table,PARTIAL
+api:ops-admin:/api/announcements,table:notifications,touches table,PARTIAL
+api:ops-admin:/api/announcements,table:platform_users,touches table,PARTIAL
+api:ops-admin:/api/announcements,package:@ridendine/db,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/audit/recent,owns API,PARTIAL
+api:ops-admin:/api/audit/recent,file:apps/ops-admin/src/app/api/audit/recent/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/audit/recent,table:audit_logs,touches table,PARTIAL
+api:ops-admin:/api/audit/recent,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/audit/recent,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/chefs/:id,owns API,MISSING
+api:ops-admin:/api/chefs/:id,file:apps/ops-admin/src/app/api/chefs/[id]/route.ts,implemented by,MISSING
+app:ops-admin,api:ops-admin:/api/chefs,owns API,PARTIAL
+api:ops-admin:/api/chefs,file:apps/ops-admin/src/app/api/chefs/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/chefs,table:audit_logs,touches table,PARTIAL
+api:ops-admin:/api/chefs,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/chefs,package:@ridendine/validation,imports,PARTIAL
+api:ops-admin:/api/chefs,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/cron/expired-offers,owns API,PARTIAL
+api:ops-admin:/api/cron/expired-offers,file:apps/ops-admin/src/app/api/cron/expired-offers/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/cron/expired-offers,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/cron/expired-offers,package:@ridendine/engine,imports,PARTIAL
+api:ops-admin:/api/cron/expired-offers,package:@ridendine/types,imports,PARTIAL
+api:ops-admin:/api/cron/expired-offers,package:@ridendine/utils,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/cron/payouts-chef-preview,owns API,PARTIAL
+api:ops-admin:/api/cron/payouts-chef-preview,file:apps/ops-admin/src/app/api/cron/payouts-chef-preview/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/cron/payouts-chef-preview,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/cron/payouts-chef-preview,package:@ridendine/engine,imports,PARTIAL
+api:ops-admin:/api/cron/payouts-chef-preview,package:@ridendine/utils,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/cron/payouts-driver-preview,owns API,PARTIAL
+api:ops-admin:/api/cron/payouts-driver-preview,file:apps/ops-admin/src/app/api/cron/payouts-driver-preview/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/cron/payouts-driver-preview,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/cron/payouts-driver-preview,package:@ridendine/engine,imports,PARTIAL
+api:ops-admin:/api/cron/payouts-driver-preview,package:@ridendine/utils,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/cron/reconciliation-daily,owns API,PARTIAL
+api:ops-admin:/api/cron/reconciliation-daily,file:apps/ops-admin/src/app/api/cron/reconciliation-daily/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/cron/reconciliation-daily,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/cron/reconciliation-daily,package:@ridendine/engine,imports,PARTIAL
+api:ops-admin:/api/cron/reconciliation-daily,package:@ridendine/utils,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/cron/sla-tick,owns API,PARTIAL
+api:ops-admin:/api/cron/sla-tick,file:apps/ops-admin/src/app/api/cron/sla-tick/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/cron/sla-tick,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/cron/sla-tick,package:@ridendine/engine,imports,PARTIAL
+api:ops-admin:/api/cron/sla-tick,package:@ridendine/types,imports,PARTIAL
+api:ops-admin:/api/cron/sla-tick,package:@ridendine/utils,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/customers/:id/notify,owns API,PARTIAL
+api:ops-admin:/api/customers/:id/notify,file:apps/ops-admin/src/app/api/customers/[id]/notify/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/customers/:id/notify,table:customers,touches table,PARTIAL
+api:ops-admin:/api/customers/:id/notify,table:notifications,touches table,PARTIAL
+api:ops-admin:/api/customers/:id/notify,package:@ridendine/db,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/customers,owns API,PARTIAL
+api:ops-admin:/api/customers,file:apps/ops-admin/src/app/api/customers/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/customers,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/customers,package:@ridendine/validation,imports,PARTIAL
+api:ops-admin:/api/customers,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/deliveries/:id,owns API,MISSING
+api:ops-admin:/api/deliveries/:id,file:apps/ops-admin/src/app/api/deliveries/[id]/route.ts,implemented by,MISSING
+app:ops-admin,api:ops-admin:/api/deliveries,owns API,PARTIAL
+api:ops-admin:/api/deliveries,file:apps/ops-admin/src/app/api/deliveries/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/deliveries,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/deliveries,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/drivers/:id,owns API,MISSING
+api:ops-admin:/api/drivers/:id,file:apps/ops-admin/src/app/api/drivers/[id]/route.ts,implemented by,MISSING
+app:ops-admin,api:ops-admin:/api/drivers,owns API,PARTIAL
+api:ops-admin:/api/drivers,file:apps/ops-admin/src/app/api/drivers/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/drivers,table:audit_logs,touches table,PARTIAL
+api:ops-admin:/api/drivers,table:driver_presence,touches table,PARTIAL
+api:ops-admin:/api/drivers,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/drivers,package:@ridendine/validation,imports,PARTIAL
+api:ops-admin:/api/drivers,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/dashboard,owns API,PARTIAL
+api:ops-admin:/api/engine/dashboard,file:apps/ops-admin/src/app/api/engine/dashboard/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/dashboard,table:get_ops_dashboard_stats,touches table,PARTIAL
+api:ops-admin:/api/engine/dashboard,table:orders,touches table,PARTIAL
+api:ops-admin:/api/engine/dashboard,table:system_alerts,touches table,PARTIAL
+api:ops-admin:/api/engine/dashboard,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/dashboard,package:@ridendine/validation,imports,PARTIAL
+api:ops-admin:/api/engine/dashboard,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/dispatch/offer-history,owns API,PARTIAL
+api:ops-admin:/api/engine/dispatch/offer-history,file:apps/ops-admin/src/app/api/engine/dispatch/offer-history/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/dispatch/offer-history,table:assignment_attempts,touches table,PARTIAL
+api:ops-admin:/api/engine/dispatch/offer-history,package:@ridendine/db,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/dispatch,owns API,PARTIAL
+api:ops-admin:/api/engine/dispatch,file:apps/ops-admin/src/app/api/engine/dispatch/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/dispatch,package:@ridendine/validation,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/exceptions/:id,owns API,PARTIAL
+api:ops-admin:/api/engine/exceptions/:id,file:apps/ops-admin/src/app/api/engine/exceptions/[id]/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/exceptions/:id,package:@ridendine/validation,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/exceptions,owns API,PARTIAL
+api:ops-admin:/api/engine/exceptions,file:apps/ops-admin/src/app/api/engine/exceptions/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/exceptions,package:@ridendine/types,imports,PARTIAL
+api:ops-admin:/api/engine/exceptions,package:@ridendine/validation,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/finance,owns API,PARTIAL
+api:ops-admin:/api/engine/finance,file:apps/ops-admin/src/app/api/engine/finance/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/finance,package:@ridendine/validation,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/health,owns API,PARTIAL
+api:ops-admin:/api/engine/health,file:apps/ops-admin/src/app/api/engine/health/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/health,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/health,package:@ridendine/engine,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/maintenance,owns API,PARTIAL
+api:ops-admin:/api/engine/maintenance,file:apps/ops-admin/src/app/api/engine/maintenance/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/maintenance,table:chef_storefronts,touches table,PARTIAL
+api:ops-admin:/api/engine/maintenance,table:platform_settings,touches table,PARTIAL
+api:ops-admin:/api/engine/maintenance,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/maintenance,package:@ridendine/validation,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/orders/:id,owns API,PARTIAL
+api:ops-admin:/api/engine/orders/:id,file:apps/ops-admin/src/app/api/engine/orders/[id]/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/orders/:id,table:order_exceptions,touches table,PARTIAL
+api:ops-admin:/api/engine/orders/:id,table:orders,touches table,PARTIAL
+api:ops-admin:/api/engine/orders/:id,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/orders/:id,package:@ridendine/validation,imports,PARTIAL
+api:ops-admin:/api/engine/orders/:id,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/payouts/execute,owns API,PARTIAL
+api:ops-admin:/api/engine/payouts/execute,file:apps/ops-admin/src/app/api/engine/payouts/execute/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/payouts/execute,package:@ridendine/types,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/payouts/instant/:id,owns API,PARTIAL
+api:ops-admin:/api/engine/payouts/instant/:id,file:apps/ops-admin/src/app/api/engine/payouts/instant/[id]/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/payouts/instant/:id,table:instant_payout_requests,touches table,PARTIAL
+api:ops-admin:/api/engine/payouts/instant/:id,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/payouts/instant/:id,package:@ridendine/types,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/payouts/instant,owns API,PARTIAL
+api:ops-admin:/api/engine/payouts/instant,file:apps/ops-admin/src/app/api/engine/payouts/instant/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/payouts/instant,table:instant_payout_requests,touches table,PARTIAL
+api:ops-admin:/api/engine/payouts/instant,package:@ridendine/db,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/payouts/preview,owns API,MISSING
+api:ops-admin:/api/engine/payouts/preview,file:apps/ops-admin/src/app/api/engine/payouts/preview/route.ts,implemented by,MISSING
+app:ops-admin,api:ops-admin:/api/engine/payouts,owns API,PARTIAL
+api:ops-admin:/api/engine/payouts,file:apps/ops-admin/src/app/api/engine/payouts/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/payouts,table:chef_payout_accounts,touches table,PARTIAL
+api:ops-admin:/api/engine/payouts,table:chef_payouts,touches table,PARTIAL
+api:ops-admin:/api/engine/payouts,table:chef_profiles,touches table,PARTIAL
+api:ops-admin:/api/engine/payouts,table:chef_storefronts,touches table,PARTIAL
+api:ops-admin:/api/engine/payouts,table:ledger_entries,touches table,PARTIAL
+api:ops-admin:/api/engine/payouts,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/payouts,package:@ridendine/validation,imports,PARTIAL
+api:ops-admin:/api/engine/payouts,external:Stripe,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/processors/expired-offers,owns API,PARTIAL
+api:ops-admin:/api/engine/processors/expired-offers,file:apps/ops-admin/src/app/api/engine/processors/expired-offers/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/processors/expired-offers,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/processors/expired-offers,package:@ridendine/engine,imports,PARTIAL
+api:ops-admin:/api/engine/processors/expired-offers,package:@ridendine/utils,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/processors/sla,owns API,PARTIAL
+api:ops-admin:/api/engine/processors/sla,file:apps/ops-admin/src/app/api/engine/processors/sla/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/processors/sla,table:deliveries,touches table,PARTIAL
+api:ops-admin:/api/engine/processors/sla,table:system_alerts,touches table,PARTIAL
+api:ops-admin:/api/engine/processors/sla,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/processors/sla,package:@ridendine/engine,imports,PARTIAL
+api:ops-admin:/api/engine/processors/sla,package:@ridendine/utils,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/reconciliation,owns API,PARTIAL
+api:ops-admin:/api/engine/reconciliation,file:apps/ops-admin/src/app/api/engine/reconciliation/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/reconciliation,table:stripe_reconciliation,touches table,PARTIAL
+api:ops-admin:/api/engine/reconciliation,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/reconciliation,package:@ridendine/types,imports,PARTIAL
+api:ops-admin:/api/engine/reconciliation,external:Stripe,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/refunds,owns API,PARTIAL
+api:ops-admin:/api/engine/refunds,file:apps/ops-admin/src/app/api/engine/refunds/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/refunds,package:@ridendine/validation,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/rules,owns API,PARTIAL
+api:ops-admin:/api/engine/rules,file:apps/ops-admin/src/app/api/engine/rules/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/rules,table:platform_settings,touches table,PARTIAL
+api:ops-admin:/api/engine/rules,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/rules,package:@ridendine/validation,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/settings,owns API,PARTIAL
+api:ops-admin:/api/engine/settings,file:apps/ops-admin/src/app/api/engine/settings/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/settings,package:@ridendine/validation,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/engine/storefronts/:id,owns API,PARTIAL
+api:ops-admin:/api/engine/storefronts/:id,file:apps/ops-admin/src/app/api/engine/storefronts/[id]/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/engine/storefronts/:id,table:chef_storefronts,touches table,PARTIAL
+api:ops-admin:/api/engine/storefronts/:id,table:storefront_state_changes,touches table,PARTIAL
+api:ops-admin:/api/engine/storefronts/:id,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/engine/storefronts/:id,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/export,owns API,PARTIAL
+api:ops-admin:/api/export,file:apps/ops-admin/src/app/api/export/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/export,table:chef_payouts,touches table,PARTIAL
+api:ops-admin:/api/export,table:chef_profiles,touches table,PARTIAL
+api:ops-admin:/api/export,table:customers,touches table,PARTIAL
+api:ops-admin:/api/export,table:drivers,touches table,PARTIAL
+api:ops-admin:/api/export,table:ledger_entries,touches table,PARTIAL
+api:ops-admin:/api/export,table:orders,touches table,PARTIAL
+api:ops-admin:/api/export,table:stripe_events_processed,touches table,PARTIAL
+api:ops-admin:/api/export,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/export,external:Stripe,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/health,owns API,PARTIAL
+api:ops-admin:/api/health,file:apps/ops-admin/src/app/api/health/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/health,table:chef_profiles,touches table,PARTIAL
+api:ops-admin:/api/health,table:customers,touches table,PARTIAL
+api:ops-admin:/api/health,table:deliveries,touches table,PARTIAL
+api:ops-admin:/api/health,table:driver_presence,touches table,PARTIAL
+api:ops-admin:/api/health,table:drivers,touches table,PARTIAL
+api:ops-admin:/api/health,table:orders,touches table,PARTIAL
+api:ops-admin:/api/health,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/health,package:@ridendine/utils,imports,PARTIAL
+api:ops-admin:/api/health,external:Stripe,calls external,PARTIAL
+api:ops-admin:/api/health,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/internal/command-center/change-requests,owns API,MISSING
+api:ops-admin:/api/internal/command-center/change-requests,file:apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts,implemented by,MISSING
+app:ops-admin,api:ops-admin:/api/ops/live-board,owns API,PARTIAL
+api:ops-admin:/api/ops/live-board,file:apps/ops-admin/src/app/api/ops/live-board/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/ops/live-board,table:chef_storefronts,touches table,PARTIAL
+api:ops-admin:/api/ops/live-board,table:drivers,touches table,PARTIAL
+api:ops-admin:/api/ops/live-board,table:orders,touches table,PARTIAL
+api:ops-admin:/api/ops/live-board,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/ops/live-board,package:@ridendine/types,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/orders/:id/refund,owns API,PARTIAL
+api:ops-admin:/api/orders/:id/refund,file:apps/ops-admin/src/app/api/orders/[id]/refund/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/orders/:id/refund,package:@ridendine/utils,imports,PARTIAL
+api:ops-admin:/api/orders/:id/refund,package:@ridendine/validation,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/orders/:id,owns API,PARTIAL
+api:ops-admin:/api/orders/:id,file:apps/ops-admin/src/app/api/orders/[id]/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/orders/:id,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/orders/:id,package:@ridendine/types,imports,PARTIAL
+api:ops-admin:/api/orders/:id,package:@ridendine/utils,imports,PARTIAL
+api:ops-admin:/api/orders/:id,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/orders,owns API,PARTIAL
+api:ops-admin:/api/orders,file:apps/ops-admin/src/app/api/orders/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/orders,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/orders,package:@ridendine/validation,imports,PARTIAL
+api:ops-admin:/api/orders,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/promos,owns API,PARTIAL
+api:ops-admin:/api/promos,file:apps/ops-admin/src/app/api/promos/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/promos,table:promo_codes,touches table,PARTIAL
+api:ops-admin:/api/promos,package:@ridendine/db,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/stripe/webhook,owns API,PARTIAL
+api:ops-admin:/api/stripe/webhook,file:apps/ops-admin/src/app/api/stripe/webhook/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/stripe/webhook,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/stripe/webhook,package:@ridendine/engine,imports,PARTIAL
+api:ops-admin:/api/stripe/webhook,package:@ridendine/engine/server,imports,PARTIAL
+api:ops-admin:/api/stripe/webhook,external:Stripe,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/support/:id,owns API,PARTIAL
+api:ops-admin:/api/support/:id,file:apps/ops-admin/src/app/api/support/[id]/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/support/:id,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/support/:id,package:@ridendine/types,imports,PARTIAL
+api:ops-admin:/api/support/:id,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/support,owns API,PARTIAL
+api:ops-admin:/api/support,file:apps/ops-admin/src/app/api/support/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/support,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/support,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/surge,owns API,PARTIAL
+api:ops-admin:/api/surge,file:apps/ops-admin/src/app/api/surge/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/surge,table:service_areas,touches table,PARTIAL
+api:ops-admin:/api/surge,package:@ridendine/db,imports,PARTIAL
+api:ops-admin:/api/surge,package:@ridendine/engine,imports,PARTIAL
+app:ops-admin,api:ops-admin:/api/team,owns API,PARTIAL
+api:ops-admin:/api/team,file:apps/ops-admin/src/app/api/team/route.ts,implemented by,PARTIAL
+api:ops-admin:/api/team,table:platform_users,touches table,PARTIAL
+api:ops-admin:/api/team,package:@ridendine/db,imports,PARTIAL
+app:chef-admin,api:chef-admin:/api/analytics,owns API,PARTIAL
+api:chef-admin:/api/analytics,file:apps/chef-admin/src/app/api/analytics/route.ts,implemented by,PARTIAL
+api:chef-admin:/api/analytics,table:order_items,touches table,PARTIAL
+api:chef-admin:/api/analytics,table:orders,touches table,PARTIAL
+api:chef-admin:/api/analytics,table:reviews,touches table,PARTIAL
+api:chef-admin:/api/analytics,package:@ridendine/db,imports,PARTIAL
+app:chef-admin,api:chef-admin:/api/auth/signup,owns API,WIRED
+api:chef-admin:/api/auth/signup,file:apps/chef-admin/src/app/api/auth/signup/route.ts,implemented by,WIRED
+api:chef-admin:/api/auth/signup,package:@ridendine/db,imports,WIRED
+api:chef-admin:/api/auth/signup,package:@ridendine/utils,imports,WIRED
+api:chef-admin:/api/auth/signup,package:@ridendine/validation,imports,WIRED
+api:chef-admin:/api/auth/signup,external:Supabase,calls external,WIRED
+app:chef-admin,api:chef-admin:/api/health,owns API,PARTIAL
+api:chef-admin:/api/health,file:apps/chef-admin/src/app/api/health/route.ts,implemented by,PARTIAL
+api:chef-admin:/api/health,table:chef_profiles,touches table,PARTIAL
+api:chef-admin:/api/health,package:@ridendine/db,imports,PARTIAL
+api:chef-admin:/api/health,package:@ridendine/utils,imports,PARTIAL
+api:chef-admin:/api/health,external:Stripe,calls external,PARTIAL
+api:chef-admin:/api/health,external:Supabase,calls external,PARTIAL
+app:chef-admin,api:chef-admin:/api/menu/:id,owns API,PARTIAL
+api:chef-admin:/api/menu/:id,file:apps/chef-admin/src/app/api/menu/[id]/route.ts,implemented by,PARTIAL
+api:chef-admin:/api/menu/:id,package:@ridendine/db,imports,PARTIAL
+api:chef-admin:/api/menu/:id,external:Supabase,calls external,PARTIAL
+app:chef-admin,api:chef-admin:/api/menu/categories,owns API,PARTIAL
+api:chef-admin:/api/menu/categories,file:apps/chef-admin/src/app/api/menu/categories/route.ts,implemented by,PARTIAL
+api:chef-admin:/api/menu/categories,package:@ridendine/db,imports,PARTIAL
+api:chef-admin:/api/menu/categories,external:Supabase,calls external,PARTIAL
+app:chef-admin,api:chef-admin:/api/menu,owns API,PARTIAL
+api:chef-admin:/api/menu,file:apps/chef-admin/src/app/api/menu/route.ts,implemented by,PARTIAL
+api:chef-admin:/api/menu,package:@ridendine/db,imports,PARTIAL
+api:chef-admin:/api/menu,external:Supabase,calls external,PARTIAL
+app:chef-admin,api:chef-admin:/api/orders/:id,owns API,PARTIAL
+api:chef-admin:/api/orders/:id,file:apps/chef-admin/src/app/api/orders/[id]/route.ts,implemented by,PARTIAL
+api:chef-admin:/api/orders/:id,table:orders,touches table,PARTIAL
+api:chef-admin:/api/orders/:id,package:@ridendine/db,imports,PARTIAL
+api:chef-admin:/api/orders/:id,package:@ridendine/types,imports,PARTIAL
+api:chef-admin:/api/orders/:id,package:@ridendine/utils,imports,PARTIAL
+app:chef-admin,api:chef-admin:/api/orders,owns API,PARTIAL
+api:chef-admin:/api/orders,file:apps/chef-admin/src/app/api/orders/route.ts,implemented by,PARTIAL
+api:chef-admin:/api/orders,table:customer_addresses,touches table,PARTIAL
+api:chef-admin:/api/orders,table:customers,touches table,PARTIAL
+api:chef-admin:/api/orders,table:orders,touches table,PARTIAL
+api:chef-admin:/api/orders,package:@ridendine/db,imports,PARTIAL
+app:chef-admin,api:chef-admin:/api/payouts/request,owns API,MISSING
+api:chef-admin:/api/payouts/request,file:apps/chef-admin/src/app/api/payouts/request/route.ts,implemented by,MISSING
+app:chef-admin,api:chef-admin:/api/payouts/setup,owns API,WIRED
+api:chef-admin:/api/payouts/setup,file:apps/chef-admin/src/app/api/payouts/setup/route.ts,implemented by,WIRED
+api:chef-admin:/api/payouts/setup,table:chef_payout_accounts,touches table,WIRED
+api:chef-admin:/api/payouts/setup,table:chef_profiles,touches table,WIRED
+api:chef-admin:/api/payouts/setup,package:@ridendine/db,imports,WIRED
+api:chef-admin:/api/payouts/setup,package:@ridendine/engine,imports,WIRED
+api:chef-admin:/api/payouts/setup,external:Stripe,calls external,WIRED
+api:chef-admin:/api/payouts/setup,external:Supabase,calls external,WIRED
+app:chef-admin,api:chef-admin:/api/profile,owns API,WIRED
+api:chef-admin:/api/profile,file:apps/chef-admin/src/app/api/profile/route.ts,implemented by,WIRED
+api:chef-admin:/api/profile,package:@ridendine/db,imports,WIRED
+api:chef-admin:/api/profile,external:Supabase,calls external,WIRED
+app:chef-admin,api:chef-admin:/api/storefront/availability,owns API,PARTIAL
+api:chef-admin:/api/storefront/availability,file:apps/chef-admin/src/app/api/storefront/availability/route.ts,implemented by,PARTIAL
+api:chef-admin:/api/storefront/availability,table:chef_availability,touches table,PARTIAL
+api:chef-admin:/api/storefront/availability,package:@ridendine/db,imports,PARTIAL
+app:chef-admin,api:chef-admin:/api/storefront,owns API,PARTIAL
+api:chef-admin:/api/storefront,file:apps/chef-admin/src/app/api/storefront/route.ts,implemented by,PARTIAL
+api:chef-admin:/api/storefront,table:chef_kitchens,touches table,PARTIAL
+api:chef-admin:/api/storefront,table:chef_storefronts,touches table,PARTIAL
+api:chef-admin:/api/storefront,package:@ridendine/db,imports,PARTIAL
+api:chef-admin:/api/storefront,external:Supabase,calls external,PARTIAL
+app:chef-admin,api:chef-admin:/api/upload,owns API,PARTIAL
+api:chef-admin:/api/upload,file:apps/chef-admin/src/app/api/upload/route.ts,implemented by,PARTIAL
+api:chef-admin:/api/upload,package:@ridendine/db,imports,PARTIAL
+api:chef-admin:/api/upload,package:@ridendine/utils,imports,PARTIAL
+api:chef-admin:/api/upload,external:Supabase,calls external,PARTIAL
+app:driver-app,api:driver-app:/api/auth/login,owns API,WIRED
+api:driver-app:/api/auth/login,file:apps/driver-app/src/app/api/auth/login/route.ts,implemented by,WIRED
+api:driver-app:/api/auth/login,package:@ridendine/db,imports,WIRED
+api:driver-app:/api/auth/login,package:@ridendine/utils,imports,WIRED
+api:driver-app:/api/auth/login,external:Supabase,calls external,WIRED
+app:driver-app,api:driver-app:/api/auth/logout,owns API,WIRED
+api:driver-app:/api/auth/logout,file:apps/driver-app/src/app/api/auth/logout/route.ts,implemented by,WIRED
+api:driver-app:/api/auth/logout,package:@ridendine/db,imports,WIRED
+api:driver-app:/api/auth/logout,external:Supabase,calls external,WIRED
+app:driver-app,api:driver-app:/api/auth/signup,owns API,WIRED
+api:driver-app:/api/auth/signup,file:apps/driver-app/src/app/api/auth/signup/route.ts,implemented by,WIRED
+api:driver-app:/api/auth/signup,table:driver_presence,touches table,WIRED
+api:driver-app:/api/auth/signup,package:@ridendine/db,imports,WIRED
+api:driver-app:/api/auth/signup,package:@ridendine/utils,imports,WIRED
+api:driver-app:/api/auth/signup,external:Supabase,calls external,WIRED
+app:driver-app,api:driver-app:/api/deliveries/:id,owns API,PARTIAL
+api:driver-app:/api/deliveries/:id,file:apps/driver-app/src/app/api/deliveries/[id]/route.ts,implemented by,PARTIAL
+api:driver-app:/api/deliveries/:id,table:assignment_attempts,touches table,PARTIAL
+api:driver-app:/api/deliveries/:id,table:deliveries,touches table,PARTIAL
+api:driver-app:/api/deliveries/:id,package:@ridendine/db,imports,PARTIAL
+api:driver-app:/api/deliveries/:id,external:Supabase,calls external,PARTIAL
+app:driver-app,api:driver-app:/api/deliveries,owns API,PARTIAL
+api:driver-app:/api/deliveries,file:apps/driver-app/src/app/api/deliveries/route.ts,implemented by,PARTIAL
+api:driver-app:/api/deliveries,package:@ridendine/db,imports,PARTIAL
+api:driver-app:/api/deliveries,external:Supabase,calls external,PARTIAL
+app:driver-app,api:driver-app:/api/driver/presence,owns API,PARTIAL
+api:driver-app:/api/driver/presence,file:apps/driver-app/src/app/api/driver/presence/route.ts,implemented by,PARTIAL
+api:driver-app:/api/driver/presence,table:deliveries,touches table,PARTIAL
+api:driver-app:/api/driver/presence,table:driver_presence,touches table,PARTIAL
+api:driver-app:/api/driver/presence,package:@ridendine/db,imports,PARTIAL
+app:driver-app,api:driver-app:/api/driver,owns API,PARTIAL
+api:driver-app:/api/driver,file:apps/driver-app/src/app/api/driver/route.ts,implemented by,PARTIAL
+api:driver-app:/api/driver,table:drivers,touches table,PARTIAL
+api:driver-app:/api/driver,package:@ridendine/db,imports,PARTIAL
+api:driver-app:/api/driver,external:Supabase,calls external,PARTIAL
+app:driver-app,api:driver-app:/api/earnings,owns API,PARTIAL
+api:driver-app:/api/earnings,file:apps/driver-app/src/app/api/earnings/route.ts,implemented by,PARTIAL
+api:driver-app:/api/earnings,package:@ridendine/db,imports,PARTIAL
+api:driver-app:/api/earnings,external:Supabase,calls external,PARTIAL
+app:driver-app,api:driver-app:/api/health,owns API,PARTIAL
+api:driver-app:/api/health,file:apps/driver-app/src/app/api/health/route.ts,implemented by,PARTIAL
+api:driver-app:/api/health,table:drivers,touches table,PARTIAL
+api:driver-app:/api/health,package:@ridendine/db,imports,PARTIAL
+api:driver-app:/api/health,package:@ridendine/utils,imports,PARTIAL
+api:driver-app:/api/health,external:Stripe,calls external,PARTIAL
+api:driver-app:/api/health,external:Supabase,calls external,PARTIAL
+app:driver-app,api:driver-app:/api/location,owns API,PARTIAL
+api:driver-app:/api/location,file:apps/driver-app/src/app/api/location/route.ts,implemented by,PARTIAL
+api:driver-app:/api/location,table:deliveries,touches table,PARTIAL
+api:driver-app:/api/location,table:delivery_tracking_events,touches table,PARTIAL
+api:driver-app:/api/location,table:driver_locations,touches table,PARTIAL
+api:driver-app:/api/location,table:driver_presence,touches table,PARTIAL
+api:driver-app:/api/location,table:orders,touches table,PARTIAL
+api:driver-app:/api/location,package:@ridendine/db,imports,PARTIAL
+api:driver-app:/api/location,package:@ridendine/utils,imports,PARTIAL
+api:driver-app:/api/location,package:@ridendine/validation,imports,PARTIAL
+app:driver-app,api:driver-app:/api/offers,owns API,PARTIAL
+api:driver-app:/api/offers,file:apps/driver-app/src/app/api/offers/route.ts,implemented by,PARTIAL
+api:driver-app:/api/offers,table:assignment_attempts,touches table,PARTIAL
+api:driver-app:/api/offers,package:@ridendine/db,imports,PARTIAL
+app:driver-app,api:driver-app:/api/payouts/instant,owns API,PARTIAL
+api:driver-app:/api/payouts/instant,file:apps/driver-app/src/app/api/payouts/instant/route.ts,implemented by,PARTIAL
+api:driver-app:/api/payouts/instant,table:drivers,touches table,PARTIAL
+api:driver-app:/api/payouts/instant,package:@ridendine/db,imports,PARTIAL
+api:driver-app:/api/payouts/instant,package:@ridendine/engine,imports,PARTIAL
+api:driver-app:/api/payouts/instant,external:Supabase,calls external,PARTIAL
+app:driver-app,api:driver-app:/api/payouts/setup,owns API,WIRED
+api:driver-app:/api/payouts/setup,file:apps/driver-app/src/app/api/payouts/setup/route.ts,implemented by,WIRED
+api:driver-app:/api/payouts/setup,table:driver_payout_accounts,touches table,WIRED
+api:driver-app:/api/payouts/setup,table:drivers,touches table,WIRED
+api:driver-app:/api/payouts/setup,package:@ridendine/db,imports,WIRED
+api:driver-app:/api/payouts/setup,package:@ridendine/engine,imports,WIRED
+api:driver-app:/api/payouts/setup,external:Stripe,calls external,WIRED
+api:driver-app:/api/payouts/setup,external:Supabase,calls external,WIRED
+file:apps/chef-admin/src/app/auth/login/page.tsx,file:apps/chef-admin/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/api/auth/signup/route.ts,fetch: /api/auth/signup,WORKING
+file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,router.push: /auth/login?signup=success,WORKING
+file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/dashboard/storefront/page.tsx,router.push: /dashboard/storefront,WORKING
+file:apps/chef-admin/src/app/dashboard/analytics/page.tsx,file:apps/chef-admin/src/app/api/analytics/route.ts,fetch: /api/analytics?period=${p},WORKING
+file:apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx,file:apps/chef-admin/src/app/dashboard/orders/page.tsx,href: /dashboard/orders,WORKING
+file:apps/chef-admin/src/app/dashboard/page.tsx,file:apps/chef-admin/src/app/dashboard/availability/page.tsx,href: /dashboard/availability,WORKING
+file:apps/chef-admin/src/app/dashboard/page.tsx,file:apps/chef-admin/src/app/dashboard/menu/page.tsx,href: /dashboard/menu,WORKING
+file:apps/chef-admin/src/app/dashboard/page.tsx,file:apps/chef-admin/src/app/dashboard/orders/page.tsx,href: /dashboard/orders,WORKING
+file:apps/chef-admin/src/app/dashboard/page.tsx,file:apps/chef-admin/src/app/dashboard/storefront/page.tsx,href: /dashboard/storefront,WORKING
+file:apps/chef-admin/src/app/dashboard/payouts/page.tsx,file:apps/chef-admin/src/app/api/payouts/request/route.ts,fetch: /api/payouts/request,WORKING
+file:apps/chef-admin/src/app/dashboard/payouts/page.tsx,file:apps/chef-admin/src/app/api/payouts/setup/route.ts,fetch: /api/payouts/setup,WORKING
+file:apps/chef-admin/src/app/dashboard/storefront/page.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/chef-admin/src/app/error.tsx,file:apps/chef-admin/src/app/dashboard/page.tsx,href: /dashboard,WORKING
+file:apps/chef-admin/src/app/page.tsx,file:apps/chef-admin/src/app/dashboard/page.tsx,redirect: /dashboard,WORKING
+file:apps/chef-admin/src/components/auth/auth-layout.tsx,file:apps/chef-admin/src/app/page.tsx,href: /,WORKING
+file:apps/chef-admin/src/components/availability/weekly-availability-form.tsx,file:apps/chef-admin/src/app/api/storefront/availability/route.ts,fetch: /api/storefront/availability,WORKING
+file:apps/chef-admin/src/components/layout/header.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,router.push: /auth/login,WORKING
+file:apps/chef-admin/src/components/layout/sidebar.tsx,file:apps/chef-admin/src/app/page.tsx,href: /,WORKING
+file:apps/chef-admin/src/components/menu/category-modal.tsx,file:apps/chef-admin/src/app/api/menu/categories/route.ts,fetch: /api/menu/categories,WORKING
+file:apps/chef-admin/src/components/menu/menu-list.tsx,file:apps/chef-admin/src/app/api/menu/route.ts,fetch: /api/menu,WORKING
+file:apps/chef-admin/src/components/menu/menu-list.tsx,file:apps/chef-admin/src/app/api/menu/[id]/route.ts,fetch: /api/menu/${itemId},WORKING_DYNAMIC
+file:apps/chef-admin/src/components/orders/orders-list.tsx,file:apps/chef-admin/src/app/api/orders/[id]/route.ts,fetch: /api/orders/${orderId},WORKING_DYNAMIC
+file:apps/chef-admin/src/components/orders/orders-list.tsx,file:apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx,href: /dashboard/orders/${order.id},WORKING_DYNAMIC
+file:apps/chef-admin/src/components/profile/profile-form.tsx,file:apps/chef-admin/src/app/api/profile/route.ts,fetch: /api/profile,WORKING
+file:apps/chef-admin/src/components/shared/image-upload.tsx,file:apps/chef-admin/src/app/api/upload/route.ts,fetch: /api/upload,WORKING
+file:apps/chef-admin/src/components/storefront/storefront-form.tsx,file:apps/chef-admin/src/app/api/storefront/route.ts,fetch: /api/storefront,WORKING
+file:apps/chef-admin/src/components/storefront/storefront-setup-form.tsx,file:apps/chef-admin/src/app/api/storefront/route.ts,fetch: /api/storefront,WORKING
+file:apps/web/src/app/about/page.tsx,file:apps/web/src/app/chef-signup/page.tsx,href: /chef-signup,WORKING
+file:apps/web/src/app/about/page.tsx,file:apps/web/src/app/chefs/page.tsx,href: /chefs,WORKING
+file:apps/web/src/app/account/addresses/page.tsx,file:apps/web/src/app/account/page.tsx,href: /account,WORKING
+file:apps/web/src/app/account/addresses/page.tsx,file:apps/web/src/app/api/addresses/route.ts,fetch: /api/addresses,WORKING
+file:apps/web/src/app/account/addresses/page.tsx,file:apps/web/src/app/api/addresses/route.ts,fetch: /api/addresses?id=${id},WORKING
+file:apps/web/src/app/account/favorites/page.tsx,file:apps/web/src/app/account/page.tsx,href: /account,WORKING
+file:apps/web/src/app/account/favorites/page.tsx,file:apps/web/src/app/auth/login/page.tsx,router.push: /auth/login,WORKING
+file:apps/web/src/app/account/favorites/page.tsx,file:apps/web/src/app/chefs/page.tsx,href: /chefs,WORKING
+file:apps/web/src/app/account/orders/page.tsx,file:apps/web/src/app/account/page.tsx,href: /account,WORKING
+file:apps/web/src/app/account/orders/page.tsx,file:apps/web/src/app/api/cart/route.ts,fetch: /api/cart,WORKING
+file:apps/web/src/app/account/orders/page.tsx,file:apps/web/src/app/api/orders/route.ts,fetch: /api/orders,WORKING
+file:apps/web/src/app/account/orders/page.tsx,file:apps/web/src/app/api/orders/[id]/route.ts,fetch: /api/orders/${order.id},WORKING_DYNAMIC
+file:apps/web/src/app/account/orders/page.tsx,file:apps/web/src/app/checkout/page.tsx,router.push: /checkout?storefrontId=${order.storefront.id},WORKING
+file:apps/web/src/app/account/orders/page.tsx,file:apps/web/src/app/chefs/[slug]/page.tsx,href: /chefs/${order.storefront.slug},WORKING_DYNAMIC
+file:apps/web/src/app/account/page.tsx,file:apps/web/src/app/page.tsx,router.push: /,WORKING
+file:apps/web/src/app/account/page.tsx,file:apps/web/src/app/auth/login/page.tsx,router.push: /auth/login,WORKING
+file:apps/web/src/app/account/settings/page.tsx,file:apps/web/src/app/account/page.tsx,href: /account,WORKING
+file:apps/web/src/app/account/settings/page.tsx,file:apps/web/src/app/api/profile/route.ts,fetch: /api/profile,WORKING
+file:apps/web/src/app/account/settings/page.tsx,file:apps/web/src/app/auth/forgot-password/page.tsx,href: /auth/forgot-password,WORKING
+file:apps/web/src/app/account/settings/page.tsx,file:apps/web/src/app/auth/login/page.tsx,router.push: /auth/login,WORKING
+file:apps/web/src/app/account/settings/page.tsx,file:apps/web/src/app/privacy/page.tsx,href: /privacy,WORKING
+file:apps/web/src/app/account/settings/page.tsx,file:apps/web/src/app/terms/page.tsx,href: /terms,WORKING
+file:apps/web/src/app/auth/forgot-password/page.tsx,file:apps/web/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/web/src/app/auth/forgot-password/page.tsx,file:apps/web/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/web/src/app/auth/login/page.tsx,file:apps/web/src/app/api/auth/login/route.ts,fetch: /api/auth/login,WORKING
+file:apps/web/src/app/auth/login/page.tsx,file:apps/web/src/app/auth/forgot-password/page.tsx,href: /auth/forgot-password,WORKING
+file:apps/web/src/app/auth/login/page.tsx,file:apps/web/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/web/src/app/auth/signup/page.tsx,file:apps/web/src/app/api/referrals/apply/route.ts,fetch: /api/referrals/apply,WORKING
+file:apps/web/src/app/auth/signup/page.tsx,file:apps/web/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/web/src/app/auth/signup/page.tsx,file:apps/web/src/app/chefs/page.tsx,router.push: /chefs,WORKING
+file:apps/web/src/app/auth/signup/page.tsx,file:apps/web/src/app/privacy/page.tsx,href: /privacy,WORKING
+file:apps/web/src/app/auth/signup/page.tsx,file:apps/web/src/app/terms/page.tsx,href: /terms,WORKING
+file:apps/web/src/app/cart/page.tsx,file:apps/web/src/app/checkout/page.tsx,href: /checkout?storefrontId=${cart?.storefront_id},WORKING
+file:apps/web/src/app/cart/page.tsx,file:apps/web/src/app/chefs/page.tsx,href: /chefs,WORKING
+file:apps/web/src/app/checkout/page.tsx,file:apps/web/src/app/api/addresses/route.ts,fetch: /api/addresses,WORKING
+file:apps/web/src/app/checkout/page.tsx,file:apps/web/src/app/api/cart/route.ts,fetch: /api/cart?storefrontId=${storefrontId},WORKING
+file:apps/web/src/app/checkout/page.tsx,file:apps/web/src/app/api/checkout/route.ts,fetch: /api/checkout,WORKING
+file:apps/web/src/app/checkout/page.tsx,file:apps/web/src/app/auth/login/page.tsx,router.push: /auth/login,WORKING
+file:apps/web/src/app/checkout/page.tsx,file:apps/web/src/app/chefs/page.tsx,href: /chefs,WORKING
+file:apps/web/src/app/chef-resources/page.tsx,file:apps/web/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/web/src/app/chef-resources/page.tsx,file:apps/web/src/app/chef-signup/page.tsx,href: /chef-signup,WORKING
+file:apps/web/src/app/chef-resources/page.tsx,file:apps/web/src/app/contact/page.tsx,href: /contact,WORKING
+file:apps/web/src/app/chef-signup/page.tsx,file:apps/web/src/app/page.tsx,href: /,WORKING
+file:apps/web/src/app/chef-signup/page.tsx,file:apps/web/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/web/src/app/chef-signup/page.tsx,file:apps/web/src/app/chef-resources/page.tsx,href: /chef-resources,WORKING
+file:apps/web/src/app/contact/page.tsx,file:apps/web/src/app/api/support/route.ts,fetch: /api/support,WORKING
+file:apps/web/src/app/error.tsx,file:apps/web/src/app/page.tsx,href: /,WORKING
+file:apps/web/src/app/how-it-works/page.tsx,file:apps/web/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/web/src/app/how-it-works/page.tsx,file:apps/web/src/app/chefs/page.tsx,href: /chefs,WORKING
+file:apps/web/src/app/not-found.tsx,file:apps/web/src/app/page.tsx,href: /,WORKING
+file:apps/web/src/app/not-found.tsx,file:apps/web/src/app/about/page.tsx,href: /about,WORKING
+file:apps/web/src/app/not-found.tsx,file:apps/web/src/app/chefs/page.tsx,href: /chefs,WORKING
+file:apps/web/src/app/not-found.tsx,file:apps/web/src/app/contact/page.tsx,href: /contact,WORKING
+file:apps/web/src/app/not-found.tsx,file:apps/web/src/app/how-it-works/page.tsx,href: /how-it-works,WORKING
+file:apps/web/src/app/orders/[id]/confirmation/page.tsx,file:apps/web/src/app/auth/login/page.tsx,redirect: /auth/login,WORKING
+file:apps/web/src/app/orders/[id]/confirmation/page.tsx,file:apps/web/src/app/chefs/page.tsx,href: /chefs,WORKING
+file:apps/web/src/app/page.tsx,file:apps/web/src/app/about/page.tsx,href: /about,WORKING
+file:apps/web/src/app/page.tsx,file:apps/web/src/app/account/orders/page.tsx,href: /account/orders,WORKING
+file:apps/web/src/app/page.tsx,file:apps/web/src/app/auth/signup/page.tsx,href: /auth/signup?role=chef,WORKING
+file:apps/web/src/app/page.tsx,file:apps/web/src/app/chef-resources/page.tsx,href: /chef-resources,WORKING
+file:apps/web/src/app/page.tsx,file:apps/web/src/app/chef-signup/page.tsx,href: /chef-signup,WORKING
+file:apps/web/src/app/page.tsx,file:apps/web/src/app/chefs/page.tsx,href: /chefs,WORKING
+file:apps/web/src/app/page.tsx,file:apps/web/src/app/contact/page.tsx,href: /contact,WORKING
+file:apps/web/src/app/page.tsx,file:apps/web/src/app/how-it-works/page.tsx,href: /how-it-works,WORKING
+file:apps/web/src/app/page.tsx,file:apps/web/src/app/privacy/page.tsx,href: /privacy,WORKING
+file:apps/web/src/app/page.tsx,file:apps/web/src/app/terms/page.tsx,href: /terms,WORKING
+file:apps/web/src/app/privacy/page.tsx,file:apps/web/src/app/page.tsx,href: /,WORKING
+file:apps/web/src/app/terms/page.tsx,file:apps/web/src/app/page.tsx,href: /,WORKING
+file:apps/web/src/components/auth/auth-layout.tsx,file:apps/web/src/app/page.tsx,href: /,WORKING
+file:apps/web/src/components/checkout/saved-card-selector.tsx,file:apps/web/src/app/api/payment-methods/route.ts,fetch: /api/payment-methods,WORKING
+file:apps/web/src/components/chefs/chefs-filters.tsx,file:apps/web/src/app/chefs/page.tsx,router.push: /chefs,WORKING
+file:apps/web/src/components/chefs/chefs-filters.tsx,file:apps/web/src/app/chefs/page.tsx,router.push: /chefs?${params.toString()},WORKING
+file:apps/web/src/components/chefs/chefs-list.tsx,file:apps/web/src/app/chefs/page.tsx,href: /chefs,WORKING
+file:apps/web/src/components/chefs/chefs-list.tsx,file:apps/web/src/app/chefs/[slug]/page.tsx,href: /chefs/${chef.slug},WORKING_DYNAMIC
+file:apps/web/src/components/home/featured-chefs.tsx,file:apps/web/src/app/chef-signup/page.tsx,href: /chef-signup,WORKING
+file:apps/web/src/components/home/featured-chefs.tsx,file:apps/web/src/app/chefs/[slug]/page.tsx,href: /chefs/${chef.slug},WORKING_DYNAMIC
+file:apps/web/src/components/layout/header.tsx,file:apps/web/src/app/page.tsx,href: /,WORKING
+file:apps/web/src/components/layout/header.tsx,file:apps/web/src/app/about/page.tsx,href: /about,WORKING
+file:apps/web/src/components/layout/header.tsx,file:apps/web/src/app/account/page.tsx,href: /account,WORKING
+file:apps/web/src/components/layout/header.tsx,file:apps/web/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/web/src/components/layout/header.tsx,file:apps/web/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/web/src/components/layout/header.tsx,file:apps/web/src/app/cart/page.tsx,href: /cart,WORKING
+file:apps/web/src/components/layout/header.tsx,file:apps/web/src/app/chefs/page.tsx,href: /chefs,WORKING
+file:apps/web/src/components/layout/header.tsx,file:apps/web/src/app/how-it-works/page.tsx,href: /how-it-works,WORKING
+file:apps/web/src/components/profile/loyalty-dashboard.tsx,file:apps/web/src/app/api/loyalty/route.ts,fetch: /api/loyalty,WORKING
+file:apps/web/src/components/profile/referral-dashboard.tsx,file:apps/web/src/app/api/referrals/route.ts,fetch: /api/referrals,WORKING
+file:apps/web/src/components/profile/saved-cards.tsx,file:apps/web/src/app/api/payment-methods/route.ts,fetch: /api/payment-methods,WORKING
+file:apps/web/src/components/profile/saved-cards.tsx,file:apps/web/src/app/api/payment-methods/route.ts,fetch: /api/payment-methods?id=${id},WORKING
+file:apps/web/src/components/reviews/review-form.tsx,file:apps/web/src/app/api/reviews/route.ts,fetch: /api/reviews,WORKING
+file:apps/web/src/components/reviews/reviews-list.tsx,file:apps/web/src/app/api/reviews/route.ts,fetch: /api/reviews?storefrontId=${storefrontId},WORKING
+file:apps/web/src/components/storefront/storefront-menu.tsx,file:apps/web/src/app/cart/page.tsx,href: /cart?storefrontId=${storefrontId},WORKING
+file:apps/web/src/components/storefront/storefront-menu.tsx,file:apps/web/src/app/checkout/page.tsx,href: /checkout?storefrontId=${storefrontId},WORKING
+file:apps/web/src/components/tracking/live-order-tracker.tsx,file:apps/web/src/app/api/orders/[id]/cancel/route.ts,fetch: /api/orders/${orderId}/cancel,WORKING_DYNAMIC
+file:apps/web/src/contexts/cart-context.tsx,file:apps/web/src/app/api/cart/route.ts,fetch: /api/cart,WORKING
+file:apps/web/src/contexts/cart-context.tsx,file:apps/web/src/app/api/cart/route.ts,fetch: /api/cart?itemId=${itemId},WORKING
+file:apps/web/src/contexts/cart-context.tsx,file:apps/web/src/app/api/cart/route.ts,fetch: /api/cart?storefrontId=${sfId},WORKING
+file:apps/web/src/hooks/use-eta.ts,file:apps/web/src/app/api/eta/route.ts,fetch: /api/eta?storefrontId=${storefrontId}&addressId=${encodeURIComponent(addressId)},WORKING
+file:apps/web/src/hooks/use-push-notifications.ts,file:apps/web/src/app/api/notifications/subscribe/route.ts,fetch: /api/notifications/subscribe,WORKING
+file:apps/web/src/lib/orders/use-order-stream.ts,file:apps/web/src/app/api/orders/[id]/route.ts,fetch: /api/orders/${orderId},WORKING_DYNAMIC
+file:apps/driver-app/src/app/auth/login/page.tsx,file:apps/driver-app/src/app/api/auth/login/route.ts,fetch: /api/auth/login,WORKING
+file:apps/driver-app/src/app/auth/login/page.tsx,file:apps/driver-app/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/driver-app/src/app/auth/signup/page.tsx,file:apps/driver-app/src/app/api/auth/signup/route.ts,fetch: /api/auth/signup,WORKING
+file:apps/driver-app/src/app/auth/signup/page.tsx,file:apps/driver-app/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/api/driver/presence/route.ts,fetch: /api/driver/presence,WORKING
+file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/api/earnings/route.ts,fetch: /api/earnings,WORKING
+file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/delivery/[id]/page.tsx,href: /delivery/${currentDelivery.id},WORKING_DYNAMIC
+file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/earnings/page.tsx,href: /earnings,WORKING
+file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/history/page.tsx,href: /history,WORKING
+file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx,file:apps/driver-app/src/app/page.tsx,router.push: /,WORKING
+file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx,file:apps/driver-app/src/app/api/deliveries/[id]/route.ts,fetch: /api/deliveries/${delivery.id},WORKING_DYNAMIC
+file:apps/driver-app/src/app/delivery/[id]/page.tsx,file:apps/driver-app/src/app/auth/login/page.tsx,redirect: /auth/login,WORKING
+file:apps/driver-app/src/app/earnings/components/EarningsView.tsx,file:apps/driver-app/src/app/api/payouts/instant/route.ts,fetch: /api/payouts/instant,WORKING
+file:apps/driver-app/src/app/earnings/components/EarningsView.tsx,file:apps/driver-app/src/app/settings/page.tsx,href: /settings,WORKING
+file:apps/driver-app/src/app/error.tsx,file:apps/driver-app/src/app/page.tsx,href: /,WORKING
+file:apps/driver-app/src/app/layout.tsx,file:apps/driver-app/public/manifest.webmanifest,href: /manifest.webmanifest,ASSET
+file:apps/driver-app/src/app/page.tsx,file:apps/driver-app/src/app/auth/login/page.tsx,redirect: /auth/login,WORKING
+file:apps/driver-app/src/app/profile/components/ProfileView.tsx,file:apps/driver-app/src/app/page.tsx,router.push: /,WORKING
+file:apps/driver-app/src/app/profile/components/ProfileView.tsx,file:apps/driver-app/src/app/api/auth/logout/route.ts,fetch: /api/auth/logout,WORKING
+file:apps/driver-app/src/app/profile/components/ProfileView.tsx,file:apps/driver-app/src/app/api/driver/route.ts,fetch: /api/driver,WORKING
+file:apps/driver-app/src/app/profile/components/ProfileView.tsx,file:apps/driver-app/src/app/api/payouts/setup/route.ts,fetch: /api/payouts/setup,WORKING
+file:apps/driver-app/src/app/profile/components/ProfileView.tsx,file:apps/driver-app/src/app/settings/page.tsx,href: /settings,WORKING
+file:apps/driver-app/src/app/settings/settings-client.tsx,file:apps/driver-app/src/app/page.tsx,href: /,WORKING
+file:apps/driver-app/src/app/settings/settings-client.tsx,file:apps/driver-app/src/app/api/driver/route.ts,fetch: /api/driver,WORKING
+file:apps/driver-app/src/app/settings/settings-client.tsx,file:apps/driver-app/src/app/earnings/page.tsx,href: /earnings,WORKING
+file:apps/driver-app/src/app/settings/settings-client.tsx,file:apps/driver-app/src/app/profile/page.tsx,href: /profile,WORKING
+file:apps/driver-app/src/components/offer-alert.tsx,file:apps/driver-app/src/app/api/offers/route.ts,fetch: /api/offers,WORKING
+file:apps/driver-app/src/components/offer-alert.tsx,file:apps/driver-app/src/app/delivery/[id]/page.tsx,window.location: /delivery/${offer.deliveryId},WORKING_DYNAMIC
+file:apps/driver-app/src/hooks/use-location-tracker.ts,file:apps/driver-app/src/app/api/location/route.ts,fetch: /api/location,WORKING
+file:apps/ops-admin/src/app/dashboard/_components/control-center.tsx,file:apps/ops-admin/src/app/dashboard/settings/page.tsx,href: /dashboard/settings,WORKING
+file:apps/ops-admin/src/app/dashboard/_components/drivers-column.tsx,file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,href: /dashboard/orders/${d.currentDeliveryOrderId},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/_components/ops-readiness.tsx,file:apps/ops-admin/src/app/dashboard/settings/page.tsx,href: /dashboard/settings,WORKING
+file:apps/ops-admin/src/app/dashboard/_components/orders-column.tsx,file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,href: /dashboard/orders/${order.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/analytics/components/platform-metrics-client.tsx,file:apps/ops-admin/src/app/api/analytics/route.ts,fetch: /api/analytics?period=${p},WORKING
+file:apps/ops-admin/src/app/dashboard/analytics/components/trend-charts.tsx,file:apps/ops-admin/src/app/api/analytics/trends/route.ts,fetch: /api/analytics/trends?days=${days},WORKING
+file:apps/ops-admin/src/app/dashboard/announcements/page.tsx,file:apps/ops-admin/src/app/api/announcements/route.ts,fetch: /api/announcements,WORKING
+file:apps/ops-admin/src/app/dashboard/automation/page.tsx,file:apps/ops-admin/src/app/api/engine/rules/route.ts,fetch: /api/engine/rules,WORKING
+file:apps/ops-admin/src/app/dashboard/chefs/[id]/chef-governance-actions.tsx,file:apps/ops-admin/src/app/api/chefs/[id]/route.ts,fetch: /api/chefs/${chefId},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/chefs/page.tsx,href: /dashboard/chefs,WORKING
+file:apps/ops-admin/src/app/dashboard/chefs/[id]/storefront-governance-actions.tsx,file:apps/ops-admin/src/app/api/engine/storefronts/[id]/route.ts,fetch: /api/engine/storefronts/${storefrontId},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx,file:apps/ops-admin/src/app/api/chefs/route.ts,fetch: /api/chefs?status=pending,WORKING
+file:apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx,file:apps/ops-admin/src/app/api/chefs/[id]/route.ts,fetch: /api/chefs/${id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/chefs/page.tsx,file:apps/ops-admin/src/app/api/export/route.ts,href: /api/export?type=chefs,WORKING
+file:apps/ops-admin/src/app/dashboard/chefs/page.tsx,file:apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx,href: /dashboard/chefs/${row.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/customers/[id]/customer-actions.tsx,file:apps/ops-admin/src/app/api/customers/[id]/notify/route.ts,fetch: /api/customers/${customerId}/notify,WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/customers/[id]/customer-actions.tsx,file:apps/ops-admin/src/app/api/export/route.ts,href: /api/export?type=orders&customerId=${customerId},WORKING
+file:apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/customers/page.tsx,href: /dashboard/customers,WORKING
+file:apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,href: /dashboard/orders/${order.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/support/page.tsx,href: /dashboard/support,WORKING
+file:apps/ops-admin/src/app/dashboard/customers/page.tsx,file:apps/ops-admin/src/app/api/customers/route.ts,fetch: /api/customers,WORKING
+file:apps/ops-admin/src/app/dashboard/customers/page.tsx,file:apps/ops-admin/src/app/api/export/route.ts,href: /api/export?type=customers,WORKING
+file:apps/ops-admin/src/app/dashboard/customers/page.tsx,file:apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx,href: /dashboard/customers/${row.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/deliveries/[id]/delivery-actions.tsx,file:apps/ops-admin/src/app/api/engine/dispatch/route.ts,fetch: /api/engine/dispatch,WORKING
+file:apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,href: /dashboard/deliveries,WORKING
+file:apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,href: /dashboard/drivers/${detail.driver.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,href: /dashboard/orders/${detail.order.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,href: /dashboard/deliveries?queue=${entry},WORKING
+file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,"href: /dashboard/deliveries?queue=${queue}&search=${encodeURIComponent(search)}&page=${Math.max(1, safePage - 1)}",WORKING
+file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,"href: /dashboard/deliveries?queue=${queue}&search=${encodeURIComponent(search)}&page=${Math.min(totalPages, safePage + 1)}",WORKING
+file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,file:apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx,href: /dashboard/deliveries/${item.deliveryId},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/dispatch/page.tsx,file:apps/ops-admin/src/app/api/engine/dispatch/route.ts,fetch: /api/engine/dispatch,WORKING
+file:apps/ops-admin/src/app/dashboard/dispatch/page.tsx,file:apps/ops-admin/src/app/api/engine/dispatch/offer-history/route.ts,fetch: /api/engine/dispatch/offer-history,WORKING
+file:apps/ops-admin/src/app/dashboard/dispatch/page.tsx,file:apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,href: /dashboard/drivers/${item.topCandidates[0]!.driverId},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/drivers/[id]/driver-governance-actions.tsx,file:apps/ops-admin/src/app/api/drivers/[id]/route.ts,fetch: /api/drivers/${driverId},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx,href: /dashboard/deliveries/${delivery.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/drivers/page.tsx,href: /dashboard/drivers,WORKING
+file:apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/map/page.tsx,href: /dashboard/map,WORKING
+file:apps/ops-admin/src/app/dashboard/drivers/page.tsx,file:apps/ops-admin/src/app/api/export/route.ts,href: /api/export?type=drivers,WORKING
+file:apps/ops-admin/src/app/dashboard/drivers/page.tsx,file:apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,href: /dashboard/drivers/${row.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx,file:apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx,href: /dashboard/finance/accounts/chefs/${id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx,file:apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx,href: /dashboard/finance/accounts/drivers/${id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/finance/finance-actions.tsx,file:apps/ops-admin/src/app/api/engine/finance/route.ts,fetch: /api/engine/finance,WORKING
+file:apps/ops-admin/src/app/dashboard/finance/page.tsx,file:apps/ops-admin/src/app/api/export/route.ts,href: /api/export?type=bank_payouts,WORKING
+file:apps/ops-admin/src/app/dashboard/finance/page.tsx,file:apps/ops-admin/src/app/api/export/route.ts,href: /api/export?type=ledger,WORKING
+file:apps/ops-admin/src/app/dashboard/finance/page.tsx,file:apps/ops-admin/src/app/api/export/route.ts,href: /api/export?type=orders,WORKING
+file:apps/ops-admin/src/app/dashboard/finance/payout-actions.tsx,file:apps/ops-admin/src/app/api/engine/payouts/route.ts,fetch: /api/engine/payouts,WORKING
+file:apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx,file:apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx,href: /dashboard/finance/payouts,WORKING
+file:apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx,file:apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx,href: /dashboard/finance/payouts/${run.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/layout.tsx,file:apps/ops-admin/src/app/auth/login/page.tsx,redirect: /auth/login?redirect=/dashboard,WORKING
+file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx,href: /dashboard/chefs/${order.storefront.chef?.id ??,WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx,href: /dashboard/customers/${order.customer.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx,href: /dashboard/deliveries/${order.delivery.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,file:apps/ops-admin/src/app/dashboard/orders/page.tsx,href: /dashboard/orders,WORKING
+file:apps/ops-admin/src/app/dashboard/orders/[id]/status-actions.tsx,file:apps/ops-admin/src/app/api/engine/orders/[id]/route.ts,fetch: /api/engine/orders/${orderId},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/orders/page.tsx,file:apps/ops-admin/src/app/api/engine/orders/[id]/route.ts,fetch: /api/engine/orders/${orderId},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/orders/page.tsx,file:apps/ops-admin/src/app/api/orders/route.ts,fetch: /api/orders,WORKING
+file:apps/ops-admin/src/app/dashboard/orders/page.tsx,file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,href: /dashboard/orders/${order.id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/page.tsx,file:apps/ops-admin/src/app/dashboard/announcements/page.tsx,href: /dashboard/announcements,WORKING
+file:apps/ops-admin/src/app/dashboard/page.tsx,file:apps/ops-admin/src/app/dashboard/chefs/page.tsx,href: /dashboard/chefs,WORKING
+file:apps/ops-admin/src/app/dashboard/page.tsx,file:apps/ops-admin/src/app/dashboard/dispatch/page.tsx,href: /dashboard/dispatch,WORKING
+file:apps/ops-admin/src/app/dashboard/page.tsx,file:apps/ops-admin/src/app/dashboard/drivers/page.tsx,href: /dashboard/drivers,WORKING
+file:apps/ops-admin/src/app/dashboard/page.tsx,file:apps/ops-admin/src/app/dashboard/finance/page.tsx,href: /dashboard/finance,WORKING
+file:apps/ops-admin/src/app/dashboard/reports/page.tsx,file:apps/ops-admin/src/app/api/export/route.ts,href: /api/export?type=orders&start=${startDate}&end=${endDate},WORKING
+file:apps/ops-admin/src/app/dashboard/settings/maintenance-toggle.tsx,file:apps/ops-admin/src/app/api/engine/maintenance/route.ts,fetch: /api/engine/maintenance,WORKING
+file:apps/ops-admin/src/app/dashboard/settings/settings-form.tsx,file:apps/ops-admin/src/app/api/engine/settings/route.ts,fetch: /api/engine/settings,WORKING
+file:apps/ops-admin/src/app/dashboard/support/page.tsx,file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,href: /dashboard/orders/${ticket.order_id},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/dashboard/support/page.tsx,file:apps/ops-admin/src/app/dashboard/support/page.tsx,"href: /dashboard/support?status=${statusFilter}&search=${encodeURIComponent(search)}&page=${Math.max(1, safePage - 1)}",WORKING
+file:apps/ops-admin/src/app/dashboard/support/page.tsx,file:apps/ops-admin/src/app/dashboard/support/page.tsx,"href: /dashboard/support?status=${statusFilter}&search=${encodeURIComponent(search)}&page=${Math.min(totalPages, safePage + 1)}",WORKING
+file:apps/ops-admin/src/app/dashboard/support/support-ticket-actions.tsx,file:apps/ops-admin/src/app/api/support/[id]/route.ts,fetch: /api/support/${ticketId},WORKING_DYNAMIC
+file:apps/ops-admin/src/app/error.tsx,file:apps/ops-admin/src/app/dashboard/page.tsx,href: /dashboard,WORKING
+file:apps/ops-admin/src/app/internal/command-center/command-center-client.tsx,file:apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts,fetch: /api/internal/command-center/change-requests,WORKING
+file:apps/ops-admin/src/app/page.tsx,file:apps/ops-admin/src/app/dashboard/page.tsx,redirect: /dashboard,WORKING
+file:apps/ops-admin/src/components/ops-alerts.tsx,file:apps/ops-admin/src/app/dashboard/support/page.tsx,href: /dashboard/support,WORKING
+file:apps/ops-admin/src/hooks/use-ops-live-feed.ts,file:apps/ops-admin/src/app/api/ops/live-board/route.ts,fetch: /api/ops/live-board,WORKING

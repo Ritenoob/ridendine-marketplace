@@ -4,15 +4,70 @@ const path = require('path');
 const root = process.cwd();
 const outDir = path.join(root, 'docs', 'wiring');
 const diagramsDir = path.join(outDir, 'diagrams');
+const architectureDir = path.join(root, 'docs', 'architecture', 'codebase-map');
+const architectureWiringDir = path.join(architectureDir, 'wiring');
+const obsidianDir = path.join(root, 'docs', 'obsidian', 'codebase-map');
+const graphifyDir = path.join(root, 'graphify-out', 'ridendine-codebase-map');
 
 const apps = [
-  { name: 'Customer Web', slug: 'web', root: 'apps/web', appDir: 'apps/web/src/app' },
-  { name: 'Ops Admin', slug: 'ops-admin', root: 'apps/ops-admin', appDir: 'apps/ops-admin/src/app' },
-  { name: 'Chef Admin', slug: 'chef-admin', root: 'apps/chef-admin', appDir: 'apps/chef-admin/src/app' },
-  { name: 'Driver App', slug: 'driver-app', root: 'apps/driver-app', appDir: 'apps/driver-app/src/app' },
+  {
+    name: 'Customer Web',
+    slug: 'web',
+    root: 'apps/web',
+    appDir: 'apps/web/src/app',
+    domain: 'ridendine.ca',
+    local: 'http://localhost:3000',
+    role: 'Customers',
+    color: '#2563eb',
+    purpose: 'Customer-facing marketplace, chef discovery, cart, checkout, account, support, loyalty, and order tracking.',
+  },
+  {
+    name: 'Ops Admin',
+    slug: 'ops-admin',
+    root: 'apps/ops-admin',
+    appDir: 'apps/ops-admin/src/app',
+    domain: 'ops.ridendine.ca',
+    local: 'http://localhost:3002',
+    role: 'Platform operators',
+    color: '#7c3aed',
+    purpose: 'Control plane for operations, customers, chefs, drivers, dispatch, finance, payouts, reconciliation, support, and system health.',
+  },
+  {
+    name: 'Chef Admin',
+    slug: 'chef-admin',
+    root: 'apps/chef-admin',
+    appDir: 'apps/chef-admin/src/app',
+    domain: 'chef.ridendine.ca',
+    local: 'http://localhost:3001',
+    role: 'Chefs',
+    color: '#e85d26',
+    purpose: 'Chef storefront management, menu, availability, orders, kitchen operations, analytics, payouts, profile, and reviews.',
+  },
+  {
+    name: 'Driver App',
+    slug: 'driver-app',
+    root: 'apps/driver-app',
+    appDir: 'apps/driver-app/src/app',
+    domain: 'driver.ridendine.ca',
+    local: 'http://localhost:3003',
+    role: 'Delivery drivers',
+    color: '#059669',
+    purpose: 'Driver onboarding, presence, delivery offers, active deliveries, location updates, history, earnings, and payout setup.',
+  },
 ];
 
-const scanPackages = ['packages/db', 'packages/engine', 'packages/types', 'packages/validation', 'packages/routing'];
+const scanPackages = [
+  'packages/auth',
+  'packages/config',
+  'packages/db',
+  'packages/engine',
+  'packages/notifications',
+  'packages/routing',
+  'packages/types',
+  'packages/ui',
+  'packages/utils',
+  'packages/validation',
+];
 const actionExpectations = {
   'Customer browse chefs/restaurants': ['apps/web/src/app/chefs/page.tsx', 'apps/web/src/app/api'],
   'Customer add item to cart': ['apps/web/src/app/cart/page.tsx', 'apps/web/src/contexts/cart-context.tsx', 'apps/web/src/app/api/cart/route.ts'],
@@ -65,6 +120,10 @@ function mdLink(file) {
   return `[${file}](../../${file})`;
 }
 
+function deepMdLink(file) {
+  return `[${file}](../../../${file})`;
+}
+
 function routeFromFile(appDir, file) {
   let route = file.replace(appDir, '').replace(/\/(page|route)\.tsx?$/, '');
   route = route.replace(/\/page$/, '');
@@ -89,6 +148,102 @@ function nearestLayout(appDir, file) {
 
 function unique(arr) {
   return [...new Set(arr.filter(Boolean))].sort();
+}
+
+function cleanTarget(raw) {
+  if (!raw) return '';
+  const value = String(raw)
+    .trim()
+    .replace(/^['"`]+|['"`]+$/g, '')
+    .replace(/&amp;/g, '&');
+  return value.includes('${') ? value.replace(/^\{+/, '') : value.replace(/^['"`{]+|['"`}]+$/g, '');
+}
+
+function removeQueryHash(target) {
+  return target.split('#')[0].split('?')[0].replace(/\/$/, '') || '/';
+}
+
+function appForHost(target) {
+  const match = target.match(/^https?:\/\/([^/]+)(\/.*)?$/i);
+  if (!match) return null;
+  const host = match[1].toLowerCase();
+  return apps.find((app) => app.domain === host || app.local.replace(/^https?:\/\//, '') === host) || null;
+}
+
+function internalPathFromTarget(target) {
+  const hostedApp = appForHost(target);
+  if (hostedApp) {
+    const url = new URL(target);
+    return { app: hostedApp, path: removeQueryHash(url.pathname || '/') };
+  }
+  if (target.startsWith('/')) return { app: null, path: removeQueryHash(target) };
+  return { app: null, path: target };
+}
+
+function targetToPattern(target) {
+  return removeQueryHash(target)
+    .replace(/\$\{[^}]+\}/g, ':param')
+    .replace(/\[[^\]]+\]/g, ':param')
+    .replace(/\/:param(?=\/|$)/g, '/:param');
+}
+
+function routeToRegex(route) {
+  const escaped = route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`^${escaped.replace(/:[^/]+/g, '[^/]+')}$`);
+}
+
+function routePatternMatches(route, target) {
+  if (route === target) return true;
+  const normalizedTarget = targetToPattern(target);
+  if (route === normalizedTarget) return true;
+  return routeToRegex(route).test(removeQueryHash(target).replace(/\$\{[^}]+\}/g, 'dynamic'));
+}
+
+function publicAssetExists(app, targetPath) {
+  if (!targetPath.startsWith('/')) return false;
+  const assetPath = `${app.root}/public${removeQueryHash(targetPath)}`;
+  const abs = path.join(root, assetPath);
+  return fs.existsSync(abs) && fs.statSync(abs).isFile();
+}
+
+function extractLinks(text) {
+  const links = [];
+  const patterns = [
+    { kind: 'href', re: /\bhref=\{?['"`]([^'"`]+)['"`]\}?/g },
+    { kind: 'router.push', re: /router\.(?:push|replace)\(['"`]([^'"`]+)['"`]\)/g },
+    { kind: 'redirect', re: /(?:redirect|permanentRedirect)\(['"`]([^'"`]+)['"`]\)/g },
+    { kind: 'window.location', re: /window\.location(?:\.href)?\s*=\s*['"`]([^'"`]+)['"`]/g },
+  ];
+  for (const { kind, re } of patterns) {
+    let match;
+    while ((match = re.exec(text))) links.push({ kind, target: cleanTarget(match[1]) });
+  }
+  return links.filter((link) => link.target && !link.target.startsWith('{'));
+}
+
+function extractEnvVars(text) {
+  const vars = [];
+  const patterns = [
+    /process\.env\.([A-Z0-9_]+)/g,
+    /process\.env\[['"`]([A-Z0-9_]+)['"`]\]/g,
+    /\b(NEXT_PUBLIC_[A-Z0-9_]+|SUPABASE_[A-Z0-9_]+|STRIPE_[A-Z0-9_]+|CRON_SECRET|ENGINE_PROCESSOR_TOKEN|OPS_ADMIN_URL|RESEND_[A-Z0-9_]+|TWILIO_[A-Z0-9_]+)\b/g,
+  ];
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(text))) vars.push(match[1]);
+  }
+  return unique(vars);
+}
+
+function extractComponents(text) {
+  const components = [];
+  const ridendineUi = text.match(/import\s+\{([^}]+)\}\s+from\s+['"]@ridendine\/ui['"]/);
+  if (ridendineUi) {
+    components.push(...ridendineUi[1].split(',').map((item) => item.trim().replace(/\s+as\s+.*/, '')));
+  }
+  const localComponentImports = [...text.matchAll(/from\s+['"](@\/components\/[^'"]+)['"]/g)].map((m) => m[1]);
+  components.push(...localComponentImports);
+  return unique(components);
 }
 
 function extractTables(text) {
@@ -156,6 +311,9 @@ function collectRoutes() {
       const tables = extractTables(text);
       const apis = extractApis(text);
       const packages = extractPackages(text);
+      const links = extractLinks(text);
+      const envVars = extractEnvVars(text);
+      const components = extractComponents(text);
       const auth = detectAuth(text, route);
       routes.push({
         app: app.name,
@@ -168,6 +326,9 @@ function collectRoutes() {
         apis,
         tables,
         packages,
+        links,
+        envVars,
+        components,
         status: statusFor({ auth, tables, apis, text }),
       });
     }
@@ -184,6 +345,7 @@ function collectApis() {
       const methods = extractMethods(text);
       const tables = extractTables(text);
       const packages = extractPackages(text);
+      const envVars = extractEnvVars(text);
       const auth = detectAuth(text, '/api');
       const endpoint = endpointFromRouteFile(app.appDir, file);
       const external = unique([
@@ -202,6 +364,7 @@ function collectApis() {
         auth,
         packages,
         tables,
+        envVars,
         external,
         status: methods.length ? statusFor({ auth, tables, apis: packages, text }) : 'PARTIAL',
       });
@@ -222,7 +385,24 @@ function collectDbEngine() {
 
 function write(file, body) {
   fs.mkdirSync(path.dirname(path.join(outDir, file)), { recursive: true });
-  fs.writeFileSync(path.join(outDir, file), body);
+  fs.writeFileSync(path.join(outDir, file), normalizeTextBody(body));
+}
+
+function writeTo(baseDir, file, body) {
+  fs.mkdirSync(path.dirname(path.join(baseDir, file)), { recursive: true });
+  fs.writeFileSync(path.join(baseDir, file), normalizeTextBody(body));
+}
+
+function writeJsonTo(baseDir, file, value) {
+  writeTo(baseDir, file, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function normalizeTextBody(body) {
+  return typeof body === 'string' ? `${body.trimEnd()}\n` : body;
+}
+
+function rebaseMdLinks(body, prefixToRepoRoot) {
+  return body.replace(/\]\(\.\.\/\.\.\//g, `](${prefixToRepoRoot}`);
 }
 
 function table(headers, rows) {
@@ -701,10 +881,23 @@ function generateCompletion(routes, apis, map) {
 - \`docs/wiring/DATA_ENGINE_MAP.md\`
 - \`docs/wiring/PAGE_WIRING_MATRIX.md\`
 - \`docs/wiring/ACTION_MAP.md\`
+- \`docs/wiring/links/LINK_WIRING_MATRIX.md\`
+- \`docs/wiring/links/API_CALL_MATRIX.md\`
+- \`docs/wiring/links/ENVIRONMENT_WIRING_MATRIX.md\`
 - \`docs/wiring/MISSING_WIRING_REPORT.md\`
 - \`docs/wiring/RIDENDINE_MASTER_WIRING_DIAGRAM.md\`
 - \`docs/wiring/index.html\`
 - \`docs/wiring/diagrams/*.md\`
+- \`docs/architecture/codebase-map/README.md\`
+- \`docs/architecture/codebase-map/COMPLETE_CODEBASE_REVIEW.md\`
+- \`docs/architecture/codebase-map/apps/*.md\`
+- \`docs/architecture/codebase-map/pages/EVERY_PAGE_DOCUMENT.md\`
+- \`docs/architecture/codebase-map/pages/*-pages.md\`
+- \`docs/architecture/codebase-map/wiring/*.md\`
+- \`docs/obsidian/codebase-map/*.md\`
+- \`graphify-out/ridendine-codebase-map/graph.json\`
+- \`graphify-out/ridendine-codebase-map/nodes.csv\`
+- \`graphify-out/ridendine-codebase-map/edges.csv\`
 
 ## Diagrams Created
 
@@ -752,25 +945,952 @@ See \`docs/wiring/MISSING_WIRING_REPORT.md\`. Scanner marks undetectable auth/da
 `;
 }
 
+function findPage(routes, app, target) {
+  const candidates = routes.filter((route) => route.slug === app.slug);
+  return candidates.find((route) => route.route === removeQueryHash(target))
+    || candidates.find((route) => routePatternMatches(route.route, target));
+}
+
+function findApi(apis, app, target) {
+  const candidates = apis.filter((api) => api.app === app.name);
+  return candidates.find((api) => api.endpoint === removeQueryHash(target))
+    || candidates.find((api) => routePatternMatches(api.endpoint, target));
+}
+
+function resolveTarget(rawTarget, sourceApp, routes, apis, kind) {
+  const target = cleanTarget(rawTarget);
+  if (!target) {
+    return { status: 'UNKNOWN', resolvedApp: sourceApp.name, resolvedFile: '', notes: 'Empty target' };
+  }
+  if (/^(mailto:|tel:|sms:|#)/i.test(target)) {
+    return { status: 'EXTERNAL', resolvedApp: 'external', resolvedFile: '', notes: 'Non-route browser action' };
+  }
+  if (/^[a-z][a-z0-9+.-]*:/i.test(target) && !/^https?:\/\//i.test(target)) {
+    return { status: 'EXTERNAL', resolvedApp: 'browser/runtime', resolvedFile: '', notes: 'Browser runtime target' };
+  }
+  if (/^https?:\/\//i.test(target) && !appForHost(target)) {
+    return { status: 'EXTERNAL', resolvedApp: 'external', resolvedFile: '', notes: 'External URL' };
+  }
+
+  const resolved = internalPathFromTarget(target);
+  const targetApp = resolved.app || sourceApp;
+  const targetPath = targetToPattern(resolved.path);
+  if (!targetPath.startsWith('/')) {
+    return {
+      status: target.includes('${') ? 'UNKNOWN_DYNAMIC' : 'EXTERNAL',
+      resolvedApp: targetApp.name,
+      resolvedFile: '',
+      notes: 'Not an internal route path',
+    };
+  }
+
+  if (publicAssetExists(targetApp, targetPath)) {
+    return {
+      status: 'ASSET',
+      resolvedApp: targetApp.name,
+      resolvedFile: `${targetApp.root}/public${targetPath}`,
+      notes: 'Resolves to public asset',
+    };
+  }
+
+  if (targetPath.startsWith('/api')) {
+    const api = findApi(apis, targetApp, targetPath);
+    return api
+      ? {
+          status: api.endpoint === targetPath ? 'WORKING' : 'WORKING_DYNAMIC',
+          resolvedApp: targetApp.name,
+          resolvedFile: api.file,
+          notes: `${kind} resolves to API ${api.endpoint}`,
+        }
+      : {
+          status: target.includes('${') ? 'UNKNOWN_DYNAMIC' : 'BROKEN',
+          resolvedApp: targetApp.name,
+          resolvedFile: '',
+          notes: 'No matching API route file detected',
+        };
+  }
+
+  const page = findPage(routes, targetApp, targetPath);
+  return page
+    ? {
+        status: page.route === targetPath ? 'WORKING' : 'WORKING_DYNAMIC',
+        resolvedApp: targetApp.name,
+        resolvedFile: page.file,
+        notes: `${kind} resolves to page ${page.route}`,
+      }
+    : {
+        status: target.includes('${') ? 'UNKNOWN_DYNAMIC' : 'BROKEN',
+        resolvedApp: targetApp.name,
+        resolvedFile: '',
+        notes: 'No matching page route file detected',
+      };
+}
+
+function sourceFilesForApp(app) {
+  return walk(app.root, (f) => {
+    if (!/\.(ts|tsx|js|jsx)$/.test(f)) return false;
+    if (f.includes('/node_modules/') || f.includes('/.next/')) return false;
+    if (/\.(test|spec)\.(ts|tsx|js|jsx)$/.test(f) || f.includes('/__tests__/')) return false;
+    return true;
+  });
+}
+
+function sourceKindForFile(app, file) {
+  if (file.startsWith(app.appDir) && file.endsWith('/page.tsx')) return 'page';
+  if (file.startsWith(app.appDir) && file.endsWith('/route.ts')) return 'api-route';
+  if (file.includes('/components/')) return 'component';
+  if (file.includes('/lib/')) return 'lib';
+  if (file.includes('/hooks/')) return 'hook';
+  if (file.endsWith('/middleware.ts')) return 'middleware';
+  return 'source';
+}
+
+function collectLinksAndCalls(routes, apis) {
+  const rows = [];
+  for (const app of apps) {
+    for (const file of sourceFilesForApp(app)) {
+      const text = read(file);
+      const sourceKind = sourceKindForFile(app, file);
+      for (const link of extractLinks(text)) {
+        const resolved = resolveTarget(link.target, app, routes, apis, link.kind);
+        rows.push({
+          app: app.name,
+          sourceKind,
+          sourceFile: file,
+          kind: link.kind,
+          target: link.target,
+          ...resolved,
+        });
+      }
+      for (const apiCall of extractApis(text)) {
+        const resolved = resolveTarget(apiCall, app, routes, apis, 'fetch');
+        rows.push({
+          app: app.name,
+          sourceKind,
+          sourceFile: file,
+          kind: 'fetch',
+          target: apiCall,
+          ...resolved,
+        });
+      }
+    }
+  }
+  const seen = new Set();
+  return rows.filter((row) => {
+    const key = `${row.app}|${row.sourceFile}|${row.kind}|${row.target}|${row.resolvedFile}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).sort((a, b) => `${a.app}${a.sourceFile}${a.target}`.localeCompare(`${b.app}${b.sourceFile}${b.target}`));
+}
+
+function generateLinkMatrix(linkRows) {
+  return `# Link Wiring Matrix
+
+Generated from \`href\`, \`router.push\`, \`redirect\`, \`window.location\`, and \`fetch()\` references in app source files.
+
+Status labels:
+
+- \`WORKING\`: exact route/API file exists.
+- \`WORKING_DYNAMIC\`: dynamic route/API file exists, such as \`/orders/:id\`.
+- \`BROKEN\`: static internal link has no matching page/API route file.
+- \`UNKNOWN_DYNAMIC\`: dynamic target cannot be proven by static scan.
+- \`ASSET\`: target resolves to an app public asset.
+- \`EXTERNAL\`: external URL, browser action, mail, phone, or fragment.
+
+${table(['Status', 'App', 'Source kind', 'Source file', 'Reference kind', 'Target', 'Resolved app', 'Resolved file', 'Notes'], linkRows.map((row) => [
+    row.status,
+    row.app,
+    row.sourceKind,
+    mdLink(row.sourceFile),
+    row.kind,
+    `\`${row.target}\``,
+    row.resolvedApp,
+    row.resolvedFile ? mdLink(row.resolvedFile) : '',
+    row.notes,
+  ]))}
+`;
+}
+
+function generateApiCallMatrix(linkRows) {
+  const apiRows = linkRows.filter((row) => row.kind === 'fetch' || row.target.includes('/api'));
+  return `# API Call Matrix
+
+This is the client/server caller view of API wiring. The API inventory is the provider view.
+
+${table(['Status', 'Caller app', 'Caller file', 'Target API', 'Resolved API file', 'Notes'], apiRows.map((row) => [
+    row.status,
+    row.app,
+    mdLink(row.sourceFile),
+    `\`${row.target}\``,
+    row.resolvedFile ? mdLink(row.resolvedFile) : '',
+    row.notes,
+  ]))}
+`;
+}
+
+function generateEnvMatrix(routes, apis) {
+  const rows = [];
+  for (const route of routes) {
+    for (const envVar of route.envVars || []) rows.push([envVar, route.app, 'page', mdLink(route.file), `\`${route.route}\``]);
+  }
+  for (const api of apis) {
+    for (const envVar of api.envVars || []) rows.push([envVar, api.app, 'api', mdLink(api.file), `\`${api.endpoint}\``]);
+  }
+  const sorted = rows.sort((a, b) => `${a[0]}${a[1]}${a[3]}`.localeCompare(`${b[0]}${b[1]}${b[3]}`));
+  return `# Environment Wiring Matrix
+
+Generated from \`process.env\` and uppercase env references in page/API source files.
+
+${table(['Variable', 'App', 'Surface', 'File', 'Route/API'], sorted)}
+`;
+}
+
+function appStatusSummary(app, routes, apis, linkRows) {
+  const appRoutes = routes.filter((route) => route.slug === app.slug);
+  const appApis = apis.filter((api) => api.app === app.name);
+  const appLinks = linkRows.filter((row) => row.app === app.name);
+  const broken = appLinks.filter((row) => row.status === 'BROKEN');
+  const unknown = appLinks.filter((row) => row.status === 'UNKNOWN_DYNAMIC');
+  return {
+    appRoutes,
+    appApis,
+    appLinks,
+    broken,
+    unknown,
+    wiredRoutes: appRoutes.filter((route) => route.status === 'WIRED').length,
+    partialRoutes: appRoutes.filter((route) => route.status === 'PARTIAL').length,
+    missingRoutes: appRoutes.filter((route) => route.status === 'MISSING').length,
+    wiredApis: appApis.filter((api) => api.status === 'WIRED').length,
+    partialApis: appApis.filter((api) => api.status === 'PARTIAL').length,
+  };
+}
+
+function generateStandaloneAppMap(app, routes, apis, linkRows) {
+  const summary = appStatusSummary(app, routes, apis, linkRows);
+  return `# ${app.name} Standalone Map
+
+## Surface
+
+- Domain: \`${app.domain}\`
+- Local development URL: \`${app.local}\`
+- Primary users: ${app.role}
+- Code root: \`${app.root}\`
+- App router root: \`${app.appDir}\`
+- Purpose: ${app.purpose}
+
+## Status Summary
+
+- Page routes: ${summary.appRoutes.length} total, ${summary.wiredRoutes} WIRED, ${summary.partialRoutes} PARTIAL, ${summary.missingRoutes} MISSING.
+- API route files: ${summary.appApis.length} total, ${summary.wiredApis} WIRED, ${summary.partialApis} PARTIAL.
+- Internal link/API references: ${summary.appLinks.length} total, ${summary.broken.length} BROKEN, ${summary.unknown.length} UNKNOWN_DYNAMIC.
+
+## Standalone App Diagram
+
+\`\`\`mermaid
+flowchart TB
+  classDef app fill:${app.color},stroke:#111827,color:#ffffff
+  classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
+  classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
+  App["${app.name}<br/>${app.domain}"]:::app
+  Pages["${summary.appRoutes.length} pages"]:::api
+  APIs["${summary.appApis.length} API route files"]:::api
+  Shared["Shared packages"]:::data
+  DB["Supabase tables/RPCs"]:::data
+  External["Stripe / routing / notifications where detected"]:::warn
+  App --> Pages
+  Pages --> APIs
+  APIs --> Shared
+  APIs --> DB
+  APIs --> External
+\`\`\`
+
+## Pages
+
+${table(['Status', 'Route', 'Page file', 'Layout', 'Auth', 'Tables', 'APIs called', 'Components'], summary.appRoutes.map((route) => [
+    route.status,
+    `\`${route.route}\``,
+    mdLink(route.file),
+    mdLink(route.layout),
+    route.auth,
+    route.tables.map((tableName) => `\`${tableName}\``).join(', ') || 'None detected',
+    route.apis.map((api) => `\`${api}\``).join(', ') || 'None detected',
+    route.components.map((component) => `\`${component}\``).join(', ') || 'None detected',
+  ]))}
+
+## APIs
+
+${table(['Status', 'Endpoint', 'Methods', 'File', 'Auth', 'Tables', 'Packages', 'External'], summary.appApis.map((api) => [
+    api.status,
+    `\`${api.endpoint}\``,
+    api.methods.join(', '),
+    mdLink(api.file),
+    api.auth,
+    api.tables.map((tableName) => `\`${tableName}\``).join(', ') || 'None detected',
+    api.packages.join(', ') || 'None detected',
+    api.external.join(', ') || 'None detected',
+  ]))}
+
+## Broken Or Unproven Links
+
+${summary.broken.length || summary.unknown.length
+    ? table(['Status', 'Source file', 'Kind', 'Target', 'Notes'], [...summary.broken, ...summary.unknown].map((row) => [
+        row.status,
+        mdLink(row.sourceFile),
+        row.kind,
+        `\`${row.target}\``,
+        row.notes,
+      ]))
+    : 'No broken or unknown dynamic internal links detected by the static scanner.'}
+`;
+}
+
+function fileSafeName(value) {
+  return value
+    .replace(/^\//, 'root')
+    .replace(/[:*?"<>|[\]{}$`\\]/g, '-')
+    .replace(/\//g, '__')
+    .replace(/-+/g, '-')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'root';
+}
+
+function mermaidLabel(value) {
+  return String(value ?? '')
+    .replace(/"/g, "'")
+    .replace(/\n/g, '<br/>')
+    .replace(/\|/g, '/');
+}
+
+function pageOutgoing(route, linkRows) {
+  return linkRows.filter((row) => row.sourceFile === route.file);
+}
+
+function pageIncoming(route, linkRows) {
+  return linkRows.filter((row) => row.resolvedFile === route.file);
+}
+
+function endpointMethodsForTarget(target, apis, appName) {
+  const app = apps.find((candidate) => candidate.name === appName);
+  if (!app) return '';
+  const resolved = internalPathFromTarget(target);
+  const targetApp = resolved.app || app;
+  const endpoint = removeQueryHash(resolved.path || target);
+  const api = findApi(apis, targetApp, endpoint);
+  return api ? api.methods.join(', ') : '';
+}
+
+function pageDiagram(route, linkRows) {
+  const out = pageOutgoing(route, linkRows);
+  const tableNodes = route.tables.slice(0, 7);
+  const apiNodes = out.filter((row) => row.target.includes('/api')).slice(0, 7);
+  const brokenNodes = out.filter((row) => row.status === 'BROKEN' || row.status === 'UNKNOWN_DYNAMIC').slice(0, 5);
+  const componentNodes = route.components.slice(0, 6);
+
+  const lines = [
+    'flowchart TB',
+    `  Page["${mermaidLabel(route.app)}<br/>${mermaidLabel(route.route)}"]`,
+    `  Layout["Layout<br/>${mermaidLabel(route.layout)}"]`,
+    `  File["Page file<br/>${mermaidLabel(route.file)}"]`,
+    `  Auth["Auth<br/>${mermaidLabel(route.auth)}"]`,
+    '  Page --> Layout',
+    '  Page --> File',
+    '  Page --> Auth',
+  ];
+  tableNodes.forEach((tableName, index) => {
+    lines.push(`  Table${index}["DB table/RPC<br/>${mermaidLabel(tableName)}"]`);
+    lines.push(`  Page --> Table${index}`);
+  });
+  apiNodes.forEach((row, index) => {
+    lines.push(`  Api${index}["API/fetch<br/>${mermaidLabel(row.target)}"]`);
+    lines.push(`  Page --> Api${index}`);
+  });
+  componentNodes.forEach((component, index) => {
+    lines.push(`  Component${index}["Component/import<br/>${mermaidLabel(component)}"]`);
+    lines.push(`  Page --> Component${index}`);
+  });
+  brokenNodes.forEach((row, index) => {
+    lines.push(`  Gap${index}["${mermaidLabel(row.status)}<br/>${mermaidLabel(row.target)}"]`);
+    lines.push(`  Page -. review .-> Gap${index}`);
+  });
+  lines.push('  classDef page fill:#111827,stroke:#111827,color:#ffffff');
+  lines.push('  classDef data fill:#dcfce7,stroke:#16a34a,color:#172033');
+  lines.push('  classDef api fill:#dbeafe,stroke:#2563eb,color:#172033');
+  lines.push('  classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033');
+  lines.push('  class Page page');
+  if (tableNodes.length) lines.push(`  class ${tableNodes.map((_, index) => `Table${index}`).join(',')} data`);
+  if (apiNodes.length) lines.push(`  class ${apiNodes.map((_, index) => `Api${index}`).join(',')} api`);
+  if (brokenNodes.length) lines.push(`  class ${brokenNodes.map((_, index) => `Gap${index}`).join(',')} warn`);
+  return lines.join('\n');
+}
+
+function generatePageDetail(route, routes, apis, linkRows, headingLevel = 1) {
+  const out = pageOutgoing(route, linkRows);
+  const incoming = pageIncoming(route, linkRows);
+  const titlePrefix = '#'.repeat(headingLevel);
+  const broken = out.filter((row) => row.status === 'BROKEN');
+  const unknown = out.filter((row) => row.status === 'UNKNOWN_DYNAMIC');
+  const apiCalls = out.filter((row) => row.target.includes('/api') || row.kind === 'fetch');
+  const navigation = out.filter((row) => !row.target.includes('/api') && row.kind !== 'fetch');
+  const app = apps.find((candidate) => candidate.name === route.app);
+  const subPrefix = '#'.repeat(Math.min(6, headingLevel + 1));
+
+  return `${titlePrefix} ${route.app}: \`${route.route}\`
+
+${subPrefix} Page Diagram
+
+\`\`\`mermaid
+${pageDiagram(route, linkRows)}
+\`\`\`
+
+${subPrefix} Actual Page Information
+
+| Field | Value |
+| --- | --- |
+| App | ${route.app} |
+| Domain | \`${app?.domain ?? 'unknown'}\` |
+| Route | \`${route.route}\` |
+| Status | \`${route.status}\` |
+| Auth | ${route.auth} |
+| Page file | ${mdLink(route.file)} |
+| Layout | ${mdLink(route.layout)} |
+| Data source summary | ${route.dataSource} |
+
+${subPrefix} Data And API Wiring
+
+| Type | Details |
+| --- | --- |
+| DB tables/RPCs | ${route.tables.map((tableName) => `\`${tableName}\``).join(', ') || 'None detected'} |
+| Fetch/API calls | ${apiCalls.map((row) => `\`${row.target}\`${endpointMethodsForTarget(row.target, apis, row.app) ? ` (${endpointMethodsForTarget(row.target, apis, row.app)})` : ''}`).join('<br>') || 'None detected'} |
+| Shared packages | ${route.packages.join(', ') || 'None detected'} |
+| Components/imports | ${route.components.map((component) => `\`${component}\``).join(', ') || 'None detected'} |
+| Environment vars | ${route.envVars.map((envVar) => `\`${envVar}\``).join(', ') || 'None detected'} |
+
+${subPrefix} Navigation And Links
+
+${navigation.length ? table(['Status', 'Kind', 'Target', 'Resolved app', 'Resolved file', 'Notes'], navigation.map((row) => [
+    row.status,
+    row.kind,
+    `\`${row.target}\``,
+    row.resolvedApp,
+    row.resolvedFile ? mdLink(row.resolvedFile) : '',
+    row.notes,
+  ])) : 'No outgoing page-navigation links detected.'}
+
+${subPrefix} API Calls From This Page
+
+${apiCalls.length ? table(['Status', 'Kind', 'Target', 'Resolved app', 'Resolved file', 'Notes'], apiCalls.map((row) => [
+    row.status,
+    row.kind,
+    `\`${row.target}\``,
+    row.resolvedApp,
+    row.resolvedFile ? mdLink(row.resolvedFile) : '',
+    row.notes,
+  ])) : 'No outgoing API/fetch calls detected.'}
+
+${subPrefix} Incoming References
+
+${incoming.length ? table(['Source app', 'Source file', 'Kind', 'Target', 'Status'], incoming.slice(0, 25).map((row) => [
+    row.app,
+    mdLink(row.sourceFile),
+    row.kind,
+    `\`${row.target}\``,
+    row.status,
+  ])) : 'No incoming static references detected.'}
+
+${subPrefix} Review Notes
+
+${[
+    broken.length ? `- Broken static references: ${broken.map((row) => `\`${row.target}\``).join(', ')}.` : '',
+    unknown.length ? `- Dynamic/unproven references: ${unknown.map((row) => `\`${row.target}\``).join(', ')}.` : '',
+    route.status !== 'WIRED' ? `- Page status is ${route.status}; review auth/data/API metadata and runtime behavior.` : '',
+    !broken.length && !unknown.length && route.status === 'WIRED' ? '- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.' : '',
+  ].filter(Boolean).join('\n')}
+`;
+}
+
+function generateEveryPageDocument(routes, apis, linkRows) {
+  const sections = routes.map((route) => generatePageDetail(route, routes, apis, linkRows, 2)).join('\n\n---\n\n');
+  return `# Every Page Application Document
+
+This document is generated from the current codebase by \`pnpm docs:wiring\`. It covers every detected Next.js App Router page in the four RideNDine applications.
+
+## Legend
+
+- \`WIRED\`: static scan found a plausible route implementation and no high-confidence missing source.
+- \`PARTIAL\`: page exists, but auth/data/API metadata is not fully provable by static scan.
+- \`MISSING\`: page exists but looks empty or not meaningfully wired by static scan.
+- Link statuses are documented in \`docs/wiring/links/LINK_WIRING_MATRIX.md\`.
+
+## Application Diagram
+
+\`\`\`mermaid
+flowchart TB
+  Customer["Customer Web<br/>ridendine.ca"] --> Shared["Shared API/package/data layer"]
+  Chef["Chef App<br/>chef.ridendine.ca"] --> Shared
+  Driver["Driver App<br/>driver.ridendine.ca"] --> Shared
+  Ops["Ops Admin<br/>ops.ridendine.ca"] --> Shared
+  Ops -. controls .-> Customer
+  Ops -. controls .-> Chef
+  Ops -. controls .-> Driver
+  Shared --> DB["Supabase"]
+  Shared --> Stripe["Stripe"]
+  Shared --> Routing["Routing/ETA"]
+\`\`\`
+
+## Page Index
+
+${table(['App', 'Route', 'Status', 'Page file'], routes.map((route) => [
+    route.app,
+    `\`${route.route}\``,
+    route.status,
+    mdLink(route.file),
+  ]))}
+
+---
+
+${sections}
+`;
+}
+
+function generateAppPagesDocument(app, routes, apis, linkRows) {
+  const appRoutes = routes.filter((route) => route.slug === app.slug);
+  return `# ${app.name} Page Document
+
+Domain: \`${app.domain}\`
+
+Purpose: ${app.purpose}
+
+${appRoutes.map((route) => generatePageDetail(route, routes, apis, linkRows, 2)).join('\n\n---\n\n')}
+`;
+}
+
+function generateArchitectureReadme(routes, apis, linkRows, map) {
+  const linkBroken = linkRows.filter((row) => row.status === 'BROKEN').length;
+  const linkUnknown = linkRows.filter((row) => row.status === 'UNKNOWN_DYNAMIC').length;
+  return `# RideNDine Complete Codebase Map
+
+Generated by \`pnpm docs:wiring\` from app routes, API routes, package imports, Supabase table references, internal links, fetch calls, env references, and migration files.
+
+## App Split
+
+${table(['App', 'Domain', 'Local URL', 'Users', 'Root', 'Purpose'], apps.map((app) => [
+    app.name,
+    `\`${app.domain}\``,
+    `\`${app.local}\``,
+    app.role,
+    `\`${app.root}\``,
+    app.purpose,
+  ]))}
+
+## Global Counts
+
+- App pages detected: ${routes.length}
+- API route files detected: ${apis.length}
+- Internal/external link and fetch references detected: ${linkRows.length}
+- Broken static internal references: ${linkBroken}
+- Unknown dynamic references: ${linkUnknown}
+- Supabase migration files scanned: ${map.migrationFiles.length}
+- Data/engine/package source files scanned: ${map.packageFiles.length}
+- Table/RPC identifiers detected: ${map.tables.length}
+
+## Main Map
+
+\`\`\`mermaid
+flowchart TB
+  classDef customer fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef chef fill:#ffedd5,stroke:#e85d26,color:#172033
+  classDef driver fill:#dcfce7,stroke:#059669,color:#172033
+  classDef ops fill:#ede9fe,stroke:#7c3aed,color:#172033
+  classDef shared fill:#f8fafc,stroke:#475569,color:#172033
+  Customer["Customer Web<br/>ridendine.ca"]:::customer
+  Chef["Chef App<br/>chef.ridendine.ca"]:::chef
+  Driver["Driver App<br/>driver.ridendine.ca"]:::driver
+  Ops["Ops Admin<br/>ops.ridendine.ca<br/>controls platform"]:::ops
+  APIs["API route layer"]:::shared
+  Engine["@ridendine/engine"]:::shared
+  DB["@ridendine/db + Supabase"]:::shared
+  Stripe["Stripe money movement"]:::shared
+  Routing["Routing / ETA"]:::shared
+  Customer --> APIs
+  Chef --> APIs
+  Driver --> APIs
+  Ops --> APIs
+  APIs --> Engine
+  APIs --> DB
+  APIs --> Stripe
+  APIs --> Routing
+  Ops -. platform control .-> Customer
+  Ops -. platform control .-> Chef
+  Ops -. platform control .-> Driver
+\`\`\`
+
+## Where To Look
+
+- App maps: \`docs/architecture/codebase-map/apps/*.md\`
+- Every page document: \`docs/architecture/codebase-map/pages/EVERY_PAGE_DOCUMENT.md\`
+- Separate wiring/link folder: \`docs/wiring\`
+- Architecture mirror of wiring: \`docs/architecture/codebase-map/wiring\`
+- Obsidian notes: \`docs/obsidian/codebase-map\`
+- Graphify outputs: \`graphify-out/ridendine-codebase-map\`
+`;
+}
+
+function generateCompleteReview(routes, apis, linkRows, map) {
+  const brokenRows = linkRows.filter((row) => row.status === 'BROKEN');
+  const unknownRows = linkRows.filter((row) => row.status === 'UNKNOWN_DYNAMIC');
+  return `# Complete Codebase Review
+
+## Executive Read
+
+RideNDine is a four-app Next.js monorepo. Ops Admin is the control plane. Customer Web is public/customer-facing. Chef Admin is the chef operating surface. Driver App is the driver operating surface. Shared behavior lives in \`packages/*\`, with Supabase as auth/database, Stripe for payments and payouts, and routing/ETA logic in shared routing/engine services.
+
+## What Is Working By Static Evidence
+
+- Route files exist for all four app surfaces.
+- API route files exist for customer, chef, driver, and ops workflows.
+- Shared packages are wired into app/API files through \`@ridendine/*\` imports.
+- Supabase table/RPC references and migration sources are discoverable from the repo.
+- Stripe checkout/webhook/payout/reconciliation source files are present and mapped.
+- The internal command center already references wiring docs under \`docs/wiring\`.
+
+## What Is Not Proven Or Needs Review
+
+- Static scans cannot prove runtime auth/RBAC correctness. Finance, dispatch, admin, refund, and payout APIs must still be reviewed/tested manually.
+- Dynamic links with template strings can only be matched when the route pattern is obvious.
+- External domains are labeled but not network-tested by this generator.
+- Pages marked \`PARTIAL\` often have data/API references but no explicit metadata declaring the intended auth/data contract.
+- Legal, launch, production readiness, and live payment readiness remain outside this static wiring proof.
+
+## Broken Static Internal Links
+
+${brokenRows.length
+    ? table(['App', 'Source file', 'Kind', 'Target', 'Notes'], brokenRows.map((row) => [
+        row.app,
+        mdLink(row.sourceFile),
+        row.kind,
+        `\`${row.target}\``,
+        row.notes,
+      ]))
+    : 'No broken static internal links detected by this scan.'}
+
+## Unknown Dynamic Links
+
+${unknownRows.length
+    ? table(['App', 'Source file', 'Kind', 'Target', 'Notes'], unknownRows.map((row) => [
+        row.app,
+        mdLink(row.sourceFile),
+        row.kind,
+        `\`${row.target}\``,
+        row.notes,
+      ]))
+    : 'No unknown dynamic internal links detected by this scan.'}
+
+## Payment Flow
+
+\`\`\`mermaid
+sequenceDiagram
+  participant C as Customer Web
+  participant Checkout as /api/checkout
+  participant Stripe as Stripe
+  participant Webhook as Stripe Webhooks
+  participant Engine as @ridendine/engine
+  participant DB as Supabase
+  participant Ops as Ops Finance
+  C->>Checkout: cart/address/payment request
+  Checkout->>Stripe: create/confirm PaymentIntent
+  Checkout->>DB: order + payment metadata
+  Stripe->>Webhook: payment/refund/transfer/payout event
+  Webhook->>Engine: idempotent finance handler
+  Engine->>DB: ledger, payout, reconciliation, audit rows
+  Ops->>DB: inspect, refund, payout, reconcile
+\`\`\`
+
+## Order And Delivery Flow
+
+\`\`\`mermaid
+sequenceDiagram
+  participant Customer
+  participant Chef
+  participant Ops
+  participant Driver
+  participant Engine
+  participant DB
+  Customer->>Engine: checkout/order create
+  Engine->>DB: order + kitchen queue
+  Chef->>Engine: accept / preparing / ready
+  Engine->>DB: order state + public stage
+  Ops->>Engine: monitor / dispatch / override
+  Engine->>Driver: delivery offer
+  Driver->>Engine: accept / pickup / delivered
+  Engine->>DB: delivery state + tracking + ledger
+\`\`\`
+
+## Data Ownership
+
+\`\`\`mermaid
+flowchart TB
+  Customer["customers, customer_addresses, carts, favorites, orders"] --> CustomerWeb["apps/web"]
+  Chef["chef_profiles, chef_storefronts, menu, kitchen, chef_payouts"] --> ChefApp["apps/chef-admin"]
+  Driver["drivers, driver_presence, deliveries, driver_payouts"] --> DriverApp["apps/driver-app"]
+  Ops["platform_users, audit_logs, ledger, reconciliation, support, settings"] --> OpsApp["apps/ops-admin"]
+  OpsApp --> Customer
+  OpsApp --> Chef
+  OpsApp --> Driver
+\`\`\`
+`;
+}
+
+function csvEscape(value) {
+  const s = String(value ?? '');
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function toCsv(headers, rows) {
+  return [headers.map(csvEscape).join(','), ...rows.map((row) => row.map(csvEscape).join(','))].join('\n') + '\n';
+}
+
+function graphNode(id, label, type, extra = {}) {
+  return { id, label, type, ...extra };
+}
+
+function generateGraphify(routes, apis, linkRows, map) {
+  const nodes = [];
+  const edges = [];
+  const addNode = (node) => {
+    if (!nodes.some((n) => n.id === node.id)) nodes.push(node);
+  };
+  const addEdge = (from, to, label, status = 'WIRED') => {
+    if (!edges.some((e) => e.from === from && e.to === to && e.label === label)) edges.push({ from, to, label, status });
+  };
+
+  for (const app of apps) {
+    addNode(graphNode(`app:${app.slug}`, app.name, 'app', { domain: app.domain, status: 'WIRED' }));
+  }
+  for (const route of routes) {
+    const routeId = `route:${route.slug}:${route.route}`;
+    const fileId = `file:${route.file}`;
+    addNode(graphNode(routeId, `${route.app} ${route.route}`, 'page-route', { status: route.status, file: route.file }));
+    addNode(graphNode(fileId, route.file, 'file', { status: route.status }));
+    addEdge(`app:${route.slug}`, routeId, 'owns route', route.status);
+    addEdge(routeId, fileId, 'implemented by', route.status);
+    for (const tableName of route.tables) {
+      const tableId = `table:${tableName}`;
+      addNode(graphNode(tableId, tableName, 'table'));
+      addEdge(routeId, tableId, 'reads/writes table', route.status);
+    }
+    for (const pkg of route.packages) {
+      const pkgId = `package:${pkg}`;
+      addNode(graphNode(pkgId, pkg, 'package'));
+      addEdge(routeId, pkgId, 'imports', route.status);
+    }
+  }
+  for (const api of apis) {
+    const slug = apps.find((app) => app.name === api.app)?.slug || api.app;
+    const apiId = `api:${slug}:${api.endpoint}`;
+    const fileId = `file:${api.file}`;
+    addNode(graphNode(apiId, `${api.app} ${api.endpoint}`, 'api-route', { status: api.status, file: api.file, methods: api.methods.join(',') }));
+    addNode(graphNode(fileId, api.file, 'file', { status: api.status }));
+    addEdge(`app:${slug}`, apiId, 'owns API', api.status);
+    addEdge(apiId, fileId, 'implemented by', api.status);
+    for (const tableName of api.tables) {
+      const tableId = `table:${tableName}`;
+      addNode(graphNode(tableId, tableName, 'table'));
+      addEdge(apiId, tableId, 'touches table', api.status);
+    }
+    for (const pkg of api.packages) {
+      const pkgId = `package:${pkg}`;
+      addNode(graphNode(pkgId, pkg, 'package'));
+      addEdge(apiId, pkgId, 'imports', api.status);
+    }
+    for (const external of api.external) {
+      const extId = `external:${external}`;
+      addNode(graphNode(extId, external, 'external'));
+      addEdge(apiId, extId, 'calls external', api.status);
+    }
+  }
+  for (const tableName of map.tables) addNode(graphNode(`table:${tableName}`, tableName, 'table'));
+  for (const row of linkRows) {
+    if (!row.resolvedFile) continue;
+    addNode(graphNode(`file:${row.sourceFile}`, row.sourceFile, 'file'));
+    addNode(graphNode(`file:${row.resolvedFile}`, row.resolvedFile, 'file'));
+    addEdge(`file:${row.sourceFile}`, `file:${row.resolvedFile}`, `${row.kind}: ${row.target}`, row.status);
+  }
+
+  writeJsonTo(graphifyDir, 'graph.json', { generatedAt: new Date().toISOString(), nodes, edges });
+  writeTo(graphifyDir, 'nodes.csv', toCsv(['id', 'label', 'type', 'status', 'file', 'domain', 'methods'], nodes.map((n) => [
+    n.id,
+    n.label,
+    n.type,
+    n.status || '',
+    n.file || '',
+    n.domain || '',
+    n.methods || '',
+  ])));
+  writeTo(graphifyDir, 'edges.csv', toCsv(['from', 'to', 'label', 'status'], edges.map((e) => [e.from, e.to, e.label, e.status])));
+  writeTo(graphifyDir, 'README.md', `# Graphify RideNDine Codebase Map
+
+Generated by \`pnpm docs:wiring\`.
+
+- \`graph.json\`: machine-readable nodes and edges.
+- \`nodes.csv\`: node export for graph tooling.
+- \`edges.csv\`: edge export for graph tooling.
+- \`master-graph.md\`: Mermaid entry graph.
+
+## Counts
+
+- Nodes: ${nodes.length}
+- Edges: ${edges.length}
+`);
+  writeTo(graphifyDir, 'master-graph.md', `# Graphify Master Graph
+
+\`\`\`mermaid
+flowchart TB
+  classDef customer fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef chef fill:#ffedd5,stroke:#e85d26,color:#172033
+  classDef driver fill:#dcfce7,stroke:#059669,color:#172033
+  classDef ops fill:#ede9fe,stroke:#7c3aed,color:#172033
+  classDef shared fill:#f8fafc,stroke:#475569,color:#172033
+  Web["Customer Web"]:::customer --> Shared["Shared APIs/packages"]:::shared
+  Chef["Chef App"]:::chef --> Shared
+  Driver["Driver App"]:::driver --> Shared
+  Ops["Ops Admin"]:::ops --> Shared
+  Shared --> DB["Supabase DB/Auth"]:::shared
+  Shared --> Stripe["Stripe"]:::shared
+  Shared --> Routing["Routing/ETA"]:::shared
+  Ops -. controls .-> Web
+  Ops -. controls .-> Chef
+  Ops -. controls .-> Driver
+\`\`\`
+`);
+  return { nodes, edges };
+}
+
+function generateObsidian(routes, apis, linkRows, map) {
+  writeTo(obsidianDir, '00 Index.md', `# RideNDine Codebase Map
+
+Use this folder as the Obsidian entry point for the repo map.
+
+## App Notes
+
+- [[Customer Web]]
+- [[Chef Admin]]
+- [[Driver App]]
+- [[Ops Admin]]
+
+## Flow Notes
+
+- [[Payment Flow]]
+- [[Order Delivery Flow]]
+- [[Every Page Document]]
+- [[API Wiring]]
+- [[Link Wiring]]
+- [[Database And Engine]]
+- [[Known Gaps]]
+
+## Generated Sources
+
+- Canonical wiring docs: \`docs/wiring\`
+- Architecture docs: \`docs/architecture/codebase-map\`
+- Graphify outputs: \`graphify-out/ridendine-codebase-map\`
+`);
+
+  for (const app of apps) {
+    writeTo(obsidianDir, `${app.name}.md`, rebaseMdLinks(generateStandaloneAppMap(app, routes, apis, linkRows), '../../../')
+      .replace(/^# .+ Standalone Map/, `# ${app.name}`));
+  }
+
+  writeTo(obsidianDir, 'Payment Flow.md', `# Payment Flow
+
+\`\`\`mermaid
+flowchart LR
+  Customer["Customer Web checkout"] --> Stripe["Stripe PaymentIntent"]
+  Stripe --> Webhook["Web/Ops Stripe webhook routes"]
+  Webhook --> Idempotency["stripe_events_processed"]
+  Idempotency --> Ledger["ledger_entries"]
+  Ledger --> ChefPayout["chef_payouts / accounts"]
+  Ledger --> DriverPayout["driver_payouts / accounts"]
+  Ledger --> Reconciliation["stripe_reconciliation"]
+  Reconciliation --> Ops["Ops finance/reconciliation"]
+\`\`\`
+
+Primary source maps:
+
+- \`docs/architecture/PAYMENT_WORKFLOW_SCHEMATIC.md\`
+- \`docs/architecture/payment-workflow-schematic.html\`
+- \`docs/wiring/API_INVENTORY.md\`
+`);
+
+  writeTo(obsidianDir, 'Order Delivery Flow.md', `# Order Delivery Flow
+
+\`\`\`mermaid
+flowchart LR
+  Browse["Customer browse/menu"] --> Cart
+  Cart --> Checkout
+  Checkout --> Order["orders"]
+  Order --> Kitchen["Chef order queue"]
+  Kitchen --> Ready["ready for pickup"]
+  Ready --> Dispatch["Ops/engine dispatch"]
+  Dispatch --> Offer["Driver offer"]
+  Offer --> Delivery["delivery progression"]
+  Delivery --> Complete["delivered + ledger"]
+\`\`\`
+`);
+
+  writeTo(obsidianDir, 'API Wiring.md', rebaseMdLinks(generateApiInventory(apis), '../../../').replace(/^# API Inventory/, '# API Wiring'));
+  writeTo(obsidianDir, 'Link Wiring.md', rebaseMdLinks(generateLinkMatrix(linkRows), '../../../').replace(/^# Link Wiring Matrix/, '# Link Wiring'));
+  writeTo(obsidianDir, 'Database And Engine.md', rebaseMdLinks(generateDataEngineMap(map), '../../../').replace(/^# Data And Engine Map/, '# Database And Engine'));
+  writeTo(obsidianDir, 'Known Gaps.md', rebaseMdLinks(generateMissing(routes, apis), '../../../').replace(/^# Missing Wiring Report/, '# Known Gaps'));
+  writeTo(obsidianDir, 'Every Page Document.md', rebaseMdLinks(generateEveryPageDocument(routes, apis, linkRows), '../../../'));
+}
+
+function generateArchitectureDocs(routes, apis, linkRows, map) {
+  writeTo(architectureDir, 'README.md', generateArchitectureReadme(routes, apis, linkRows, map));
+  writeTo(architectureDir, 'COMPLETE_CODEBASE_REVIEW.md', rebaseMdLinks(generateCompleteReview(routes, apis, linkRows, map), '../../../'));
+  writeTo(architectureDir, 'STANDALONE_APPS.md', `# Standalone App Surfaces
+
+${apps.map((app) => `- [${app.name}](apps/${app.slug}.md): ${app.domain} — ${app.purpose}`).join('\n')}
+`);
+  for (const app of apps) {
+    writeTo(architectureDir, `apps/${app.slug}.md`, rebaseMdLinks(generateStandaloneAppMap(app, routes, apis, linkRows), '../../../../'));
+    writeTo(architectureDir, `pages/${app.slug}-pages.md`, rebaseMdLinks(generateAppPagesDocument(app, routes, apis, linkRows), '../../../../'));
+  }
+  writeTo(architectureDir, 'pages/EVERY_PAGE_DOCUMENT.md', rebaseMdLinks(generateEveryPageDocument(routes, apis, linkRows), '../../../../'));
+  writeTo(architectureWiringDir, 'LINK_WIRING_MATRIX.md', rebaseMdLinks(generateLinkMatrix(linkRows), '../../../../'));
+  writeTo(architectureWiringDir, 'API_CALL_MATRIX.md', rebaseMdLinks(generateApiCallMatrix(linkRows), '../../../../'));
+  writeTo(architectureWiringDir, 'ENVIRONMENT_WIRING_MATRIX.md', rebaseMdLinks(generateEnvMatrix(routes, apis), '../../../../'));
+  writeTo(architectureWiringDir, 'ROUTE_INVENTORY.md', rebaseMdLinks(generateRouteInventory(routes), '../../../../'));
+  writeTo(architectureWiringDir, 'API_INVENTORY.md', rebaseMdLinks(generateApiInventory(apis), '../../../../'));
+  writeTo(architectureWiringDir, 'MISSING_WIRING_REPORT.md', rebaseMdLinks(generateMissing(routes, apis), '../../../../'));
+}
+
 function main() {
   fs.mkdirSync(outDir, { recursive: true });
   fs.mkdirSync(diagramsDir, { recursive: true });
   const routes = collectRoutes();
   const apis = collectApis();
   const map = collectDbEngine();
+  const linkRows = collectLinksAndCalls(routes, apis);
 
   write('ROUTE_INVENTORY.md', generateRouteInventory(routes));
   write('API_INVENTORY.md', generateApiInventory(apis));
   write('DATA_ENGINE_MAP.md', generateDataEngineMap(map));
   write('PAGE_WIRING_MATRIX.md', generatePageMatrix(routes));
   write('ACTION_MAP.md', generateActionMap(apis));
+  write('links/LINK_WIRING_MATRIX.md', rebaseMdLinks(generateLinkMatrix(linkRows), '../../../'));
+  write('links/API_CALL_MATRIX.md', rebaseMdLinks(generateApiCallMatrix(linkRows), '../../../'));
+  write('links/ENVIRONMENT_WIRING_MATRIX.md', rebaseMdLinks(generateEnvMatrix(routes, apis), '../../../'));
   write('MISSING_WIRING_REPORT.md', generateMissing(routes, apis));
   write('RIDENDINE_MASTER_WIRING_DIAGRAM.md', generateMaster(routes, apis));
   write('index.html', generateHtml(routes, apis));
   write('WIRING_COMPLETION_REPORT.md', generateCompletion(routes, apis, map));
   for (const [file, body] of Object.entries(diagrams)) write(path.join('diagrams', file), body);
+  generateArchitectureDocs(routes, apis, linkRows, map);
+  generateObsidian(routes, apis, linkRows, map);
+  const graph = generateGraphify(routes, apis, linkRows, map);
 
-  console.log(`Generated wiring docs: ${routes.length} pages, ${apis.length} API route files, ${map.tables.length} table/RPC identifiers.`);
+  console.log(`Generated wiring docs: ${routes.length} pages, ${apis.length} API route files, ${linkRows.length} link/fetch references, ${map.tables.length} table/RPC identifiers, ${graph.nodes.length} graph nodes.`);
 }
 
 main();
