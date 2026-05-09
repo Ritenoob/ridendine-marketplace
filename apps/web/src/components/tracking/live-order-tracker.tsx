@@ -85,58 +85,6 @@ function publicStageIndex(publicStage: string): number {
   return idx >= 0 ? idx : 0;
 }
 
-function _StepIndicator({ currentIndex, terminal }: { currentIndex: number; terminal: string | null }) {
-  if (terminal === 'cancelled') {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-lg font-semibold text-gray-800">This order was cancelled.</p>
-      </div>
-    );
-  }
-  if (terminal === 'refunded') {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-lg font-semibold text-gray-800">Refund in progress or completed.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between">
-        {PUBLIC_STEPS.map((step, i) => (
-          <div key={step.key} className="flex items-center">
-            <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                i < currentIndex
-                  ? 'bg-green-500 text-white'
-                  : i === currentIndex
-                    ? 'bg-[#E85D26] text-white'
-                    : 'bg-gray-200 text-gray-500'
-              }`}
-            >
-              {i < currentIndex ? '✓' : i + 1}
-            </div>
-            {i < PUBLIC_STEPS.length - 1 && (
-              <div className={`h-0.5 w-4 sm:w-8 ${i < currentIndex ? 'bg-green-500' : 'bg-gray-200'}`} />
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="mt-2 flex justify-between gap-1">
-        {PUBLIC_STEPS.map((step, i) => (
-          <span
-            key={step.key}
-            className={`text-[10px] sm:text-xs ${i <= currentIndex ? 'text-gray-900 font-medium' : 'text-gray-400'}`}
-          >
-            {step.label}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function DeliveryDetails({
   pickupAddress,
   dropoffAddress,
