@@ -72,7 +72,7 @@ describe('POST /api/payouts/setup (driver)', () => {
   });
 
   it('creates a Stripe Connect Express account and returns onboarding URL', async () => {
-    const { POST } = require('../app/api/payouts/setup/route');
+    const { POST } = await import('../app/api/payouts/setup/route');
     const response = await POST();
     const json = await response.json();
 
@@ -87,10 +87,10 @@ describe('POST /api/payouts/setup (driver)', () => {
   });
 
   it('returns 401 when driver is not authenticated', async () => {
-    const { getDriverActorContext } = require('@/lib/engine');
+    const { getDriverActorContext } = await import('@/lib/engine');
     (getDriverActorContext as jest.Mock).mockResolvedValueOnce(null);
 
-    const { POST } = require('../app/api/payouts/setup/route');
+    const { POST } = await import('../app/api/payouts/setup/route');
     const response = await POST();
 
     expect(response.status).toBe(401);

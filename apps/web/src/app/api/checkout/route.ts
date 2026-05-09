@@ -609,7 +609,7 @@ export async function POST(request: Request): Promise<Response> {
           undefined,
       }).catch(() => null);
 
-      const piParams: Record<string, unknown> = {
+      const piParams: Parameters<typeof stripe.paymentIntents.create>[0] = {
         amount: totalCents,
         currency: 'cad',
         metadata: {
@@ -631,10 +631,9 @@ export async function POST(request: Request): Promise<Response> {
         }
       }
 
-      const paymentIntent = await stripe.paymentIntents.create(
-        piParams as Parameters<typeof stripe.paymentIntents.create>[0],
-        { idempotencyKey: `checkout:${customerContext.customerId}:${idempotencyKey}` }
-      );
+      const paymentIntent = await stripe.paymentIntents.create(piParams, {
+        idempotencyKey: `checkout:${customerContext.customerId}:${idempotencyKey}`,
+      });
 
       // Authorize payment via engine
       const authResult = await engine.orderCreation.authorizePayment(

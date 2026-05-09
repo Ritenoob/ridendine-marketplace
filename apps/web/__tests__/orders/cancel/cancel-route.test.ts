@@ -1,7 +1,5 @@
-/**
- * @jest-environment node
- * Tests for POST /api/orders/[id]/cancel
- */
+/** @jest-environment node */
+// Tests for POST /api/orders/[id]/cancel
 
 // ---- Mocks setup (before imports) ----
 

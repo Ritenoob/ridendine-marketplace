@@ -85,7 +85,7 @@ function publicStageIndex(publicStage: string): number {
   return idx >= 0 ? idx : 0;
 }
 
-function StepIndicator({ currentIndex, terminal }: { currentIndex: number; terminal: string | null }) {
+function _StepIndicator({ currentIndex, terminal }: { currentIndex: number; terminal: string | null }) {
   if (terminal === 'cancelled') {
     return (
       <div className="p-6 text-center">
