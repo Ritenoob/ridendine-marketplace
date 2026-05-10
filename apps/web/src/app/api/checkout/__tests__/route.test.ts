@@ -27,11 +27,26 @@ jest.mock('@ridendine/db', () => ({
 jest.mock('@ridendine/engine', () => ({
   getStripeClient: () => mockGetStripeClient(),
   assertStripeConfigured: () => mockAssertStripeConfigured(),
+  getOrCreateStripeCustomer: jest.fn().mockResolvedValue('cus_test'),
   evaluateCheckoutRisk: (...args: unknown[]) => mockEvaluateCheckoutRisk(...args),
   isWithinDeliveryZone: (...args: unknown[]) => mockIsWithinDeliveryZone(...args),
+  estimateDistance: jest.fn().mockReturnValue(0),
+  getSurgeMultiplier: jest.fn().mockResolvedValue(1),
+  createLoyaltyService: jest.fn(() => ({
+    earnPoints: jest.fn().mockResolvedValue(undefined),
+  })),
   BASE_DELIVERY_FEE: 500,
   SERVICE_FEE_PERCENT: 8,
   HST_RATE: 13,
+  calculateDeliveryFee: jest.fn(() => ({
+    feeCents: 500,
+    breakdown: {
+      baseFee: 500,
+      distanceFee: 0,
+      smallOrderSurcharge: 0,
+      surgeMultiplier: 1,
+    },
+  })),
 }));
 
 jest.mock('@/lib/engine', () => ({
@@ -109,6 +124,18 @@ function createAdminClientMock() {
         return {
           update: () => ({
             eq: async () => ({ error: null }),
+          }),
+        };
+      }
+      if (table === 'customers') {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { email: 'customer@test.com', first_name: 'Test', last_name: 'Customer' },
+                error: null,
+              }),
+            }),
           }),
         };
       }

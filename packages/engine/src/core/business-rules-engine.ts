@@ -182,7 +182,7 @@ export class BusinessRulesEngine {
     }
 
     const { data: driver } = await this.client
-      .from('driver_profiles')
+      .from('drivers')
       .select('id, status')
       .eq('id', input.driverId)
       .single();

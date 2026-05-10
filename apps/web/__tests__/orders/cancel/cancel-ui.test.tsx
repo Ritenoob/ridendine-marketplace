@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
- * Tests for Cancel Order UI in LiveOrderTracker
  */
+// Tests for Cancel Order UI in LiveOrderTracker.
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 

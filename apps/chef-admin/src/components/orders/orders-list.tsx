@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import { Card, Badge, Button, LiveIndicator, type LiveIndicatorStatus } from '@ridendine/ui';
 import { chefStorefrontOrdersChannel, createBrowserClient, parseOrdersRealtimeRow } from '@ridendine/db';
 import { OrderToast, type ToastMsg } from './order-toast';
@@ -9,7 +10,15 @@ interface Order {
   id: string;
   order_number: string;
   status: string;
+  subtotal: number;
+  delivery_fee: number;
+  service_fee: number;
+  tax: number;
+  tip: number;
   total: number;
+  payment_status?: string | null;
+  estimated_ready_at?: string | null;
+  actual_ready_at?: string | null;
   special_instructions: string | null;
   created_at: string;
   customer?: {
@@ -25,7 +34,31 @@ interface Order {
     city: string;
     state?: string;
     postal_code?: string;
+    country?: string;
+    delivery_instructions?: string | null;
   };
+  items?: Array<{
+    id: string;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+    special_instructions?: string | null;
+    menu_item?: {
+      id?: string;
+      name: string;
+      description?: string | null;
+    } | null;
+  }>;
+  delivery?: {
+    id: string;
+    status: string;
+    driver_id: string | null;
+    driver?: {
+      first_name: string;
+      last_name: string;
+      phone: string | null;
+    } | null;
+  } | null;
 }
 
 interface OrdersListProps {
@@ -34,6 +67,14 @@ interface OrdersListProps {
 }
 
 const ACCEPT_TIMEOUT_MS = 8 * 60 * 1000; // 8 minutes
+
+function money(value: number | null | undefined) {
+  return `$${Number(value ?? 0).toFixed(2)}`;
+}
+
+function formatStatus(status: string | null | undefined) {
+  return status ? status.replace(/_/g, ' ') : 'not recorded';
+}
 
 function CountdownTimer({ createdAt, onExpire }: { createdAt: string; onExpire: () => void }) {
   const [timeLeft, setTimeLeft] = useState<number>(0);
@@ -109,11 +150,26 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'orders', filter },
         (payload) => {
+          const hydrateOrder = async (orderId: string) => {
+            try {
+              const response = await fetch(`/api/orders/${orderId}`);
+              if (!response.ok) return null;
+              const json = await response.json();
+              return json.data?.order ?? json.order ?? null;
+            } catch {
+              return null;
+            }
+          };
+
           if (payload.eventType === 'INSERT') {
             const row = parseOrdersRealtimeRow(payload.new);
             if (!row || row.storefront_id !== storefrontId) return;
             const newOrder = payload.new as Order;
             setOrders((prev) => [newOrder, ...prev]);
+            hydrateOrder(newOrder.id).then((fullOrder) => {
+              if (!fullOrder) return;
+              setOrders((prev) => prev.map((order) => order.id === fullOrder.id ? fullOrder : order));
+            });
             setPlaySound(true);
             const orderNum = (payload.new as Order).order_number ?? '';
             const customer = (payload.new as Order).customer;
@@ -128,6 +184,10 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
             setOrders((prev) =>
               prev.map((o) => (o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o))
             );
+            hydrateOrder(updatedOrder.id).then((fullOrder) => {
+              if (!fullOrder) return;
+              setOrders((prev) => prev.map((order) => order.id === fullOrder.id ? { ...order, ...fullOrder } : order));
+            });
           }
         }
       )
@@ -296,7 +356,7 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
         ) : (
           filteredOrders.map((order) => (
             <Card key={order.id} className={order.status === 'pending' ? 'border-2 border-orange-400 shadow-lg' : ''}>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-gray-900">{order.order_number}</span>
@@ -321,28 +381,90 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
                       </div>
                     )}
                   </div>
-                  {order.customer && (
-                    <p className="mt-1 text-sm text-gray-600">
-                      {order.customer.first_name} {order.customer.last_name}
-                      {order.customer.phone && ` • ${order.customer.phone}`}
-                    </p>
-                  )}
-                  {order.address && (
-                    <p className="text-sm text-gray-500">
-                      {order.address.street_address}, {order.address.city}
-                    </p>
-                  )}
+                  <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Customer</p>
+                      {order.customer ? (
+                        <div className="mt-1 text-sm text-gray-700">
+                          <p className="font-medium text-gray-900">{order.customer.first_name} {order.customer.last_name}</p>
+                          <p>{order.customer.phone || 'No phone'}</p>
+                          {order.customer.email ? <p>{order.customer.email}</p> : null}
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-sm text-gray-500">Customer not linked</p>
+                      )}
+                    </div>
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Delivery</p>
+                      {order.address ? (
+                        <div className="mt-1 text-sm text-gray-700">
+                          <p className="font-medium text-gray-900">{order.address.street_address}</p>
+                          <p>{order.address.city}, {order.address.state} {order.address.postal_code}</p>
+                          {order.address.delivery_instructions ? <p className="mt-1 italic">{order.address.delivery_instructions}</p> : null}
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-sm text-gray-500">Delivery address not linked</p>
+                      )}
+                    </div>
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Payment & Ops</p>
+                      <div className="mt-1 text-sm text-gray-700">
+                        <p><span className="font-medium text-gray-900">{money(order.total)}</span> total</p>
+                        <p>Payment: {formatStatus(order.payment_status)}</p>
+                        <p>Delivery: {formatStatus(order.delivery?.status)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 overflow-hidden rounded-lg border border-gray-100">
+                    <div className="grid grid-cols-[1fr_54px_80px] bg-gray-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      <span>Kitchen ticket</span>
+                      <span className="text-center">Qty</span>
+                      <span className="text-right">Line</span>
+                    </div>
+                    {(order.items ?? []).length > 0 ? (
+                      (order.items ?? []).map((item) => (
+                        <div key={item.id} className="grid grid-cols-[1fr_54px_80px] border-t border-gray-100 px-3 py-2 text-sm">
+                          <div>
+                            <p className="font-medium text-gray-900">{item.menu_item?.name || 'Unknown item'}</p>
+                            {item.special_instructions ? (
+                              <p className="mt-0.5 text-xs italic text-orange-700">Item note: {item.special_instructions}</p>
+                            ) : null}
+                          </div>
+                          <span className="text-center font-semibold text-gray-900">{item.quantity}</span>
+                          <span className="text-right text-gray-700">{money(item.total_price)}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="border-t border-gray-100 px-3 py-3 text-sm text-gray-500">
+                        No line items are attached to this order yet.
+                      </div>
+                    )}
+                  </div>
+
                   {order.special_instructions && (
                     <p className="mt-2 text-sm italic text-gray-600">
                       Note: {order.special_instructions}
                     </p>
                   )}
-                  <p className="mt-2 text-sm text-gray-500">
-                    ${order.total.toFixed(2)} • {new Date(order.created_at).toLocaleString()}
-                  </p>
+                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                    <span>Subtotal {money(order.subtotal)}</span>
+                    <span>Delivery {money(order.delivery_fee)}</span>
+                    <span>Service {money(order.service_fee)}</span>
+                    <span>Tax {money(order.tax)}</span>
+                    <span>Tip {money(order.tip)}</span>
+                    <span>Created {new Date(order.created_at).toLocaleString()}</span>
+                    {order.estimated_ready_at ? <span>ETA {new Date(order.estimated_ready_at).toLocaleTimeString()}</span> : null}
+                  </div>
                 </div>
 
                 <div className="flex gap-2 flex-wrap justify-end">
+                  <Link
+                    href={`/dashboard/orders/${order.id}`}
+                    className="inline-flex min-h-9 items-center rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Full Details
+                  </Link>
                   {order.status === 'pending' && (
                     <>
                       <Button

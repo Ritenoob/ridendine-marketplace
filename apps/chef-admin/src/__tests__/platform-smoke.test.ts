@@ -16,7 +16,12 @@ describe('chef-admin smoke wiring', () => {
 
   it('middleware preserves auth route/public-route protections', () => {
     const src = read('middleware.ts');
-    expect(src).toContain("publicRoutes: ['/auth/login', '/auth/signup', '/api/health']");
+    expect(src).toContain('/auth/login');
+    expect(src).toContain('/auth/signup');
+    expect(src).toContain('/auth/forgot-password');
+    expect(src).toContain('/privacy');
+    expect(src).toContain('/terms');
+    expect(src).toContain('/api/health');
     expect(src).toContain("loginRoute: '/auth/login'");
   });
 

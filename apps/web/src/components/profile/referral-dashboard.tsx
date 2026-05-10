@@ -86,7 +86,7 @@ interface Props {
   userId: string;
 }
 
-export function ReferralDashboard({ userId }: Props) {
+export function ReferralDashboard({ userId: _userId }: Props) {
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
