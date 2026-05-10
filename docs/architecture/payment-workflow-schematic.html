@@ -1,0 +1,428 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Ridendine Payment Workflow Schematic</title>
+  <style>
+  :root {
+    --ink: #172033;
+    --muted: #637083;
+    --line: #d7dee8;
+    --paper: #ffffff;
+    --panel: #f7f9fc;
+    --dark: #172033;
+    --gold: #d9952f;
+    --green: #1f9d68;
+    --red: #d34b4b;
+    --blue: #2978c8;
+    --slate: #52647a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #eef2f7;
+    color: var(--ink);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.45;
+  }
+  .page {
+    width: 11in;
+    min-height: 8.5in;
+    margin: 0 auto;
+    padding: 0.45in;
+    background: var(--paper);
+    page-break-after: always;
+    position: relative;
+  }
+  .page:last-child { page-break-after: auto; }
+  .eyebrow {
+    color: var(--gold);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+  h1, h2, h3 { margin: 0; line-height: 1.08; letter-spacing: 0; }
+  h1 { font-size: 38px; max-width: 760px; }
+  h2 { font-size: 24px; margin-bottom: 10px; }
+  h3 { font-size: 14px; margin-bottom: 8px; }
+  p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+  .hero {
+    border-radius: 22px;
+    color: #fff;
+    background: linear-gradient(135deg, #172033 0%, #24364c 70%, #3a2b14 100%);
+    padding: 34px;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .hero p { color: #cbd5e1; max-width: 720px; font-size: 15px; }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .meta {
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 12px;
+    min-height: 70px;
+  }
+  .meta b { display: block; color: #fff; font-size: 13px; }
+  .meta span { display: block; color: #cbd5e1; font-size: 11px; margin-top: 3px; }
+  .section-note {
+    border-left: 4px solid var(--gold);
+    padding: 10px 14px;
+    background: #fff8ed;
+    border-radius: 10px;
+    margin: 16px 0;
+    color: #5e4730;
+    font-size: 12px;
+  }
+  .flow {
+    display: grid;
+    gap: 12px;
+  }
+  .lane {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .lane-label {
+    border-radius: 14px;
+    background: var(--dark);
+    color: #fff;
+    padding: 14px;
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+  }
+  .nodes {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    background: var(--panel);
+  }
+  .node {
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 14px;
+    padding: 10px;
+    min-height: 78px;
+    position: relative;
+  }
+  .node:after {
+    content: "→";
+    position: absolute;
+    right: -13px;
+    top: 27px;
+    color: var(--slate);
+    font-weight: 900;
+  }
+  .node:last-child:after { content: ""; }
+  .node b { display: block; font-size: 12px; color: var(--ink); }
+  .node span { display: block; color: var(--muted); font-size: 10px; margin-top: 5px; }
+  .node.gold { border-color: #f0c06c; background: #fff9ed; }
+  .node.green { border-color: #8fd8b4; background: #f0fff7; }
+  .node.red { border-color: #f0aaaa; background: #fff5f5; }
+  .node.blue { border-color: #9cc6ed; background: #f1f7ff; }
+  .split-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fff;
+    padding: 14px;
+    min-height: 116px;
+  }
+  .card strong { color: var(--ink); font-size: 13px; }
+  .card ul { margin: 8px 0 0; padding-left: 17px; color: var(--muted); font-size: 11px; }
+  .money {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr 1fr 1fr;
+    gap: 10px;
+    align-items: stretch;
+    margin-top: 12px;
+  }
+  .money-col {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--panel);
+    padding: 12px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    background: var(--slate);
+    margin-bottom: 8px;
+  }
+  .pill.gold { background: var(--gold); }
+  .pill.green { background: var(--green); }
+  .pill.red { background: var(--red); }
+  .pill.blue { background: var(--blue); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-top: 12px;
+  }
+  th, td {
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    padding: 9px 8px;
+    vertical-align: top;
+  }
+  th {
+    background: #f4f7fb;
+    color: var(--ink);
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+  code {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    background: #f4f7fb;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1px 4px;
+    font-size: 10px;
+  }
+  .footer {
+    position: absolute;
+    bottom: 0.25in;
+    left: 0.45in;
+    right: 0.45in;
+    display: flex;
+    justify-content: space-between;
+    color: #8b97a8;
+    border-top: 1px solid var(--line);
+    padding-top: 8px;
+    font-size: 10px;
+  }
+  @page {
+    size: Letter landscape;
+    margin: 0;
+  }
+  @media print {
+    body { background: #fff; }
+    .page { margin: 0; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+  <section class="page">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Ridendine Finance Architecture</div>
+        <h1>Payment Workflow Schematic</h1>
+        <p>
+          A production-oriented view of how Ridendine accepts customer payment as merchant of record,
+          routes Stripe events into order operations, and records finance state through ledger,
+          payout, refund, and reconciliation services.
+        </p>
+      </div>
+      <div class="meta-grid">
+        <div class="meta"><b>Merchant Model</b><span>Ridendine is merchant of record</span></div>
+        <div class="meta"><b>Primary Processor</b><span>Stripe PaymentIntent + webhooks</span></div>
+        <div class="meta"><b>System of Record</b><span>Supabase + ledger_entries</span></div>
+        <div class="meta"><b>Safety Pattern</b><span>Idempotency, audit, reconciliation</span></div>
+      </div>
+    </div>
+    <div class="section-note">
+      This document reflects current repo wiring from checkout, webhook, ledger, and payout source files. It does not claim production readiness for money movement without the remaining RBAC, replay, and reconciliation tests.
+    </div>
+    <div class="split-grid">
+      <div class="card">
+        <strong>Customer Payment</strong>
+        <ul>
+          <li>Validates customer, cart, menu prices, promo, risk, and kitchen readiness.</li>
+          <li>Creates the order before initializing Stripe payment.</li>
+          <li>Returns Stripe client secret and authoritative total breakdown.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Stripe Event Intake</strong>
+        <ul>
+          <li>Verifies webhook signature.</li>
+          <li>Claims event idempotently before processing.</li>
+          <li>Routes payment success, failure, refund, transfer, and payout events.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Finance Ledger</strong>
+        <ul>
+          <li>Records capture, tax, platform fee, chef payable, driver payable, tips, refunds, and payout debits.</li>
+          <li>Uses idempotency keys to avoid duplicate money entries.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer"><span>Ridendine Payment Workflow</span><span>Page 1</span></div>
+  </section>
+
+  <section class="page">
+    <h2>End-To-End Operational Flow</h2>
+    <p>Checkout is synchronous until the PaymentIntent is created. Payment confirmation and downstream finance updates arrive asynchronously through Stripe webhooks.</p>
+    <div class="flow">
+      <div class="lane">
+        <div class="lane-label">Checkout API</div>
+        <div class="nodes">
+          <div class="node"><b>Customer Auth</b><span>getCustomerActorContext</span></div>
+          <div class="node"><b>Cart Read</b><span>getCartWithItems</span></div>
+          <div class="node"><b>Menu Validation</b><span>menu_items availability + price</span></div>
+          <div class="node gold"><b>Server Quote</b><span>subtotal, fee, HST, tip, promo</span></div>
+        </div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">Risk + Order</div>
+        <div class="nodes">
+          <div class="node red"><b>Risk Check</b><span>evaluateCheckoutRisk</span></div>
+          <div class="node"><b>Kitchen Readiness</b><span>storefront/menu readiness</span></div>
+          <div class="node blue"><b>Idempotency</b><span>checkout_idempotency_keys</span></div>
+          <div class="node green"><b>Create Order</b><span>engine.orderCreation.createOrder</span></div>
+        </div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">Stripe</div>
+        <div class="nodes">
+          <div class="node gold"><b>PaymentIntent</b><span>order metadata attached</span></div>
+          <div class="node"><b>Authorize</b><span>authorizePayment</span></div>
+          <div class="node"><b>Clear Cart</b><span>clearCart</span></div>
+          <div class="node green"><b>Client Secret</b><span>returned to browser</span></div>
+        </div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">Webhook</div>
+        <div class="nodes">
+          <div class="node red"><b>Signature Verify</b><span>stripe-signature required</span></div>
+          <div class="node blue"><b>Event Claim</b><span>claimStripeWebhookEventForProcessing</span></div>
+          <div class="node green"><b>Kitchen Submit</b><span>payment_intent.succeeded</span></div>
+          <div class="node"><b>Finance Handler</b><span>handleStripeFinanceWebhook</span></div>
+        </div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">Finance</div>
+        <div class="nodes">
+          <div class="node gold"><b>Ledger Entries</b><span>ledger_entries</span></div>
+          <div class="node"><b>Payable Balances</b><span>platform_accounts</span></div>
+          <div class="node"><b>Payout Runs</b><span>payout_runs</span></div>
+          <div class="node green"><b>Reconciliation</b><span>ops finance visibility</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span>Operational flow: checkout to finance</span><span>Page 2</span></div>
+  </section>
+
+  <section class="page">
+    <h2>Money Movement Model</h2>
+    <p>Ridendine receives the customer payment, then ledger entries describe how money is allocated, reversed, and settled.</p>
+    <div class="money">
+      <div class="money-col">
+        <span class="pill gold">Customer Charge</span>
+        <div class="node gold"><b>Customer card payment</b><span>Stripe PaymentIntent</span></div>
+        <div class="node"><b>Ridendine merchant balance</b><span>Platform receives funds as merchant of record</span></div>
+      </div>
+      <div class="money-col">
+        <span class="pill blue">Ledger Split</span>
+        <div class="node"><b>customer_charge_capture</b><span>Total captured</span></div>
+        <div class="node"><b>tax_collected</b><span>Tax liability visibility</span></div>
+        <div class="node"><b>platform_fee</b><span>Platform revenue</span></div>
+      </div>
+      <div class="money-col">
+        <span class="pill green">Payables</span>
+        <div class="node green"><b>chef_payable</b><span>Chef earnings balance</span></div>
+        <div class="node green"><b>driver_payable</b><span>Delivery fee earnings</span></div>
+        <div class="node green"><b>tip_payable</b><span>Driver tip earnings</span></div>
+      </div>
+      <div class="money-col">
+        <span class="pill red">Adjust + Settle</span>
+        <div class="node red"><b>refund reversals</b><span>Negative payable/platform entries</span></div>
+        <div class="node"><b>payout debit</b><span>Negative payable ledger entry</span></div>
+        <div class="node"><b>reconciliation</b><span>Match payout/refund/payment state</span></div>
+      </div>
+    </div>
+    <div class="split-grid">
+      <div class="card">
+        <strong>Payout Execution</strong>
+        <ul>
+          <li>Preview pulls positive balances from platform_accounts.</li>
+          <li>Execution creates payout_runs and payout rows.</li>
+          <li>Ledger records negative payable entries before settlement records are considered safe.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Refund Handling</strong>
+        <ul>
+          <li>Stripe charge.refunded event enters webhook processing.</li>
+          <li>Engine platform refund handler applies operational state.</li>
+          <li>Ledger reverses chef, driver, and platform allocations.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Required Gates</strong>
+        <ul>
+          <li>Finance RBAC on every money action.</li>
+          <li>Webhook replay/idempotency tests.</li>
+          <li>Reconciliation and audit logs before production launch.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer"><span>Money movement model</span><span>Page 3</span></div>
+  </section>
+
+  <section class="page">
+    <h2>Repo Evidence And Controls</h2>
+    <table>
+      <thead>
+        <tr><th>Area</th><th>Current Source</th><th>What It Proves</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Checkout + PaymentIntent</td>
+          <td><code>apps/web/src/app/api/checkout/route.ts</code></td>
+          <td>Customer auth, cart/menu validation, server quote, risk, kitchen readiness, checkout idempotency, order creation, Stripe PaymentIntent creation, payment authorization.</td>
+        </tr>
+        <tr>
+          <td>Stripe Webhook</td>
+          <td><code>apps/web/src/app/api/webhooks/stripe/route.ts</code></td>
+          <td>Signature verification, webhook rate limit, idempotent event claim, payment success/failure/refund routing, audit logging, finance webhook handling.</td>
+        </tr>
+        <tr>
+          <td>Ledger</td>
+          <td><code>packages/engine/src/services/ledger.service.ts</code></td>
+          <td>Idempotent insertion into ledger_entries for capture, tax, payables, platform fee, refund reversals, payout debits, and instant payout fees.</td>
+        </tr>
+        <tr>
+          <td>Payouts</td>
+          <td><code>packages/engine/src/services/payout.service.ts</code></td>
+          <td>Chef/driver payout preview, payout run creation, payout risk checks, bank payout lifecycle, instant payout request/execution, payout ledger debits.</td>
+        </tr>
+        <tr>
+          <td>Engine Exports</td>
+          <td><code>packages/engine/src/index.ts</code></td>
+          <td>Stripe, webhook idempotency, finance webhook, ledger, payout, and reconciliation services are exported for app APIs.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="section-note">
+      Production note: the schematic describes intended/current wiring, not a launch approval. Before real money goes live, protect all finance/admin actions with role checks, add negative tests, prove Stripe webhook replay safety, and verify reconciliation can explain every dollar.
+    </div>
+    <div class="footer"><span>Source evidence and launch controls</span><span>Page 4</span></div>
+  </section>
+</body>
+</html>

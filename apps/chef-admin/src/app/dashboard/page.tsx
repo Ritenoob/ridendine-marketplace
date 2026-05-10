@@ -486,7 +486,7 @@ export default async function DashboardPage() {
               <CalendarClock className="mr-2 h-4 w-4" />
               Hours
             </Link>
-            <Link href={`/chefs/${storefront.slug}`} className="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:border-[#E85D26]/40">
+            <Link href={`https://ridendine.ca/chefs/${storefront.slug}`} className="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:border-[#E85D26]/40">
               <Eye className="mr-2 h-4 w-4" />
               Preview
             </Link>
@@ -688,7 +688,7 @@ export default async function DashboardPage() {
               { label: 'Update kitchen hours', href: '/dashboard/availability', icon: CalendarClock },
               { label: 'Improve storefront photos', href: '/dashboard/storefront', icon: Image },
               { label: 'Open payout center', href: '/dashboard/payouts', icon: Banknote },
-              { label: 'Preview customer storefront', href: `/chefs/${storefront.slug}`, icon: Eye },
+              { label: 'Preview customer storefront', href: `https://ridendine.ca/chefs/${storefront.slug}`, icon: Eye },
             ].map((tool) => {
               const Icon = tool.icon;
               return (

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1460" height="860" viewBox="0 0 1460 860">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="1460" height="860" fill="#ffffff"/>
+  <text x="60" y="54" font-size="24" font-weight="900" fill="#172033">Ridendine Payment Workflow Schematic</text>
+  <text x="60" y="82" font-size="14" fill="#64748b">Merchant-of-record checkout, Stripe webhook intake, ledger, payout, and reconciliation flow.</text>
+
+    <rect x="40" y="100" width="1380" height="135" rx="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="58" y="128" font-size="14" font-weight="900" fill="#334155">Checkout and Order Creation</text>
+
+    <rect x="40" y="300" width="1380" height="135" rx="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="58" y="328" font-size="14" font-weight="900" fill="#334155">Stripe Payment Initialization and Webhook Intake</text>
+
+    <rect x="40" y="500" width="1380" height="135" rx="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="58" y="528" font-size="14" font-weight="900" fill="#334155">Payment Outcomes and Finance Processing</text>
+
+    <rect x="40" y="700" width="1380" height="115" rx="18" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="58" y="728" font-size="14" font-weight="900" fill="#334155">Settlement and Reconciliation</text>
+  <path d="M 280 156 L 340 156" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 560 156 L 620 106" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 560 156 L 620 206" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 840 106 L 900 156" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 840 206 L 900 156" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 1120 156 L 1180 156" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 1290 192 L 170 320" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 280 356 L 340 356" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 560 356 L 620 356" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 840 356 L 900 356" fill="none" stroke="#64748b" stroke-width="2.5" stroke-dasharray="7 7" marker-end="url(#arrow)"/>
+<path d="M 1120 356 L 1180 356" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 1290 392 L 170 520" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 1290 392 L 450 520" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 1290 392 L 730 520" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 280 556 L 900 556" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 560 556 L 900 556" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 840 556 L 900 556" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 1120 556 L 1180 556" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 1290 592 L 450 720" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 560 756 L 620 756" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+<path d="M 840 756 L 900 756" fill="none" stroke="#64748b" stroke-width="2.5"  marker-end="url(#arrow)"/>
+
+    <g id="customer">
+      <rect x="60" y="120" width="220" height="72" rx="14" fill="#fff7ed" stroke="#f0b45f" stroke-width="2"/>
+      <text x="74" y="147" font-size="15" font-weight="800" fill="#172033">Customer Checkout</text>
+      <text x="74" y="170" font-size="12" fill="#64748b">cart / checkout UI</text>
+    </g>
+
+    <g id="checkout-api">
+      <rect x="340" y="120" width="220" height="72" rx="14" fill="#fff7ed" stroke="#f0b45f" stroke-width="2"/>
+      <text x="354" y="147" font-size="15" font-weight="800" fill="#172033">POST /api/checkout</text>
+      <text x="354" y="170" font-size="12" fill="#64748b">checkout route</text>
+    </g>
+
+    <g id="auth">
+      <rect x="620" y="70" width="220" height="72" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+      <text x="634" y="97" font-size="15" font-weight="800" fill="#172033">Auth + Validation</text>
+      <text x="634" y="120" font-size="12" fill="#64748b">customer, schema, risk</text>
+    </g>
+
+    <g id="cart-menu">
+      <rect x="620" y="170" width="220" height="72" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+      <text x="634" y="197" font-size="15" font-weight="800" fill="#172033">Cart/Menu Checks</text>
+      <text x="634" y="220" font-size="12" fill="#64748b">price + availability</text>
+    </g>
+
+    <g id="idem">
+      <rect x="900" y="120" width="220" height="72" rx="14" fill="#eff6ff" stroke="#93c5fd" stroke-width="2"/>
+      <text x="914" y="147" font-size="15" font-weight="800" fill="#172033">Checkout Idempotency</text>
+      <text x="914" y="170" font-size="12" fill="#64748b">checkout_idempotency_keys</text>
+    </g>
+
+    <g id="order">
+      <rect x="1180" y="120" width="220" height="72" rx="14" fill="#ecfdf5" stroke="#86efac" stroke-width="2"/>
+      <text x="1194" y="147" font-size="15" font-weight="800" fill="#172033">Create Order</text>
+      <text x="1194" y="170" font-size="12" fill="#64748b">orders + order_items</text>
+    </g>
+
+    <g id="stripe-pi">
+      <rect x="60" y="320" width="220" height="72" rx="14" fill="#fff7ed" stroke="#f0b45f" stroke-width="2"/>
+      <text x="74" y="347" font-size="15" font-weight="800" fill="#172033">Stripe PaymentIntent</text>
+      <text x="74" y="370" font-size="12" fill="#64748b">order metadata</text>
+    </g>
+
+    <g id="authorize">
+      <rect x="340" y="320" width="220" height="72" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+      <text x="354" y="347" font-size="15" font-weight="800" fill="#172033">Authorize Payment</text>
+      <text x="354" y="370" font-size="12" fill="#64748b">engine.orderCreation</text>
+    </g>
+
+    <g id="client-secret">
+      <rect x="620" y="320" width="220" height="72" rx="14" fill="#ecfdf5" stroke="#86efac" stroke-width="2"/>
+      <text x="634" y="347" font-size="15" font-weight="800" fill="#172033">Return Client Secret</text>
+      <text x="634" y="370" font-size="12" fill="#64748b">order id + totals</text>
+    </g>
+
+    <g id="webhook">
+      <rect x="900" y="320" width="220" height="72" rx="14" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+      <text x="914" y="347" font-size="15" font-weight="800" fill="#172033">Stripe Webhook</text>
+      <text x="914" y="370" font-size="12" fill="#64748b">signature verified</text>
+    </g>
+
+    <g id="webhook-idem">
+      <rect x="1180" y="320" width="220" height="72" rx="14" fill="#eff6ff" stroke="#93c5fd" stroke-width="2"/>
+      <text x="1194" y="347" font-size="15" font-weight="800" fill="#172033">Webhook Idempotency</text>
+      <text x="1194" y="370" font-size="12" fill="#64748b">claim event first</text>
+    </g>
+
+    <g id="success">
+      <rect x="60" y="520" width="220" height="72" rx="14" fill="#ecfdf5" stroke="#86efac" stroke-width="2"/>
+      <text x="74" y="547" font-size="15" font-weight="800" fill="#172033">Payment Succeeded</text>
+      <text x="74" y="570" font-size="12" fill="#64748b">submit to kitchen</text>
+    </g>
+
+    <g id="failure">
+      <rect x="340" y="520" width="220" height="72" rx="14" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+      <text x="354" y="547" font-size="15" font-weight="800" fill="#172033">Payment Failed</text>
+      <text x="354" y="570" font-size="12" fill="#64748b">handle failure</text>
+    </g>
+
+    <g id="refund">
+      <rect x="620" y="520" width="220" height="72" rx="14" fill="#fee2e2" stroke="#fca5a5" stroke-width="2"/>
+      <text x="634" y="547" font-size="15" font-weight="800" fill="#172033">Refund Event</text>
+      <text x="634" y="570" font-size="12" fill="#64748b">charge.refunded</text>
+    </g>
+
+    <g id="finance">
+      <rect x="900" y="520" width="220" height="72" rx="14" fill="#fff7ed" stroke="#f0b45f" stroke-width="2"/>
+      <text x="914" y="547" font-size="15" font-weight="800" fill="#172033">Finance Handler</text>
+      <text x="914" y="570" font-size="12" fill="#64748b">handleStripeFinanceWebhook</text>
+    </g>
+
+    <g id="ledger">
+      <rect x="1180" y="520" width="220" height="72" rx="14" fill="#fff7ed" stroke="#f0b45f" stroke-width="2"/>
+      <text x="1194" y="547" font-size="15" font-weight="800" fill="#172033">Ledger Service</text>
+      <text x="1194" y="570" font-size="12" fill="#64748b">ledger_entries</text>
+    </g>
+
+    <g id="accounts">
+      <rect x="340" y="720" width="220" height="72" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+      <text x="354" y="747" font-size="15" font-weight="800" fill="#172033">Platform Accounts</text>
+      <text x="354" y="770" font-size="12" fill="#64748b">payable balances</text>
+    </g>
+
+    <g id="payout">
+      <rect x="620" y="720" width="220" height="72" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+      <text x="634" y="747" font-size="15" font-weight="800" fill="#172033">Payout Service</text>
+      <text x="634" y="770" font-size="12" fill="#64748b">preview / execute / instant</text>
+    </g>
+
+    <g id="recon">
+      <rect x="900" y="720" width="220" height="72" rx="14" fill="#eff6ff" stroke="#93c5fd" stroke-width="2"/>
+      <text x="914" y="747" font-size="15" font-weight="800" fill="#172033">Reconciliation</text>
+      <text x="914" y="770" font-size="12" fill="#64748b">ops finance visibility</text>
+    </g>
+</svg>

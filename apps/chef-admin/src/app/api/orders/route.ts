@@ -39,12 +39,29 @@ export async function GET() {
         delivery_fee,
         service_fee,
         tax,
+        tip,
+        payment_status,
         special_instructions,
         estimated_ready_at,
+        actual_ready_at,
         created_at,
         updated_at,
         customer_id,
-        delivery_address_id
+        delivery_address_id,
+        items:order_items (
+          id,
+          quantity,
+          unit_price,
+          total_price,
+          special_instructions,
+          menu_item:menu_items (id, name, description)
+        ),
+        delivery:deliveries (
+          id,
+          status,
+          driver_id,
+          driver:drivers (first_name, last_name, phone)
+        )
       `)
       .eq('storefront_id', chefContext.storefrontId)
       .order('created_at', { ascending: false });

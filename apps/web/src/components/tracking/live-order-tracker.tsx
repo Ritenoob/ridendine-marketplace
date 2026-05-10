@@ -4,7 +4,6 @@ import { useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, Button } from '@ridendine/ui';
 import { useOrderStream } from '@/lib/orders/use-order-stream';
-import { OrderProgressStepper } from '@/components/orders/order-progress-stepper';
 import { formatScheduledTime, isScheduledOrder } from '@/lib/checkout/scheduling';
 
 const OrderTrackingMap = dynamic(
@@ -83,6 +82,58 @@ function publicStageIndex(publicStage: string): number {
   if (publicStage === 'cancelled' || publicStage === 'refunded') return -1;
   const idx = PUBLIC_STEPS.findIndex((s) => s.key === publicStage);
   return idx >= 0 ? idx : 0;
+}
+
+function StepIndicator({ currentIndex, terminal }: { currentIndex: number; terminal: string | null }) {
+  if (terminal === 'cancelled') {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-lg font-semibold text-gray-800">This order was cancelled.</p>
+      </div>
+    );
+  }
+  if (terminal === 'refunded') {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-lg font-semibold text-gray-800">Refund in progress or completed.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between">
+        {PUBLIC_STEPS.map((step, i) => (
+          <div key={step.key} className="flex items-center">
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                i < currentIndex
+                  ? 'bg-green-500 text-white'
+                  : i === currentIndex
+                  ? 'bg-[#E85D26] text-white'
+                  : 'bg-gray-200 text-gray-500'
+              }`}
+            >
+              {i < currentIndex ? '✓' : i + 1}
+            </div>
+            {i < PUBLIC_STEPS.length - 1 && (
+              <div className={`h-0.5 w-4 sm:w-8 ${i < currentIndex ? 'bg-green-500' : 'bg-gray-200'}`} />
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex justify-between gap-1">
+        {PUBLIC_STEPS.map((step, i) => (
+          <span
+            key={step.key}
+            className={`text-[10px] sm:text-xs ${i <= currentIndex ? 'text-gray-900 font-medium' : 'text-gray-400'}`}
+          >
+            {step.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function DeliveryDetails({
@@ -275,9 +326,6 @@ export function LiveOrderTracker({
   initialProgressPct,
   initialRemainingSeconds,
   initialRoutePolyline,
-  driverFirstName,
-  driverPhone,
-  createdAt,
   scheduledFor,
 }: LiveOrderTrackerProps) {
   const {
@@ -357,13 +405,9 @@ export function LiveOrderTracker({
         </Card>
       )}
 
-      <OrderProgressStepper
-        status={legacyStatus ?? initialStatus}
-        createdAt={createdAt ?? new Date().toISOString()}
-        estimatedDeliveryMinutes={estimatedDeliveryMinutes}
-        driverFirstName={driverFirstName}
-        driverPhone={driverPhone}
-      />
+      <Card className="overflow-hidden">
+        <StepIndicator currentIndex={currentStepIndex} terminal={terminal} />
+      </Card>
 
       {showMap && (
         <Card className="overflow-hidden">

@@ -32,9 +32,9 @@ jest.mock('@ridendine/db', () => ({
 jest.mock('@ridendine/engine', () => ({
   getStripeClient: () => mockGetStripeClient(),
   assertStripeConfigured: () => mockAssertStripeConfigured(),
+  getOrCreateStripeCustomer: (...args: unknown[]) => mockGetOrCreateStripeCustomer(...args),
   evaluateCheckoutRisk: (...args: unknown[]) => mockEvaluateCheckoutRisk(...args),
   isWithinDeliveryZone: (...args: unknown[]) => mockIsWithinDeliveryZone(...args),
-  getOrCreateStripeCustomer: (...args: unknown[]) => mockGetOrCreateStripeCustomer(...args),
   calculateDeliveryFee: (...args: unknown[]) => mockCalculateDeliveryFee(...args),
   estimateDistance: (...args: unknown[]) => mockEstimateDistance(...args),
   getSurgeMultiplier: (...args: unknown[]) => mockGetSurgeMultiplier(...args),
@@ -119,6 +119,18 @@ function createAdminClientMock() {
         return {
           update: () => ({
             eq: async () => ({ error: null }),
+          }),
+        };
+      }
+      if (table === 'customers') {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: { email: 'customer@test.com', first_name: 'Test', last_name: 'Customer' },
+                error: null,
+              }),
+            }),
           }),
         };
       }
@@ -219,7 +231,15 @@ describe('POST /api/checkout Phase C hardening', () => {
     mockEvaluateCheckoutRisk.mockReturnValue({ allowed: true, reasons: [], auditPayload: {} });
     mockIsWithinDeliveryZone.mockResolvedValue(true);
     mockGetOrCreateStripeCustomer.mockResolvedValue(null);
-    mockCalculateDeliveryFee.mockReturnValue({ feeCents: 500 });
+    mockCalculateDeliveryFee.mockReturnValue({
+      feeCents: 500,
+      breakdown: {
+        baseFee: 500,
+        distanceFee: 0,
+        smallOrderSurcharge: 0,
+        surgeMultiplier: 1,
+      },
+    });
     mockEstimateDistance.mockReturnValue(1.2);
     mockGetSurgeMultiplier.mockResolvedValue(1.0);
     mockEarnPoints.mockResolvedValue(undefined);

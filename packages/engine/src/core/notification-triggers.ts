@@ -271,7 +271,7 @@ export class NotificationTriggers {
 
   private async fetchDriverUserId(driverProfileId: string): Promise<string | null> {
     const { data } = await (this.client as any)
-      .from('driver_profiles')
+      .from('drivers')
       .select('user_id')
       .eq('id', driverProfileId)
       .single();
