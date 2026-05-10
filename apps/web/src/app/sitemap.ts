@@ -3,13 +3,13 @@ import { createAdminClient, getActiveStorefronts } from '@ridendine/db';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ridendine.ca';
-  const client = createAdminClient();
 
   let storefronts: Array<{ slug: string; updated_at?: string }> = [];
   try {
-    storefronts = await getActiveStorefronts(client as any);
+    const client = createAdminClient() as Parameters<typeof getActiveStorefronts>[0];
+    storefronts = await getActiveStorefronts(client);
   } catch {
-    // Fallback to empty
+    // Keep sitemap generation deploy-safe when preview env vars are absent.
   }
 
   const staticPages = [

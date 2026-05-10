@@ -88,17 +88,17 @@ describe('GET /api/payouts/setup (driver)', () => {
   });
 
   it('returns 401 when driver is not authenticated', async () => {
-    const { getDriverActorContext } = require('@/lib/engine');
+    const { getDriverActorContext } = await import('@/lib/engine');
     (getDriverActorContext as jest.Mock).mockResolvedValueOnce(null);
 
-    const { GET } = require('../app/api/payouts/setup/route');
+    const { GET } = await import('../app/api/payouts/setup/route');
     const response = await GET();
 
     expect(response.status).toBe(401);
   });
 
   it('returns payout account status when account exists', async () => {
-    const { GET } = require('../app/api/payouts/setup/route');
+    const { GET } = await import('../app/api/payouts/setup/route');
     const response = await GET();
     const json = await response.json();
 
@@ -135,7 +135,7 @@ describe('GET /api/payouts/setup (driver)', () => {
       return {};
     });
 
-    const { GET } = require('../app/api/payouts/setup/route');
+    const { GET } = await import('../app/api/payouts/setup/route');
     const response = await GET();
     const json = await response.json();
 
@@ -157,7 +157,7 @@ describe('GET /api/payouts/setup (driver)', () => {
       return {};
     });
 
-    const { GET } = require('../app/api/payouts/setup/route');
+    const { GET } = await import('../app/api/payouts/setup/route');
     const response = await GET();
 
     expect(response.status).toBe(404);

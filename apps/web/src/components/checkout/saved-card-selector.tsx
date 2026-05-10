@@ -26,15 +26,6 @@ function brandLabel(brand: string): string {
   return map[brand.toLowerCase()] ?? brand.toUpperCase();
 }
 
-function brandIcon(brand: string): string {
-  const icons: Record<string, string> = {
-    visa: '💳 Visa',
-    mastercard: '💳 MC',
-    amex: '💳 Amex',
-  };
-  return icons[brand.toLowerCase()] ?? '💳';
-}
-
 function formatExpiry(month: number, year: number): string {
   return `${String(month).padStart(2, '0')}/${String(year).slice(-2)}`;
 }

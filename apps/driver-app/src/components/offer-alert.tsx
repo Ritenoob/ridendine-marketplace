@@ -172,12 +172,14 @@ export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertPr
           return null;
         });
       })
-      .subscribe();
+      .subscribe((status) => {
+        onChannelStatus?.(status as unknown as LiveIndicatorStatus);
+      });
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [isOnline, driverId]);
+  }, [isOnline, driverId, onChannelStatus]);
 
   useEffect(() => {
     if (!offer) return;

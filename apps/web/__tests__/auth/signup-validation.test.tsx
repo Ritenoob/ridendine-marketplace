@@ -12,6 +12,7 @@ jest.mock('next/link', () => {
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock('../../src/components/auth/auth-layout', () => ({

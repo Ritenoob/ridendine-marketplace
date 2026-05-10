@@ -4,7 +4,6 @@ import { useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, Button } from '@ridendine/ui';
 import { useOrderStream } from '@/lib/orders/use-order-stream';
-import { OrderProgressStepper } from '@/components/orders/order-progress-stepper';
 import { formatScheduledTime, isScheduledOrder } from '@/lib/checkout/scheduling';
 
 const OrderTrackingMap = dynamic(
@@ -327,9 +326,6 @@ export function LiveOrderTracker({
   initialProgressPct,
   initialRemainingSeconds,
   initialRoutePolyline,
-  driverFirstName,
-  driverPhone,
-  createdAt,
   scheduledFor,
 }: LiveOrderTrackerProps) {
   const {
@@ -409,13 +405,9 @@ export function LiveOrderTracker({
         </Card>
       )}
 
-      <OrderProgressStepper
-        status={legacyStatus ?? initialStatus}
-        createdAt={createdAt ?? new Date().toISOString()}
-        estimatedDeliveryMinutes={estimatedDeliveryMinutes}
-        driverFirstName={driverFirstName}
-        driverPhone={driverPhone}
-      />
+      <Card className="overflow-hidden">
+        <StepIndicator currentIndex={currentStepIndex} terminal={terminal} />
+      </Card>
 
       {showMap && (
         <Card className="overflow-hidden">
