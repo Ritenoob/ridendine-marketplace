@@ -382,7 +382,7 @@ describe('BusinessRulesEngine', () => {
       });
       const from = mockFrom({
         deliveries: deliveryChain,
-        driver_profiles: driverChain,
+        drivers: driverChain,
         driver_presence: presenceChain,
       });
       const engine = new BusinessRulesEngine(makeClient(from));
@@ -408,7 +408,7 @@ describe('BusinessRulesEngine', () => {
       });
       const from = mockFrom({
         deliveries: deliveryChain,
-        driver_profiles: driverChain,
+        drivers: driverChain,
         driver_presence: presenceChain,
       });
       const engine = new BusinessRulesEngine(makeClient(from));
@@ -434,7 +434,7 @@ describe('BusinessRulesEngine', () => {
       });
       const from = mockFrom({
         deliveries: deliveryChain,
-        driver_profiles: driverChain,
+        drivers: driverChain,
         driver_presence: presenceChain,
       });
       const engine = new BusinessRulesEngine(makeClient(from));
@@ -460,7 +460,7 @@ describe('BusinessRulesEngine', () => {
       });
       const from = mockFrom({
         deliveries: deliveryChain,
-        driver_profiles: driverChain,
+        drivers: driverChain,
         driver_presence: presenceChain,
       });
       const engine = new BusinessRulesEngine(makeClient(from));

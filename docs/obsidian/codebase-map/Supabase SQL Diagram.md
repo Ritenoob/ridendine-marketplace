@@ -1164,7 +1164,7 @@ erDiagram
 
 | Name | Surfaces | Example File | Review Note |
 | --- | --- | --- | --- |
-| driver_profiles | Shared Packages | packages/engine/src/core/business-rules-engine.ts | Code references this name but migrations do not create it. Confirm table, view, storage bucket, or typo. |
+| None | None | None | None |
 
 ## Linked Repo Docs
 

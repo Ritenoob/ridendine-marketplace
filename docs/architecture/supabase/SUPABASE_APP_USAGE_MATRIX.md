@@ -19,7 +19,7 @@ This matrix maps application code and shared packages to Supabase tables, RPCs, 
 | DEFINED | chef_kitchens | Chef Admin, Customer Web, Shared Packages | insert, select | 5 | apps/chef-admin/src/app/api/storefront/route.ts |
 | DEFINED | chef_payout_accounts | Chef Admin, Ops Admin, Shared Packages | insert, select | 6 | apps/chef-admin/src/app/api/payouts/setup/route.ts |
 | DEFINED | chef_payouts | Chef Admin, Ops Admin, Shared Packages | insert, select, update | 9 | apps/chef-admin/src/app/dashboard/payouts/page.tsx |
-| DEFINED | chef_profiles | Chef Admin, Ops Admin, Shared Packages | insert, select, update | 41 | apps/chef-admin/src/app/api/health/route.ts |
+| DEFINED | chef_profiles | Chef Admin, Ops Admin, Shared Packages | insert, select, update | 42 | apps/chef-admin/src/app/api/health/route.ts |
 | DEFINED | chef_storefronts | Chef Admin, Customer Web, Ops Admin, Shared Packages | insert, select, update | 55 | apps/chef-admin/src/app/api/storefront/route.ts |
 | DEFINED | customer_addresses | Chef Admin, Customer Web, Shared Packages | delete, insert, select, update | 20 | apps/chef-admin/src/app/api/orders/route.ts |
 | DEFINED | customers | Chef Admin, Customer Web, Ops Admin, Shared Packages | insert, select, update, upsert | 29 | apps/chef-admin/src/app/api/orders/route.ts |
@@ -34,10 +34,9 @@ This matrix maps application code and shared packages to Supabase tables, RPCs, 
 | DEFINED | driver_payout_accounts | Driver App | insert, select | 4 | apps/driver-app/src/app/api/payouts/setup/route.ts |
 | DEFINED | driver_payouts | Ops Admin, Shared Packages | insert, select, update | 4 | apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx |
 | DEFINED | driver_presence | Driver App, Ops Admin, Shared Packages | insert, select, update, upsert | 25 | apps/driver-app/src/app/api/auth/signup/route.ts |
-| REFERENCED_ONLY | driver_profiles | Shared Packages | select | 2 | packages/engine/src/core/business-rules-engine.ts |
 | DEFINED | driver_shifts | - | - | 0 | - |
 | DEFINED | driver_vehicles | - | - | 0 | - |
-| DEFINED | drivers | Driver App, Ops Admin, Shared Packages | insert, select, update | 42 | apps/driver-app/src/app/api/driver/route.ts |
+| DEFINED | drivers | Driver App, Ops Admin, Shared Packages | insert, select, update | 44 | apps/driver-app/src/app/api/driver/route.ts |
 | DEFINED | favorites | Customer Web | delete, insert, select | 4 | apps/web/src/app/api/favorites/route.ts |
 | DEFINED | instant_payout_requests | Ops Admin, Shared Packages | insert, select, update | 14 | apps/ops-admin/src/app/api/engine/payouts/instant/[id]/route.ts |
 | DEFINED | kitchen_queue_entries | Shared Packages | insert, select, update | 6 | packages/engine/src/e2e/order-lifecycle.e2e.ts |
@@ -80,7 +79,7 @@ This matrix maps application code and shared packages to Supabase tables, RPCs, 
 
 | Name | Surfaces | Example File | Review Note |
 | --- | --- | --- | --- |
-| driver_profiles | Shared Packages | packages/engine/src/core/business-rules-engine.ts | Code references this name but migrations do not create it. Confirm table, view, storage bucket, or typo. |
+| None | None | None | None |
 
 ## RPC Usage
 

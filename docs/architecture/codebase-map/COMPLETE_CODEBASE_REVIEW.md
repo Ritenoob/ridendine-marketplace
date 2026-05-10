@@ -23,21 +23,12 @@ RideNDine is a four-app Next.js monorepo. Ops Admin is the control plane. Custom
 
 ## Broken Static Internal Links
 
-| App | Source file | Kind | Target | Notes |
-| --- | --- | --- | --- | --- |
-| Chef Admin | [apps/chef-admin/src/app/auth/login/page.tsx](../../../apps/chef-admin/src/app/auth/login/page.tsx) | href | `/auth/forgot-password` | No matching page route file detected |
-| Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href | `/privacy` | No matching page route file detected |
-| Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href | `/terms` | No matching page route file detected |
-| Chef Admin | [apps/chef-admin/src/app/dashboard/storefront/page.tsx](../../../apps/chef-admin/src/app/dashboard/storefront/page.tsx) | href | `/dashboard/storefront/setup` | No matching page route file detected |
-| Driver App | [apps/driver-app/src/app/auth/signup/page.tsx](../../../apps/driver-app/src/app/auth/signup/page.tsx) | href | `/privacy` | No matching page route file detected |
-| Driver App | [apps/driver-app/src/app/auth/signup/page.tsx](../../../apps/driver-app/src/app/auth/signup/page.tsx) | href | `/terms` | No matching page route file detected |
-| Driver App | [apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx](../../../apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx) | fetch | `/api/upload` | No matching API route file detected |
+No broken static internal links detected by this scan.
 
 ## Unknown Dynamic Links
 
 | App | Source file | Kind | Target | Notes |
 | --- | --- | --- | --- | --- |
-| Chef Admin | [apps/chef-admin/src/app/dashboard/page.tsx](../../../apps/chef-admin/src/app/dashboard/page.tsx) | href | `/chefs/${storefront.slug}` | No matching page route file detected |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/health/page.tsx](../../../apps/ops-admin/src/app/dashboard/health/page.tsx) | fetch | `${baseUrl}/api/health` | Not an internal route path |
 
 ## Payment Flow

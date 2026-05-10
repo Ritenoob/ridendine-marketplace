@@ -39,6 +39,7 @@
     "ui:command-center": "pnpm ui:registry && pnpm ui:screenshots:sync && pnpm ui:docs",
     "docs:wiring": "node scripts/wiring/generate-wiring-docs.cjs && pnpm docs:supabase",
     "docs:supabase": "node scripts/wiring/generate-supabase-diagrams.cjs",
+    "test:wiring-fixes": "node scripts/wiring/verify-known-wiring-fixes.cjs",
     "audit:guards": "node scripts/audit/check-api-route-guards.mjs",
     "test:e2e:setup": "supabase db reset && pnpm db:seed",
     "test:e2e:lifecycle": "concurrently --kill-others --success first \"pnpm dev:web\" \"pnpm dev:chef\" \"pnpm dev:ops\" \"pnpm dev:driver\" \"wait-on http://localhost:3000 http://localhost:3001 http://localhost:3002 http://localhost:3003 && playwright test e2e/lifecycle\""

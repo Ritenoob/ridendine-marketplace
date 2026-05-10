@@ -4,6 +4,76 @@ Domain: `chef.ridendine.ca`
 
 Purpose: Chef storefront management, menu, availability, orders, kitchen operations, analytics, payouts, profile, and reviews.
 
+## Chef Admin: `/auth/forgot-password`
+
+### Page Diagram
+
+```mermaid
+flowchart TB
+  Page["Chef Admin<br/>/auth/forgot-password"]
+  Layout["Layout<br/>apps/chef-admin/src/app/auth/layout.tsx"]
+  File["Page file<br/>apps/chef-admin/src/app/auth/forgot-password/page.tsx"]
+  Auth["Auth<br/>Public"]
+  Page --> Layout
+  Page --> File
+  Page --> Auth
+  Component0["Component/import<br/>Button"]
+  Page --> Component0
+  Component1["Component/import<br/>Input"]
+  Page --> Component1
+  classDef page fill:#111827,stroke:#111827,color:#ffffff
+  classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
+  classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
+  class Page page
+```
+
+### Actual Page Information
+
+| Field | Value |
+| --- | --- |
+| App | Chef Admin |
+| Domain | `chef.ridendine.ca` |
+| Route | `/auth/forgot-password` |
+| Status | `PARTIAL` |
+| Auth | Public |
+| Page file | [apps/chef-admin/src/app/auth/forgot-password/page.tsx](../../../../apps/chef-admin/src/app/auth/forgot-password/page.tsx) |
+| Layout | [apps/chef-admin/src/app/auth/layout.tsx](../../../../apps/chef-admin/src/app/auth/layout.tsx) |
+| Data source summary | @ridendine/auth, @ridendine/ui |
+
+### Data And API Wiring
+
+| Type | Details |
+| --- | --- |
+| DB tables/RPCs | None detected |
+| Fetch/API calls | None detected |
+| Shared packages | @ridendine/auth, @ridendine/ui |
+| Components/imports | `Button`, `Input` |
+| Environment vars | None detected |
+
+### Navigation And Links
+
+| Status | Kind | Target | Resolved app | Resolved file | Notes |
+| --- | --- | --- | --- | --- | --- |
+| WORKING | href | `/auth/login` | Chef Admin | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) | href resolves to page /auth/login |
+
+### API Calls From This Page
+
+No outgoing API/fetch calls detected.
+
+### Incoming References
+
+| Source app | Source file | Kind | Target | Status |
+| --- | --- | --- | --- | --- |
+| Chef Admin | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) | href | `/auth/forgot-password` | WORKING |
+
+### Review Notes
+
+- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+
+
+---
+
 ## Chef Admin: `/auth/login`
 
 ### Page Diagram
@@ -21,14 +91,11 @@ flowchart TB
   Page --> Component0
   Component1["Component/import<br/>Input"]
   Page --> Component1
-  Gap0["BROKEN<br/>/auth/forgot-password"]
-  Page -. review .-> Gap0
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
-  class Gap0 warn
 ```
 
 ### Actual Page Information
@@ -58,7 +125,7 @@ flowchart TB
 
 | Status | Kind | Target | Resolved app | Resolved file | Notes |
 | --- | --- | --- | --- | --- | --- |
-| BROKEN | href | `/auth/forgot-password` | Chef Admin |  | No matching page route file detected |
+| WORKING | href | `/auth/forgot-password` | Chef Admin | [apps/chef-admin/src/app/auth/forgot-password/page.tsx](../../../../apps/chef-admin/src/app/auth/forgot-password/page.tsx) | href resolves to page /auth/forgot-password |
 | WORKING | href | `/auth/signup` | Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href resolves to page /auth/signup |
 
 ### API Calls From This Page
@@ -69,14 +136,15 @@ No outgoing API/fetch calls detected.
 
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
+| Chef Admin | [apps/chef-admin/src/app/auth/forgot-password/page.tsx](../../../../apps/chef-admin/src/app/auth/forgot-password/page.tsx) | href | `/auth/login` | WORKING |
 | Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href | `/auth/login` | WORKING |
 | Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | router.push | `/auth/login?signup=success` | WORKING |
 | Chef Admin | [apps/chef-admin/src/app/dashboard/storefront/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/page.tsx) | href | `/auth/login` | WORKING |
+| Chef Admin | [apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx) | href | `/auth/login?redirect=/dashboard/storefront/setup` | WORKING |
 | Chef Admin | [apps/chef-admin/src/components/layout/header.tsx](../../../../apps/chef-admin/src/components/layout/header.tsx) | router.push | `/auth/login` | WORKING |
 
 ### Review Notes
 
-- Broken static references: `/auth/forgot-password`.
 - Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
 
 
@@ -103,17 +171,12 @@ flowchart TB
   Page --> Component1
   Component2["Component/import<br/>PasswordStrength"]
   Page --> Component2
-  Gap0["BROKEN<br/>/privacy"]
-  Page -. review .-> Gap0
-  Gap1["BROKEN<br/>/terms"]
-  Page -. review .-> Gap1
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
   class Api0 api
-  class Gap0,Gap1 warn
 ```
 
 ### Actual Page Information
@@ -146,8 +209,8 @@ flowchart TB
 | WORKING | href | `/auth/login` | Chef Admin | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) | href resolves to page /auth/login |
 | WORKING | router.push | `/auth/login?signup=success` | Chef Admin | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) | router.push resolves to page /auth/login |
 | WORKING | router.push | `/dashboard/storefront` | Chef Admin | [apps/chef-admin/src/app/dashboard/storefront/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/page.tsx) | router.push resolves to page /dashboard/storefront |
-| BROKEN | href | `/privacy` | Chef Admin |  | No matching page route file detected |
-| BROKEN | href | `/terms` | Chef Admin |  | No matching page route file detected |
+| WORKING | href | `/privacy` | Chef Admin | [apps/chef-admin/src/app/privacy/page.tsx](../../../../apps/chef-admin/src/app/privacy/page.tsx) | href resolves to page /privacy |
+| WORKING | href | `/terms` | Chef Admin | [apps/chef-admin/src/app/terms/page.tsx](../../../../apps/chef-admin/src/app/terms/page.tsx) | href resolves to page /terms |
 
 ### API Calls From This Page
 
@@ -160,10 +223,12 @@ flowchart TB
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
 | Chef Admin | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) | href | `/auth/signup` | WORKING |
+| Chef Admin | [apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx) | href | `/auth/signup` | WORKING |
+| Chef Admin | [apps/chef-admin/src/app/privacy/page.tsx](../../../../apps/chef-admin/src/app/privacy/page.tsx) | href | `/auth/signup` | WORKING |
+| Chef Admin | [apps/chef-admin/src/app/terms/page.tsx](../../../../apps/chef-admin/src/app/terms/page.tsx) | href | `/auth/signup` | WORKING |
 
 ### Review Notes
 
-- Broken static references: `/privacy`, `/terms`.
 - Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
 
 
@@ -543,15 +608,12 @@ flowchart TB
   Page --> Table2
   Table3["DB table/RPC<br/>customers"]
   Page --> Table3
-  Gap0["UNKNOWN_DYNAMIC<br/>/chefs/${storefront.slug}"]
-  Page -. review .-> Gap0
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
   class Table0,Table1,Table2,Table3 data
-  class Gap0 warn
 ```
 
 ### Actual Page Information
@@ -581,11 +643,11 @@ flowchart TB
 
 | Status | Kind | Target | Resolved app | Resolved file | Notes |
 | --- | --- | --- | --- | --- | --- |
-| UNKNOWN_DYNAMIC | href | `/chefs/${storefront.slug}` | Chef Admin |  | No matching page route file detected |
 | WORKING | href | `/dashboard/availability` | Chef Admin | [apps/chef-admin/src/app/dashboard/availability/page.tsx](../../../../apps/chef-admin/src/app/dashboard/availability/page.tsx) | href resolves to page /dashboard/availability |
 | WORKING | href | `/dashboard/menu` | Chef Admin | [apps/chef-admin/src/app/dashboard/menu/page.tsx](../../../../apps/chef-admin/src/app/dashboard/menu/page.tsx) | href resolves to page /dashboard/menu |
 | WORKING | href | `/dashboard/orders` | Chef Admin | [apps/chef-admin/src/app/dashboard/orders/page.tsx](../../../../apps/chef-admin/src/app/dashboard/orders/page.tsx) | href resolves to page /dashboard/orders |
 | WORKING | href | `/dashboard/storefront` | Chef Admin | [apps/chef-admin/src/app/dashboard/storefront/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/page.tsx) | href resolves to page /dashboard/storefront |
+| WORKING_DYNAMIC | href | `https://ridendine.ca/chefs/${storefront.slug}` | Customer Web | [apps/web/src/app/chefs/[slug]/page.tsx](../../../../apps/web/src/app/chefs/[slug]/page.tsx) | href resolves to page /chefs/:slug |
 
 ### API Calls From This Page
 
@@ -600,7 +662,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Dynamic/unproven references: `/chefs/${storefront.slug}`.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -854,15 +916,12 @@ flowchart TB
   Page --> Component1
   Component2["Component/import<br/>EmptyState"]
   Page --> Component2
-  Gap0["BROKEN<br/>/dashboard/storefront/setup"]
-  Page -. review .-> Gap0
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
   class Table0 data
-  class Gap0 warn
 ```
 
 ### Actual Page Information
@@ -893,7 +952,7 @@ flowchart TB
 | Status | Kind | Target | Resolved app | Resolved file | Notes |
 | --- | --- | --- | --- | --- | --- |
 | WORKING | href | `/auth/login` | Chef Admin | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) | href resolves to page /auth/login |
-| BROKEN | href | `/dashboard/storefront/setup` | Chef Admin |  | No matching page route file detected |
+| WORKING | href | `/dashboard/storefront/setup` | Chef Admin | [apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx) | href resolves to page /dashboard/storefront/setup |
 
 ### API Calls From This Page
 
@@ -905,10 +964,86 @@ No outgoing API/fetch calls detected.
 | --- | --- | --- | --- | --- |
 | Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | router.push | `/dashboard/storefront` | WORKING |
 | Chef Admin | [apps/chef-admin/src/app/dashboard/page.tsx](../../../../apps/chef-admin/src/app/dashboard/page.tsx) | href | `/dashboard/storefront` | WORKING |
+| Chef Admin | [apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx) | redirect | `/dashboard/storefront` | WORKING |
 
 ### Review Notes
 
-- Broken static references: `/dashboard/storefront/setup`.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
+
+
+---
+
+## Chef Admin: `/dashboard/storefront/setup`
+
+### Page Diagram
+
+```mermaid
+flowchart TB
+  Page["Chef Admin<br/>/dashboard/storefront/setup"]
+  Layout["Layout<br/>apps/chef-admin/src/app/dashboard/layout.tsx"]
+  File["Page file<br/>apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx"]
+  Auth["Auth<br/>Detected"]
+  Page --> Layout
+  Page --> File
+  Page --> Auth
+  Table0["DB table/RPC<br/>chef_profiles"]
+  Page --> Table0
+  Component0["Component/import<br/>@/components/storefront/storefront-setup-form"]
+  Page --> Component0
+  Component1["Component/import<br/>EmptyState"]
+  Page --> Component1
+  classDef page fill:#111827,stroke:#111827,color:#ffffff
+  classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
+  classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
+  class Page page
+  class Table0 data
+```
+
+### Actual Page Information
+
+| Field | Value |
+| --- | --- |
+| App | Chef Admin |
+| Domain | `chef.ridendine.ca` |
+| Route | `/dashboard/storefront/setup` |
+| Status | `WIRED` |
+| Auth | Detected |
+| Page file | [apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx) |
+| Layout | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../../apps/chef-admin/src/app/dashboard/layout.tsx) |
+| Data source summary | table:chef_profiles, @ridendine/db, @ridendine/ui |
+
+### Data And API Wiring
+
+| Type | Details |
+| --- | --- |
+| DB tables/RPCs | `chef_profiles` |
+| Fetch/API calls | None detected |
+| Shared packages | @ridendine/db, @ridendine/ui |
+| Components/imports | `@/components/storefront/storefront-setup-form`, `EmptyState` |
+| Environment vars | None detected |
+
+### Navigation And Links
+
+| Status | Kind | Target | Resolved app | Resolved file | Notes |
+| --- | --- | --- | --- | --- | --- |
+| WORKING | href | `/auth/login?redirect=/dashboard/storefront/setup` | Chef Admin | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) | href resolves to page /auth/login |
+| WORKING | href | `/auth/signup` | Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href resolves to page /auth/signup |
+| WORKING | redirect | `/dashboard/storefront` | Chef Admin | [apps/chef-admin/src/app/dashboard/storefront/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/page.tsx) | redirect resolves to page /dashboard/storefront |
+
+### API Calls From This Page
+
+No outgoing API/fetch calls detected.
+
+### Incoming References
+
+| Source app | Source file | Kind | Target | Status |
+| --- | --- | --- | --- | --- |
+| Chef Admin | [apps/chef-admin/src/app/dashboard/storefront/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/page.tsx) | href | `/dashboard/storefront/setup` | WORKING |
+
+### Review Notes
+
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -972,6 +1107,140 @@ No outgoing API/fetch calls detected.
 | --- | --- | --- | --- | --- |
 | Chef Admin | [apps/chef-admin/src/components/auth/auth-layout.tsx](../../../../apps/chef-admin/src/components/auth/auth-layout.tsx) | href | `/` | WORKING |
 | Chef Admin | [apps/chef-admin/src/components/layout/sidebar.tsx](../../../../apps/chef-admin/src/components/layout/sidebar.tsx) | href | `/` | WORKING |
+
+### Review Notes
+
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
+
+
+---
+
+## Chef Admin: `/privacy`
+
+### Page Diagram
+
+```mermaid
+flowchart TB
+  Page["Chef Admin<br/>/privacy"]
+  Layout["Layout<br/>apps/chef-admin/src/app/layout.tsx"]
+  File["Page file<br/>apps/chef-admin/src/app/privacy/page.tsx"]
+  Auth["Auth<br/>Public"]
+  Page --> Layout
+  Page --> File
+  Page --> Auth
+  classDef page fill:#111827,stroke:#111827,color:#ffffff
+  classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
+  classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
+  class Page page
+```
+
+### Actual Page Information
+
+| Field | Value |
+| --- | --- |
+| App | Chef Admin |
+| Domain | `chef.ridendine.ca` |
+| Route | `/privacy` |
+| Status | `WIRED` |
+| Auth | Public |
+| Page file | [apps/chef-admin/src/app/privacy/page.tsx](../../../../apps/chef-admin/src/app/privacy/page.tsx) |
+| Layout | [apps/chef-admin/src/app/layout.tsx](../../../../apps/chef-admin/src/app/layout.tsx) |
+| Data source summary | Static/client component/undetected |
+
+### Data And API Wiring
+
+| Type | Details |
+| --- | --- |
+| DB tables/RPCs | None detected |
+| Fetch/API calls | None detected |
+| Shared packages | None detected |
+| Components/imports | None detected |
+| Environment vars | None detected |
+
+### Navigation And Links
+
+| Status | Kind | Target | Resolved app | Resolved file | Notes |
+| --- | --- | --- | --- | --- | --- |
+| WORKING | href | `/auth/signup` | Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href resolves to page /auth/signup |
+| WORKING | href | `https://ridendine.ca/privacy` | Customer Web | [apps/web/src/app/privacy/page.tsx](../../../../apps/web/src/app/privacy/page.tsx) | href resolves to page /privacy |
+
+### API Calls From This Page
+
+No outgoing API/fetch calls detected.
+
+### Incoming References
+
+| Source app | Source file | Kind | Target | Status |
+| --- | --- | --- | --- | --- |
+| Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href | `/privacy` | WORKING |
+
+### Review Notes
+
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
+
+
+---
+
+## Chef Admin: `/terms`
+
+### Page Diagram
+
+```mermaid
+flowchart TB
+  Page["Chef Admin<br/>/terms"]
+  Layout["Layout<br/>apps/chef-admin/src/app/layout.tsx"]
+  File["Page file<br/>apps/chef-admin/src/app/terms/page.tsx"]
+  Auth["Auth<br/>Public"]
+  Page --> Layout
+  Page --> File
+  Page --> Auth
+  classDef page fill:#111827,stroke:#111827,color:#ffffff
+  classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
+  classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
+  class Page page
+```
+
+### Actual Page Information
+
+| Field | Value |
+| --- | --- |
+| App | Chef Admin |
+| Domain | `chef.ridendine.ca` |
+| Route | `/terms` |
+| Status | `WIRED` |
+| Auth | Public |
+| Page file | [apps/chef-admin/src/app/terms/page.tsx](../../../../apps/chef-admin/src/app/terms/page.tsx) |
+| Layout | [apps/chef-admin/src/app/layout.tsx](../../../../apps/chef-admin/src/app/layout.tsx) |
+| Data source summary | Static/client component/undetected |
+
+### Data And API Wiring
+
+| Type | Details |
+| --- | --- |
+| DB tables/RPCs | None detected |
+| Fetch/API calls | None detected |
+| Shared packages | None detected |
+| Components/imports | None detected |
+| Environment vars | None detected |
+
+### Navigation And Links
+
+| Status | Kind | Target | Resolved app | Resolved file | Notes |
+| --- | --- | --- | --- | --- | --- |
+| WORKING | href | `/auth/signup` | Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href resolves to page /auth/signup |
+| WORKING | href | `https://ridendine.ca/terms` | Customer Web | [apps/web/src/app/terms/page.tsx](../../../../apps/web/src/app/terms/page.tsx) | href resolves to page /terms |
+
+### API Calls From This Page
+
+No outgoing API/fetch calls detected.
+
+### Incoming References
+
+| Source app | Source file | Kind | Target | Status |
+| --- | --- | --- | --- | --- |
+| Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href | `/terms` | WORKING |
 
 ### Review Notes
 

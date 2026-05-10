@@ -56,7 +56,7 @@ function createMockClient(overrides?: {
         single: vi.fn().mockResolvedValue({ data: storefrontData, error: null }),
       };
     }
-    if (table === 'driver_profiles') {
+    if (table === 'drivers') {
       return {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),

@@ -224,6 +224,10 @@ app:ops-admin,route:ops-admin:/internal/command-center,owns route,WIRED
 route:ops-admin:/internal/command-center,file:apps/ops-admin/src/app/internal/command-center/page.tsx,implemented by,WIRED
 app:ops-admin,route:ops-admin:/,owns route,WIRED
 route:ops-admin:/,file:apps/ops-admin/src/app/page.tsx,implemented by,WIRED
+app:chef-admin,route:chef-admin:/auth/forgot-password,owns route,PARTIAL
+route:chef-admin:/auth/forgot-password,file:apps/chef-admin/src/app/auth/forgot-password/page.tsx,implemented by,PARTIAL
+route:chef-admin:/auth/forgot-password,package:@ridendine/auth,imports,PARTIAL
+route:chef-admin:/auth/forgot-password,package:@ridendine/ui,imports,PARTIAL
 app:chef-admin,route:chef-admin:/auth/login,owns route,PARTIAL
 route:chef-admin:/auth/login,file:apps/chef-admin/src/app/auth/login/page.tsx,implemented by,PARTIAL
 route:chef-admin:/auth/login,package:@ridendine/auth,imports,PARTIAL
@@ -283,8 +287,17 @@ route:chef-admin:/dashboard/storefront,file:apps/chef-admin/src/app/dashboard/st
 route:chef-admin:/dashboard/storefront,table:chef_profiles,reads/writes table,WIRED
 route:chef-admin:/dashboard/storefront,package:@ridendine/db,imports,WIRED
 route:chef-admin:/dashboard/storefront,package:@ridendine/ui,imports,WIRED
+app:chef-admin,route:chef-admin:/dashboard/storefront/setup,owns route,WIRED
+route:chef-admin:/dashboard/storefront/setup,file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx,implemented by,WIRED
+route:chef-admin:/dashboard/storefront/setup,table:chef_profiles,reads/writes table,WIRED
+route:chef-admin:/dashboard/storefront/setup,package:@ridendine/db,imports,WIRED
+route:chef-admin:/dashboard/storefront/setup,package:@ridendine/ui,imports,WIRED
 app:chef-admin,route:chef-admin:/,owns route,WIRED
 route:chef-admin:/,file:apps/chef-admin/src/app/page.tsx,implemented by,WIRED
+app:chef-admin,route:chef-admin:/privacy,owns route,WIRED
+route:chef-admin:/privacy,file:apps/chef-admin/src/app/privacy/page.tsx,implemented by,WIRED
+app:chef-admin,route:chef-admin:/terms,owns route,WIRED
+route:chef-admin:/terms,file:apps/chef-admin/src/app/terms/page.tsx,implemented by,WIRED
 app:driver-app,route:driver-app:/auth/login,owns route,PARTIAL
 route:driver-app:/auth/login,file:apps/driver-app/src/app/auth/login/page.tsx,implemented by,PARTIAL
 route:driver-app:/auth/login,package:@ridendine/ui,imports,PARTIAL
@@ -307,6 +320,8 @@ app:driver-app,route:driver-app:/,owns route,WIRED
 route:driver-app:/,file:apps/driver-app/src/app/page.tsx,implemented by,WIRED
 route:driver-app:/,package:@ridendine/db,imports,WIRED
 route:driver-app:/,package:@ridendine/ui,imports,WIRED
+app:driver-app,route:driver-app:/privacy,owns route,WIRED
+route:driver-app:/privacy,file:apps/driver-app/src/app/privacy/page.tsx,implemented by,WIRED
 app:driver-app,route:driver-app:/profile,owns route,WIRED
 route:driver-app:/profile,file:apps/driver-app/src/app/profile/page.tsx,implemented by,WIRED
 route:driver-app:/profile,package:@ridendine/db,imports,WIRED
@@ -314,6 +329,8 @@ app:driver-app,route:driver-app:/settings,owns route,WIRED
 route:driver-app:/settings,file:apps/driver-app/src/app/settings/page.tsx,implemented by,WIRED
 route:driver-app:/settings,table:platform_accounts,reads/writes table,WIRED
 route:driver-app:/settings,package:@ridendine/db,imports,WIRED
+app:driver-app,route:driver-app:/terms,owns route,WIRED
+route:driver-app:/terms,file:apps/driver-app/src/app/terms/page.tsx,implemented by,WIRED
 app:web,api:web:/api/addresses,owns API,WIRED
 api:web:/api/addresses,file:apps/web/src/app/api/addresses/route.ts,implemented by,WIRED
 api:web:/api/addresses,table:customer_addresses,touches table,WIRED
@@ -879,22 +896,39 @@ api:driver-app:/api/payouts/setup,package:@ridendine/db,imports,WIRED
 api:driver-app:/api/payouts/setup,package:@ridendine/engine,imports,WIRED
 api:driver-app:/api/payouts/setup,external:Stripe,calls external,WIRED
 api:driver-app:/api/payouts/setup,external:Supabase,calls external,WIRED
+app:driver-app,api:driver-app:/api/upload,owns API,PARTIAL
+api:driver-app:/api/upload,file:apps/driver-app/src/app/api/upload/route.ts,implemented by,PARTIAL
+api:driver-app:/api/upload,package:@ridendine/db,imports,PARTIAL
+api:driver-app:/api/upload,package:@ridendine/utils,imports,PARTIAL
+file:apps/chef-admin/src/app/auth/forgot-password/page.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/chef-admin/src/app/auth/login/page.tsx,file:apps/chef-admin/src/app/auth/forgot-password/page.tsx,href: /auth/forgot-password,WORKING
 file:apps/chef-admin/src/app/auth/login/page.tsx,file:apps/chef-admin/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
 file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/api/auth/signup/route.ts,fetch: /api/auth/signup,WORKING
 file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,href: /auth/login,WORKING
 file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,router.push: /auth/login?signup=success,WORKING
 file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/dashboard/storefront/page.tsx,router.push: /dashboard/storefront,WORKING
+file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/privacy/page.tsx,href: /privacy,WORKING
+file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/terms/page.tsx,href: /terms,WORKING
 file:apps/chef-admin/src/app/dashboard/analytics/page.tsx,file:apps/chef-admin/src/app/api/analytics/route.ts,fetch: /api/analytics?period=${p},WORKING
 file:apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx,file:apps/chef-admin/src/app/dashboard/orders/page.tsx,href: /dashboard/orders,WORKING
 file:apps/chef-admin/src/app/dashboard/page.tsx,file:apps/chef-admin/src/app/dashboard/availability/page.tsx,href: /dashboard/availability,WORKING
 file:apps/chef-admin/src/app/dashboard/page.tsx,file:apps/chef-admin/src/app/dashboard/menu/page.tsx,href: /dashboard/menu,WORKING
 file:apps/chef-admin/src/app/dashboard/page.tsx,file:apps/chef-admin/src/app/dashboard/orders/page.tsx,href: /dashboard/orders,WORKING
 file:apps/chef-admin/src/app/dashboard/page.tsx,file:apps/chef-admin/src/app/dashboard/storefront/page.tsx,href: /dashboard/storefront,WORKING
+file:apps/chef-admin/src/app/dashboard/page.tsx,file:apps/web/src/app/chefs/[slug]/page.tsx,href: https://ridendine.ca/chefs/${storefront.slug},WORKING_DYNAMIC
 file:apps/chef-admin/src/app/dashboard/payouts/page.tsx,file:apps/chef-admin/src/app/api/payouts/request/route.ts,fetch: /api/payouts/request,WORKING
 file:apps/chef-admin/src/app/dashboard/payouts/page.tsx,file:apps/chef-admin/src/app/api/payouts/setup/route.ts,fetch: /api/payouts/setup,WORKING
 file:apps/chef-admin/src/app/dashboard/storefront/page.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/chef-admin/src/app/dashboard/storefront/page.tsx,file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx,href: /dashboard/storefront/setup,WORKING
+file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,href: /auth/login?redirect=/dashboard/storefront/setup,WORKING
+file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx,file:apps/chef-admin/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx,file:apps/chef-admin/src/app/dashboard/storefront/page.tsx,redirect: /dashboard/storefront,WORKING
 file:apps/chef-admin/src/app/error.tsx,file:apps/chef-admin/src/app/dashboard/page.tsx,href: /dashboard,WORKING
 file:apps/chef-admin/src/app/page.tsx,file:apps/chef-admin/src/app/dashboard/page.tsx,redirect: /dashboard,WORKING
+file:apps/chef-admin/src/app/privacy/page.tsx,file:apps/chef-admin/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/chef-admin/src/app/privacy/page.tsx,file:apps/web/src/app/privacy/page.tsx,href: https://ridendine.ca/privacy,WORKING
+file:apps/chef-admin/src/app/terms/page.tsx,file:apps/chef-admin/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/chef-admin/src/app/terms/page.tsx,file:apps/web/src/app/terms/page.tsx,href: https://ridendine.ca/terms,WORKING
 file:apps/chef-admin/src/components/auth/auth-layout.tsx,file:apps/chef-admin/src/app/page.tsx,href: /,WORKING
 file:apps/chef-admin/src/components/availability/weekly-availability-form.tsx,file:apps/chef-admin/src/app/api/storefront/availability/route.ts,fetch: /api/storefront/availability,WORKING
 file:apps/chef-admin/src/components/layout/header.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,router.push: /auth/login,WORKING
@@ -1011,6 +1045,8 @@ file:apps/driver-app/src/app/auth/login/page.tsx,file:apps/driver-app/src/app/ap
 file:apps/driver-app/src/app/auth/login/page.tsx,file:apps/driver-app/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
 file:apps/driver-app/src/app/auth/signup/page.tsx,file:apps/driver-app/src/app/api/auth/signup/route.ts,fetch: /api/auth/signup,WORKING
 file:apps/driver-app/src/app/auth/signup/page.tsx,file:apps/driver-app/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/driver-app/src/app/auth/signup/page.tsx,file:apps/driver-app/src/app/privacy/page.tsx,href: /privacy,WORKING
+file:apps/driver-app/src/app/auth/signup/page.tsx,file:apps/driver-app/src/app/terms/page.tsx,href: /terms,WORKING
 file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/api/driver/presence/route.ts,fetch: /api/driver/presence,WORKING
 file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/api/earnings/route.ts,fetch: /api/earnings,WORKING
 file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/delivery/[id]/page.tsx,href: /delivery/${currentDelivery.id},WORKING_DYNAMIC
@@ -1018,12 +1054,15 @@ file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app
 file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/history/page.tsx,href: /history,WORKING
 file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx,file:apps/driver-app/src/app/page.tsx,router.push: /,WORKING
 file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx,file:apps/driver-app/src/app/api/deliveries/[id]/route.ts,fetch: /api/deliveries/${delivery.id},WORKING_DYNAMIC
+file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx,file:apps/driver-app/src/app/api/upload/route.ts,fetch: /api/upload,WORKING
 file:apps/driver-app/src/app/delivery/[id]/page.tsx,file:apps/driver-app/src/app/auth/login/page.tsx,redirect: /auth/login,WORKING
 file:apps/driver-app/src/app/earnings/components/EarningsView.tsx,file:apps/driver-app/src/app/api/payouts/instant/route.ts,fetch: /api/payouts/instant,WORKING
 file:apps/driver-app/src/app/earnings/components/EarningsView.tsx,file:apps/driver-app/src/app/settings/page.tsx,href: /settings,WORKING
 file:apps/driver-app/src/app/error.tsx,file:apps/driver-app/src/app/page.tsx,href: /,WORKING
 file:apps/driver-app/src/app/layout.tsx,file:apps/driver-app/public/manifest.webmanifest,href: /manifest.webmanifest,ASSET
 file:apps/driver-app/src/app/page.tsx,file:apps/driver-app/src/app/auth/login/page.tsx,redirect: /auth/login,WORKING
+file:apps/driver-app/src/app/privacy/page.tsx,file:apps/driver-app/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/driver-app/src/app/privacy/page.tsx,file:apps/web/src/app/privacy/page.tsx,href: https://ridendine.ca/privacy,WORKING
 file:apps/driver-app/src/app/profile/components/ProfileView.tsx,file:apps/driver-app/src/app/page.tsx,router.push: /,WORKING
 file:apps/driver-app/src/app/profile/components/ProfileView.tsx,file:apps/driver-app/src/app/api/auth/logout/route.ts,fetch: /api/auth/logout,WORKING
 file:apps/driver-app/src/app/profile/components/ProfileView.tsx,file:apps/driver-app/src/app/api/driver/route.ts,fetch: /api/driver,WORKING
@@ -1033,6 +1072,8 @@ file:apps/driver-app/src/app/settings/settings-client.tsx,file:apps/driver-app/s
 file:apps/driver-app/src/app/settings/settings-client.tsx,file:apps/driver-app/src/app/api/driver/route.ts,fetch: /api/driver,WORKING
 file:apps/driver-app/src/app/settings/settings-client.tsx,file:apps/driver-app/src/app/earnings/page.tsx,href: /earnings,WORKING
 file:apps/driver-app/src/app/settings/settings-client.tsx,file:apps/driver-app/src/app/profile/page.tsx,href: /profile,WORKING
+file:apps/driver-app/src/app/terms/page.tsx,file:apps/driver-app/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
+file:apps/driver-app/src/app/terms/page.tsx,file:apps/web/src/app/terms/page.tsx,href: https://ridendine.ca/terms,WORKING
 file:apps/driver-app/src/components/offer-alert.tsx,file:apps/driver-app/src/app/api/offers/route.ts,fetch: /api/offers,WORKING
 file:apps/driver-app/src/components/offer-alert.tsx,file:apps/driver-app/src/app/delivery/[id]/page.tsx,window.location: /delivery/${offer.deliveryId},WORKING_DYNAMIC
 file:apps/driver-app/src/hooks/use-location-tracker.ts,file:apps/driver-app/src/app/api/location/route.ts,fetch: /api/location,WORKING

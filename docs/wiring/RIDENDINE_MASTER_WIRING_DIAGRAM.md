@@ -25,7 +25,7 @@ flowchart TB
 
 ## Route Map
 
-Detected page routes: 82. Customer Web: 23, Ops Admin: 38, Chef Admin: 13, Driver App: 8.
+Detected page routes: 88. Customer Web: 23, Ops Admin: 38, Chef Admin: 17, Driver App: 10.
 
 ```mermaid
 flowchart LR
@@ -37,7 +37,7 @@ flowchart LR
 
 ## API Map
 
-Detected API route files: 103. Customer Web: 25, Ops Admin: 51, Chef Admin: 14, Driver App: 13.
+Detected API route files: 104. Customer Web: 25, Ops Admin: 51, Chef Admin: 14, Driver App: 14.
 
 ```mermaid
 flowchart TB

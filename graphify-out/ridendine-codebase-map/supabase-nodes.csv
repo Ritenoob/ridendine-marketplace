@@ -100,7 +100,6 @@
 "rpc:is_finance_staff","is_finance_staff","supabase_rpc"
 "rpc:is_support_staff","is_support_staff","supabase_rpc"
 "rpc:update_loyalty_account_updated_at","update_loyalty_account_updated_at","supabase_rpc"
-"table:driver_profiles","driver_profiles","missing_table_reference"
 "rpc:public.get_ops_dashboard_stats","public.get_ops_dashboard_stats","missing_rpc_reference"
 "rpc:public.increment_promo_usage","public.increment_promo_usage","missing_rpc_reference"
 "rpc:public.increment_order_exception_count","public.increment_order_exception_count","missing_rpc_reference"

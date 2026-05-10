@@ -32,7 +32,6 @@
 - `driver_payout_accounts`
 - `driver_payouts`
 - `driver_presence`
-- `driver_profiles`
 - `driver_shifts`
 - `driver_vehicles`
 - `drivers`
@@ -196,7 +195,7 @@
 | [packages/engine/src/constants.ts](../../../packages/engine/src/constants.ts) | None detected | None detected |
 | [packages/engine/src/core/audit-logger.ts](../../../packages/engine/src/core/audit-logger.ts) | `audit_logs`, `ops_override_logs` | @ridendine/types |
 | [packages/engine/src/core/business-rules-engine.test.ts](../../../packages/engine/src/core/business-rules-engine.test.ts) | None detected | None detected |
-| [packages/engine/src/core/business-rules-engine.ts](../../../packages/engine/src/core/business-rules-engine.ts) | `chef_profiles`, `chef_storefronts`, `deliveries`, `driver_presence`, `driver_profiles`, `menu_items`, `order_exceptions`, `orders` | None detected |
+| [packages/engine/src/core/business-rules-engine.ts](../../../packages/engine/src/core/business-rules-engine.ts) | `chef_profiles`, `chef_storefronts`, `deliveries`, `driver_presence`, `drivers`, `menu_items`, `order_exceptions`, `orders` | None detected |
 | [packages/engine/src/core/email-provider.test.ts](../../../packages/engine/src/core/email-provider.test.ts) | None detected | None detected |
 | [packages/engine/src/core/email-provider.ts](../../../packages/engine/src/core/email-provider.ts) | None detected | @ridendine/notifications/email-templates, @ridendine/types |
 | [packages/engine/src/core/email-templates.test.ts](../../../packages/engine/src/core/email-templates.test.ts) | None detected | @ridendine/notifications/email-templates |
@@ -211,7 +210,7 @@
 | [packages/engine/src/core/notification-sender.test.ts](../../../packages/engine/src/core/notification-sender.test.ts) | None detected | None detected |
 | [packages/engine/src/core/notification-sender.ts](../../../packages/engine/src/core/notification-sender.ts) | `notifications` | @ridendine/notifications, @ridendine/types |
 | [packages/engine/src/core/notification-triggers.test.ts](../../../packages/engine/src/core/notification-triggers.test.ts) | None detected | None detected |
-| [packages/engine/src/core/notification-triggers.ts](../../../packages/engine/src/core/notification-triggers.ts) | `chef_storefronts`, `customers`, `driver_profiles`, `orders` | @ridendine/types |
+| [packages/engine/src/core/notification-triggers.ts](../../../packages/engine/src/core/notification-triggers.ts) | `chef_storefronts`, `customers`, `drivers`, `orders` | @ridendine/types |
 | [packages/engine/src/core/public-broadcast-sanitizer.test.ts](../../../packages/engine/src/core/public-broadcast-sanitizer.test.ts) | None detected | None detected |
 | [packages/engine/src/core/public-broadcast-sanitizer.ts](../../../packages/engine/src/core/public-broadcast-sanitizer.ts) | None detected | None detected |
 | [packages/engine/src/core/sla-checks.test.ts](../../../packages/engine/src/core/sla-checks.test.ts) | None detected | None detected |

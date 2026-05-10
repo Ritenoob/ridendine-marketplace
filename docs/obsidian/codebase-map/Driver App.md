@@ -11,9 +11,9 @@
 
 ## Status Summary
 
-- Page routes: 8 total, 6 WIRED, 2 PARTIAL, 0 MISSING.
-- API route files: 13 total, 4 WIRED, 9 PARTIAL.
-- Internal link/API references: 36 total, 3 BROKEN, 0 UNKNOWN_DYNAMIC.
+- Page routes: 10 total, 8 WIRED, 2 PARTIAL, 0 MISSING.
+- API route files: 14 total, 4 WIRED, 10 PARTIAL.
+- Internal link/API references: 40 total, 0 BROKEN, 0 UNKNOWN_DYNAMIC.
 
 ## Standalone App Diagram
 
@@ -24,8 +24,8 @@ flowchart TB
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   App["Driver App<br/>driver.ridendine.ca"]:::app
-  Pages["8 pages"]:::api
-  APIs["13 API route files"]:::api
+  Pages["10 pages"]:::api
+  APIs["14 API route files"]:::api
   Shared["Shared packages"]:::data
   DB["Supabase tables/RPCs"]:::data
   External["Stripe / routing / notifications where detected"]:::warn
@@ -46,8 +46,10 @@ flowchart TB
 | WIRED | `/earnings` | [apps/driver-app/src/app/earnings/page.tsx](../../../apps/driver-app/src/app/earnings/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Detected | `platform_accounts` | None detected | None detected |
 | WIRED | `/history` | [apps/driver-app/src/app/history/page.tsx](../../../apps/driver-app/src/app/history/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Detected | None detected | None detected | None detected |
 | WIRED | `/` | [apps/driver-app/src/app/page.tsx](../../../apps/driver-app/src/app/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Detected | None detected | None detected | `ErrorState` |
+| WIRED | `/privacy` | [apps/driver-app/src/app/privacy/page.tsx](../../../apps/driver-app/src/app/privacy/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Public | None detected | None detected | None detected |
 | WIRED | `/profile` | [apps/driver-app/src/app/profile/page.tsx](../../../apps/driver-app/src/app/profile/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Detected | None detected | None detected | None detected |
 | WIRED | `/settings` | [apps/driver-app/src/app/settings/page.tsx](../../../apps/driver-app/src/app/settings/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Detected | `platform_accounts` | None detected | None detected |
+| WIRED | `/terms` | [apps/driver-app/src/app/terms/page.tsx](../../../apps/driver-app/src/app/terms/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Public | None detected | None detected | None detected |
 
 ## APIs
 
@@ -66,11 +68,8 @@ flowchart TB
 | PARTIAL | `/api/offers` | GET, POST | [apps/driver-app/src/app/api/offers/route.ts](../../../apps/driver-app/src/app/api/offers/route.ts) | Undetected | `assignment_attempts` | @ridendine/db | None detected |
 | PARTIAL | `/api/payouts/instant` | POST | [apps/driver-app/src/app/api/payouts/instant/route.ts](../../../apps/driver-app/src/app/api/payouts/instant/route.ts) | Undetected | `drivers` | @ridendine/db, @ridendine/engine | Supabase |
 | WIRED | `/api/payouts/setup` | GET, POST | [apps/driver-app/src/app/api/payouts/setup/route.ts](../../../apps/driver-app/src/app/api/payouts/setup/route.ts) | Detected | `driver_payout_accounts`, `drivers` | @ridendine/db, @ridendine/engine | Stripe, Supabase |
+| PARTIAL | `/api/upload` | POST | [apps/driver-app/src/app/api/upload/route.ts](../../../apps/driver-app/src/app/api/upload/route.ts) | Undetected | None detected | @ridendine/db, @ridendine/utils | None detected |
 
 ## Broken Or Unproven Links
 
-| Status | Source file | Kind | Target | Notes |
-| --- | --- | --- | --- | --- |
-| BROKEN | [apps/driver-app/src/app/auth/signup/page.tsx](../../../apps/driver-app/src/app/auth/signup/page.tsx) | href | `/privacy` | No matching page route file detected |
-| BROKEN | [apps/driver-app/src/app/auth/signup/page.tsx](../../../apps/driver-app/src/app/auth/signup/page.tsx) | href | `/terms` | No matching page route file detected |
-| BROKEN | [apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx](../../../apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx) | fetch | `/api/upload` | No matching API route file detected |
+No broken or unknown dynamic internal links detected by the static scanner.

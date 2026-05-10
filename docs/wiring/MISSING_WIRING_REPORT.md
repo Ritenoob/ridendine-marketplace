@@ -44,6 +44,7 @@ Scanner statuses are conservative. Undetectable wiring is marked for review rath
 | Ops Admin | [apps/ops-admin/src/app/dashboard/promos/page.tsx](../../apps/ops-admin/src/app/dashboard/promos/page.tsx) | Route /dashboard/promos is partially wired | Review auth/data/API path and complete missing state surfaces | Phase 2 |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/support/page.tsx](../../apps/ops-admin/src/app/dashboard/support/page.tsx) | Route /dashboard/support is partially wired | Review auth/data/API path and complete missing state surfaces | Phase 2 |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/team/page.tsx](../../apps/ops-admin/src/app/dashboard/team/page.tsx) | Route /dashboard/team is partially wired | Review auth/data/API path and complete missing state surfaces | Phase 2 |
+| Chef Admin | [apps/chef-admin/src/app/auth/forgot-password/page.tsx](../../apps/chef-admin/src/app/auth/forgot-password/page.tsx) | Route /auth/forgot-password is partially wired | Review auth/data/API path and complete missing state surfaces | Phase 2 |
 | Chef Admin | [apps/chef-admin/src/app/auth/login/page.tsx](../../apps/chef-admin/src/app/auth/login/page.tsx) | Route /auth/login is partially wired | Review auth/data/API path and complete missing state surfaces | Phase 2 |
 | Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../apps/chef-admin/src/app/auth/signup/page.tsx) | Route /auth/signup is partially wired | Review auth/data/API path and complete missing state surfaces | Phase 2 |
 | Chef Admin | [apps/chef-admin/src/app/dashboard/analytics/page.tsx](../../apps/chef-admin/src/app/dashboard/analytics/page.tsx) | Route /dashboard/analytics is partially wired | Review auth/data/API path and complete missing state surfaces | Phase 2 |
@@ -125,6 +126,7 @@ Scanner statuses are conservative. Undetectable wiring is marked for review rath
 | Driver App | [apps/driver-app/src/app/api/location/route.ts](../../apps/driver-app/src/app/api/location/route.ts) | API /api/location is partially detectable | Document or strengthen auth/schema/service wiring | Phase 2 |
 | Driver App | [apps/driver-app/src/app/api/offers/route.ts](../../apps/driver-app/src/app/api/offers/route.ts) | API /api/offers is partially detectable | Document or strengthen auth/schema/service wiring | Phase 2 |
 | Driver App | [apps/driver-app/src/app/api/payouts/instant/route.ts](../../apps/driver-app/src/app/api/payouts/instant/route.ts) | API /api/payouts/instant is partially detectable | Document or strengthen auth/schema/service wiring | Phase 2 |
+| Driver App | [apps/driver-app/src/app/api/upload/route.ts](../../apps/driver-app/src/app/api/upload/route.ts) | API /api/upload is partially detectable | Document or strengthen auth/schema/service wiring | Phase 2 |
 
 ## MEDIUM
 

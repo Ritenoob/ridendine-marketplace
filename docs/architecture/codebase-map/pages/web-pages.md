@@ -1118,6 +1118,7 @@ No outgoing API/fetch calls detected.
 
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
+| Chef Admin | [apps/chef-admin/src/app/dashboard/page.tsx](../../../../apps/chef-admin/src/app/dashboard/page.tsx) | href | `https://ridendine.ca/chefs/${storefront.slug}` | WORKING_DYNAMIC |
 | Customer Web | [apps/web/src/app/account/orders/page.tsx](../../../../apps/web/src/app/account/orders/page.tsx) | href | `/chefs/${order.storefront.slug}` | WORKING_DYNAMIC |
 | Customer Web | [apps/web/src/components/chefs/chefs-list.tsx](../../../../apps/web/src/components/chefs/chefs-list.tsx) | href | `/chefs/${chef.slug}` | WORKING_DYNAMIC |
 | Customer Web | [apps/web/src/components/home/featured-chefs.tsx](../../../../apps/web/src/components/home/featured-chefs.tsx) | href | `/chefs/${chef.slug}` | WORKING_DYNAMIC |
@@ -1719,9 +1720,11 @@ No outgoing API/fetch calls detected.
 
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
+| Chef Admin | [apps/chef-admin/src/app/privacy/page.tsx](../../../../apps/chef-admin/src/app/privacy/page.tsx) | href | `https://ridendine.ca/privacy` | WORKING |
 | Customer Web | [apps/web/src/app/account/settings/page.tsx](../../../../apps/web/src/app/account/settings/page.tsx) | href | `/privacy` | WORKING |
 | Customer Web | [apps/web/src/app/auth/signup/page.tsx](../../../../apps/web/src/app/auth/signup/page.tsx) | href | `/privacy` | WORKING |
 | Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/privacy` | WORKING |
+| Driver App | [apps/driver-app/src/app/privacy/page.tsx](../../../../apps/driver-app/src/app/privacy/page.tsx) | href | `https://ridendine.ca/privacy` | WORKING |
 
 ### Review Notes
 
@@ -1789,9 +1792,11 @@ No outgoing API/fetch calls detected.
 
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
+| Chef Admin | [apps/chef-admin/src/app/terms/page.tsx](../../../../apps/chef-admin/src/app/terms/page.tsx) | href | `https://ridendine.ca/terms` | WORKING |
 | Customer Web | [apps/web/src/app/account/settings/page.tsx](../../../../apps/web/src/app/account/settings/page.tsx) | href | `/terms` | WORKING |
 | Customer Web | [apps/web/src/app/auth/signup/page.tsx](../../../../apps/web/src/app/auth/signup/page.tsx) | href | `/terms` | WORKING |
 | Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/terms` | WORKING |
+| Driver App | [apps/driver-app/src/app/terms/page.tsx](../../../../apps/driver-app/src/app/terms/page.tsx) | href | `https://ridendine.ca/terms` | WORKING |
 
 ### Review Notes
 

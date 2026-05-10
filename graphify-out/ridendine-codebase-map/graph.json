@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-09T17:46:09.801Z",
+  "generatedAt": "2026-05-09T20:20:00.172Z",
   "nodes": [
     {
       "id": "app:web",
@@ -928,6 +928,19 @@
       "status": "WIRED"
     },
     {
+      "id": "route:chef-admin:/auth/forgot-password",
+      "label": "Chef Admin /auth/forgot-password",
+      "type": "page-route",
+      "status": "PARTIAL",
+      "file": "apps/chef-admin/src/app/auth/forgot-password/page.tsx"
+    },
+    {
+      "id": "file:apps/chef-admin/src/app/auth/forgot-password/page.tsx",
+      "label": "apps/chef-admin/src/app/auth/forgot-password/page.tsx",
+      "type": "file",
+      "status": "PARTIAL"
+    },
+    {
       "id": "route:chef-admin:/auth/login",
       "label": "Chef Admin /auth/login",
       "type": "page-route",
@@ -1114,6 +1127,19 @@
       "status": "WIRED"
     },
     {
+      "id": "route:chef-admin:/dashboard/storefront/setup",
+      "label": "Chef Admin /dashboard/storefront/setup",
+      "type": "page-route",
+      "status": "WIRED",
+      "file": "apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx"
+    },
+    {
+      "id": "file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx",
+      "label": "apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx",
+      "type": "file",
+      "status": "WIRED"
+    },
+    {
       "id": "route:chef-admin:/",
       "label": "Chef Admin /",
       "type": "page-route",
@@ -1123,6 +1149,32 @@
     {
       "id": "file:apps/chef-admin/src/app/page.tsx",
       "label": "apps/chef-admin/src/app/page.tsx",
+      "type": "file",
+      "status": "WIRED"
+    },
+    {
+      "id": "route:chef-admin:/privacy",
+      "label": "Chef Admin /privacy",
+      "type": "page-route",
+      "status": "WIRED",
+      "file": "apps/chef-admin/src/app/privacy/page.tsx"
+    },
+    {
+      "id": "file:apps/chef-admin/src/app/privacy/page.tsx",
+      "label": "apps/chef-admin/src/app/privacy/page.tsx",
+      "type": "file",
+      "status": "WIRED"
+    },
+    {
+      "id": "route:chef-admin:/terms",
+      "label": "Chef Admin /terms",
+      "type": "page-route",
+      "status": "WIRED",
+      "file": "apps/chef-admin/src/app/terms/page.tsx"
+    },
+    {
+      "id": "file:apps/chef-admin/src/app/terms/page.tsx",
+      "label": "apps/chef-admin/src/app/terms/page.tsx",
       "type": "file",
       "status": "WIRED"
     },
@@ -1210,6 +1262,19 @@
       "status": "WIRED"
     },
     {
+      "id": "route:driver-app:/privacy",
+      "label": "Driver App /privacy",
+      "type": "page-route",
+      "status": "WIRED",
+      "file": "apps/driver-app/src/app/privacy/page.tsx"
+    },
+    {
+      "id": "file:apps/driver-app/src/app/privacy/page.tsx",
+      "label": "apps/driver-app/src/app/privacy/page.tsx",
+      "type": "file",
+      "status": "WIRED"
+    },
+    {
       "id": "route:driver-app:/profile",
       "label": "Driver App /profile",
       "type": "page-route",
@@ -1232,6 +1297,19 @@
     {
       "id": "file:apps/driver-app/src/app/settings/page.tsx",
       "label": "apps/driver-app/src/app/settings/page.tsx",
+      "type": "file",
+      "status": "WIRED"
+    },
+    {
+      "id": "route:driver-app:/terms",
+      "label": "Driver App /terms",
+      "type": "page-route",
+      "status": "WIRED",
+      "file": "apps/driver-app/src/app/terms/page.tsx"
+    },
+    {
+      "id": "file:apps/driver-app/src/app/terms/page.tsx",
+      "label": "apps/driver-app/src/app/terms/page.tsx",
       "type": "file",
       "status": "WIRED"
     },
@@ -2818,6 +2896,20 @@
       "type": "table"
     },
     {
+      "id": "api:driver-app:/api/upload",
+      "label": "Driver App /api/upload",
+      "type": "api-route",
+      "status": "PARTIAL",
+      "file": "apps/driver-app/src/app/api/upload/route.ts",
+      "methods": "POST"
+    },
+    {
+      "id": "file:apps/driver-app/src/app/api/upload/route.ts",
+      "label": "apps/driver-app/src/app/api/upload/route.ts",
+      "type": "file",
+      "status": "PARTIAL"
+    },
+    {
       "id": "table:${accountSid}:${authToken}",
       "label": "${accountSid}:${authToken}",
       "type": "table"
@@ -2870,11 +2962,6 @@
     {
       "id": "table:driver_earnings",
       "label": "driver_earnings",
-      "type": "table"
-    },
-    {
-      "id": "table:driver_profiles",
-      "label": "driver_profiles",
       "type": "table"
     },
     {
@@ -4936,6 +5023,30 @@
     },
     {
       "from": "app:chef-admin",
+      "to": "route:chef-admin:/auth/forgot-password",
+      "label": "owns route",
+      "status": "PARTIAL"
+    },
+    {
+      "from": "route:chef-admin:/auth/forgot-password",
+      "to": "file:apps/chef-admin/src/app/auth/forgot-password/page.tsx",
+      "label": "implemented by",
+      "status": "PARTIAL"
+    },
+    {
+      "from": "route:chef-admin:/auth/forgot-password",
+      "to": "package:@ridendine/auth",
+      "label": "imports",
+      "status": "PARTIAL"
+    },
+    {
+      "from": "route:chef-admin:/auth/forgot-password",
+      "to": "package:@ridendine/ui",
+      "label": "imports",
+      "status": "PARTIAL"
+    },
+    {
+      "from": "app:chef-admin",
       "to": "route:chef-admin:/auth/login",
       "label": "owns route",
       "status": "PARTIAL"
@@ -5290,6 +5401,36 @@
     },
     {
       "from": "app:chef-admin",
+      "to": "route:chef-admin:/dashboard/storefront/setup",
+      "label": "owns route",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:chef-admin:/dashboard/storefront/setup",
+      "to": "file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx",
+      "label": "implemented by",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:chef-admin:/dashboard/storefront/setup",
+      "to": "table:chef_profiles",
+      "label": "reads/writes table",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:chef-admin:/dashboard/storefront/setup",
+      "to": "package:@ridendine/db",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:chef-admin:/dashboard/storefront/setup",
+      "to": "package:@ridendine/ui",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "app:chef-admin",
       "to": "route:chef-admin:/",
       "label": "owns route",
       "status": "WIRED"
@@ -5297,6 +5438,30 @@
     {
       "from": "route:chef-admin:/",
       "to": "file:apps/chef-admin/src/app/page.tsx",
+      "label": "implemented by",
+      "status": "WIRED"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "route:chef-admin:/privacy",
+      "label": "owns route",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:chef-admin:/privacy",
+      "to": "file:apps/chef-admin/src/app/privacy/page.tsx",
+      "label": "implemented by",
+      "status": "WIRED"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "route:chef-admin:/terms",
+      "label": "owns route",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:chef-admin:/terms",
+      "to": "file:apps/chef-admin/src/app/terms/page.tsx",
       "label": "implemented by",
       "status": "WIRED"
     },
@@ -5434,6 +5599,18 @@
     },
     {
       "from": "app:driver-app",
+      "to": "route:driver-app:/privacy",
+      "label": "owns route",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:driver-app:/privacy",
+      "to": "file:apps/driver-app/src/app/privacy/page.tsx",
+      "label": "implemented by",
+      "status": "WIRED"
+    },
+    {
+      "from": "app:driver-app",
       "to": "route:driver-app:/profile",
       "label": "owns route",
       "status": "WIRED"
@@ -5472,6 +5649,18 @@
       "from": "route:driver-app:/settings",
       "to": "package:@ridendine/db",
       "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "route:driver-app:/terms",
+      "label": "owns route",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:driver-app:/terms",
+      "to": "file:apps/driver-app/src/app/terms/page.tsx",
+      "label": "implemented by",
       "status": "WIRED"
     },
     {
@@ -8865,6 +9054,42 @@
       "status": "WIRED"
     },
     {
+      "from": "app:driver-app",
+      "to": "api:driver-app:/api/upload",
+      "label": "owns API",
+      "status": "PARTIAL"
+    },
+    {
+      "from": "api:driver-app:/api/upload",
+      "to": "file:apps/driver-app/src/app/api/upload/route.ts",
+      "label": "implemented by",
+      "status": "PARTIAL"
+    },
+    {
+      "from": "api:driver-app:/api/upload",
+      "to": "package:@ridendine/db",
+      "label": "imports",
+      "status": "PARTIAL"
+    },
+    {
+      "from": "api:driver-app:/api/upload",
+      "to": "package:@ridendine/utils",
+      "label": "imports",
+      "status": "PARTIAL"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/auth/forgot-password/page.tsx",
+      "to": "file:apps/chef-admin/src/app/auth/login/page.tsx",
+      "label": "href: /auth/login",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/auth/login/page.tsx",
+      "to": "file:apps/chef-admin/src/app/auth/forgot-password/page.tsx",
+      "label": "href: /auth/forgot-password",
+      "status": "WORKING"
+    },
+    {
       "from": "file:apps/chef-admin/src/app/auth/login/page.tsx",
       "to": "file:apps/chef-admin/src/app/auth/signup/page.tsx",
       "label": "href: /auth/signup",
@@ -8892,6 +9117,18 @@
       "from": "file:apps/chef-admin/src/app/auth/signup/page.tsx",
       "to": "file:apps/chef-admin/src/app/dashboard/storefront/page.tsx",
       "label": "router.push: /dashboard/storefront",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/auth/signup/page.tsx",
+      "to": "file:apps/chef-admin/src/app/privacy/page.tsx",
+      "label": "href: /privacy",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/auth/signup/page.tsx",
+      "to": "file:apps/chef-admin/src/app/terms/page.tsx",
+      "label": "href: /terms",
       "status": "WORKING"
     },
     {
@@ -8931,6 +9168,12 @@
       "status": "WORKING"
     },
     {
+      "from": "file:apps/chef-admin/src/app/dashboard/page.tsx",
+      "to": "file:apps/web/src/app/chefs/[slug]/page.tsx",
+      "label": "href: https://ridendine.ca/chefs/${storefront.slug}",
+      "status": "WORKING_DYNAMIC"
+    },
+    {
       "from": "file:apps/chef-admin/src/app/dashboard/payouts/page.tsx",
       "to": "file:apps/chef-admin/src/app/api/payouts/request/route.ts",
       "label": "fetch: /api/payouts/request",
@@ -8949,6 +9192,30 @@
       "status": "WORKING"
     },
     {
+      "from": "file:apps/chef-admin/src/app/dashboard/storefront/page.tsx",
+      "to": "file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx",
+      "label": "href: /dashboard/storefront/setup",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx",
+      "to": "file:apps/chef-admin/src/app/auth/login/page.tsx",
+      "label": "href: /auth/login?redirect=/dashboard/storefront/setup",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx",
+      "to": "file:apps/chef-admin/src/app/auth/signup/page.tsx",
+      "label": "href: /auth/signup",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx",
+      "to": "file:apps/chef-admin/src/app/dashboard/storefront/page.tsx",
+      "label": "redirect: /dashboard/storefront",
+      "status": "WORKING"
+    },
+    {
       "from": "file:apps/chef-admin/src/app/error.tsx",
       "to": "file:apps/chef-admin/src/app/dashboard/page.tsx",
       "label": "href: /dashboard",
@@ -8958,6 +9225,30 @@
       "from": "file:apps/chef-admin/src/app/page.tsx",
       "to": "file:apps/chef-admin/src/app/dashboard/page.tsx",
       "label": "redirect: /dashboard",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/privacy/page.tsx",
+      "to": "file:apps/chef-admin/src/app/auth/signup/page.tsx",
+      "label": "href: /auth/signup",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/privacy/page.tsx",
+      "to": "file:apps/web/src/app/privacy/page.tsx",
+      "label": "href: https://ridendine.ca/privacy",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/terms/page.tsx",
+      "to": "file:apps/chef-admin/src/app/auth/signup/page.tsx",
+      "label": "href: /auth/signup",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/terms/page.tsx",
+      "to": "file:apps/web/src/app/terms/page.tsx",
+      "label": "href: https://ridendine.ca/terms",
       "status": "WORKING"
     },
     {
@@ -9657,6 +9948,18 @@
       "status": "WORKING"
     },
     {
+      "from": "file:apps/driver-app/src/app/auth/signup/page.tsx",
+      "to": "file:apps/driver-app/src/app/privacy/page.tsx",
+      "label": "href: /privacy",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/driver-app/src/app/auth/signup/page.tsx",
+      "to": "file:apps/driver-app/src/app/terms/page.tsx",
+      "label": "href: /terms",
+      "status": "WORKING"
+    },
+    {
       "from": "file:apps/driver-app/src/app/components/DriverDashboard.tsx",
       "to": "file:apps/driver-app/src/app/api/driver/presence/route.ts",
       "label": "fetch: /api/driver/presence",
@@ -9699,6 +10002,12 @@
       "status": "WORKING_DYNAMIC"
     },
     {
+      "from": "file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx",
+      "to": "file:apps/driver-app/src/app/api/upload/route.ts",
+      "label": "fetch: /api/upload",
+      "status": "WORKING"
+    },
+    {
       "from": "file:apps/driver-app/src/app/delivery/[id]/page.tsx",
       "to": "file:apps/driver-app/src/app/auth/login/page.tsx",
       "label": "redirect: /auth/login",
@@ -9732,6 +10041,18 @@
       "from": "file:apps/driver-app/src/app/page.tsx",
       "to": "file:apps/driver-app/src/app/auth/login/page.tsx",
       "label": "redirect: /auth/login",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/driver-app/src/app/privacy/page.tsx",
+      "to": "file:apps/driver-app/src/app/auth/signup/page.tsx",
+      "label": "href: /auth/signup",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/driver-app/src/app/privacy/page.tsx",
+      "to": "file:apps/web/src/app/privacy/page.tsx",
+      "label": "href: https://ridendine.ca/privacy",
       "status": "WORKING"
     },
     {
@@ -9786,6 +10107,18 @@
       "from": "file:apps/driver-app/src/app/settings/settings-client.tsx",
       "to": "file:apps/driver-app/src/app/profile/page.tsx",
       "label": "href: /profile",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/driver-app/src/app/terms/page.tsx",
+      "to": "file:apps/driver-app/src/app/auth/signup/page.tsx",
+      "label": "href: /auth/signup",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/driver-app/src/app/terms/page.tsx",
+      "to": "file:apps/web/src/app/terms/page.tsx",
+      "label": "href: https://ridendine.ca/terms",
       "status": "WORKING"
     },
     {

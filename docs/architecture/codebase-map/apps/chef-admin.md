@@ -11,9 +11,9 @@
 
 ## Status Summary
 
-- Page routes: 13 total, 9 WIRED, 4 PARTIAL, 0 MISSING.
+- Page routes: 17 total, 12 WIRED, 5 PARTIAL, 0 MISSING.
 - API route files: 14 total, 3 WIRED, 10 PARTIAL.
-- Internal link/API references: 34 total, 4 BROKEN, 1 UNKNOWN_DYNAMIC.
+- Internal link/API references: 42 total, 0 BROKEN, 0 UNKNOWN_DYNAMIC.
 
 ## Standalone App Diagram
 
@@ -24,7 +24,7 @@ flowchart TB
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   App["Chef Admin<br/>chef.ridendine.ca"]:::app
-  Pages["13 pages"]:::api
+  Pages["17 pages"]:::api
   APIs["14 API route files"]:::api
   Shared["Shared packages"]:::data
   DB["Supabase tables/RPCs"]:::data
@@ -40,6 +40,7 @@ flowchart TB
 
 | Status | Route | Page file | Layout | Auth | Tables | APIs called | Components |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| PARTIAL | `/auth/forgot-password` | [apps/chef-admin/src/app/auth/forgot-password/page.tsx](../../../../apps/chef-admin/src/app/auth/forgot-password/page.tsx) | [apps/chef-admin/src/app/auth/layout.tsx](../../../../apps/chef-admin/src/app/auth/layout.tsx) | Public | None detected | None detected | `Button`, `Input` |
 | PARTIAL | `/auth/login` | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) | [apps/chef-admin/src/app/auth/layout.tsx](../../../../apps/chef-admin/src/app/auth/layout.tsx) | Public | None detected | None detected | `Button`, `Input` |
 | PARTIAL | `/auth/signup` | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | [apps/chef-admin/src/app/auth/layout.tsx](../../../../apps/chef-admin/src/app/auth/layout.tsx) | Public | None detected | `/api/auth/signup` | `Button`, `Input`, `PasswordStrength` |
 | PARTIAL | `/dashboard/analytics` | [apps/chef-admin/src/app/dashboard/analytics/page.tsx](../../../../apps/chef-admin/src/app/dashboard/analytics/page.tsx) | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../../apps/chef-admin/src/app/dashboard/layout.tsx) | Undetected | None detected | `/api/analytics?period=${p}` | `Card` |
@@ -52,7 +53,10 @@ flowchart TB
 | PARTIAL | `/dashboard/reviews` | [apps/chef-admin/src/app/dashboard/reviews/page.tsx](../../../../apps/chef-admin/src/app/dashboard/reviews/page.tsx) | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../../apps/chef-admin/src/app/dashboard/layout.tsx) | Detected | `chef_profiles`, `chef_storefronts`, `reviews` | None detected | `Badge`, `Button`, `Card` |
 | WIRED | `/dashboard/settings` | [apps/chef-admin/src/app/dashboard/settings/page.tsx](../../../../apps/chef-admin/src/app/dashboard/settings/page.tsx) | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../../apps/chef-admin/src/app/dashboard/layout.tsx) | Detected | None detected | None detected | `@/components/profile/profile-form`, `@/components/settings/notification-preferences` |
 | WIRED | `/dashboard/storefront` | [apps/chef-admin/src/app/dashboard/storefront/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/page.tsx) | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../../apps/chef-admin/src/app/dashboard/layout.tsx) | Detected | `chef_profiles` | None detected | `@/components/storefront/storefront-form`, `@/components/storefront/storefront-setup-form`, `EmptyState` |
+| WIRED | `/dashboard/storefront/setup` | [apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx) | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../../apps/chef-admin/src/app/dashboard/layout.tsx) | Detected | `chef_profiles` | None detected | `@/components/storefront/storefront-setup-form`, `EmptyState` |
 | WIRED | `/` | [apps/chef-admin/src/app/page.tsx](../../../../apps/chef-admin/src/app/page.tsx) | [apps/chef-admin/src/app/layout.tsx](../../../../apps/chef-admin/src/app/layout.tsx) | Public | None detected | None detected | None detected |
+| WIRED | `/privacy` | [apps/chef-admin/src/app/privacy/page.tsx](../../../../apps/chef-admin/src/app/privacy/page.tsx) | [apps/chef-admin/src/app/layout.tsx](../../../../apps/chef-admin/src/app/layout.tsx) | Public | None detected | None detected | None detected |
+| WIRED | `/terms` | [apps/chef-admin/src/app/terms/page.tsx](../../../../apps/chef-admin/src/app/terms/page.tsx) | [apps/chef-admin/src/app/layout.tsx](../../../../apps/chef-admin/src/app/layout.tsx) | Public | None detected | None detected | None detected |
 
 ## APIs
 
@@ -75,10 +79,4 @@ flowchart TB
 
 ## Broken Or Unproven Links
 
-| Status | Source file | Kind | Target | Notes |
-| --- | --- | --- | --- | --- |
-| BROKEN | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) | href | `/auth/forgot-password` | No matching page route file detected |
-| BROKEN | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href | `/privacy` | No matching page route file detected |
-| BROKEN | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) | href | `/terms` | No matching page route file detected |
-| BROKEN | [apps/chef-admin/src/app/dashboard/storefront/page.tsx](../../../../apps/chef-admin/src/app/dashboard/storefront/page.tsx) | href | `/dashboard/storefront/setup` | No matching page route file detected |
-| UNKNOWN_DYNAMIC | [apps/chef-admin/src/app/dashboard/page.tsx](../../../../apps/chef-admin/src/app/dashboard/page.tsx) | href | `/chefs/${storefront.slug}` | No matching page route file detected |
+No broken or unknown dynamic internal links detected by the static scanner.

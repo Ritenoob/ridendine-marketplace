@@ -100,17 +100,12 @@ flowchart TB
   Page --> Component1
   Component2["Component/import<br/>PasswordStrength"]
   Page --> Component2
-  Gap0["BROKEN<br/>/privacy"]
-  Page -. review .-> Gap0
-  Gap1["BROKEN<br/>/terms"]
-  Page -. review .-> Gap1
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
   class Api0 api
-  class Gap0,Gap1 warn
 ```
 
 ### Actual Page Information
@@ -141,8 +136,8 @@ flowchart TB
 | Status | Kind | Target | Resolved app | Resolved file | Notes |
 | --- | --- | --- | --- | --- | --- |
 | WORKING | href | `/auth/login` | Driver App | [apps/driver-app/src/app/auth/login/page.tsx](../../../../apps/driver-app/src/app/auth/login/page.tsx) | href resolves to page /auth/login |
-| BROKEN | href | `/privacy` | Driver App |  | No matching page route file detected |
-| BROKEN | href | `/terms` | Driver App |  | No matching page route file detected |
+| WORKING | href | `/privacy` | Driver App | [apps/driver-app/src/app/privacy/page.tsx](../../../../apps/driver-app/src/app/privacy/page.tsx) | href resolves to page /privacy |
+| WORKING | href | `/terms` | Driver App | [apps/driver-app/src/app/terms/page.tsx](../../../../apps/driver-app/src/app/terms/page.tsx) | href resolves to page /terms |
 
 ### API Calls From This Page
 
@@ -155,10 +150,11 @@ flowchart TB
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
 | Driver App | [apps/driver-app/src/app/auth/login/page.tsx](../../../../apps/driver-app/src/app/auth/login/page.tsx) | href | `/auth/signup` | WORKING |
+| Driver App | [apps/driver-app/src/app/privacy/page.tsx](../../../../apps/driver-app/src/app/privacy/page.tsx) | href | `/auth/signup` | WORKING |
+| Driver App | [apps/driver-app/src/app/terms/page.tsx](../../../../apps/driver-app/src/app/terms/page.tsx) | href | `/auth/signup` | WORKING |
 
 ### Review Notes
 
-- Broken static references: `/privacy`, `/terms`.
 - Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
 
 
@@ -439,6 +435,73 @@ No outgoing API/fetch calls detected.
 
 ---
 
+## Driver App: `/privacy`
+
+### Page Diagram
+
+```mermaid
+flowchart TB
+  Page["Driver App<br/>/privacy"]
+  Layout["Layout<br/>apps/driver-app/src/app/layout.tsx"]
+  File["Page file<br/>apps/driver-app/src/app/privacy/page.tsx"]
+  Auth["Auth<br/>Public"]
+  Page --> Layout
+  Page --> File
+  Page --> Auth
+  classDef page fill:#111827,stroke:#111827,color:#ffffff
+  classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
+  classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
+  class Page page
+```
+
+### Actual Page Information
+
+| Field | Value |
+| --- | --- |
+| App | Driver App |
+| Domain | `driver.ridendine.ca` |
+| Route | `/privacy` |
+| Status | `WIRED` |
+| Auth | Public |
+| Page file | [apps/driver-app/src/app/privacy/page.tsx](../../../../apps/driver-app/src/app/privacy/page.tsx) |
+| Layout | [apps/driver-app/src/app/layout.tsx](../../../../apps/driver-app/src/app/layout.tsx) |
+| Data source summary | Static/client component/undetected |
+
+### Data And API Wiring
+
+| Type | Details |
+| --- | --- |
+| DB tables/RPCs | None detected |
+| Fetch/API calls | None detected |
+| Shared packages | None detected |
+| Components/imports | None detected |
+| Environment vars | None detected |
+
+### Navigation And Links
+
+| Status | Kind | Target | Resolved app | Resolved file | Notes |
+| --- | --- | --- | --- | --- | --- |
+| WORKING | href | `/auth/signup` | Driver App | [apps/driver-app/src/app/auth/signup/page.tsx](../../../../apps/driver-app/src/app/auth/signup/page.tsx) | href resolves to page /auth/signup |
+| WORKING | href | `https://ridendine.ca/privacy` | Customer Web | [apps/web/src/app/privacy/page.tsx](../../../../apps/web/src/app/privacy/page.tsx) | href resolves to page /privacy |
+
+### API Calls From This Page
+
+No outgoing API/fetch calls detected.
+
+### Incoming References
+
+| Source app | Source file | Kind | Target | Status |
+| --- | --- | --- | --- | --- |
+| Driver App | [apps/driver-app/src/app/auth/signup/page.tsx](../../../../apps/driver-app/src/app/auth/signup/page.tsx) | href | `/privacy` | WORKING |
+
+### Review Notes
+
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
+
+
+---
+
 ## Driver App: `/profile`
 
 ### Page Diagram
@@ -563,6 +626,73 @@ No outgoing API/fetch calls detected.
 | --- | --- | --- | --- | --- |
 | Driver App | [apps/driver-app/src/app/earnings/components/EarningsView.tsx](../../../../apps/driver-app/src/app/earnings/components/EarningsView.tsx) | href | `/settings` | WORKING |
 | Driver App | [apps/driver-app/src/app/profile/components/ProfileView.tsx](../../../../apps/driver-app/src/app/profile/components/ProfileView.tsx) | href | `/settings` | WORKING |
+
+### Review Notes
+
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
+
+
+---
+
+## Driver App: `/terms`
+
+### Page Diagram
+
+```mermaid
+flowchart TB
+  Page["Driver App<br/>/terms"]
+  Layout["Layout<br/>apps/driver-app/src/app/layout.tsx"]
+  File["Page file<br/>apps/driver-app/src/app/terms/page.tsx"]
+  Auth["Auth<br/>Public"]
+  Page --> Layout
+  Page --> File
+  Page --> Auth
+  classDef page fill:#111827,stroke:#111827,color:#ffffff
+  classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
+  classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
+  class Page page
+```
+
+### Actual Page Information
+
+| Field | Value |
+| --- | --- |
+| App | Driver App |
+| Domain | `driver.ridendine.ca` |
+| Route | `/terms` |
+| Status | `WIRED` |
+| Auth | Public |
+| Page file | [apps/driver-app/src/app/terms/page.tsx](../../../../apps/driver-app/src/app/terms/page.tsx) |
+| Layout | [apps/driver-app/src/app/layout.tsx](../../../../apps/driver-app/src/app/layout.tsx) |
+| Data source summary | Static/client component/undetected |
+
+### Data And API Wiring
+
+| Type | Details |
+| --- | --- |
+| DB tables/RPCs | None detected |
+| Fetch/API calls | None detected |
+| Shared packages | None detected |
+| Components/imports | None detected |
+| Environment vars | None detected |
+
+### Navigation And Links
+
+| Status | Kind | Target | Resolved app | Resolved file | Notes |
+| --- | --- | --- | --- | --- | --- |
+| WORKING | href | `/auth/signup` | Driver App | [apps/driver-app/src/app/auth/signup/page.tsx](../../../../apps/driver-app/src/app/auth/signup/page.tsx) | href resolves to page /auth/signup |
+| WORKING | href | `https://ridendine.ca/terms` | Customer Web | [apps/web/src/app/terms/page.tsx](../../../../apps/web/src/app/terms/page.tsx) | href resolves to page /terms |
+
+### API Calls From This Page
+
+No outgoing API/fetch calls detected.
+
+### Incoming References
+
+| Source app | Source file | Kind | Target | Status |
+| --- | --- | --- | --- | --- |
+| Driver App | [apps/driver-app/src/app/auth/signup/page.tsx](../../../../apps/driver-app/src/app/auth/signup/page.tsx) | href | `/terms` | WORKING |
 
 ### Review Notes
 

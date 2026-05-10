@@ -222,7 +222,6 @@
 "app:packages","table:support_tickets","uses table","mapped"
 "app:packages","table:admin_notes","uses table","mapped"
 "app:packages","table:delivery_events","uses table","mapped"
-"app:packages","table:driver_profiles","uses table","review"
 "app:packages","table:domain_events","uses table","mapped"
 "app:packages","table:sla_timers","uses table","mapped"
 "app:packages","table:kitchen_queue_entries","uses table","mapped"

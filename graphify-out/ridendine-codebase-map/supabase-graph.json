@@ -506,11 +506,6 @@
       "type": "supabase_rpc"
     },
     {
-      "id": "table:driver_profiles",
-      "label": "driver_profiles",
-      "type": "missing_table_reference"
-    },
-    {
       "id": "rpc:public.get_ops_dashboard_stats",
       "label": "public.get_ops_dashboard_stats",
       "type": "missing_rpc_reference"
@@ -1864,12 +1859,6 @@
       "to": "table:delivery_events",
       "label": "uses table",
       "status": "mapped"
-    },
-    {
-      "from": "app:packages",
-      "to": "table:driver_profiles",
-      "label": "uses table",
-      "status": "review"
     },
     {
       "from": "app:packages",
