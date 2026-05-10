@@ -103,9 +103,10 @@ describe('LiveOrderTracker', () => {
 
   it('shows four-stage labels for public flow', () => {
     render(<LiveOrderTracker {...defaultProps} />);
-    expect(screen.getAllByText('Order placed').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Order Placed').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Accepted').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Preparing').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('On the way').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Picked Up').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('Delivered').length).toBeGreaterThanOrEqual(1);
   });
 
@@ -114,7 +115,7 @@ describe('LiveOrderTracker', () => {
       ...streamBase,
       stage: 'cancelled',
     }));
-    render(<LiveOrderTracker {...defaultProps} initialPublicStage="cancelled" />);
+    render(<LiveOrderTracker {...defaultProps} initialPublicStage="cancelled" initialStatus="cancelled" />);
     expect(screen.getByText('This order was cancelled.')).toBeInTheDocument();
   });
 });

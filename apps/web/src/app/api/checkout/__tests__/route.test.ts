@@ -17,6 +17,11 @@ const mockAuditLog = jest.fn();
 const mockGetCustomerActorContext = jest.fn();
 const mockEvaluateRateLimit = jest.fn();
 const mockIsWithinDeliveryZone = jest.fn();
+const mockGetOrCreateStripeCustomer = jest.fn();
+const mockCalculateDeliveryFee = jest.fn();
+const mockEstimateDistance = jest.fn();
+const mockGetSurgeMultiplier = jest.fn();
+const mockEarnPoints = jest.fn();
 
 jest.mock('@ridendine/db', () => ({
   createAdminClient: () => mockCreateAdminClient(),
@@ -27,26 +32,16 @@ jest.mock('@ridendine/db', () => ({
 jest.mock('@ridendine/engine', () => ({
   getStripeClient: () => mockGetStripeClient(),
   assertStripeConfigured: () => mockAssertStripeConfigured(),
-  getOrCreateStripeCustomer: jest.fn().mockResolvedValue('cus_test'),
+  getOrCreateStripeCustomer: (...args: unknown[]) => mockGetOrCreateStripeCustomer(...args),
   evaluateCheckoutRisk: (...args: unknown[]) => mockEvaluateCheckoutRisk(...args),
   isWithinDeliveryZone: (...args: unknown[]) => mockIsWithinDeliveryZone(...args),
-  estimateDistance: jest.fn().mockReturnValue(0),
-  getSurgeMultiplier: jest.fn().mockResolvedValue(1),
-  createLoyaltyService: jest.fn(() => ({
-    earnPoints: jest.fn().mockResolvedValue(undefined),
-  })),
+  calculateDeliveryFee: (...args: unknown[]) => mockCalculateDeliveryFee(...args),
+  estimateDistance: (...args: unknown[]) => mockEstimateDistance(...args),
+  getSurgeMultiplier: (...args: unknown[]) => mockGetSurgeMultiplier(...args),
+  createLoyaltyService: () => ({ earnPoints: (...args: unknown[]) => mockEarnPoints(...args) }),
   BASE_DELIVERY_FEE: 500,
   SERVICE_FEE_PERCENT: 8,
   HST_RATE: 13,
-  calculateDeliveryFee: jest.fn(() => ({
-    feeCents: 500,
-    breakdown: {
-      baseFee: 500,
-      distanceFee: 0,
-      smallOrderSurcharge: 0,
-      surgeMultiplier: 1,
-    },
-  })),
 }));
 
 jest.mock('@/lib/engine', () => ({
@@ -202,6 +197,7 @@ function createAdminClientMock() {
         select: () => ({
           eq: () => ({
             single: async () => ({ data: null, error: null }),
+            maybeSingle: async () => ({ data: null, error: null }),
           }),
         }),
       };
@@ -234,6 +230,19 @@ describe('POST /api/checkout Phase C hardening', () => {
     });
     mockEvaluateCheckoutRisk.mockReturnValue({ allowed: true, reasons: [], auditPayload: {} });
     mockIsWithinDeliveryZone.mockResolvedValue(true);
+    mockGetOrCreateStripeCustomer.mockResolvedValue(null);
+    mockCalculateDeliveryFee.mockReturnValue({
+      feeCents: 500,
+      breakdown: {
+        baseFee: 500,
+        distanceFee: 0,
+        smallOrderSurcharge: 0,
+        surgeMultiplier: 1,
+      },
+    });
+    mockEstimateDistance.mockReturnValue(1.2);
+    mockGetSurgeMultiplier.mockResolvedValue(1.0);
+    mockEarnPoints.mockResolvedValue(undefined);
     mockValidateReadiness.mockResolvedValue({ ok: true });
     mockCreateOrder.mockResolvedValue({
       success: true,

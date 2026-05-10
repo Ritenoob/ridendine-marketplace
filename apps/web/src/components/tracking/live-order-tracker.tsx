@@ -110,8 +110,8 @@ function StepIndicator({ currentIndex, terminal }: { currentIndex: number; termi
                 i < currentIndex
                   ? 'bg-green-500 text-white'
                   : i === currentIndex
-                    ? 'bg-[#E85D26] text-white'
-                    : 'bg-gray-200 text-gray-500'
+                  ? 'bg-[#E85D26] text-white'
+                  : 'bg-gray-200 text-gray-500'
               }`}
             >
               {i < currentIndex ? '✓' : i + 1}

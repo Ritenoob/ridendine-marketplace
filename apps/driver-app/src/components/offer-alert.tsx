@@ -136,7 +136,7 @@ function OfferStats({
   );
 }
 
-export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertProps) {
+export function OfferAlert({ driverId, isOnline }: OfferAlertProps) {
   const [offer, setOffer] = useState<DeliveryOffer | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [responding, setResponding] = useState(false);
