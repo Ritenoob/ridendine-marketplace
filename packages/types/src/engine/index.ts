@@ -354,6 +354,7 @@ export const AuditAction = {
   PAYOUT: 'payout',
   LOGIN: 'login',
   LOGOUT: 'logout',
+  EXPORT: 'export',
 } as const;
 
 export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];

@@ -469,6 +469,33 @@ export class PlatformWorkflowEngine {
       };
     }
 
+    // C.4 / A7 — refuse to publish a storefront whose kitchen still has the
+    // placeholder address inserted by chef-admin's onboarding shortcut.
+    // ETA + delivery-zone math depends on a real address.
+    if (storefront.kitchen_id) {
+      const { data: kitchen } = await this.client
+        .from('chef_kitchens')
+        .select('address_line1, postal_code, lat, lng')
+        .eq('id', storefront.kitchen_id)
+        .single();
+      const isPlaceholder =
+        !kitchen ||
+        kitchen.address_line1 === 'To be updated' ||
+        kitchen.postal_code === 'V0V 0V0' ||
+        kitchen.lat == null ||
+        kitchen.lng == null;
+      if (isPlaceholder) {
+        return {
+          success: false,
+          error: {
+            code: 'KITCHEN_ADDRESS_INCOMPLETE',
+            message:
+              'Kitchen address is missing or still the onboarding placeholder. Chef must update kitchen address before publish.',
+          },
+        };
+      }
+    }
+
     if (storefront.is_active) {
       return { success: true, data: storefront };
     }

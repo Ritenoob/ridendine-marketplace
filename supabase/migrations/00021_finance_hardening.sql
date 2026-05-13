@@ -3,6 +3,24 @@
 -- Additive only.
 -- ==========================================
 
+-- Drift repair (2026-05-13): chef_payouts is declared in 00004 with IF NOT EXISTS
+-- but observed to be missing on at least one environment (the live ref). Re-declaring
+-- it defensively here so this migration is self-contained. No-op when table exists.
+CREATE TABLE IF NOT EXISTS chef_payouts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  chef_id UUID NOT NULL REFERENCES chef_profiles(id) ON DELETE CASCADE,
+  stripe_transfer_id TEXT,
+  amount INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  period_start TIMESTAMPTZ NOT NULL,
+  period_end TIMESTAMPTZ NOT NULL,
+  orders_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  paid_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_chef_payouts_chef_id ON chef_payouts(chef_id);
+CREATE INDEX IF NOT EXISTS idx_chef_payouts_status ON chef_payouts(status);
+
 -- Chef payout runs linkage (ops batch payouts)
 ALTER TABLE chef_payouts
   ADD COLUMN IF NOT EXISTS payout_run_id UUID REFERENCES payout_runs(id) ON DELETE SET NULL;

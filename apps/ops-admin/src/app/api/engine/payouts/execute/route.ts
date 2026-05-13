@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { AuditAction } from '@ridendine/types';
+import { createAdminClient } from '@ridendine/db';
 import { getEngine, getOpsActorContext, guardPlatformApi, successResponse, errorResponse, finalizeOpsActor } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -20,9 +21,30 @@ export async function POST(request: NextRequest) {
     return errorResponse('INVALID_INPUT', 'periodStart and periodEnd required', 400);
   }
 
+  const runType = body.type === 'driver' ? 'driver' : 'chef';
+
+  // C.5 / O2 — refuse to start a second concurrent run for this rail.
+  // The migration 00032 partial unique index is the ironclad guard; this is
+  // the friendly 409 the UI can show instead of a generic DB error.
+  const adminClient = createAdminClient();
+  const { data: inProgress } = await adminClient
+    .from('payout_runs')
+    .select('id')
+    .eq('run_type', runType)
+    .eq('status', 'processing')
+    .limit(1)
+    .maybeSingle();
+  if (inProgress) {
+    return errorResponse(
+      'PAYOUT_RUN_IN_PROGRESS',
+      `A ${runType} payout run is already processing (id=${inProgress.id}). Wait for it to finish before triggering another.`,
+      409
+    );
+  }
+
   const engine = getEngine();
   const result =
-    body.type === 'driver'
+    runType === 'driver'
       ? await engine.payoutAutomation.executeDriverRun({
           periodStart: body.periodStart,
           periodEnd: body.periodEnd,
