@@ -111,7 +111,11 @@ describe('DriverMatchingService', () => {
           return {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockResolvedValue({ data: driversData, error: null }),
+                eq: vi.fn().mockReturnValue({
+                  // findEligibleDrivers added a last_location_at freshness filter
+                  // via .gte() — must be chained at the end of the call sequence.
+                  gte: vi.fn().mockResolvedValue({ data: driversData, error: null }),
+                }),
               }),
             }),
           };
@@ -156,6 +160,7 @@ describe('DriverMatchingService', () => {
         status: 'online',
         current_lat: lat,
         current_lng: lng,
+        last_location_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
     };

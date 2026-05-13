@@ -90,6 +90,15 @@ export class DriverMatchingService {
     maxRadiusKm = 10,
     filterByLocation = true
   ): Promise<EligibleDriver[]> {
+    // REVIEW_2026-05-13 finding E4 — only consider drivers whose presence has
+    // been refreshed in the last 90 seconds. The driver app posts location
+    // every 15s while online, so a stale `last_location_at` means the tab is
+    // backgrounded or closed. Without this filter we would assign deliveries
+    // to "ghost" drivers and the order would sit in DISPATCH_PENDING with no
+    // acceptance.
+    const PRESENCE_TTL_SECONDS = 90;
+    const freshnessCutoff = new Date(Date.now() - PRESENCE_TTL_SECONDS * 1000).toISOString();
+
     const { data: drivers, error } = await this.client
       .from('drivers')
       .select(`
@@ -104,11 +113,13 @@ export class DriverMatchingService {
           status,
           current_lat,
           current_lng,
+          last_location_at,
           updated_at
         )
       `)
       .eq('status', 'approved')
-      .eq('driver_presence.status', 'online');
+      .eq('driver_presence.status', 'online')
+      .gte('driver_presence.last_location_at', freshnessCutoff);
 
     if (error || !drivers) return [];
 
