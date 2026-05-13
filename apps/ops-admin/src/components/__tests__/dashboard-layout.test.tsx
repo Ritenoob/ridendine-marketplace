@@ -10,6 +10,14 @@ jest.mock('@ridendine/db', () => ({
   createBrowserClient: () => null,
 }));
 
+// DashboardLayout's UserMenu reads the auth context for email/sign-out.
+jest.mock('@ridendine/auth', () => ({
+  useAuthContext: () => ({
+    user: { email: 'ops@ridendine.ca', user_metadata: { display_name: 'Ops' } },
+    signOut: jest.fn().mockResolvedValue(undefined),
+  }),
+}));
+
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => <img {...props} />,

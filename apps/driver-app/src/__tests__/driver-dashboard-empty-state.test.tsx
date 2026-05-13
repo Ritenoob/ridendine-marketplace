@@ -41,6 +41,16 @@ jest.mock('next/image', () => {
   return Img;
 });
 
+// Mock next/navigation since DriverDashboard now uses useRouter for sign-out.
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+}));
+
+// Mock @ridendine/auth since DriverDashboard now uses useAuthContext for sign-out.
+jest.mock('@ridendine/auth', () => ({
+  useAuthContext: () => ({ user: null, signOut: jest.fn().mockResolvedValue(undefined) }),
+}));
+
 // Mock OfferAlert so it doesn't make real network calls
 jest.mock('@/components/offer-alert', () => ({
   OfferAlert: () => null,

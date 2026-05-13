@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { useAuthContext } from '@ridendine/auth';
 import {
   Activity,
   Package,
@@ -34,6 +35,7 @@ import {
   Plus,
   X,
   Menu,
+  LogOut,
 } from 'lucide-react';
 import { OpsAlerts } from './ops-alerts';
 import { GlobalSearch } from './global-search';
@@ -258,6 +260,65 @@ function QuickCreateMenu() {
   );
 }
 
+function UserMenu() {
+  const { user, signOut } = useAuthContext();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [open]);
+
+  const handleSignOut = async () => {
+    setOpen(false);
+    await signOut();
+    router.push('/auth/login');
+  };
+
+  const initials = (user?.email?.slice(0, 2) || 'OP').toUpperCase();
+  const displayName =
+    (user?.user_metadata?.display_name as string | undefined) ||
+    user?.email?.split('@')[0] ||
+    'Ops';
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 rounded-md border border-white/5 bg-opsPanel px-2 py-1.5 text-xs text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
+        aria-label="Open user menu"
+      >
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E85D26] text-[10px] font-semibold text-white">
+          {initials}
+        </span>
+        <span className="hidden max-w-[160px] truncate sm:inline">{displayName}</span>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1.5 w-56 overflow-hidden rounded-lg border border-gray-700 bg-opsPanel shadow-xl">
+          <div className="border-b border-white/5 px-4 py-3">
+            <p className="truncate text-sm font-medium text-white">{displayName}</p>
+            <p className="truncate text-xs text-gray-400">{user?.email}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-red-400 transition-colors hover:bg-white/5 hover:text-red-300"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface DashboardLayoutProps {
   children: ReactNode;
 }
@@ -388,6 +449,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </span>
               <span className="hidden text-xs font-medium text-green-400 sm:inline">Live</span>
             </div>
+            <UserMenu />
           </div>
         </header>
 

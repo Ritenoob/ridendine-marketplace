@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useAuthContext } from '@ridendine/auth';
 import type { Driver, Delivery } from '@ridendine/db';
 import { OfferAlert } from '@/components/offer-alert';
 
@@ -35,10 +37,17 @@ const NAV_ITEMS = [
 ];
 
 export default function DriverDashboard({ driver, activeDeliveries }: DriverDashboardProps) {
+  const router = useRouter();
+  const { signOut } = useAuthContext();
   const [isOnline, setIsOnline] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [presenceLoading, setPresenceLoading] = useState(true);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/auth/login');
+  };
 
   const currentDelivery = activeDeliveries[0];
 
@@ -128,11 +137,24 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
               </span>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-sm font-semibold text-gray-900">
-              {driver ? `${driver.first_name} ${driver.last_name}` : 'Driver'}
-            </p>
-            <p className="text-xs text-gray-400">Hamilton, ON</p>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-sm font-semibold text-gray-900">
+                {driver ? `${driver.first_name} ${driver.last_name}` : 'Driver'}
+              </p>
+              <p className="text-xs text-gray-400">Hamilton, ON</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              title="Sign out"
+              aria-label="Sign out"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
