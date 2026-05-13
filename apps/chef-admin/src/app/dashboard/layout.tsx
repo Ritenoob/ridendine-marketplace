@@ -1,22 +1,23 @@
-import { redirect } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
-import { getChefBasicContext } from '@/lib/engine';
 
-export default async function DashboardLayout({
+// NOTE: The redirect-based role check that briefly lived here (Phase C of
+// the 2026-05-13 stabilization pass) caused a redirect loop on chef.ridendine.ca:
+// /dashboard → /auth/login → middleware sees session → / → /dashboard → ...
+// because chef-admin's root page (apps/chef-admin/src/app/page.tsx) redirects
+// to /dashboard and the chef-admin middleware's authenticatedRedirect points
+// at '/'. The dashboard page itself ([./page.tsx]) already renders a graceful
+// state for "no chef profile / no storefront" via its own getChefContext
+// helper, and every privileged API route enforces getChefActorContext which
+// requires status='approved'. Role-gating belongs in Phase D — likely via a
+// dedicated /onboarding entry route or a "you don't have a chef account" page,
+// not via an in-layout redirect that fights the middleware.
+
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // C.1 / A1 — only users who own a chef_profiles row reach the chef dashboard
-  // chrome. Pending chefs are allowed (onboarding flow). Customers, drivers, and
-  // ops users are redirected to login. Per-page `getChefActorContext` still
-  // enforces `status === 'approved'` for privileged operations.
-  const ctx = await getChefBasicContext();
-  if (!ctx) {
-    redirect('/auth/login?redirect=/dashboard');
-  }
-
   return (
     <div className="flex min-h-screen">
       <Sidebar />
