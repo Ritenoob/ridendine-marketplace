@@ -1,7 +1,9 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import { createAdminClient } from '@ridendine/db';
-import { getOpsActorContext, guardPlatformApi } from '@/lib/engine';
+import { AuditAction } from '@ridendine/types';
+import { getEngine, getOpsActorContext, guardPlatformApi, finalizeOpsActor } from '@/lib/engine';
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -137,10 +139,11 @@ export async function GET(request: NextRequest) {
   const endDate = searchParams.get('end') || new Date().toISOString();
 
   const financeExportTypes = new Set(['ledger', 'stripe_events', 'bank_payouts']);
-  const exportDenied = financeExportTypes.has(type || '')
-    ? guardPlatformApi(actor, 'finance_export_ledger')
-    : guardPlatformApi(actor, 'ops_export_operational');
-  if (exportDenied) return exportDenied;
+  const capability = financeExportTypes.has(type || '')
+    ? 'finance_export_ledger'
+    : 'ops_export_operational';
+  const opsActor = finalizeOpsActor(actor, guardPlatformApi(actor, capability));
+  if (opsActor instanceof Response) return opsActor;
 
   const client = createAdminClient() as any;
   let rows: any[] = [];
@@ -186,6 +189,28 @@ export async function GET(request: NextRequest) {
   }
 
   const csvRows = [headers.join(','), ...rows.map(buildCsvRow)];
+
+  // C.6 / O4 — record every successful export so PII access is reviewable.
+  // Fire-and-forget; export still returns to the operator if audit insert fails.
+  const engine = getEngine();
+  void engine.audit
+    .log({
+      action: AuditAction.EXPORT,
+      entityType: 'export',
+      entityId: randomUUID(),
+      actor: opsActor,
+      afterState: {
+        kind: type,
+        rows_count: rows.length,
+        columns: headers,
+        period_start: startDate,
+        period_end: endDate,
+        capability,
+      },
+    })
+    .catch((err) => {
+      console.error('[export] audit log failed (export still returned):', err);
+    });
 
   return new Response(csvRows.join('\n'), {
     headers: {

@@ -11,8 +11,11 @@ import { cookies } from 'next/headers';
 export { getAdminEngine as getEngine, errorResponse, successResponse } from '@ridendine/engine';
 
 /**
- * Get actor context for current chef user
- * Returns null if user is not authenticated or not a chef
+ * Get actor context for current chef user.
+ * Returns null if the user is unauthenticated, not a chef, has no storefront,
+ * or whose chef status is not 'approved' (REVIEW_2026-05-13 finding A2).
+ * Use {@link getChefBasicContext} during onboarding flows where pending chefs
+ * are still allowed (e.g. storefront creation).
  */
 export async function getChefActorContext(): Promise<{
   actor: ActorContext;
@@ -36,6 +39,11 @@ export async function getChefActorContext(): Promise<{
     .single();
 
   if (!chefProfile) {
+    return null;
+  }
+
+  // Phase C / A2: privileged context requires an approved chef.
+  if (chefProfile.status !== 'approved') {
     return null;
   }
 
