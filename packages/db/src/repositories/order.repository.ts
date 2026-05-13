@@ -204,7 +204,7 @@ export async function getOpsOrderDetail(
         chef:chef_profiles (id, display_name, phone)
       ),
       delivery_address:customer_addresses (
-        id, label, street_address, city, state, postal_code, country, lat, lng, delivery_instructions, is_default
+        id, label, address_line1, address_line2, city, state, postal_code, country, lat, lng, delivery_instructions, is_default
       ),
       items:order_items (
         id, quantity, unit_price, total_price,

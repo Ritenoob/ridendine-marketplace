@@ -67,7 +67,8 @@ export async function POST(request: Request) {
     const address = await createAddress(supabase, {
       customer_id: customer.id,
       label: validated.label,
-      street_address: validated.addressLine1,
+      address_line1: validated.addressLine1,
+      address_line2: validated.addressLine2 ?? null,
       city: validated.city,
       state: validated.state,
       postal_code: validated.postalCode,
@@ -127,7 +128,8 @@ export async function PATCH(request: Request) {
 
     const updates: any = {};
     if (validated.label !== undefined) updates.label = validated.label;
-    if (validated.addressLine1 !== undefined) updates.street_address = validated.addressLine1;
+    if (validated.addressLine1 !== undefined) updates.address_line1 = validated.addressLine1;
+    if (validated.addressLine2 !== undefined) updates.address_line2 = validated.addressLine2;
     if (validated.city !== undefined) updates.city = validated.city;
     if (validated.state !== undefined) updates.state = validated.state;
     if (validated.postalCode !== undefined) updates.postal_code = validated.postalCode;
@@ -147,13 +149,13 @@ export async function PATCH(request: Request) {
     if (addressFieldsChanged && validated.lat === undefined && validated.lng === undefined) {
       const { data: current } = await supabase
         .from('customer_addresses')
-        .select('street_address, city, state, postal_code, country')
+        .select('address_line1, city, state, postal_code, country')
         .eq('id', addressId)
         .single();
 
       if (current) {
         const addressString = buildAddressString({
-          streetAddress: updates.street_address ?? current.street_address,
+          streetAddress: updates.address_line1 ?? current.address_line1,
           city: updates.city ?? current.city,
           state: updates.state ?? current.state,
           postalCode: updates.postal_code ?? current.postal_code,

@@ -29,7 +29,8 @@ type OrderDetail = {
     phone: string | null;
   } | null;
   delivery_address: {
-    street_address: string;
+    address_line1: string;
+    address_line2: string | null;
     city: string;
     state: string | null;
     postal_code: string | null;
@@ -103,7 +104,7 @@ async function getChefOrder(orderId: string): Promise<OrderDetail | null> {
         id, first_name, last_name, email, phone
       ),
       delivery_address:customer_addresses (
-        street_address, city, state, postal_code, country, delivery_instructions
+        address_line1, address_line2, city, state, postal_code, country, delivery_instructions
       ),
       items:order_items (
         id, quantity, unit_price, total_price, special_instructions,
@@ -235,7 +236,10 @@ export default async function ChefOrderDetailPage({
           <h2 className="text-lg font-semibold text-gray-950">Delivery address</h2>
           {order.delivery_address ? (
             <div className="mt-4 space-y-2 text-sm text-gray-700">
-              <p className="font-semibold text-gray-950">{order.delivery_address.street_address}</p>
+              <p className="font-semibold text-gray-950">{order.delivery_address.address_line1}</p>
+              {order.delivery_address.address_line2 ? (
+                <p className="text-gray-700">{order.delivery_address.address_line2}</p>
+              ) : null}
               <p>{order.delivery_address.city}, {order.delivery_address.state} {order.delivery_address.postal_code}</p>
               <p>{order.delivery_address.country || 'Canada'}</p>
               {order.delivery_address.delivery_instructions ? (
