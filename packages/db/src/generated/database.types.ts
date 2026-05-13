@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -702,7 +707,7 @@ export type Database = {
           profile_image_url: string | null
           status: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           bio?: string | null
@@ -713,7 +718,7 @@ export type Database = {
           profile_image_url?: string | null
           status?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           bio?: string | null
@@ -724,13 +729,12 @@ export type Database = {
           profile_image_url?: string | null
           status?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
       chef_storefronts: {
         Row: {
-          address: string | null
           average_prep_minutes: number | null
           average_rating: number | null
           chef_id: string
@@ -761,7 +765,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          address?: string | null
           average_prep_minutes?: number | null
           average_rating?: number | null
           chef_id: string
@@ -792,7 +795,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          address?: string | null
           average_prep_minutes?: number | null
           average_rating?: number | null
           chef_id?: string
@@ -911,7 +913,7 @@ export type Database = {
           phone: string | null
           profile_image_url: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -922,7 +924,7 @@ export type Database = {
           phone?: string | null
           profile_image_url?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -933,7 +935,7 @@ export type Database = {
           phone?: string | null
           profile_image_url?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1415,6 +1417,50 @@ export type Database = {
           },
         ]
       }
+      driver_payout_accounts: {
+        Row: {
+          charges_enabled: boolean
+          created_at: string
+          driver_id: string
+          id: string
+          onboarding_completed_at: string | null
+          payouts_enabled: boolean
+          status: string
+          stripe_account_id: string
+          updated_at: string
+        }
+        Insert: {
+          charges_enabled?: boolean
+          created_at?: string
+          driver_id: string
+          id?: string
+          onboarding_completed_at?: string | null
+          payouts_enabled?: boolean
+          status?: string
+          stripe_account_id: string
+          updated_at?: string
+        }
+        Update: {
+          charges_enabled?: boolean
+          created_at?: string
+          driver_id?: string
+          id?: string
+          onboarding_completed_at?: string | null
+          payouts_enabled?: boolean
+          status?: string
+          stripe_account_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_payout_accounts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_payouts: {
         Row: {
           amount: number
@@ -1662,7 +1708,7 @@ export type Database = {
           stripe_connect_account_id: string | null
           total_deliveries: number
           updated_at: string
-          user_id: string
+          user_id: string | null
           vehicle_description: string | null
           vehicle_type: string | null
         }
@@ -1681,7 +1727,7 @@ export type Database = {
           stripe_connect_account_id?: string | null
           total_deliveries?: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           vehicle_description?: string | null
           vehicle_type?: string | null
         }
@@ -1700,7 +1746,7 @@ export type Database = {
           stripe_connect_account_id?: string | null
           total_deliveries?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           vehicle_description?: string | null
           vehicle_type?: string | null
         }
@@ -1889,6 +1935,89 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ledger_entries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_accounts: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          lifetime_points: number
+          points_balance: number
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          lifetime_points?: number
+          points_balance?: number
+          tier?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          lifetime_points?: number
+          points_balance?: number
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_accounts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          loyalty_account_id: string
+          order_id: string | null
+          points: number
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          loyalty_account_id: string
+          order_id?: string | null
+          points: number
+          type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          loyalty_account_id?: string
+          order_id?: string | null
+          points?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_transactions_loyalty_account_id_fkey"
+            columns: ["loyalty_account_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_transactions_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
@@ -2416,43 +2545,34 @@ export type Database = {
           created_at: string
           id: string
           menu_item_id: string
-          menu_item_name: string | null
+          menu_item_name: string
           order_id: string
           quantity: number
-          selected_options: Json | null
           special_instructions: string | null
-          subtotal: number | null
           total_price: number
           unit_price: number
-          updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           menu_item_id: string
-          menu_item_name?: string | null
+          menu_item_name: string
           order_id: string
           quantity: number
-          selected_options?: Json | null
           special_instructions?: string | null
-          subtotal?: number | null
           total_price: number
           unit_price: number
-          updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           menu_item_id?: string
-          menu_item_name?: string | null
+          menu_item_name?: string
           order_id?: string
           quantity?: number
-          selected_options?: Json | null
           special_instructions?: string | null
-          subtotal?: number | null
           total_price?: number
           unit_price?: number
-          updated_at?: string
         }
         Relationships: [
           {
@@ -2534,6 +2654,7 @@ export type Database = {
           payment_intent_id: string | null
           payment_status: string
           prep_started_at: string | null
+          promo_code_id: string | null
           public_stage: string
           ready_at: string | null
           rejection_notes: string | null
@@ -2569,6 +2690,7 @@ export type Database = {
           payment_intent_id?: string | null
           payment_status?: string
           prep_started_at?: string | null
+          promo_code_id?: string | null
           public_stage: string
           ready_at?: string | null
           rejection_notes?: string | null
@@ -2604,6 +2726,7 @@ export type Database = {
           payment_intent_id?: string | null
           payment_status?: string
           prep_started_at?: string | null
+          promo_code_id?: string | null
           public_stage?: string
           ready_at?: string | null
           rejection_notes?: string | null
@@ -2789,27 +2912,27 @@ export type Database = {
       platform_settings: {
         Row: {
           auto_assign_enabled: boolean
-          base_delivery_fee_cents: number | null
-          chef_response_sla_minutes: number | null
-          created_at: string | null
+          base_delivery_fee_cents: number
+          chef_response_sla_minutes: number
+          created_at: string
           default_prep_time_minutes: number
           description: string | null
           dispatch_radius_km: number
-          dispatch_timeout_minutes: number | null
-          driver_payout_percent: number | null
+          dispatch_timeout_minutes: number
+          driver_payout_percent: number
           hst_rate: number
           id: string
           max_assignment_attempts: number
           max_delivery_distance_km: number
           max_delivery_radius_km: number
-          min_order_amount: number
+          min_order_amount: number | null
           offer_timeout_seconds: number
           platform_fee_percent: number
           refund_auto_review_threshold_cents: number
-          refund_window_hours: number | null
+          refund_window_hours: number
           service_fee_percent: number
-          setting_key: string | null
-          setting_value: Json | null
+          setting_key: string
+          setting_value: Json
           storefront_auto_pause_enabled: boolean
           storefront_pause_on_sla_breach: boolean
           storefront_throttle_order_limit: number
@@ -2821,27 +2944,27 @@ export type Database = {
         }
         Insert: {
           auto_assign_enabled?: boolean
-          base_delivery_fee_cents?: number | null
-          chef_response_sla_minutes?: number | null
-          created_at?: string | null
+          base_delivery_fee_cents?: number
+          chef_response_sla_minutes?: number
+          created_at?: string
           default_prep_time_minutes?: number
           description?: string | null
           dispatch_radius_km?: number
-          dispatch_timeout_minutes?: number | null
-          driver_payout_percent?: number | null
+          dispatch_timeout_minutes?: number
+          driver_payout_percent?: number
           hst_rate?: number
           id?: string
           max_assignment_attempts?: number
           max_delivery_distance_km?: number
           max_delivery_radius_km?: number
-          min_order_amount?: number
+          min_order_amount?: number | null
           offer_timeout_seconds?: number
           platform_fee_percent?: number
           refund_auto_review_threshold_cents?: number
-          refund_window_hours?: number | null
+          refund_window_hours?: number
           service_fee_percent?: number
-          setting_key?: string | null
-          setting_value?: Json | null
+          setting_key: string
+          setting_value?: Json
           storefront_auto_pause_enabled?: boolean
           storefront_pause_on_sla_breach?: boolean
           storefront_throttle_order_limit?: number
@@ -2853,27 +2976,27 @@ export type Database = {
         }
         Update: {
           auto_assign_enabled?: boolean
-          base_delivery_fee_cents?: number | null
-          chef_response_sla_minutes?: number | null
-          created_at?: string | null
+          base_delivery_fee_cents?: number
+          chef_response_sla_minutes?: number
+          created_at?: string
           default_prep_time_minutes?: number
           description?: string | null
           dispatch_radius_km?: number
-          dispatch_timeout_minutes?: number | null
-          driver_payout_percent?: number | null
+          dispatch_timeout_minutes?: number
+          driver_payout_percent?: number
           hst_rate?: number
           id?: string
           max_assignment_attempts?: number
           max_delivery_distance_km?: number
           max_delivery_radius_km?: number
-          min_order_amount?: number
+          min_order_amount?: number | null
           offer_timeout_seconds?: number
           platform_fee_percent?: number
           refund_auto_review_threshold_cents?: number
-          refund_window_hours?: number | null
+          refund_window_hours?: number
           service_fee_percent?: number
-          setting_key?: string | null
-          setting_value?: Json | null
+          setting_key?: string
+          setting_value?: Json
           storefront_auto_pause_enabled?: boolean
           storefront_pause_on_sla_breach?: boolean
           storefront_throttle_order_limit?: number
@@ -2988,6 +3111,7 @@ export type Database = {
           endpoint: string
           id: string
           p256dh: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -2996,6 +3120,7 @@ export type Database = {
           endpoint: string
           id?: string
           p256dh: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -3004,9 +3129,94 @@ export type Database = {
           endpoint?: string
           id?: string
           p256dh?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          reward_cents: number
+          user_id: string
+          user_type: string
+          uses_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          reward_cents?: number
+          user_id: string
+          user_type: string
+          uses_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          reward_cents?: number
+          user_id?: string
+          user_type?: string
+          uses_count?: number
+        }
+        Relationships: []
+      }
+      referral_signups: {
+        Row: {
+          created_at: string
+          first_order_id: string | null
+          id: string
+          referral_code_id: string
+          referred_user_id: string
+          referred_user_type: string
+          reward_paid: boolean
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          first_order_id?: string | null
+          id?: string
+          referral_code_id: string
+          referred_user_id: string
+          referred_user_type: string
+          reward_paid?: boolean
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          first_order_id?: string | null
+          id?: string
+          referral_code_id?: string
+          referred_user_id?: string
+          referred_user_type?: string
+          reward_paid?: boolean
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_signups_first_order_id_fkey"
+            columns: ["first_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_signups_referral_code_id_fkey"
+            columns: ["referral_code_id"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       refund_cases: {
         Row: {
@@ -4683,101 +4893,6 @@ export type Database = {
         }
         Relationships: []
       }
-      iceberg_namespaces: {
-        Row: {
-          bucket_name: string
-          catalog_id: string
-          created_at: string
-          id: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          bucket_name: string
-          catalog_id: string
-          created_at?: string
-          id?: string
-          metadata?: Json
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          bucket_name?: string
-          catalog_id?: string
-          created_at?: string
-          id?: string
-          metadata?: Json
-          name?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "iceberg_namespaces_catalog_id_fkey"
-            columns: ["catalog_id"]
-            isOneToOne: false
-            referencedRelation: "buckets_analytics"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      iceberg_tables: {
-        Row: {
-          bucket_name: string
-          catalog_id: string
-          created_at: string
-          id: string
-          location: string
-          name: string
-          namespace_id: string
-          remote_table_id: string | null
-          shard_id: string | null
-          shard_key: string | null
-          updated_at: string
-        }
-        Insert: {
-          bucket_name: string
-          catalog_id: string
-          created_at?: string
-          id?: string
-          location: string
-          name: string
-          namespace_id: string
-          remote_table_id?: string | null
-          shard_id?: string | null
-          shard_key?: string | null
-          updated_at?: string
-        }
-        Update: {
-          bucket_name?: string
-          catalog_id?: string
-          created_at?: string
-          id?: string
-          location?: string
-          name?: string
-          namespace_id?: string
-          remote_table_id?: string | null
-          shard_id?: string | null
-          shard_key?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "iceberg_tables_catalog_id_fkey"
-            columns: ["catalog_id"]
-            isOneToOne: false
-            referencedRelation: "buckets_analytics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "iceberg_tables_namespace_id_fkey"
-            columns: ["namespace_id"]
-            isOneToOne: false
-            referencedRelation: "iceberg_namespaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       migrations: {
         Row: {
           executed_at: string | null
@@ -4859,6 +4974,7 @@ export type Database = {
           id: string
           in_progress_size: number
           key: string
+          metadata: Json | null
           owner_id: string | null
           upload_signature: string
           user_metadata: Json | null
@@ -4870,6 +4986,7 @@ export type Database = {
           id: string
           in_progress_size?: number
           key: string
+          metadata?: Json | null
           owner_id?: string | null
           upload_signature: string
           user_metadata?: Json | null
@@ -4881,6 +4998,7 @@ export type Database = {
           id?: string
           in_progress_size?: number
           key?: string
+          metadata?: Json | null
           owner_id?: string | null
           upload_signature?: string
           user_metadata?: Json | null
@@ -4999,6 +5117,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      allow_any_operation: {
+        Args: { expected_operations: string[] }
+        Returns: boolean
+      }
+      allow_only_operation: {
+        Args: { expected_operation: string }
+        Returns: boolean
+      }
       can_insert_object: {
         Args: { bucketid: string; metadata: Json; name: string; owner: string }
         Returns: undefined
@@ -5254,4 +5380,3 @@ export const Constants = {
     },
   },
 } as const
-
