@@ -84,7 +84,7 @@ export default function PayoutsPage() {
         // Calculate pending and available balance from completed orders
         const { data: orders } = await db
           .from('orders')
-          .select('total, status, created_at, chef_payout')
+          .select('total, status, created_at')
           .eq('storefront_id', storefront.id)
           .in('status', ['delivered', 'completed']);
 
@@ -95,9 +95,12 @@ export default function PayoutsPage() {
           let pending = 0;
           let available = 0;
 
-          orders.forEach((order: any) => {
+          // 15% platform fee → chef earns 85% of the order total.
+          // This used to read an orders.chef_payout column that never existed
+          // on the live schema; falling back to (total * 0.85) for every order.
+          orders.forEach((order: { total: number | null; created_at: string }) => {
             const orderDate = new Date(order.created_at);
-            const payout = order.chef_payout || order.total * 0.85; // 15% platform fee
+            const payout = Number(order.total ?? 0) * 0.85;
 
             if (orderDate > sevenDaysAgo) {
               pending += payout;
