@@ -30,7 +30,8 @@ interface Order {
   };
   address?: {
     id: string;
-    street_address: string;
+    address_line1: string;
+    address_line2?: string | null;
     city: string;
     state?: string;
     postal_code?: string;
@@ -398,7 +399,8 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
                       <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Delivery</p>
                       {order.address ? (
                         <div className="mt-1 text-sm text-gray-700">
-                          <p className="font-medium text-gray-900">{order.address.street_address}</p>
+                          <p className="font-medium text-gray-900">{order.address.address_line1}</p>
+                          {order.address.address_line2 ? <p>{order.address.address_line2}</p> : null}
                           <p>{order.address.city}, {order.address.state} {order.address.postal_code}</p>
                           {order.address.delivery_instructions ? <p className="mt-1 italic">{order.address.delivery_instructions}</p> : null}
                         </div>

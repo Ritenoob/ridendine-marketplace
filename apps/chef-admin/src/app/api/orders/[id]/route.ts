@@ -49,7 +49,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
           id, first_name, last_name, phone, email
         ),
         delivery_address:customer_addresses (
-          street_address, city, state, postal_code, lat, lng,
+          address_line1, address_line2, city, state, postal_code, lat, lng,
           delivery_instructions
         ),
         items:order_items (

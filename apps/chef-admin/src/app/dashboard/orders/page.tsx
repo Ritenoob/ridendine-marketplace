@@ -34,7 +34,7 @@ async function getOrdersWithCustomers(storefrontId: string) {
         id, first_name, last_name, phone, email
       ),
       address:customer_addresses (
-        id, street_address, city, state, postal_code, country, lat, lng, delivery_instructions
+        id, address_line1, address_line2, city, state, postal_code, country, lat, lng, delivery_instructions
       ),
       items:order_items (
         id, quantity, unit_price, total_price, special_instructions,

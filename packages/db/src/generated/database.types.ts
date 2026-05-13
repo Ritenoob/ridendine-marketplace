@@ -841,6 +841,8 @@ export type Database = {
       }
       customer_addresses: {
         Row: {
+          address_line1: string
+          address_line2: string | null
           city: string
           country: string
           created_at: string
@@ -853,10 +855,11 @@ export type Database = {
           lng: number | null
           postal_code: string
           state: string
-          street_address: string
           updated_at: string
         }
         Insert: {
+          address_line1: string
+          address_line2?: string | null
           city: string
           country?: string
           created_at?: string
@@ -869,10 +872,11 @@ export type Database = {
           lng?: number | null
           postal_code: string
           state: string
-          street_address: string
           updated_at?: string
         }
         Update: {
+          address_line1?: string
+          address_line2?: string | null
           city?: string
           country?: string
           created_at?: string
@@ -885,7 +889,6 @@ export type Database = {
           lng?: number | null
           postal_code?: string
           state?: string
-          street_address?: string
           updated_at?: string
         }
         Relationships: [
