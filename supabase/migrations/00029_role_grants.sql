@@ -1,3 +1,9 @@
+-- ============================================================================
+-- 00029_role_grants.sql
+-- Adopt previously-stray supabase/fix_permissions.sql into the migration system.
+-- Idempotent: GRANT ALL re-applies safely; ALTER DEFAULT PRIVILEGES re-runs cleanly.
+-- ============================================================================
+
 -- Grant schema access to Supabase roles
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;

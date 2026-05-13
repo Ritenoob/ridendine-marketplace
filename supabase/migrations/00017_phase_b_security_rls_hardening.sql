@@ -18,24 +18,28 @@ DROP POLICY IF EXISTS "Anon can view delivery assignments" ON delivery_assignmen
 
 -- Keep public discovery-only policies on storefront/menu/reviews.
 DROP POLICY IF EXISTS "Anon can view all storefronts" ON chef_storefronts;
+DROP POLICY IF EXISTS "Public can view active storefronts" ON chef_storefronts;
 CREATE POLICY "Public can view active storefronts"
 ON chef_storefronts FOR SELECT
 TO anon, authenticated
 USING (is_active = true);
 
 DROP POLICY IF EXISTS "Anon can view all menu categories" ON menu_categories;
+DROP POLICY IF EXISTS "Public can view menu categories" ON menu_categories;
 CREATE POLICY "Public can view menu categories"
 ON menu_categories FOR SELECT
 TO anon, authenticated
 USING (true);
 
 DROP POLICY IF EXISTS "Anon can view all menu items" ON menu_items;
+DROP POLICY IF EXISTS "Public can view menu items" ON menu_items;
 CREATE POLICY "Public can view menu items"
 ON menu_items FOR SELECT
 TO anon, authenticated
 USING (is_available = true);
 
 DROP POLICY IF EXISTS "Anon can view all reviews" ON reviews;
+DROP POLICY IF EXISTS "Public can view reviews" ON reviews;
 CREATE POLICY "Public can view reviews"
 ON reviews FOR SELECT
 TO anon, authenticated
@@ -45,6 +49,11 @@ USING (is_visible = true);
 -- 2) Support ticket RLS depth hardening
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "Ops can manage support tickets" ON support_tickets;
+DROP POLICY IF EXISTS "support_tickets_customer_select_own" ON support_tickets;
+DROP POLICY IF EXISTS "support_tickets_customer_insert_own" ON support_tickets;
+DROP POLICY IF EXISTS "support_tickets_customer_update_open_own" ON support_tickets;
+DROP POLICY IF EXISTS "support_tickets_platform_select" ON support_tickets;
+DROP POLICY IF EXISTS "support_tickets_platform_update" ON support_tickets;
 
 -- Customer self-service: only own tickets.
 CREATE POLICY "support_tickets_customer_select_own"
