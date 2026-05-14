@@ -59,6 +59,13 @@ export default async function HomePage() {
     <div className="min-h-screen bg-white">
       <Header />
 
+      {/* Closed-beta test-mode banner */}
+      <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-center text-sm text-amber-900">
+        <span className="font-semibold">Closed Beta</span> — This is a test environment. To place a test order, use the demo card{' '}
+        <span className="rounded bg-white/70 px-1.5 py-0.5 font-mono text-xs">4242 4242 4242 4242</span>{' '}
+        (any future expiry, any CVC). No real money will be charged.
+      </div>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#fff8f4] via-white to-[#f0faf9] py-16 sm:py-24">
         {/* Background decoration */}
