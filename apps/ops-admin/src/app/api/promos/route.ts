@@ -1,7 +1,23 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@ridendine/db';
+import {
+  evaluateRateLimit,
+  RATE_LIMIT_POLICIES,
+  rateLimitPolicyResponse,
+} from '@ridendine/utils';
 import { getOpsActorContext, guardPlatformApi } from '@/lib/engine';
+
+async function checkRateLimit(request: NextRequest, actor: { userId: string } | null, method: 'post' | 'patch' | 'delete') {
+  const limit = await evaluateRateLimit({
+    request,
+    policy: RATE_LIMIT_POLICIES.opsAdminMutation,
+    namespace: `ops-promos-${method}`,
+    userId: actor?.userId ?? 'unknown',
+    routeKey: `${method.toUpperCase()}:/api/promos`,
+  });
+  return limit.allowed ? null : rateLimitPolicyResponse(limit);
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +40,8 @@ export async function POST(request: NextRequest) {
   const actor = await getOpsActorContext();
   const denied = guardPlatformApi(actor, 'promos');
   if (denied) return denied;
+  const limited = await checkRateLimit(request, actor, 'post');
+  if (limited) return limited;
 
   const body = await request.json();
   const { code, discountType, discountValue, minOrderAmount, usageLimit, startsAt, expiresAt } = body;
@@ -57,6 +75,8 @@ export async function PATCH(request: NextRequest) {
   const actor = await getOpsActorContext();
   const denied = guardPlatformApi(actor, 'promos');
   if (denied) return denied;
+  const limited = await checkRateLimit(request, actor, 'patch');
+  if (limited) return limited;
 
   const body = await request.json();
   const { id, is_active } = body;
@@ -79,6 +99,8 @@ export async function DELETE(request: NextRequest) {
   const actor = await getOpsActorContext();
   const denied = guardPlatformApi(actor, 'promos');
   if (denied) return denied;
+  const limited = await checkRateLimit(request, actor, 'delete');
+  if (limited) return limited;
 
   const { id } = await request.json();
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });

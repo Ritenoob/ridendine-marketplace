@@ -39,9 +39,10 @@ jest.mock('@ridendine/engine', () => ({
   estimateDistance: (...args: unknown[]) => mockEstimateDistance(...args),
   getSurgeMultiplier: (...args: unknown[]) => mockGetSurgeMultiplier(...args),
   createLoyaltyService: () => ({ earnPoints: (...args: unknown[]) => mockEarnPoints(...args) }),
+  createTaxConfigService: () => ({
+    getTaxRates: async () => ({ hstRate: 13, serviceFeePercent: 8 }),
+  }),
   BASE_DELIVERY_FEE: 500,
-  SERVICE_FEE_PERCENT: 8,
-  HST_RATE: 13,
 }));
 
 jest.mock('@/lib/engine', () => ({
