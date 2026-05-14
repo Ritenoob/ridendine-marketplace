@@ -112,11 +112,19 @@ The ops dashboard is for monitoring + intervening. Use the existing super-admin 
 
 What you can do from here:
 - Live board — every active order, every active delivery
-- Chefs — approve/suspend
-- Drivers — approve/suspend, view documents, view payouts
+- **People → Chef Onboarding** — recently joined chefs, those without a live storefront, anyone in `pending`/`suspended` status. Click "View / Manage" to land on the chef detail page with full governance actions (suspend, unsuspend, etc.)
+- **People → Chefs** — full chef directory with status filter chips
+- **People → Drivers** — driver directory, approve/suspend, view documents, view payouts
 - Finance — payouts, refunds, ledger
 - Engine processors — see SLA tick, dispatch attempts, payout-batch cron status
 - System alerts — dispatch low-supply warnings, escalated exceptions
+
+**Managing a newly-onboarded chef (e.g. Mirko):**
+1. Ops dashboard → **Chef Onboarding** in the sidebar
+2. Mirko (or any chef joined in the last 30 days) appears under "Recently Joined"
+3. Click **View / Manage** → chef detail page
+4. From here you can: suspend / reinstate the chef, view their storefront(s), check delivery zones, see payout state
+5. To help a chef finish setting up their storefront content (real name, description, menu), either ask them to log into chef.ridendine.ca themselves, or impersonate them temporarily by signing into their account.
 
 ---
 

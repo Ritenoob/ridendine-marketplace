@@ -84,7 +84,7 @@ const NAV_GROUPS: NavGroup[] = [
     Icon: Users,
     items: [
       { href: '/dashboard/chefs', label: 'Chefs', Icon: UserCog },
-      { href: '/dashboard/chefs/approvals', label: 'Chef Approvals', Icon: UserCheck },
+      { href: '/dashboard/chefs/approvals', label: 'Chef Onboarding', Icon: UserCheck },
       { href: '/dashboard/drivers', label: 'Drivers', Icon: Truck },
       { href: '/dashboard/customers', label: 'Customers', Icon: Users },
     ],
