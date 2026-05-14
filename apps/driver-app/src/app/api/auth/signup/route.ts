@@ -89,7 +89,11 @@ export async function POST(request: Request) {
         last_name: lastName,
         phone,
         email,
-        status: 'pending',
+        // Closed-beta: drivers are self-serve. They still have to upload
+        // licence + insurance docs (gated by driver_documents review) and
+        // complete Stripe Connect before they can be paid. Ops can flip
+        // this to 'suspended' to block a driver post-signup.
+        status: 'approved',
         vehicle_type: vehicleType ?? null,
         profile_image_url: null,
         rating: null,
@@ -104,8 +108,7 @@ export async function POST(request: Request) {
       success: true,
       data: {
         user: authData.user,
-        requiresApproval: true,
-        message: 'Account created! Your application is pending approval.',
+        requiresEmailConfirmation: !authData.session,
       },
     });
   } catch (error) {
