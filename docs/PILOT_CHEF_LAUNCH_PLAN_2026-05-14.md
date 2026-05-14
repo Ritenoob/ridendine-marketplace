@@ -2,29 +2,48 @@
 
 **Date:** 2026-05-14
 **Goal:** First real-money order in Hamilton with one real chef, one real driver, one real customer.
-**Status:** Platform is technically ready. Real participants and Stripe-live keys are the remaining gates.
+**Status:** Platform is test-ready end-to-end. Real participants and Stripe-live keys are the remaining gates.
 
 ---
 
-## Current production state (verified 2026-05-14)
+## Current production state (verified 2026-05-14 post-PR #23 merge)
 
 ### What works
-- ✅ All 4 apps deployed (commit `c81852a`), HTTP 200 on every public route
+- ✅ All 4 apps deployed on master `bb23cec` (PR #23 merged), HTTP 200 on every public route
 - ✅ All 36 Supabase migrations synced local↔remote
 - ✅ Customer signup, browse, add-to-cart, checkout → real `payment_authorized` order placed today (`RD-MP4ZNSEA-AJKX`)
 - ✅ Stripe PaymentIntents (test mode) working end-to-end with `STRIPE_ALLOW_TEST_IN_PRODUCTION=true`
-- ✅ 4 seeded chefs published (Every Bite Yum, HOANG GIA PHO, COOCO, Mirko B Test Kitchen) with 4 menu items each
-- ✅ 5 drivers in DB, 2 currently `status=online` in `driver_presence`
+- ✅ 3 real Hamilton chefs published with real menu + bio + cover image: Every Bite Yum (Sean), HOANG GIA PHO (Tuan), COOCO (Ryo)
+- ✅ Mirko (4th chef) signed up & approved — storefront still has placeholder content he hasn't replaced yet
+- ✅ Sean approved as real driver. 4 other driver rows (Marcus/Priya are seed UUIDs with `user_id=null`, Mike/Sarah have real user_ids — unclear if real)
 - ✅ Demo order `RD-DEMO-001` in `picked_up` state for status-watching demo
 - ✅ Engine state machine, RLS, payout reversal on refund, SLA auto-reject all in place
+- ✅ **Auto-approve on signup** — new chefs + drivers land in the app immediately, no manual ops gate
+- ✅ **Closed-beta banner** on `/` and `/chefs` tells test users to use Stripe card `4242…`
+- ✅ **DRAFT — Pending Legal Review** banners on all 6 privacy/terms pages
+- ✅ **Inline signup acknowledgements**: customer (age 18+, marketplace, allergens), chef (IC + food safety + permits), driver (IC + commercial insurance + no-phone-while-driving)
+- ✅ **Chef Onboarding** page in ops-admin (sidebar → Chef Onboarding) — finds Mirko + any recent chef signup
+- ✅ Vercel cron jobs configured (SLA tick + expired-offers every minute, payouts + reconciliation daily/weekly)
+- ✅ ops-admin `/api/health` reports all subsystems ready: 13 orders, 7 deliveries, 5 drivers, 4 chefs, 5 customers
 
 ### What's NOT real yet
 - ❌ `chef_payout_accounts` is empty — no chef has completed Stripe Connect Express onboarding
-- ❌ No drivers have `stripe_connect_account_id` populated either
+- ❌ No drivers have `stripe_connect_account_id` populated
 - ❌ All Stripe keys are `sk_test_` — no real money has moved
-- ❌ Seeded chefs use placeholder UUIDs and fake addresses; none represents a real Hamilton kitchen
-- ❌ Customer privacy/T&C still on DRAFT — legal review pending
-- ❌ No external uptime monitor (now possible since `/api/health` is exposed)
+- ❌ Mirko's storefront content is still placeholder ("Mirko B Test Kitchen", "Test Dummy 1 Pasta Bowl"). He needs to edit it in chef-admin.
+- ❌ Customer privacy/T&C still on DRAFT — full legal review deferred to near-production
+- ❌ No external uptime monitor (possible now since `/api/health` is exposed on driver-app too)
+
+---
+
+## What changed since this plan was first written (PR #23)
+
+Shipped in 4 commits, merged 2026-05-14 as `bb23cec`:
+
+1. **`2b5cb75`** — driver-app middleware exposed `/privacy`, `/terms`, `/api/health`; DRAFT banners on all 6 legal pages; inline IC/insurance/food-safety acknowledgements on the 3 signup pages
+2. **`6c76f62`** — auto-approve chef + driver signups (`chef_profiles.status` and `drivers.status` default to `'approved'` on signup; driver SuccessScreen removed, drops driver straight onto the dashboard)
+3. **`86996cc`** — closed-beta amber banner on `/` and `/chefs` with the test card number; test-user walkthrough doc
+4. **`30bd0dc`** — rebuild ops `/dashboard/chefs/approvals` (renamed sidebar to "Chef Onboarding"). Shows 3 sections: Pending Review (rare now), Needs Storefront Setup, Recently Joined (where Mirko appears). Mirko's storefront `is_active=true` restored after I'd erroneously hidden it.
 
 ---
 
