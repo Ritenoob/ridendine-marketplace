@@ -141,6 +141,7 @@ export class OrderCreationService {
     let subtotal = 0;
     const orderItems: Array<{
       menu_item_id: string;
+      menu_item_name: string;
       quantity: number;
       unit_price: number;
       total_price: number;
@@ -156,8 +157,14 @@ export class OrderCreationService {
       const totalPrice = (unitPrice + modifierTotal) * inputItem.quantity;
       subtotal += totalPrice;
 
+      // menu_item_name is NOT NULL on order_items; the populate_order_item_name()
+      // trigger from migration 00006 is supposed to snapshot it from menu_items,
+      // but observed not firing in production. Set it explicitly so we don't
+      // depend on the trigger and the column gets the *current* name even if the
+      // menu item is later renamed.
       orderItems.push({
         menu_item_id: inputItem.menuItemId,
+        menu_item_name: menuItem.name,
         quantity: inputItem.quantity,
         unit_price: unitPrice,
         total_price: totalPrice,
