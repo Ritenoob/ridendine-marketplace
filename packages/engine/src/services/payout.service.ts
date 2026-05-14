@@ -42,6 +42,89 @@ export class PayoutService {
     private readonly deps: PayoutServiceDeps = {}
   ) {}
 
+  /**
+   * Phase D / D.2 — attempt a Stripe Connect transfer for a payout line.
+   *
+   * Behavior:
+   * - If Stripe is not configured OR the payee has no Connect account OR
+   *   payout_enabled is false → returns { rail: 'bank', stripeTransferId: null }
+   *   so the caller falls through to the manual-bank path. No money moves
+   *   through Stripe; ops handles the payout outside the platform.
+   * - If Stripe is configured AND the payee has an active Connect account →
+   *   calls stripe.transfers.create with a deterministic idempotency key
+   *   tied to (payout_run_id, payee_id) so retrying the run never
+   *   double-pays.
+   * - On any Stripe error → returns rail='bank' + error reason. The bank
+   *   fallback keeps the run from dying on a single misconfigured payee.
+   *
+   * Idempotency note: the Stripe API treats the idempotency key as the
+   * uniqueness primitive — a second call with the same key + same params
+   * returns the original transfer rather than creating a new one. A second
+   * call with the same key + DIFFERENT params returns 400. Since the key
+   * includes the run_id we get the right semantics: re-running the same
+   * payout_run is safe; re-using a key for a different run would fail loud.
+   */
+  private async attemptStripeTransfer(input: {
+    payeeType: BankPayoutPayeeType;
+    payeeId: string;
+    payeeEntityId: string;
+    amountCents: number;
+    currency: string;
+    payoutRunId: string;
+    description: string;
+  }): Promise<{ rail: 'stripe' | 'bank'; stripeTransferId: string | null; reason?: string }> {
+    const stripe = this.deps.getStripe?.();
+    if (!stripe) {
+      return { rail: 'bank', stripeTransferId: null, reason: 'stripe_not_configured' };
+    }
+
+    const accountTable =
+      input.payeeType === 'chef' ? 'chef_payout_accounts' : 'driver_payout_accounts';
+    const payeeColumn = input.payeeType === 'chef' ? 'chef_id' : 'driver_id';
+
+    const { data: connectAccount } = await this.client
+      .from(accountTable)
+      .select('stripe_account_id, payout_enabled')
+      .eq(payeeColumn, input.payeeEntityId)
+      .maybeSingle();
+
+    if (!connectAccount?.stripe_account_id) {
+      return { rail: 'bank', stripeTransferId: null, reason: 'no_connect_account' };
+    }
+    if (!connectAccount.payout_enabled) {
+      return { rail: 'bank', stripeTransferId: null, reason: 'connect_account_payouts_disabled' };
+    }
+
+    try {
+      const transfer = await stripe.transfers.create(
+        {
+          amount: input.amountCents,
+          currency: input.currency.toLowerCase(),
+          destination: connectAccount.stripe_account_id as string,
+          transfer_group: input.payoutRunId,
+          description: input.description,
+          metadata: {
+            payout_run_id: input.payoutRunId,
+            payee_type: input.payeeType,
+            payee_id: input.payeeId,
+            payee_entity_id: input.payeeEntityId,
+          },
+        },
+        {
+          idempotencyKey: `payout_run:${input.payeeType}:${input.payoutRunId}:${input.payeeEntityId}`,
+        }
+      );
+      return { rail: 'stripe', stripeTransferId: transfer.id };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'unknown_stripe_error';
+      console.error(
+        '[PayoutService] Stripe transfer failed, falling back to bank rail',
+        { payeeType: input.payeeType, payeeId: input.payeeId, error: message }
+      );
+      return { rail: 'bank', stripeTransferId: null, reason: `stripe_error: ${message}` };
+    }
+  }
+
   private async safeAudit(params: {
     actor: ActorContext;
     entityType: string;
@@ -157,6 +240,17 @@ export class PayoutService {
         continue;
       }
 
+      // D.2 — Try Stripe Connect transfer first; fall back to manual bank rail.
+      const transferResult = await this.attemptStripeTransfer({
+        payeeType: 'chef',
+        payeeId: line.payeeId,
+        payeeEntityId: chefId,
+        amountCents: line.amountCents,
+        currency: line.currency,
+        payoutRunId: runId,
+        description: `Chef weekly payout run ${runId}`,
+      });
+
       const led = await this.ledger.recordPayout({
         orderId: null,
         payee: 'chef',
@@ -164,11 +258,14 @@ export class PayoutService {
         amountCents: line.amountCents,
         currency: line.currency,
         payoutRunId: runId,
-        description: `Bank-funded chef weekly payout run ${runId}`,
-        stripeId: null,
+        description:
+          transferResult.rail === 'stripe'
+            ? `Stripe Connect chef weekly payout run ${runId}`
+            : `Bank-funded chef weekly payout run ${runId}`,
+        stripeId: transferResult.stripeTransferId,
       });
       if (led.error) {
-        errors.push(`Ledger failed for bank-funded chef payout: ${led.error}`);
+        errors.push(`Ledger failed for chef payout (${transferResult.rail}): ${led.error}`);
         continue;
       }
 
@@ -178,10 +275,10 @@ export class PayoutService {
         period_start: input.periodStart,
         period_end: input.periodEnd,
         status: 'paid',
-        payment_rail: 'bank',
+        payment_rail: transferResult.rail,
         reconciliation_status: 'pending',
         orders_count: 0,
-        stripe_transfer_id: null,
+        stripe_transfer_id: transferResult.stripeTransferId,
         payout_run_id: runId,
         paid_at: new Date().toISOString(),
       });
@@ -297,6 +394,17 @@ export class PayoutService {
         continue;
       }
 
+      // D.2 — Try Stripe Connect transfer first; fall back to manual bank rail.
+      const transferResult = await this.attemptStripeTransfer({
+        payeeType: 'driver',
+        payeeId: line.payeeId,
+        payeeEntityId: line.payeeId,
+        amountCents: line.amountCents,
+        currency: line.currency,
+        payoutRunId: runId,
+        description: `Driver daily payout run ${runId}`,
+      });
+
       const led = await this.ledger.recordPayout({
         orderId: null,
         payee: 'driver',
@@ -304,11 +412,14 @@ export class PayoutService {
         amountCents: line.amountCents,
         currency: line.currency,
         payoutRunId: runId,
-        description: `Bank-funded driver daily payout run ${runId}`,
-        stripeId: null,
+        description:
+          transferResult.rail === 'stripe'
+            ? `Stripe Connect driver daily payout run ${runId}`
+            : `Bank-funded driver daily payout run ${runId}`,
+        stripeId: transferResult.stripeTransferId,
       });
       if (led.error) {
-        errors.push(`Ledger failed for bank-funded driver payout: ${led.error}`);
+        errors.push(`Ledger failed for driver payout (${transferResult.rail}): ${led.error}`);
         continue;
       }
 
@@ -319,10 +430,10 @@ export class PayoutService {
         period_start: input.periodStart,
         period_end: input.periodEnd,
         status: 'paid',
-        payment_rail: 'bank',
+        payment_rail: transferResult.rail,
         reconciliation_status: 'pending',
         payout_run_id: runId,
-        stripe_transfer_id: null,
+        stripe_transfer_id: transferResult.stripeTransferId,
       });
       if (dpErr) {
         errors.push(`driver_payouts insert failed: ${dpErr.message}`);

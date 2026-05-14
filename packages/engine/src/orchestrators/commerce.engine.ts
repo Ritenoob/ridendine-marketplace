@@ -959,7 +959,15 @@ export class CommerceLedgerEngine {
   }
 
   /**
-   * Create payout adjustments when refund is processed
+   * Create payout adjustments when a refund is processed.
+   *
+   * Phase D / D.3 fix:
+   * - Reverse platform_fee too (was previously omitted — platform kept its
+   *   15% cut on refunded orders, leaving the ledger unbalanced).
+   * - Add idempotency_key to every ledger insert so re-processing a refund
+   *   case doesn't double-deduct chefs/drivers/platform.
+   * - payout_adjustments inserts get a refund_case_id constraint at the
+   *   table level (UNIQUE), so they're already idempotent.
    */
   private async createRefundAdjustments(
     refundCase: RefundCase & { orders: Record<string, unknown> },
@@ -968,39 +976,48 @@ export class CommerceLedgerEngine {
     const approvedAmount = refundCase.approved_amount_cents || 0;
     const refundPercent = approvedAmount / Math.round((refundCase.orders.total as number) * 100);
 
-    // Get original payables
+    // Get all original payables that should be proportionally reversed.
     const { data: ledgerEntries } = await this.client
       .from('ledger_entries')
       .select('*')
       .eq('order_id', refundCase.order_id)
-      .in('entry_type', ['chef_payable', 'driver_payable']);
+      .in('entry_type', ['chef_payable', 'driver_payable', 'platform_fee']);
 
     for (const entry of ledgerEntries || []) {
       const adjustmentAmount = Math.round(entry.amount_cents * refundPercent);
+      if (adjustmentAmount <= 0) continue;
 
-      if (adjustmentAmount > 0) {
+      // payout_adjustments only applies to chef/driver. platform_fee just
+      // reverses on the ledger — there's no payable to claw back.
+      if (entry.entry_type === 'chef_payable' || entry.entry_type === 'driver_payable') {
         await this.client.from('payout_adjustments').insert({
           payee_type: entry.entry_type === 'chef_payable' ? 'chef' : 'driver',
           payee_id: entry.entity_id,
           order_id: refundCase.order_id,
           refund_case_id: refundCase.id,
           adjustment_type: 'refund_clawback',
-          amount_cents: -adjustmentAmount, // Negative = deduction
+          amount_cents: -adjustmentAmount,
           reason: `Refund adjustment: ${refundCase.refund_reason}`,
           status: 'pending',
           created_by: actor.userId,
         });
-
-        await this.client.from('ledger_entries').insert({
-          order_id: refundCase.order_id,
-          entry_type: 'payout_adjustment',
-          amount_cents: -adjustmentAmount,
-          currency: 'CAD',
-          description: `Refund adjustment for ${entry.entry_type === 'chef_payable' ? 'chef' : 'driver'}`,
-          entity_type: entry.entity_type,
-          entity_id: entry.entity_id,
-        });
       }
+
+      const reversalLabel =
+        entry.entry_type === 'chef_payable' ? 'chef'
+        : entry.entry_type === 'driver_payable' ? 'driver'
+        : 'platform';
+
+      await this.client.from('ledger_entries').insert({
+        order_id: refundCase.order_id,
+        entry_type: 'payout_adjustment',
+        amount_cents: -adjustmentAmount,
+        currency: 'CAD',
+        description: `Refund reversal for ${reversalLabel} (${refundCase.refund_reason || 'refund'})`,
+        entity_type: entry.entity_type,
+        entity_id: entry.entity_id,
+        idempotency_key: `refund_reversal:${refundCase.id}:${entry.entry_type}:${entry.id}`,
+      });
     }
   }
 

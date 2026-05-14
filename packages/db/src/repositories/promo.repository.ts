@@ -6,8 +6,8 @@ export interface PromoCode {
   discount_type: 'percentage' | 'fixed';
   discount_value: number;
   min_order_amount: number | null;
-  max_uses: number | null;
-  used_count: number;
+  usage_limit: number | null;
+  usage_count: number;
   expires_at: string | null;
   is_active: boolean;
   created_at: string;
@@ -58,7 +58,7 @@ export async function validatePromoCode(
     return { valid: false, error: 'Promo code has expired' };
   }
 
-  if (promo.max_uses !== null && promo.used_count >= promo.max_uses) {
+  if (promo.usage_limit !== null && promo.usage_count >= promo.usage_limit) {
     return { valid: false, error: 'Promo code has reached its usage limit' };
   }
 
@@ -97,7 +97,7 @@ export async function incrementPromoCodeUsage(
     const { error: updateError } = await client
       .from('promo_codes')
       .update({
-        used_count: (client as any).raw('used_count + 1'),
+        usage_count: (client as any).raw('usage_count + 1'),
         updated_at: new Date().toISOString(),
       })
       .eq('id', promoId);

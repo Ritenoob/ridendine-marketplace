@@ -37,16 +37,12 @@ interface PromoCodeRow {
   id: string;
   code: string;
   is_active: boolean;
-  // Schema columns (canonical)
+  // Canonical schema columns. Aliases (valid_from / valid_until /
+  // max_uses / times_used) were dropped in migration 00036.
   starts_at: string | null;
   expires_at: string | null;
   usage_limit: number | null;
   usage_count: number;
-  // Alias columns added by migration 00010 (kept for backwards compat)
-  valid_from: string | null;
-  valid_until: string | null;
-  max_uses: number | null;
-  times_used: number;
   discount_type: 'percentage' | 'fixed';
   discount_value: number;
 }
@@ -457,12 +453,12 @@ export async function POST(request: Request): Promise<Response> {
       const typedPromo = promo as PromoCodeRow | null;
 
       if (typedPromo) {
-        // Check validity — use canonical schema columns with alias fallback
+        // Check validity against the canonical schema columns.
         const now = new Date();
-        const activeFrom = typedPromo.starts_at ?? typedPromo.valid_from;
-        const activeUntil = typedPromo.expires_at ?? typedPromo.valid_until;
-        const maxUses = typedPromo.usage_limit ?? typedPromo.max_uses;
-        const usedCount = typedPromo.usage_count ?? typedPromo.times_used;
+        const activeFrom = typedPromo.starts_at;
+        const activeUntil = typedPromo.expires_at;
+        const maxUses = typedPromo.usage_limit;
+        const usedCount = typedPromo.usage_count;
         if (activeFrom && new Date(activeFrom) > now) {
           return errorResponse('PROMO_NOT_ACTIVE', 'Promo code is not yet active');
         }
