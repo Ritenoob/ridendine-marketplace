@@ -643,11 +643,16 @@ export async function POST(request: Request): Promise<Response> {
         idempotencyKey: `checkout:${customerContext.customerId}:${idempotencyKey}`,
       });
 
-      // Authorize payment via engine
+      // Authorize payment via engine. The state-machine ACTOR_PERMISSION_MATRIX
+      // only allows 'system' to perform authorize_payment — the customer creates
+      // the PaymentIntent indirectly but the actual authorization is a platform
+      // action that fires after Stripe acknowledges the intent. Passing the
+      // customer's actor here was the source of the
+      // "Actor role customer is not allowed to perform authorize_payment" 500.
       const authResult = await engine.orderCreation.authorizePayment(
         order.id,
         paymentIntent.id,
-        customerContext.actor
+        { userId: customerContext.actor.userId, role: 'system' }
       );
       if (!authResult.success) {
         return errorResponse('PAYMENT_FAILED', authResult.error?.message || 'Failed to authorize payment', 500);
