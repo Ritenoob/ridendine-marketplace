@@ -103,6 +103,12 @@ export class OfferManagementService {
     );
 
     if (eligibleDrivers.length === 0) {
+      // REVIEW_2026-05-13 finding E3 / Phase D item D.4 — surface every
+      // empty-pool dispatch attempt to ops via a warning-level system_alerts
+      // row. Full escalation (escalated_to_ops flag + order_exceptions +
+      // error-level alert) still only triggers after sustained failure so we
+      // don't false-alarm on transient 5-second supply gaps.
+      await this.insertLowSupplyAlert(deliveryId, typedDelivery.assignment_attempts_count);
       if (typedDelivery.assignment_attempts_count >= 2) {
         await this.escalateToOps(deliveryId, 'no_drivers_available', actor);
       }
@@ -485,6 +491,30 @@ export class OfferManagementService {
 
     await this.events.flush();
     return { success: true };
+  }
+
+  // ==========================================
+  // LOW-SUPPLY WARNING (internal)
+  // Lightweight per-attempt alert. Does NOT flag the delivery as escalated
+  // and does NOT insert an order_exception — those are reserved for the
+  // sustained-failure path in escalateToOps.
+  // ==========================================
+
+  private async insertLowSupplyAlert(deliveryId: string, attemptCount: number): Promise<void> {
+    try {
+      await this.client.from('system_alerts').insert({
+        alert_type: 'dispatch_low_supply',
+        severity: 'warning',
+        title: 'No eligible drivers',
+        message: `Delivery ${deliveryId} found no eligible drivers in this matching window (attempt ${attemptCount + 1}).`,
+        entity_type: 'delivery',
+        entity_id: deliveryId,
+        metadata: { attempts_before: attemptCount },
+      });
+    } catch (err) {
+      // Alerting must never block dispatch — log + continue.
+      console.error('[offer-management] insertLowSupplyAlert failed:', err);
+    }
   }
 
   // ==========================================
