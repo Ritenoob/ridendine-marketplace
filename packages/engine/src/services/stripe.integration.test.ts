@@ -69,7 +69,7 @@ describe('Phase 6 Stripe / finance integration', () => {
     expect(row.status).toBe('disputed');
   });
 
-  it('executeChefRun records a bank-funded payout without calling Stripe transfers', async () => {
+  it('executeChefRun records a Stripe Connect payout when the chef has an active Connect account', async () => {
     const transferCreate = vi.fn().mockResolvedValue({ id: 'tr_test_123' });
     const stripe = {
       transfers: {
@@ -182,14 +182,32 @@ describe('Phase 6 Stripe / finance integration', () => {
 
     expect(result.runId).toBe('run-1');
     expect(result.processed).toBe(1);
-    expect(transferCreate).not.toHaveBeenCalled();
-    const lastLedger = ledgerInserts[ledgerInserts.length - 1];
-    expect(lastLedger?.stripe_id).toBeNull();
+
+    // D.2 — Stripe transfer IS called for chefs with active Connect accounts.
+    expect(transferCreate).toHaveBeenCalledTimes(1);
+    const [transferPayload, transferOpts] = transferCreate.mock.calls[0] as [
+      Record<string, unknown>,
+      { idempotencyKey?: string },
+    ];
+    expect(transferPayload.destination).toBe('acct_testchef');
+    expect(transferPayload.amount).toBe(1000);
+    expect(transferPayload.currency).toBe('cad');
+    expect(transferPayload.transfer_group).toBe('run-1');
+    expect(transferOpts.idempotencyKey).toBe('payout_run:chef:run-1:chef-1');
+
+    // Ledger row + chef_payouts row carry the returned Stripe transfer id and
+    // rail flips to 'stripe'.
+    const lastLedger = ledgerInserts[ledgerInserts.length - 1] as {
+      stripe_id?: string | null;
+    };
+    expect(lastLedger?.stripe_id).toBe('tr_test_123');
     const cpArg = chefPayoutInsert.mock.calls[0][0] as {
       stripe_transfer_id?: string | null;
+      payment_rail?: string;
       status: string;
     };
-    expect(cpArg.stripe_transfer_id).toBeNull();
+    expect(cpArg.stripe_transfer_id).toBe('tr_test_123');
+    expect(cpArg.payment_rail).toBe('stripe');
     expect(cpArg.status).toBe('paid');
   });
 
