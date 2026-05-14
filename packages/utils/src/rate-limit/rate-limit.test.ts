@@ -32,7 +32,12 @@ describe('distributed-aware rate limits', () => {
     expect(status.degraded).toBe(true);
   });
 
-  it('fails closed for high-risk policies when provider missing in production', async () => {
+  it('falls back to in-memory limiter (with degraded flag) when provider missing in production', async () => {
+    // Previously we hard-failed every high-risk request when Upstash was unset,
+    // which blocked legitimate auth/checkout traffic in prod the moment the
+    // distributed provider went down. New behavior: use the in-memory store as
+    // a degraded fallback so requests still flow, and surface the gap via the
+    // `degraded` flag on the response.
     process.env.NODE_ENV = 'production';
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -44,7 +49,8 @@ describe('distributed-aware rate limits', () => {
       userId: 'customer-1',
     });
 
-    expect(decision.allowed).toBe(false);
+    expect(decision.allowed).toBe(true);
+    expect(decision.degraded).toBe(true);
     expect(decision.reason).toMatch(/Distributed rate-limit provider/);
   });
 
