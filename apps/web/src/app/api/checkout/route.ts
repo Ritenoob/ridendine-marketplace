@@ -10,13 +10,12 @@ import {
   assertStripeConfigured,
   getOrCreateStripeCustomer,
   BASE_DELIVERY_FEE,
-  SERVICE_FEE_PERCENT,
-  HST_RATE,
   isWithinDeliveryZone,
   calculateDeliveryFee,
   estimateDistance,
   getSurgeMultiplier,
   createLoyaltyService,
+  createTaxConfigService,
   type Coordinates,
 } from '@ridendine/engine';
 import { checkoutSchema } from '@ridendine/validation';
@@ -128,14 +127,15 @@ function computeServerQuote(
   subtotal: number,
   tip: number,
   promoDiscount: number,
+  rates: { hstRate: number; serviceFeePercent: number },
   deliveryFeeCents?: number
 ) {
   // Use dynamic fee if provided, otherwise fall back to static BASE_DELIVERY_FEE
   const deliveryFee = deliveryFeeCents !== undefined
     ? deliveryFeeCents / 100
     : BASE_DELIVERY_FEE / 100;
-  const serviceFee = roundMoney(subtotal * (SERVICE_FEE_PERCENT / 100));
-  const tax = roundMoney((subtotal + deliveryFee + serviceFee) * (HST_RATE / 100));
+  const serviceFee = roundMoney(subtotal * (rates.serviceFeePercent / 100));
+  const tax = roundMoney((subtotal + deliveryFee + serviceFee) * (rates.hstRate / 100));
   const preDiscountTotal = subtotal + deliveryFee + serviceFee + tax + tip;
   const total = roundMoney(Math.max(preDiscountTotal - promoDiscount, 0));
 
@@ -378,10 +378,17 @@ export async function POST(request: Request): Promise<Response> {
       surgeMultiplier: deliverySurgeMultiplier,
     } = await resolveDeliveryFeeCents(adminClient, deliveryAddressId, storefrontId, subtotalCents);
 
+    // D.6 / E5 — pull HST + service-fee from platform_settings (ops-configurable)
+    // instead of compiled-in constants. Service falls back to constants on DB error.
+    const taxRates = await createTaxConfigService(
+      adminClient as unknown as Parameters<typeof createTaxConfigService>[0]
+    ).getTaxRates();
+
     const serverQuoteNoPromo = computeServerQuote(
       authoritativeSubtotal,
       Number(tip || 0),
       0,
+      taxRates,
       dynamicDeliveryFeeCents
     );
     const clientSuppliedAnyTotals =
@@ -481,6 +488,7 @@ export async function POST(request: Request): Promise<Response> {
       authoritativeSubtotal,
       Number(tip || 0),
       promoDiscount,
+      taxRates,
       dynamicDeliveryFeeCents
     );
     const idempotencyKey = deriveIdempotencyKey(request, customerContext.customerId, cart.id, {

@@ -1,6 +1,11 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@ridendine/db';
+import {
+  evaluateRateLimit,
+  RATE_LIMIT_POLICIES,
+  rateLimitPolicyResponse,
+} from '@ridendine/utils';
 import { finalizeOpsActor, getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -9,6 +14,15 @@ export async function POST(request: NextRequest) {
   const actor = await getOpsActorContext();
   const opsActor = finalizeOpsActor(actor, guardPlatformApi(actor, 'announcements'));
   if (opsActor instanceof Response) return opsActor;
+
+  const limit = await evaluateRateLimit({
+    request,
+    policy: RATE_LIMIT_POLICIES.opsAdminMutation,
+    namespace: 'ops-announcements-post',
+    userId: opsActor.userId,
+    routeKey: 'POST:/api/announcements',
+  });
+  if (!limit.allowed) return rateLimitPolicyResponse(limit);
 
   const { audience, title, body } = await request.json();
 

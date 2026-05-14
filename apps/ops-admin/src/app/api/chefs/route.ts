@@ -6,6 +6,11 @@ import {
   type SupabaseClient,
 } from '@ridendine/db';
 import { paginationSchema, signupSchema } from '@ridendine/validation';
+import {
+  evaluateRateLimit,
+  RATE_LIMIT_POLICIES,
+  rateLimitPolicyResponse,
+} from '@ridendine/utils';
 import { getOpsActorContext, errorResponse, guardPlatformApi } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -53,6 +58,15 @@ export async function POST(request: Request) {
     const actor = await getOpsActorContext();
     const denied = guardPlatformApi(actor, 'chefs_governance');
     if (denied) return denied;
+
+    const limit = await evaluateRateLimit({
+      request,
+      policy: RATE_LIMIT_POLICIES.opsAdminMutation,
+      namespace: 'ops-chefs-post',
+      userId: actor?.userId ?? 'unknown',
+      routeKey: 'POST:/api/chefs',
+    });
+    if (!limit.allowed) return rateLimitPolicyResponse(limit);
 
     const body = await request.json();
     const validated = signupSchema.parse(body);

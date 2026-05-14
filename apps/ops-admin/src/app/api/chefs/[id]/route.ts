@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 import {
+  evaluateRateLimit,
+  RATE_LIMIT_POLICIES,
+  rateLimitPolicyResponse,
+} from '@ridendine/utils';
+import {
   finalizeOpsActor,
   getOpsActorContext,
   errorResponse,
@@ -19,6 +24,15 @@ export async function PATCH(
     const actor = await getOpsActorContext();
     const opsActor = finalizeOpsActor(actor, guardPlatformApi(actor, 'chefs_governance'));
     if (opsActor instanceof Response) return opsActor;
+
+    const limit = await evaluateRateLimit({
+      request,
+      policy: RATE_LIMIT_POLICIES.opsAdminMutation,
+      namespace: 'ops-chefs-patch',
+      userId: opsActor.userId,
+      routeKey: 'PATCH:/api/chefs/[id]',
+    });
+    if (!limit.allowed) return rateLimitPolicyResponse(limit);
 
     const action = body.action ?? (
       body.status === 'approved'
