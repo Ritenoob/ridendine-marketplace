@@ -16,7 +16,11 @@ export default tseslint.config(
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      // ~440 existing `any` usages across the monorepo, mostly Supabase
+      // client casts where the generated types don't match runtime semantics.
+      // Disabled for now; tracked as a dedicated typing-debt cleanup in
+      // docs/TYPING_BACKLOG.md. Re-enable when working through that backlog.
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/consistent-type-imports': 'error',
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',

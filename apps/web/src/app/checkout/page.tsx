@@ -182,7 +182,7 @@ function CheckoutContent() {
     }
 
     loadData();
-  }, [storefrontId]);
+  }, [storefrontId, router]);
 
   /** Cart line total in dollars (matches cart API `unit_price` × qty). */
   const cartSubtotal =

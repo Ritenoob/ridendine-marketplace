@@ -45,9 +45,26 @@ export default function AddressesPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!authLoading) {
-      fetchAddresses();
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      return;
     }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/addresses');
+        const result = await res.json();
+        if (!cancelled) setAddresses(result.data || []);
+      } catch {
+        if (!cancelled) setError('Failed to load addresses');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [user, authLoading]);
 
   async function fetchAddresses() {

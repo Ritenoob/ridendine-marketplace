@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   if (!addressId) return badRequest('addressId is required');
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const db = createAdminClient() as any;
     const provider = new OsrmProvider();
     const service = new EtaService(provider, db);
