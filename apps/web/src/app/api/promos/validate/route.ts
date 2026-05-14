@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'This promo code has expired' });
   }
 
-  if (promo.max_uses !== null && promo.used_count >= promo.max_uses) {
+  if (promo.usage_limit !== null && promo.usage_count >= promo.usage_limit) {
     return NextResponse.json({ success: false, error: 'This promo code has reached its usage limit' });
   }
 
