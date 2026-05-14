@@ -8,6 +8,13 @@ export const middleware = createAuthMiddleware({
     '/privacy',
     '/terms',
     '/api/health',
+    // E2E walkthrough fix: without these, the chef-admin login API
+    // returned HTTP 307 from the middleware (auth/login page form posts
+    // to /api/auth/login which the default-protect mode flagged as
+    // requiring a session — chicken-and-egg).
+    '/api/auth/login',
+    '/api/auth/signup',
+    '/api/auth/forgot-password',
   ],
   loginRoute: '/auth/login',
   authenticatedRedirect: '/',

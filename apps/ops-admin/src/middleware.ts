@@ -1,7 +1,18 @@
 import { createAuthMiddleware } from '@ridendine/auth/middleware';
 
 export const middleware = createAuthMiddleware({
-  publicRoutes: ['/auth/login', '/api/health', '/api/engine/processors', '/api/ops/live-board'],
+  publicRoutes: [
+    '/auth/login',
+    '/api/health',
+    '/api/engine/processors',
+    '/api/ops/live-board',
+    // E2E walkthrough fix — without these, fresh-session POSTs to
+    // /api/auth/login returned 307 from the default-protect middleware,
+    // chicken-and-egg blocking the very first login.
+    '/api/auth/login',
+    '/api/auth/signup',
+    '/api/auth/forgot-password',
+  ],
   loginRoute: '/auth/login',
   authenticatedRedirect: '/',
   authRoutes: [],
