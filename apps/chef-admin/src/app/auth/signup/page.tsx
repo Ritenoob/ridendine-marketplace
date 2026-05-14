@@ -18,6 +18,7 @@ export default function SignupPage() {
     confirmPassword: '',
   });
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToChefDuties, setAgreedToChefDuties] = useState(false);
   const [validationError, setValidationError] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,6 +39,13 @@ export default function SignupPage() {
     // Validation
     if (!agreedToTerms) {
       setValidationError('You must agree to the Terms of Service');
+      return;
+    }
+
+    if (!agreedToChefDuties) {
+      setValidationError(
+        'You must acknowledge the chef independent-contractor and food-safety responsibilities'
+      );
       return;
     }
 
@@ -177,6 +185,23 @@ export default function SignupPage() {
             <Link href="/privacy" className="font-medium text-[#E85D26] hover:text-[#D04D16]">
               Privacy Policy
             </Link>
+          </label>
+        </div>
+
+        <div className="flex items-start gap-2 rounded-lg border border-orange-100 bg-orange-50 p-3">
+          <input
+            type="checkbox"
+            id="chefDuties"
+            checked={agreedToChefDuties}
+            onChange={(e) => setAgreedToChefDuties(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#E85D26] focus:ring-[#E85D26] focus:ring-offset-0"
+          />
+          <label htmlFor="chefDuties" className="text-sm text-slate-700">
+            I confirm I am an <strong>independent contractor</strong>, not an employee of
+            RideNDine. I am solely responsible for food safety, hold (or will hold before my
+            first order) any required food-handler certifications and municipal permits, and
+            will report my income for tax purposes. I will list accurate allergens and
+            ingredients on every menu item.
           </label>
         </div>
 

@@ -1,7 +1,17 @@
 import { createAuthMiddleware } from '@ridendine/auth/middleware';
 
 export const middleware = createAuthMiddleware({
-  publicRoutes: ['/auth/login', '/auth/signup', '/api/auth/login', '/api/auth/signup'],
+  publicRoutes: [
+    '/auth/login',
+    '/auth/signup',
+    '/api/auth/login',
+    '/api/auth/signup',
+    // Health endpoint must be reachable by external uptime monitors.
+    '/api/health',
+    // Legal pages must be reachable from the login screen / new-driver onboarding.
+    '/privacy',
+    '/terms',
+  ],
   loginRoute: '/auth/login',
   authenticatedRedirect: '/',
 });

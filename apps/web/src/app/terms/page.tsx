@@ -25,6 +25,20 @@ export default function TermsPage() {
           <h1 className="text-4xl font-bold text-gray-900">Terms of Service</h1>
           <p className="mt-4 text-gray-600">Last updated: March 2024</p>
 
+          <div
+            role="alert"
+            className="mt-6 rounded-lg border-2 border-amber-400 bg-amber-50 p-4 text-sm text-amber-900"
+          >
+            <p className="font-semibold">⚠️ DRAFT — Pending Legal Review</p>
+            <p className="mt-1">
+              This document is a working draft prepared by the RideNDine team and has{' '}
+              <strong>not</strong> been reviewed by qualified legal counsel. It does not
+              constitute legal advice, is not a binding contract, and is provided for
+              informational purposes only during our closed beta. Final terms will be posted
+              before public launch. Questions: legal@ridendine.ca.
+            </p>
+          </div>
+
           <div className="mt-8 space-y-8 text-gray-600">
             <section>
               <h2 className="text-2xl font-semibold text-gray-900">1. Acceptance of Terms</h2>

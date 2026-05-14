@@ -250,7 +250,7 @@ export default function SignupPage() {
             className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#E85D26] focus:ring-[#E85D26] focus:ring-offset-0"
           />
           <label htmlFor="terms" className="text-sm text-slate-600">
-            I agree to the{' '}
+            I am 18 or older. I agree to the{' '}
             <Link href="/terms" className="font-medium text-[#E85D26] hover:text-[#D04D16]">
               Terms of Service
             </Link>{' '}
@@ -258,6 +258,9 @@ export default function SignupPage() {
             <Link href="/privacy" className="font-medium text-[#E85D26] hover:text-[#D04D16]">
               Privacy Policy
             </Link>
+            . I understand RideNDine is a marketplace — food is prepared by independent home
+            chefs, not by RideNDine. I will review allergen and ingredient information before
+            ordering and contact the chef directly about severe allergies.
           </label>
         </div>
 

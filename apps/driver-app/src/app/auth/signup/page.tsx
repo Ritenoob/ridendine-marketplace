@@ -50,8 +50,14 @@ function SuccessScreen() {
   );
 }
 
-function validateForm(formData: FormData, agreedToTerms: boolean): string | null {
+function validateForm(
+  formData: FormData,
+  agreedToTerms: boolean,
+  agreedToDriverDuties: boolean
+): string | null {
   if (!agreedToTerms) return 'You must agree to the Terms of Service';
+  if (!agreedToDriverDuties)
+    return 'You must acknowledge the driver independent-contractor, insurance, and safe-driving requirements';
   if (formData.password !== formData.confirmPassword) return 'Passwords do not match';
   if (formData.password.length < 8) return 'Password must be at least 8 characters';
   return null;
@@ -60,6 +66,7 @@ function validateForm(formData: FormData, agreedToTerms: boolean): string | null
 export default function DriverSignupPage() {
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToDriverDuties, setAgreedToDriverDuties] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -72,7 +79,7 @@ export default function DriverSignupPage() {
     e.preventDefault();
     setError('');
 
-    const validationError = validateForm(formData, agreedToTerms);
+    const validationError = validateForm(formData, agreedToTerms, agreedToDriverDuties);
     if (validationError) {
       setError(validationError);
       return;
@@ -233,6 +240,23 @@ export default function DriverSignupPage() {
                 <Link href="/privacy" className="font-medium text-[#E85D26] hover:text-[#d44e1e]">
                   Privacy Policy
                 </Link>
+              </label>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <input
+                type="checkbox"
+                id="driverDuties"
+                checked={agreedToDriverDuties}
+                onChange={(e) => setAgreedToDriverDuties(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#E85D26] focus:ring-[#E85D26] focus:ring-offset-0"
+              />
+              <label htmlFor="driverDuties" className="text-sm text-gray-700">
+                I confirm I am an <strong>independent contractor</strong>, not an employee of
+                RideNDine. I hold a valid driver&apos;s licence and{' '}
+                <strong>commercial-delivery-eligible insurance</strong> for the vehicle I will
+                use. I will not use the app while driving, will follow all traffic laws, and
+                will report my income for tax purposes.
               </label>
             </div>
 
