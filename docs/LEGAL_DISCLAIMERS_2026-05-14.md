@@ -301,3 +301,21 @@ Each block below is the DRAFT wording counsel should review. Wiring happens afte
 ### When to wire these up
 
 Per direction 2026-05-14: defer wiring of the remaining 13 surfaces until **close to production-readiness**, then engage counsel for a single legal review pass on this whole document plus the 6 already-banner-protected pages.
+
+---
+
+## D.10 status — 2026-05-14 session end
+
+**Status:** ⛔ **Deferred to counsel.** Cannot be completed without a qualified lawyer reviewing the existing DRAFT text and the 13 unwired disclaimers cataloged above.
+
+**Engineer work done:**
+- 6 legal pages (web/chef/driver × privacy/terms) have a visible amber DRAFT banner
+- 3 signup forms have role-specific IC + food-safety / IC + insurance acknowledgement checkboxes
+- This doc enumerates every surface counsel will need to review
+
+**What you/counsel need to do when resuming:**
+1. Engage a Canadian lawyer familiar with marketplace platforms (similar to Uber Eats / DoorDash structure)
+2. Have them review this catalog top-to-bottom
+3. Replace the DRAFT body text on each of the 6 legal pages with their approved wording
+4. Wire the 13 remaining disclaimer surfaces with their approved text
+5. Remove the DRAFT banner from each legal page once it's been reviewed

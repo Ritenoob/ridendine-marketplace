@@ -45,7 +45,7 @@ function calcAvgDeliveryMinutes(deliveries: DeliveryRow[]): number | null {
 }
 
 async function fetchOrders(client: ReturnType<typeof createAdminClient>, start: Date, end: Date) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data } = await (client as any)
     .from('orders')
     .select('id, total, service_fee, status, customer_id, created_at')
@@ -55,7 +55,7 @@ async function fetchOrders(client: ReturnType<typeof createAdminClient>, start: 
 }
 
 async function fetchActiveChefs(client: ReturnType<typeof createAdminClient>, start: Date, end: Date) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { count } = await (client as any)
     .from('chef_storefronts')
     .select('id', { count: 'exact', head: true })
@@ -65,7 +65,7 @@ async function fetchActiveChefs(client: ReturnType<typeof createAdminClient>, st
 }
 
 async function fetchActiveDrivers(client: ReturnType<typeof createAdminClient>, start: Date, end: Date) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { count } = await (client as any)
     .from('drivers')
     .select('id', { count: 'exact', head: true })
@@ -75,7 +75,7 @@ async function fetchActiveDrivers(client: ReturnType<typeof createAdminClient>, 
 }
 
 async function fetchDeliveries(client: ReturnType<typeof createAdminClient>, start: Date, end: Date) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { data } = await (client as any)
     .from('deliveries')
     .select('created_at, actual_dropoff_at')
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
   const { start, end } = getPeriodDates(period);
   const prev = getPreviousPeriodDates(period);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const client = createAdminClient() as any;
 
   const [orders, prevOrders, activeChefs, activeDrivers, deliveries] = await Promise.all([

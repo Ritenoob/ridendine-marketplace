@@ -42,7 +42,7 @@ async function getDashboardStats() {
     let onlineDrivers = 0;
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const deliveriesResult = await (supabase as any).from('deliveries').select('*', { count: 'exact', head: true }).in('status', [
         'assigned', 'accepted', 'en_route_to_pickup', 'picked_up', 'en_route_to_dropoff',
       ]);
@@ -50,13 +50,13 @@ async function getDashboardStats() {
     } catch { /* table may not exist */ }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const driversResult = await (supabase as any).from('drivers').select('*', { count: 'exact', head: true }).eq('status', 'approved');
       totalDrivers = driversResult.count ?? 0;
     } catch { /* non-critical */ }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const onlineResult = await (supabase as any).from('driver_presence').select('*', { count: 'exact', head: true }).eq('status', 'online');
       onlineDrivers = onlineResult.count ?? 0;
     } catch { /* non-critical */ }
@@ -64,7 +64,7 @@ async function getDashboardStats() {
     // Compute avg delivery time from actual_dropoff_at (not hardcoded)
     try {
       const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const completedResult = await (supabase as any)
         .from('deliveries')
         .select('created_at, actual_dropoff_at')
