@@ -69,7 +69,11 @@ export async function POST(request: Request) {
         bio: null,
         profile_image_url: null,
         phone: validated.phone ?? null,
-        status: 'pending',
+        // Closed-beta: chefs are self-serve. The chef still has to build a
+        // storefront (default is_active=false) and publish it before any
+        // customer sees them. Ops can flip this back to 'suspended' to
+        // block a chef without changing this default.
+        status: 'approved',
       });
     }
 

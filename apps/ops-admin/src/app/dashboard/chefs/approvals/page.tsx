@@ -1,8 +1,16 @@
 'use client';
 
 import { Card, Badge } from '@ridendine/ui';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+
+type Storefront = {
+  id: string;
+  name: string;
+  slug: string;
+  is_active: boolean;
+};
 
 type ChefProfile = {
   id: string;
@@ -11,62 +19,75 @@ type ChefProfile = {
   bio: string | null;
   status: string;
   created_at: string;
+  chef_storefronts: Storefront[] | null;
 };
 
 function getInitials(name: string): string {
   return name
     .split(' ')
+    .filter(Boolean)
     .map((word) => word.charAt(0))
     .join('')
     .toUpperCase()
     .slice(0, 2);
 }
 
+function statusBadgeColor(status: string): string {
+  switch (status) {
+    case 'approved': return 'bg-green-600 text-white';
+    case 'pending':  return 'bg-yellow-600 text-white';
+    case 'suspended': return 'bg-orange-600 text-white';
+    case 'rejected': return 'bg-red-600 text-white';
+    default:         return 'bg-gray-600 text-white';
+  }
+}
+
 export default function ChefApprovalsPage() {
-  const [pendingChefs, setPendingChefs] = useState<ChefProfile[]>([]);
+  const [chefs, setChefs] = useState<ChefProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPendingChefs();
+    fetchChefs();
   }, []);
 
-  async function fetchPendingChefs() {
+  async function fetchChefs() {
     try {
-      const response = await fetch('/api/chefs?status=pending');
+      const response = await fetch('/api/chefs');
       const result = await response.json();
-      setPendingChefs(Array.isArray(result.data) ? result.data : result.data?.items ?? []);
+      const all = Array.isArray(result.data) ? result.data : result.data?.items ?? [];
+      setChefs(all);
     } catch (error) {
-      console.error('Failed to fetch pending chefs:', error);
+      console.error('Failed to fetch chefs:', error);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleApprove(id: string) {
+  async function handleAction(id: string, action: 'approve' | 'reject' | 'suspend' | 'unsuspend') {
     try {
       await fetch(`/api/chefs/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'approve' }),
+        body: JSON.stringify({ action }),
       });
-      fetchPendingChefs();
+      fetchChefs();
     } catch (error) {
-      console.error('Failed to approve chef:', error);
+      console.error(`Failed to ${action} chef:`, error);
     }
   }
 
-  async function handleReject(id: string) {
-    try {
-      await fetch(`/api/chefs/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reject' }),
-      });
-      fetchPendingChefs();
-    } catch (error) {
-      console.error('Failed to reject chef:', error);
-    }
-  }
+  const pending = chefs.filter((c) => c.status === 'pending');
+  const needsOnboarding = chefs.filter(
+    (c) =>
+      c.status === 'approved' &&
+      (!c.chef_storefronts || c.chef_storefronts.length === 0 || !c.chef_storefronts.some((s) => s.is_active))
+  );
+  const recentlyJoined = chefs
+    .filter((c) => {
+      const ageDays = (Date.now() - new Date(c.created_at).getTime()) / (1000 * 60 * 60 * 24);
+      return ageDays < 30;
+    })
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   if (loading) {
     return (
@@ -78,68 +99,155 @@ export default function ChefApprovalsPage() {
     );
   }
 
+  function ChefRow({ chef }: { chef: ChefProfile }) {
+    const storefront = chef.chef_storefronts?.[0];
+    const ageDays = Math.floor((Date.now() - new Date(chef.created_at).getTime()) / (1000 * 60 * 60 * 24));
+    return (
+      <Card className="border-gray-800 bg-opsPanel p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#E85D26] text-base font-bold text-white">
+              {getInitials(chef.display_name)}
+            </div>
+            <div>
+              <Link href={`/dashboard/chefs/${chef.id}`} className="text-base font-semibold text-white hover:text-[#E85D26]">
+                {chef.display_name}
+              </Link>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                {chef.phone && <span>{chef.phone}</span>}
+                <span>·</span>
+                <span>Joined {ageDays === 0 ? 'today' : `${ageDays}d ago`}</span>
+                <span>·</span>
+                <span className={`rounded px-2 py-0.5 text-xs font-medium ${statusBadgeColor(chef.status)}`}>
+                  {chef.status}
+                </span>
+                {storefront ? (
+                  <Badge variant={storefront.is_active ? 'success' : 'warning'}>
+                    {storefront.is_active ? 'Storefront live' : 'Storefront inactive'}
+                  </Badge>
+                ) : (
+                  <Badge variant="warning">No storefront yet</Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/dashboard/chefs/${chef.id}`}
+              className="rounded bg-[#E85D26] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#d54d1a]"
+            >
+              View / Manage
+            </Link>
+            {chef.status === 'pending' && (
+              <>
+                <button
+                  onClick={() => handleAction(chef.id, 'approve')}
+                  className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-500"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleAction(chef.id, 'reject')}
+                  className="rounded bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500"
+                >
+                  Reject
+                </button>
+              </>
+            )}
+            {chef.status === 'approved' && (
+              <button
+                onClick={() => handleAction(chef.id, 'suspend')}
+                className="rounded bg-gray-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-600"
+              >
+                Suspend
+              </button>
+            )}
+            {chef.status === 'suspended' && (
+              <button
+                onClick={() => handleAction(chef.id, 'unsuspend')}
+                className="rounded bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-500"
+              >
+                Reinstate
+              </button>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-5xl">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Chef Approvals</h1>
-          <p className="mt-2 text-gray-400">Review and approve new chef applications</p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white">Chef Onboarding</h1>
+          <p className="mt-2 text-gray-400">
+            New chef signups are auto-approved. Use this page to track recent joiners,
+            spot chefs who haven&apos;t finished setting up a storefront, and intervene
+            when a chef needs to be suspended or reinstated.
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            For the full chef directory + filters, see{' '}
+            <Link href="/dashboard/chefs" className="text-[#E85D26] hover:underline">
+              All Chefs
+            </Link>
+            .
+          </p>
         </div>
-        <Badge className="bg-[#E85D26] text-white">
-          {pendingChefs.length} Pending
-        </Badge>
-      </div>
 
-      <div className="space-y-4">
-        {pendingChefs.map((chef) => (
-          <Card key={chef.id} className="border-gray-800 bg-opsPanel p-6">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-              <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-[#E85D26] text-xl font-bold text-white">
-                {getInitials(chef.display_name)}
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white">{chef.display_name}</h3>
-                {chef.phone && (
-                  <p className="mt-1 text-sm text-gray-400">{chef.phone}</p>
-                )}
-
-                {chef.bio && (
-                  <p className="mt-3 text-sm text-gray-300">{chef.bio}</p>
-                )}
-
-                <div className="mt-4 flex items-center gap-3">
-                  <Badge variant="warning">Pending Review</Badge>
-                  <span className="text-xs text-gray-500">
-                    Applied {new Date(chef.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-
-                <div className="mt-4 flex gap-3">
-                  <button
-                    onClick={() => handleApprove(chef.id)}
-                    className="rounded bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-500"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleReject(chef.id)}
-                    className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500"
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
+        {/* Pending review (rare after auto-approve, but keep for legacy + ops imports) */}
+        {pending.length > 0 && (
+          <section className="mb-8">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">Pending Review</h2>
+              <Badge className="bg-yellow-600 text-white">{pending.length}</Badge>
             </div>
-          </Card>
-        ))}
-        {pendingChefs.length === 0 && (
-          <div className="rounded-lg border border-gray-800 bg-opsPanel py-16 text-center">
-            <p className="text-gray-400">No pending chef approvals</p>
-          </div>
+            <div className="space-y-3">
+              {pending.map((chef) => <ChefRow key={chef.id} chef={chef} />)}
+            </div>
+          </section>
         )}
+
+        {/* Approved but storefront not yet live */}
+        <section className="mb-8">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-white">Needs Storefront Setup</h2>
+            <Badge className="bg-[#E85D26] text-white">{needsOnboarding.length}</Badge>
+          </div>
+          <p className="mb-3 text-sm text-gray-400">
+            These chefs signed up and are approved, but their storefront is either missing
+            or inactive. They need to finish onboarding in the chef portal — or you can
+            help them from the chef detail page.
+          </p>
+          {needsOnboarding.length === 0 ? (
+            <div className="rounded-lg border border-gray-800 bg-opsPanel py-8 text-center text-sm text-gray-400">
+              All approved chefs have an active storefront.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {needsOnboarding.map((chef) => <ChefRow key={chef.id} chef={chef} />)}
+            </div>
+          )}
+        </section>
+
+        {/* Recently joined (last 30 days) */}
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-white">Recently Joined</h2>
+            <Badge className="bg-gray-700 text-white">{recentlyJoined.length}</Badge>
+          </div>
+          {recentlyJoined.length === 0 ? (
+            <div className="rounded-lg border border-gray-800 bg-opsPanel py-8 text-center text-sm text-gray-400">
+              No new chef signups in the last 30 days.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentlyJoined.map((chef) => <ChefRow key={chef.id} chef={chef} />)}
+            </div>
+          )}
+        </section>
       </div>
-    </div>
     </DashboardLayout>
   );
 }

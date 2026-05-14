@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Button, Input, PasswordStrength } from '@ridendine/ui';
 
 type FormData = {
@@ -32,37 +33,26 @@ const INITIAL_FORM: FormData = {
   vehicleType: 'car',
 };
 
-function SuccessScreen() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-opsCanvas to-[#1a2d3d] px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
-        <div className="text-5xl mb-4">✅</div>
-        <h2 className="text-2xl font-bold text-gray-900">Application Submitted!</h2>
-        <p className="mt-3 text-gray-600">
-          Your driver application is being reviewed. You&apos;ll be able to log in once approved
-          by our operations team.
-        </p>
-        <Link href="/auth/login">
-          <Button className="mt-6 w-full bg-[#E85D26] hover:bg-[#d44e1e]">Go to Login</Button>
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function validateForm(formData: FormData, agreedToTerms: boolean): string | null {
+function validateForm(
+  formData: FormData,
+  agreedToTerms: boolean,
+  agreedToDriverDuties: boolean
+): string | null {
   if (!agreedToTerms) return 'You must agree to the Terms of Service';
+  if (!agreedToDriverDuties)
+    return 'You must acknowledge the driver independent-contractor, insurance, and safe-driving requirements';
   if (formData.password !== formData.confirmPassword) return 'Passwords do not match';
   if (formData.password.length < 8) return 'Password must be at least 8 characters';
   return null;
 }
 
 export default function DriverSignupPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToDriverDuties, setAgreedToDriverDuties] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -72,7 +62,7 @@ export default function DriverSignupPage() {
     e.preventDefault();
     setError('');
 
-    const validationError = validateForm(formData, agreedToTerms);
+    const validationError = validateForm(formData, agreedToTerms, agreedToDriverDuties);
     if (validationError) {
       setError(validationError);
       return;
@@ -87,15 +77,22 @@ export default function DriverSignupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Signup failed');
-      setSuccess(true);
+
+      // Closed-beta: drivers are auto-approved. If Supabase returned a
+      // session (email confirmation off), drop the driver straight into
+      // the dashboard. Otherwise send to login so they can finish via the
+      // email-confirmation link.
+      if (data.data?.requiresEmailConfirmation) {
+        router.push('/auth/login?signup=success');
+      } else {
+        router.push('/');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
   };
-
-  if (success) return <SuccessScreen />;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-opsCanvas to-[#1a2d3d] px-4 py-8">
@@ -233,6 +230,23 @@ export default function DriverSignupPage() {
                 <Link href="/privacy" className="font-medium text-[#E85D26] hover:text-[#d44e1e]">
                   Privacy Policy
                 </Link>
+              </label>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <input
+                type="checkbox"
+                id="driverDuties"
+                checked={agreedToDriverDuties}
+                onChange={(e) => setAgreedToDriverDuties(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#E85D26] focus:ring-[#E85D26] focus:ring-offset-0"
+              />
+              <label htmlFor="driverDuties" className="text-sm text-gray-700">
+                I confirm I am an <strong>independent contractor</strong>, not an employee of
+                RideNDine. I hold a valid driver&apos;s licence and{' '}
+                <strong>commercial-delivery-eligible insurance</strong> for the vehicle I will
+                use. I will not use the app while driving, will follow all traffic laws, and
+                will report my income for tax purposes.
               </label>
             </div>
 

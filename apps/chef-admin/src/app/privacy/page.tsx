@@ -14,6 +14,20 @@ export default function ChefPrivacyPage() {
         <h1 className="mt-6 text-3xl font-bold text-gray-950">Chef Privacy Policy</h1>
         <p className="mt-3 text-sm text-gray-500">RideNDine chef portal privacy summary.</p>
 
+        <div
+          role="alert"
+          className="mt-6 rounded-lg border-2 border-amber-400 bg-amber-50 p-4 text-sm text-amber-900"
+        >
+          <p className="font-semibold">⚠️ DRAFT — Pending Legal Review</p>
+          <p className="mt-1">
+            This document is a working draft prepared by the RideNDine team and has{' '}
+            <strong>not</strong> been reviewed by qualified legal counsel. It does not
+            constitute legal advice, is not a binding contract, and is provided for
+            informational purposes only during our closed beta. Final terms will be posted
+            before public launch. Questions: legal@ridendine.ca.
+          </p>
+        </div>
+
         <div className="mt-8 space-y-6 text-sm leading-6 text-gray-700">
           <section>
             <h2 className="text-lg font-semibold text-gray-950">Information we collect</h2>
