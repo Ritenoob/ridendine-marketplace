@@ -28,7 +28,13 @@ function cutoffISO(thresholdMinutes: number): string {
 // ---- public functions ----
 
 /**
- * Orders with engine_status='pending' older than thresholdMinutes.
+ * Orders awaiting chef acceptance, older than thresholdMinutes.
+ *
+ * Canonically PENDING is the "awaiting chef" state, but a real prod order
+ * (RD-MP4ZNSEA-AJKX, 2026-05-14) sat in PAYMENT_AUTHORIZED for 12 hours
+ * because the upstream payment_authorized → pending auto-transition didn't
+ * fire. Defensive: cancel stuck orders in EITHER state so customers don't
+ * see "Pending forever" while we trace the upstream transition bug.
  */
 export async function checkChefAcceptanceTimeout(
   client: SupabaseClient,
@@ -37,7 +43,7 @@ export async function checkChefAcceptanceTimeout(
   const { data, error } = await client
     .from('orders')
     .select('id, engine_status, created_at')
-    .eq('engine_status', 'pending')
+    .in('engine_status', ['pending', 'payment_authorized'])
     .lt('created_at', cutoffISO(thresholdMinutes));
 
   if (error || !data) return [];
