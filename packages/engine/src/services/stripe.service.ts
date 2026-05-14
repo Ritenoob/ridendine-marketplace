@@ -12,12 +12,23 @@ let stripeSingleton: Stripe | null = null;
 
 function assertStripeEnvironmentSafety(secretKey: string): void {
   const nodeEnv = process.env.NODE_ENV ?? 'development';
+  const allowTestInProd = process.env.STRIPE_ALLOW_TEST_IN_PRODUCTION === 'true';
+
   if (nodeEnv !== 'production' && !secretKey.startsWith('sk_test_')) {
     throw new Error(
       `Unsafe Stripe key for ${nodeEnv}: non-production must use test mode key`
     );
   }
   if (nodeEnv === 'production' && !secretKey.startsWith('sk_live_')) {
+    // Closed-beta escape hatch — explicit opt-in for testing the real
+    // production code path with Stripe test keys (no real money moves).
+    // Remove STRIPE_ALLOW_TEST_IN_PRODUCTION from Vercel before public launch.
+    if (allowTestInProd && secretKey.startsWith('sk_test_')) {
+      console.warn(
+        '[stripe] STRIPE_ALLOW_TEST_IN_PRODUCTION=true — using Stripe TEST mode key in production environment. Remove this flag before going live with real customers.'
+      );
+      return;
+    }
     throw new Error('Unsafe Stripe key for production: production must use live mode key');
   }
 }
