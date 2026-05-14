@@ -107,8 +107,19 @@ export async function evaluateRateLimit(params: {
   const status = getRateLimitProviderStatus();
   const policy = params.policy;
 
-  if (status.degraded && policy.failBehavior === 'fail_closed' && policy.risk === 'high') {
-    return buildFailClosedDecision(policy, status.reason ?? 'rate_limit_provider_unavailable');
+  // Even when the distributed provider is missing, we fall back to the in-memory
+  // store. Per-instance rate limiting is strictly worse than per-cluster, but it
+  // is FAR better than the previous behavior of fail-closed on every request,
+  // which blocked legitimate logins for everyone the moment Upstash was unset.
+  // Distributed-bypass risk is logged via the `degraded: true` field on every
+  // response so ops can detect the gap. Set UPSTASH_REDIS_REST_URL / _TOKEN to
+  // close the gap.
+  if (status.degraded) {
+    console.warn(
+      '[rate-limit] degraded: using in-memory fallback. reason=%s policy=%s',
+      status.reason ?? 'unknown',
+      policy.name
+    );
   }
 
   try {

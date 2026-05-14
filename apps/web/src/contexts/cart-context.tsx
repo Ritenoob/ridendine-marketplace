@@ -116,9 +116,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (result.success) {
         setStorefrontId(sfId);
         await fetchCart(sfId);
+        return;
       }
-    } catch (error) {
-      console.error('Error adding to cart:', error);
+
+      // Previously this branch was silent — users saw the "add to cart" button
+      // click do nothing with no feedback. Now we surface the failure: a 401
+      // (no session) bounces to login with a redirect back; anything else
+      // throws so callers (storefront menu, etc.) can show the message.
+      if (response.status === 401) {
+        const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/auth/login?redirect=${redirect}`;
+        return;
+      }
+      const message =
+        typeof result?.error === 'string'
+          ? result.error
+          : `Add to cart failed (HTTP ${response.status})`;
+      throw new Error(message);
     } finally {
       setLoading(false);
     }
