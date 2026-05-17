@@ -3,11 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --font-inter: 'Inter', system-ui, sans-serif;
-  }
-
   body {
-    @apply text-gray-900;
+    @apply text-text;
   }
 }
