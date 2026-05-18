@@ -1,3 +1,18 @@
+// =============================================================================
+// DEPRECATED — legacy route, retained for /scripts/local-cron.mjs compatibility.
+//
+// Canonical SLA cron is `POST /api/engine/processors/sla` (see vercel.json).
+// That route writes to `ops_processor_runs` (idempotency tracking) and runs the
+// full SLA flow: timers + chef auto-cancel + driver-assignment escalation +
+// stale-preparing alerts. This file runs an older, smaller subset (timers +
+// chef rejection only) and does NOT participate in `ops_processor_runs`, so it
+// is invisible to `GET /api/engine/health.readiness.processorRuns.sla`.
+//
+// Production cron does NOT invoke this route. Do not point new schedulers here.
+// New work belongs in `/api/engine/processors/sla`. Slated for removal once
+// `scripts/local-cron.mjs` is retired or rewritten to call the canonical path.
+// =============================================================================
+
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@ridendine/db';

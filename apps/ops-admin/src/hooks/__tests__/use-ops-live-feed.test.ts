@@ -153,4 +153,99 @@ describe('liveFeedReducer', () => {
     });
     expect(s.chefsById.get('sf1')?.current_queue_size).toBe(5);
   });
+
+  // Audit gap #4 — DELIVERY_PATCH was previously uncovered (docs/OPS_LIVE_BOARD_AUDIT_2026-05-18.md).
+  it('attaches a delivery to the matching order via DELIVERY_PATCH', () => {
+    let s = createEmptyLiveFeedState();
+    s = liveFeedReducer(s, {
+      type: 'HYDRATE',
+      payload: {
+        orders: [baseOrder({ id: 'o1', updated_at: '2025-01-01T00:00:00Z' })],
+        drivers: [],
+        chefs: [],
+      },
+    });
+    s = liveFeedReducer(s, {
+      type: 'DELIVERY_PATCH',
+      row: {
+        id: 'del-1',
+        order_id: 'o1',
+        status: 'accepted',
+        driver_id: 'd1',
+        updated_at: '2025-01-02T00:00:00Z',
+        pickup_address: '123 Pickup',
+        dropoff_address: '456 Dropoff',
+      },
+    });
+    const order = s.ordersById.get('o1');
+    expect(order?.delivery?.id).toBe('del-1');
+    expect(order?.delivery?.status).toBe('accepted');
+    expect(order?.delivery?.driver_id).toBe('d1');
+  });
+
+  it('ignores DELIVERY_PATCH when the parent order is unknown', () => {
+    let s = createEmptyLiveFeedState();
+    s = liveFeedReducer(s, {
+      type: 'HYDRATE',
+      payload: { orders: [], drivers: [], chefs: [] },
+    });
+    s = liveFeedReducer(s, {
+      type: 'DELIVERY_PATCH',
+      row: {
+        id: 'del-orphan',
+        order_id: 'o-missing',
+        status: 'accepted',
+        driver_id: 'd1',
+        updated_at: '2025-01-02T00:00:00Z',
+        pickup_address: 'a',
+        dropoff_address: 'b',
+      },
+    });
+    expect(s.ordersById.size).toBe(0);
+  });
+
+  it('ignores stale DELIVERY_PATCH by updated_at', () => {
+    let s = createEmptyLiveFeedState();
+    s = liveFeedReducer(s, {
+      type: 'HYDRATE',
+      payload: {
+        orders: [
+          {
+            ...baseOrder({ id: 'o1', updated_at: '2025-06-01T00:00:00Z' }),
+            delivery: {
+              id: 'del-1',
+              order_id: 'o1',
+              status: 'picked_up',
+              driver_id: 'd1',
+              updated_at: '2025-06-01T12:00:00Z',
+              estimated_dropoff_at: null,
+              escalated_to_ops: null,
+              assignment_attempts_count: null,
+              pickup_lat: null,
+              pickup_lng: null,
+              dropoff_lat: null,
+              dropoff_lng: null,
+              pickup_address: '',
+              dropoff_address: '',
+            },
+          },
+        ],
+        drivers: [],
+        chefs: [],
+      },
+    });
+    s = liveFeedReducer(s, {
+      type: 'DELIVERY_PATCH',
+      row: {
+        id: 'del-1',
+        order_id: 'o1',
+        status: 'accepted',
+        driver_id: 'd1',
+        updated_at: '2025-01-01T00:00:00Z',
+        pickup_address: '',
+        dropoff_address: '',
+      },
+    });
+    expect(s.ordersById.get('o1')?.delivery?.status).toBe('picked_up');
+  });
 });

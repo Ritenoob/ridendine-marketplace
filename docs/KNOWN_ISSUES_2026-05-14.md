@@ -2,6 +2,14 @@
 
 Found during the post-merge verification pass. None of these are showstoppers for a closed-beta test user, but they need fixing before real-money launch.
 
+## Resolution log
+
+- **2026-05-18 — Issue #1 code side complete.** As Task 2 of `docs/plans/2026-05-18-production-readiness-stabilization.md`:
+  - `GET /api/engine/health` now returns `readiness.processorRuns.{sla,expired-offers,...}.lastSuccessAt` from the `ops_processor_runs` table, so uptime monitors can alert on stale processors rather than just missing env vars (`apps/ops-admin/src/app/api/engine/health/route.ts`).
+  - Legacy duplicate `apps/ops-admin/src/app/api/cron/sla-tick/route.ts` is marked deprecated in its header; the canonical SLA cron is `POST /api/engine/processors/sla` (which is what `apps/ops-admin/vercel.json` already points at).
+  - `scripts/local-cron.mjs` now invokes the canonical `/api/engine/processors/*` routes during local dev, matching production.
+  - Operator action still required: push `CRON_SECRET` and `ENGINE_PROCESSOR_TOKEN` to the `ridendine-ops-admin` Vercel project so the 401s actually clear. The code side cannot do this; see the "Fix (Sean to apply)" section below.
+
 ---
 
 ## ⚠️ #1 — Vercel cron jobs are silently 401-ing on ops-admin

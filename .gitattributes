@@ -1,0 +1,59 @@
+# Normalize line endings: store LF in the repo regardless of platform.
+# Resolves the WSL/Windows CRLF vs LF noise that produced ~1300 "modified"
+# files in `git status` on Windows-side clones.
+
+* text=auto eol=lf
+
+# Source — explicit LF
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.mdx text eol=lf
+*.sql text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.svg text eol=lf
+*.sh text eol=lf
+*.env.example text eol=lf
+.gitignore text eol=lf
+.prettierrc text eol=lf
+.prettierignore text eol=lf
+.vercelignore text eol=lf
+
+# Binary — never touch line endings, never try to diff
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.avif binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.zip binary
+*.tar binary
+*.tar.gz binary
+*.tgz binary
+
+# Lockfiles — keep LF and prefer ours on conflict (re-run install instead)
+pnpm-lock.yaml text eol=lf merge=ours
+package-lock.json text eol=lf merge=ours
+yarn.lock text eol=lf merge=ours
+
+# Windows-only files (none currently, but reserved)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

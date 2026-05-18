@@ -13,8 +13,11 @@ const CRON_SECRET = process.env.CRON_SECRET ?? 'dev-cron-secret';
 const OPS_ADMIN_URL = process.env.OPS_ADMIN_URL ?? 'http://localhost:3002';
 
 const ROUTES = [
-  { path: '/api/cron/sla-tick', intervalMs: 60_000 },
-  { path: '/api/cron/expired-offers', intervalMs: 30_000 },
+  // Canonical SLA processor (writes ops_processor_runs). The legacy
+  // /api/cron/sla-tick route is deprecated; see the header comment in
+  // apps/ops-admin/src/app/api/cron/sla-tick/route.ts.
+  { path: '/api/engine/processors/sla', intervalMs: 60_000 },
+  { path: '/api/engine/processors/expired-offers', intervalMs: 30_000 },
 ];
 
 function now() {
