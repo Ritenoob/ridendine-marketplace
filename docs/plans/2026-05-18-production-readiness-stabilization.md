@@ -225,9 +225,8 @@ This is the **terminal readiness plan** for the Hamilton soft-launch. It is subo
 - `[ ]` First drill completed and drill log row recorded — gated on Task 5 (lifecycle E2E running) AND operator setup above.
 
 **Task 10 — partial audit complete, one gap surfaced:**
-- `[x]` 4 of 7 sensitive tables audited and recorded in `docs/RLS_AUDIT_2026-05-18.md`: `ledger_entries` ✅, `chef_payout_accounts` ✅, `order_exceptions` ✅, `driver_documents` ⚠️ (gap).
+- `[x]` All 5 distinct sensitive tables audited (the 7-name list in the plan collapses — `support_threads`+`support_messages` were aliases for the real `support_tickets`; `audit_log` is actually `audit_logs`): `ledger_entries` ✅, `chef_payout_accounts` ✅, `order_exceptions` ✅, `support_tickets` ✅, `audit_logs` ✅, `driver_documents` ⚠️ (gap).
 - `[x]` Gap: `driver_documents` has driver-self ALL policy but NO ops-read policy. Ops driver-approval flow (Gate 5 of PILOT_CHEF_LAUNCH_PLAN) currently relies on the engine's admin-client bypass. Migration drafted in the audit doc; awaits Sean's decision (apply explicit policy vs document the admin-client reliance).
-- `[ ]` `support_threads`, `support_messages`, `audit_log` — deferred to a follow-up audit session (TASK-D in the audit doc).
 - `[ ]` Legal copy replacement, DRAFT banner removal — **operator deliverable** (Sean's reviewed text).
 - `[ ]` Verification SQL run on staging — gated on staging environment work (Task 5).
 
