@@ -3,8 +3,15 @@ import type { Database } from '../database.merged';
 
 type CookieStore = {
   get: (name: string) => { value: string } | undefined;
+  getAll?: () => Array<{ name: string; value: string }>;
   set: (name: string, value: string, options?: object) => void;
   delete: (name: string) => void;
+};
+
+type CookieToSet = {
+  name: string;
+  value: string;
+  options?: object;
 };
 
 /**
@@ -23,21 +30,19 @@ export function createServerClient(cookieStore: CookieStore): any {
 
   return createSupabaseServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
-      },
-      set(name: string, value: string, options: object) {
-        try {
-          cookieStore.set(name, value, options);
-        } catch {
-          // Handle server component context where cookies can't be set
+      getAll() {
+        if (typeof cookieStore.getAll === 'function') {
+          return cookieStore.getAll();
         }
+        return [];
       },
-      remove(name: string, options: object) {
-        try {
-          cookieStore.set(name, '', options);
-        } catch {
-          // Handle server component context
+      setAll(cookiesToSet: CookieToSet[]) {
+        for (const { name, value, options } of cookiesToSet) {
+          try {
+            cookieStore.set(name, value, options);
+          } catch {
+            // Handle server component context where cookies can't be set
+          }
         }
       },
     },

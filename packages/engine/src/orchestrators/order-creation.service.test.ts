@@ -276,6 +276,85 @@ describe('OrderCreationService', () => {
       expect(result.success).toBe(true);
     });
 
+    it('persists selected modifiers on order items', async () => {
+      const menuItem = makeSingleItem();
+      const order = makeOrder({ subtotal: 17.00 });
+      const orderItemsInsert = vi.fn();
+      const modifierInsert = vi.fn().mockResolvedValue({ error: null });
+      const client = {
+        from: vi.fn((table: string) => {
+          if (table === 'menu_items') {
+            return {
+              select: vi.fn().mockReturnValue({
+                in: vi.fn().mockResolvedValue({ data: [menuItem], error: null }),
+              }),
+            };
+          }
+          if (table === 'orders') {
+            return {
+              insert: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({ data: order, error: null }),
+                }),
+              }),
+              delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+            };
+          }
+          if (table === 'order_items') {
+            return {
+              insert: orderItemsInsert.mockReturnValue({
+                select: vi.fn().mockResolvedValue({
+                  data: [{ id: 'order-item-1', menu_item_id: MENU_ITEM_ID }],
+                  error: null,
+                }),
+              }),
+            };
+          }
+          if (table === 'order_item_modifiers') {
+            return { insert: modifierInsert };
+          }
+          return buildChain();
+        }) as ReturnType<typeof vi.fn>,
+      };
+      const service = new OrderCreationService(
+        client as any, events as any, audit as any, sla as any, masterOrder as any
+      );
+
+      const result = await service.createOrder(
+        {
+          customerId: CUSTOMER_ID,
+          storefrontId: STOREFRONT_ID,
+          deliveryAddressId: ADDRESS_ID,
+          items: [
+            {
+              menuItemId: MENU_ITEM_ID,
+              quantity: 1,
+              modifiers: [
+                {
+                  optionId: 'option-1',
+                  valueId: 'value-1',
+                  optionName: 'Spice level',
+                  valueName: 'Hot',
+                  priceAdjustment: 2,
+                } as any,
+              ],
+            },
+          ],
+        },
+        customerActor,
+      );
+
+      expect(result.success).toBe(true);
+      expect(modifierInsert).toHaveBeenCalledWith([
+        {
+          order_item_id: 'order-item-1',
+          option_name: 'Spice level',
+          value_name: 'Hot',
+          price_adjustment: 2,
+        },
+      ]);
+    });
+
     // NOTE: promoCode field exists on CreateOrderInput but the service does not
     // apply discount logic — it is stored as-is and no discount is computed.
     // Skip promo discount assertion; document here for future implementation.

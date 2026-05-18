@@ -22,46 +22,68 @@ import { expect, test } from '@playwright/test';
 
 const STUB_PHOTO_PATH = path.join(__dirname, 'fixtures', 'stub-photo.png');
 
+async function signInDriver(page: import('@playwright/test').Page) {
+  await page.goto('/auth/login');
+  const result = await page.evaluate(async () => {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        email: 'mike.driver@ridendine.ca',
+        password: 'password123',
+      }),
+    });
+    const body = await response.json().catch(() => ({}));
+    return {
+      ok: response.ok,
+      status: response.status,
+      error: typeof body.error === 'string' ? body.error : null,
+    };
+  });
+
+  expect(result, result.error ?? `Driver login failed with status ${result.status}`).toMatchObject({
+    ok: true,
+  });
+  await page.goto('/');
+  await expect(page).not.toHaveURL(/\/auth\/login/);
+}
+
 test.describe('driver lifecycle @lifecycle', () => {
-  test.use({ baseURL: 'http://127.0.0.1:3003' });
+  test.use({ baseURL: 'http://localhost:3003' });
 
   test('new driver can sign up', async ({ page }) => {
-    const driverEmail = `driver-${Date.now()}@test.local`;
+    const driverEmail = `driver-${Date.now()}@ridendine.ca`;
     await page.goto('/auth/signup');
+    await page.getByLabel(/first name/i).fill('E2E');
+    await page.getByLabel(/last name/i).fill('Driver');
     await page.getByLabel(/email/i).fill(driverEmail);
+    await page.getByLabel(/phone/i).fill('+1 555 010 1234');
     await page.getByLabel(/^password/i).fill('DriverPass123!');
     const confirmField = page.getByLabel(/confirm password/i);
     if (await confirmField.isVisible()) {
       await confirmField.fill('DriverPass123!');
     }
-    await page.getByRole('button', { name: /sign up|create account|register/i }).click();
-    await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+    await page.getByLabel(/terms of service/i).check();
+    await page.getByLabel(/independent contractor/i).check();
+    await page.getByRole('button', { name: /submit application/i }).click();
+    await page.waitForURL((url) => !url.pathname.startsWith('/auth/signup'), { timeout: 15_000 });
   });
 
   test('driver can fill vehicle details', async ({ page }) => {
-    // Sign in as seeded approved driver
-    await page.goto('/auth/login');
-    await page.getByLabel(/email/i).fill('mike.driver@ridendine.ca');
-    await page.getByLabel(/password/i).fill('password123');
-    await page.getByRole('button', { name: /sign in|log in/i }).click();
-    await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+    await signInDriver(page);
 
     await page.goto('/profile');
     await expect(page).toHaveURL(/\/profile/);
-    // Vehicle section should be present
-    await expect(page.getByText(/vehicle|car|make|model/i).first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByTestId('driver-vehicle-details')).toBeVisible({ timeout: 5_000 });
   });
 
   test('approved driver can toggle online status', async ({ page }) => {
-    await page.goto('/auth/login');
-    await page.getByLabel(/email/i).fill('mike.driver@ridendine.ca');
-    await page.getByLabel(/password/i).fill('password123');
-    await page.getByRole('button', { name: /sign in|log in/i }).click();
-    await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+    await signInDriver(page);
 
     // Driver app home / dashboard
     await page.goto('/');
-    const toggle = page.locator('[role="switch"], input[type="checkbox"], [data-testid*="online"]').first();
+    const toggle = page.getByTestId('driver-online-toggle').first();
     await expect(toggle).toBeVisible({ timeout: 5_000 });
     await toggle.click();
     // Status label should update
@@ -69,11 +91,7 @@ test.describe('driver lifecycle @lifecycle', () => {
   });
 
   test('driver can see and accept a delivery offer', async ({ page }) => {
-    await page.goto('/auth/login');
-    await page.getByLabel(/email/i).fill('mike.driver@ridendine.ca');
-    await page.getByLabel(/password/i).fill('password123');
-    await page.getByRole('button', { name: /sign in|log in/i }).click();
-    await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+    await signInDriver(page);
 
     // Navigate to deliveries list — seeded ready_for_pickup order (ord-00006 / del-assigned pending)
     await page.goto('/delivery');
@@ -87,11 +105,7 @@ test.describe('driver lifecycle @lifecycle', () => {
   });
 
   test('driver can confirm pickup with stub photo', async ({ page }) => {
-    await page.goto('/auth/login');
-    await page.getByLabel(/email/i).fill('mike.driver@ridendine.ca');
-    await page.getByLabel(/password/i).fill('password123');
-    await page.getByRole('button', { name: /sign in|log in/i }).click();
-    await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+    await signInDriver(page);
 
     // Navigate to active delivery — assumes accepted state from prior step
     await page.goto('/delivery');
@@ -109,11 +123,7 @@ test.describe('driver lifecycle @lifecycle', () => {
   });
 
   test('driver can confirm dropoff with stub photo and complete delivery', async ({ page }) => {
-    await page.goto('/auth/login');
-    await page.getByLabel(/email/i).fill('mike.driver@ridendine.ca');
-    await page.getByLabel(/password/i).fill('password123');
-    await page.getByRole('button', { name: /sign in|log in/i }).click();
-    await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+    await signInDriver(page);
 
     await page.goto('/delivery');
     const dropoffBtn = page.getByRole('button', { name: /confirm drop.?off|delivered|complete/i }).first();
@@ -140,11 +150,7 @@ test.describe('driver lifecycle @lifecycle', () => {
   });
 
   test('driver earnings page shows updated balance', async ({ page }) => {
-    await page.goto('/auth/login');
-    await page.getByLabel(/email/i).fill('mike.driver@ridendine.ca');
-    await page.getByLabel(/password/i).fill('password123');
-    await page.getByRole('button', { name: /sign in|log in/i }).click();
-    await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+    await signInDriver(page);
 
     await page.goto('/earnings');
     await expect(page).toHaveURL(/\/earnings/);

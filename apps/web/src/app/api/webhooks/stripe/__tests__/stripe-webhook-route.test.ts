@@ -5,10 +5,12 @@ import { POST } from '../route';
 import { headers } from 'next/headers';
 import { getStripeClient } from '@ridendine/engine';
 import {
+  createLoyaltyService,
   claimStripeWebhookEventForProcessing,
   finalizeStripeWebhookSuccess,
 } from '@ridendine/engine';
-import { getEngine } from '@/lib/engine';
+import { getEngine, getSystemActor } from '@/lib/engine';
+import { clearCart, createAdminClient } from '@ridendine/db';
 
 const mockEvaluateRateLimit = jest.fn();
 
@@ -28,6 +30,7 @@ jest.mock('next/headers', () => ({
 
 jest.mock('@ridendine/engine', () => ({
   getStripeClient: jest.fn(),
+  createLoyaltyService: jest.fn(),
   claimStripeWebhookEventForProcessing: jest.fn(),
   finalizeStripeWebhookSuccess: jest.fn(),
   finalizeStripeWebhookFailure: jest.fn(),
@@ -36,12 +39,58 @@ jest.mock('@ridendine/engine', () => ({
 
 jest.mock('@ridendine/db', () => ({
   createAdminClient: jest.fn(),
+  clearCart: jest.fn(),
 }));
 
 jest.mock('@/lib/engine', () => ({
   getEngine: jest.fn(),
   getSystemActor: jest.fn(),
 }));
+
+function createAdminClientMock(orderPatchSink: Record<string, unknown>[] = []) {
+  return {
+    from(table: string) {
+      if (table === 'orders') {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: {
+                  id: 'order-1',
+                  customer_id: 'cust-1',
+                  subtotal: 12,
+                  total: 12,
+                  payment_status: 'pending',
+                  engine_status: 'draft',
+                },
+                error: null,
+              }),
+            }),
+          }),
+          update: (patch: Record<string, unknown>) => ({
+            eq: async () => {
+              orderPatchSink.push(patch);
+              return { data: null, error: null };
+            },
+          }),
+        };
+      }
+
+      return {
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({ data: null, error: null }),
+          }),
+        }),
+        update: () => ({
+          eq: async () => ({ data: null, error: null }),
+        }),
+        upsert: async () => ({ data: null, error: null }),
+      };
+    },
+    rpc: jest.fn().mockResolvedValue({ data: true, error: null }),
+  };
+}
 
 describe('POST /api/webhooks/stripe', () => {
   beforeEach(() => {
@@ -53,7 +102,10 @@ describe('POST /api/webhooks/stripe', () => {
       policy: 'webhook_stripe',
     });
     jest.mocked(getEngine).mockReturnValue({
-      orderCreation: { submitToKitchen: jest.fn().mockResolvedValue({ success: true }) },
+      orderCreation: {
+        authorizePayment: jest.fn().mockResolvedValue({ success: true }),
+        submitToKitchen: jest.fn().mockResolvedValue({ success: true }),
+      },
       orders: {},
       platform: {
         handlePaymentFailure: jest.fn().mockResolvedValue({ success: true }),
@@ -66,6 +118,15 @@ describe('POST /api/webhooks/stripe', () => {
       .mocked(claimStripeWebhookEventForProcessing)
       .mockResolvedValue({ action: 'proceed', rowId: 'row-1' });
     jest.mocked(finalizeStripeWebhookSuccess).mockResolvedValue(undefined);
+    jest.mocked(getSystemActor).mockReturnValue({
+      userId: 'system',
+      role: 'system',
+    } as ReturnType<typeof getSystemActor>);
+    jest.mocked(clearCart).mockResolvedValue(undefined);
+    jest.mocked(createLoyaltyService).mockReturnValue({
+      earnPoints: jest.fn().mockResolvedValue(undefined),
+    } as unknown as ReturnType<typeof createLoyaltyService>);
+    jest.mocked(createAdminClient).mockReturnValue(createAdminClientMock() as ReturnType<typeof createAdminClient>);
   });
 
   it('returns 400 when stripe-signature header is missing', async () => {
@@ -145,11 +206,12 @@ describe('POST /api/webhooks/stripe', () => {
   });
 
   it('handles payment success exactly once', async () => {
+    const authorizePayment = jest.fn().mockResolvedValue({ success: true });
     const submitToKitchen = jest.fn().mockResolvedValue({ success: true });
     const events = { emit: jest.fn(), flush: jest.fn().mockResolvedValue(undefined) };
     const audit = { log: jest.fn().mockResolvedValue(undefined) };
     jest.mocked(getEngine).mockReturnValue({
-      orderCreation: { submitToKitchen },
+      orderCreation: { authorizePayment, submitToKitchen },
       orders: {},
       platform: {
         handlePaymentFailure: jest.fn().mockResolvedValue({ success: true }),
@@ -182,6 +244,14 @@ describe('POST /api/webhooks/stripe', () => {
       new Request('http://localhost/api/webhooks/stripe', { method: 'POST', body: '{}' })
     );
     expect(res.status).toBe(200);
+    expect(authorizePayment).toHaveBeenCalledWith(
+      'order-1',
+      'pi_123',
+      expect.objectContaining({ role: 'system' })
+    );
+    expect(authorizePayment.mock.invocationCallOrder[0]).toBeLessThan(
+      submitToKitchen.mock.invocationCallOrder[0]
+    );
     expect(submitToKitchen).toHaveBeenCalledTimes(1);
     expect(finalizeStripeWebhookSuccess).toHaveBeenCalledTimes(1);
   });
@@ -190,7 +260,10 @@ describe('POST /api/webhooks/stripe', () => {
     const submitToKitchen = jest.fn().mockResolvedValue({ success: true });
     const handlePaymentFailure = jest.fn().mockResolvedValue({ success: true });
     jest.mocked(getEngine).mockReturnValue({
-      orderCreation: { submitToKitchen },
+      orderCreation: {
+        authorizePayment: jest.fn().mockResolvedValue({ success: true }),
+        submitToKitchen,
+      },
       orders: {},
       platform: {
         handlePaymentFailure,
@@ -252,7 +325,10 @@ describe('POST /api/webhooks/stripe', () => {
   it('replay-safety: second call with same event.id short-circuits via claimStripeWebhookEventForProcessing', async () => {
     const submitToKitchen = jest.fn().mockResolvedValue({ success: true });
     jest.mocked(getEngine).mockReturnValue({
-      orderCreation: { submitToKitchen },
+      orderCreation: {
+        authorizePayment: jest.fn().mockResolvedValue({ success: true }),
+        submitToKitchen,
+      },
       orders: {},
       platform: {
         handlePaymentFailure: jest.fn().mockResolvedValue({ success: true }),
@@ -275,7 +351,7 @@ describe('POST /api/webhooks/stripe', () => {
           data: {
             object: {
               id: 'pi_replay',
-              amount: 1500,
+              amount: 1200,
               metadata: { order_id: 'order-replay', order_number: 'RD-5' },
             },
           },
@@ -316,7 +392,10 @@ describe('POST /api/webhooks/stripe', () => {
   it('replay-safety: first-time event proceeds — submitToKitchen and finalizeStripeWebhookSuccess are called', async () => {
     const submitToKitchen = jest.fn().mockResolvedValue({ success: true });
     jest.mocked(getEngine).mockReturnValue({
-      orderCreation: { submitToKitchen },
+      orderCreation: {
+        authorizePayment: jest.fn().mockResolvedValue({ success: true }),
+        submitToKitchen,
+      },
       orders: {},
       platform: {
         handlePaymentFailure: jest.fn().mockResolvedValue({ success: true }),
@@ -339,7 +418,7 @@ describe('POST /api/webhooks/stripe', () => {
           data: {
             object: {
               id: 'pi_firsttime',
-              amount: 2000,
+              amount: 1200,
               metadata: { order_id: 'order-firsttime', order_number: 'RD-6' },
             },
           },

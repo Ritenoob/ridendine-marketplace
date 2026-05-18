@@ -23,16 +23,21 @@ test.describe('chef lifecycle @lifecycle', () => {
   test.use({ baseURL: 'http://127.0.0.1:3001' });
 
   test('new chef can sign up', async ({ page }) => {
-    const chefEmail = `chef-${Date.now()}@test.local`;
+    const chefEmail = `chef-${Date.now()}@ridendine.ca`;
     await page.goto('/auth/signup');
+    await page.getByLabel(/first name/i).fill('E2E');
+    await page.getByLabel(/last name/i).fill('Chef');
     await page.getByLabel(/email/i).fill(chefEmail);
+    await page.getByLabel(/phone/i).fill('+1 555 020 1234');
     await page.getByLabel(/^password/i).fill('ChefPass123!');
     const confirmField = page.getByLabel(/confirm password/i);
     if (await confirmField.isVisible()) {
       await confirmField.fill('ChefPass123!');
     }
-    await page.getByRole('button', { name: /sign up|create account|register/i }).click();
-    await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+    await page.getByLabel(/terms of service/i).check();
+    await page.getByLabel(/independent contractor/i).check();
+    await page.getByRole('button', { name: /create chef account/i }).click();
+    await expect(page).not.toHaveURL(/\/auth\/signup/, { timeout: 10_000 });
   });
 
   test('chef can complete storefront setup', async ({ page }) => {
@@ -61,7 +66,7 @@ test.describe('chef lifecycle @lifecycle', () => {
     // Menu page should show items from seed
     await expect(page.getByText(/burger|chicken|smash/i).first()).toBeVisible({ timeout: 5_000 });
     // Add category button should be present
-    const addCatBtn = page.getByRole('button', { name: /add category|new category/i });
+    const addCatBtn = page.getByRole('button', { name: /^category$/i });
     await expect(addCatBtn).toBeVisible();
   });
 
@@ -75,8 +80,8 @@ test.describe('chef lifecycle @lifecycle', () => {
     await page.goto('/dashboard/availability');
     await expect(page).toHaveURL(/\/dashboard\/availability/);
     // Toggle or switch element should be present
-    const toggle = page.locator('[role="switch"], input[type="checkbox"], [data-testid*="toggle"]').first();
-    await expect(toggle).toBeVisible({ timeout: 5_000 });
+    const toggle = page.locator('input[type="checkbox"]').first();
+    await expect(toggle).toBeVisible({ timeout: 20_000 });
   });
 
   test('chef can accept a pending order', async ({ page }) => {

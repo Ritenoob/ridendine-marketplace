@@ -97,6 +97,30 @@ export const driverDeliveryPatchSchema = z.object({
   newStatus: z.string().optional(),
 });
 
+export const driverDeliveryProofSchema = z.object({
+  eventType: z.enum(['pickup', 'dropoff']),
+  proofUrl: z.string().url(),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+  notes: z.string().max(500).optional(),
+  signatureUrl: z.string().url().optional(),
+});
+
+export const driverDeliveryIssueSchema = z.object({
+  issueType: z.enum([
+    'chef_delay',
+    'customer_unavailable',
+    'damaged_package',
+    'unsafe_route',
+    'driver_emergency',
+    'wrong_address',
+    'unable_to_complete',
+  ]),
+  notes: z.string().min(1).max(1000),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+});
+
 export const offerActionSchema = z.object({
   attemptId: z.string().min(1, 'Attempt ID is required'),
   response: z.enum(['accepted', 'declined']),
@@ -118,4 +142,6 @@ export type UploadDriverDocumentInput = z.infer<typeof uploadDriverDocumentSchem
 export type DriverUpdateInput = z.infer<typeof driverUpdateSchema>;
 export type PresencePatchInput = z.infer<typeof presencePatchSchema>;
 export type DriverDeliveryPatchInput = z.infer<typeof driverDeliveryPatchSchema>;
+export type DriverDeliveryProofInput = z.infer<typeof driverDeliveryProofSchema>;
+export type DriverDeliveryIssueInput = z.infer<typeof driverDeliveryIssueSchema>;
 export type OfferActionInput = z.infer<typeof offerActionSchema>;

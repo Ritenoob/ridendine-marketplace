@@ -1,4 +1,26 @@
 import { defineConfig, devices } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+
+function loadRootEnv() {
+  for (const fileName of ['.env.local', '.env.test', '.env']) {
+    const filePath = path.join(__dirname, fileName);
+    if (!fs.existsSync(filePath)) continue;
+
+    const contents = fs.readFileSync(filePath, 'utf8');
+    for (const rawLine of contents.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith('#')) continue;
+      const match = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line);
+      if (!match) continue;
+      const [, key, rawValue] = match;
+      if (process.env[key] !== undefined) continue;
+      process.env[key] = rawValue.trim().replace(/^['"]|['"]$/g, '');
+    }
+  }
+}
+
+loadRootEnv();
 
 export default defineConfig({
   testDir: './e2e',
@@ -45,25 +67,25 @@ export default defineConfig({
     {
       command: 'pnpm --filter @ridendine/web dev',
       url: 'http://127.0.0.1:3000',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 120_000,
     },
     {
       command: 'pnpm --filter @ridendine/chef-admin dev',
       url: 'http://127.0.0.1:3001',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 120_000,
     },
     {
       command: 'pnpm --filter @ridendine/ops-admin dev',
       url: 'http://127.0.0.1:3002',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 120_000,
     },
     {
       command: 'pnpm --filter @ridendine/driver-app dev',
       url: 'http://127.0.0.1:3003',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 120_000,
     },
   ],

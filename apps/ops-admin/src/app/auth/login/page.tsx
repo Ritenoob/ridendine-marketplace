@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { createBrowserClient } from '@ridendine/db';
 import { Button, Card, Input } from '@ridendine/ui';
 import { ShieldCheck } from 'lucide-react';
 
@@ -23,18 +22,15 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const supabase = createBrowserClient();
-      if (!supabase) {
-        throw new Error('Unable to connect to authentication service');
-      }
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (signInError) {
-        throw signInError;
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to sign in');
       }
 
       router.push(redirectPath);

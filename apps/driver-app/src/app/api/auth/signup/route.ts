@@ -30,6 +30,61 @@ async function createDriverPresence(adminClient: SupabaseClient, driverId: strin
     .insert({ driver_id: driverId, status: 'offline' });
 }
 
+async function createAuthUser({
+  supabase,
+  adminClient,
+  firstName,
+  lastName,
+  email,
+  phone,
+  password,
+}: {
+  supabase: SupabaseClient;
+  adminClient: SupabaseClient;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+}) {
+  const userMetadata = {
+    first_name: firstName,
+    last_name: lastName,
+    phone,
+    role: 'driver',
+  };
+
+  if (process.env.E2E_FIXTURE_RESET_ENABLED === 'true') {
+    const { data, error } = await (adminClient as any).auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: userMetadata,
+    });
+    return {
+      user: data?.user ?? null,
+      session: null,
+      error,
+      requiresEmailConfirmation: false,
+    };
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: userMetadata,
+    },
+  });
+
+  return {
+    user: data.user,
+    session: data.session,
+    error,
+    requiresEmailConfirmation: !data.session,
+  };
+}
+
 export async function POST(request: Request) {
   const limit = await evaluateRateLimit({
     request,
@@ -56,30 +111,27 @@ export async function POST(request: Request) {
     };
 
     const cookieStore = await cookies();
-    const supabase = createServerClient(cookieStore);
+    const supabase = createServerClient(cookieStore) as unknown as SupabaseClient;
+    const adminClient = createAdminClient() as unknown as SupabaseClient;
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const authData = await createAuthUser({
+      supabase,
+      adminClient,
+      firstName,
+      lastName,
       email,
+      phone,
       password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          phone,
-          role: 'driver',
-        },
-      },
     });
 
-    if (authError) {
-      return NextResponse.json({ error: authError.message }, { status: 400 });
+    if (authData.error) {
+      return NextResponse.json({ error: authData.error.message }, { status: 400 });
     }
 
     if (!authData.user) {
       return NextResponse.json({ error: 'Failed to create account' }, { status: 500 });
     }
 
-    const adminClient = createAdminClient() as unknown as SupabaseClient;
     const existing = await getDriverByUserId(adminClient, authData.user.id);
 
     if (!existing) {
@@ -108,7 +160,7 @@ export async function POST(request: Request) {
       success: true,
       data: {
         user: authData.user,
-        requiresEmailConfirmation: !authData.session,
+        requiresEmailConfirmation: authData.requiresEmailConfirmation,
       },
     });
   } catch (error) {

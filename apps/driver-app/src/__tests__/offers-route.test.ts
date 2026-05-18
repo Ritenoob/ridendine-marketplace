@@ -44,4 +44,23 @@ describe('POST /api/offers', () => {
       expect.objectContaining({ role: 'driver' })
     );
   });
+
+  it('surfaces engine errors for expired or already-taken offers', async () => {
+    respondToOffer.mockResolvedValue({
+      success: false,
+      error: { code: 'OFFER_EXPIRED', message: 'This offer has expired' },
+    });
+    const req = new NextRequest('http://localhost/api/offers', {
+      method: 'POST',
+      body: JSON.stringify({
+        attemptId: 'att-expired',
+        driverId: 'driver-self',
+        action: 'accept',
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('OFFER_EXPIRED');
+  });
 });

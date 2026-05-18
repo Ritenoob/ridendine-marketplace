@@ -225,6 +225,30 @@ export default function ProfileView({ driver }: ProfileViewProps) {
           </div>
         </Card>
 
+        <Card className="border-0 shadow-sm" data-testid="driver-vehicle-details">
+          <h2 className="text-[17px] font-semibold text-[#1a1a1a] mb-6">Vehicle Details</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[13px] font-medium text-[#6b7280] mb-2">
+                Vehicle Type
+              </label>
+              <p className="text-[15px] text-[#1a1a1a]">
+                {driver.vehicle_type
+                  ? driver.vehicle_type.charAt(0).toUpperCase() + driver.vehicle_type.slice(1)
+                  : 'Not provided'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-[13px] font-medium text-[#6b7280] mb-2">
+                Vehicle Description
+              </label>
+              <p className="text-[15px] text-[#1a1a1a]">
+                {driver.vehicle_description || 'Not provided'}
+              </p>
+            </div>
+          </div>
+        </Card>
+
         {/* Payout Account */}
         <Card className="border-0 shadow-sm">
           <h2 className="text-[17px] font-semibold text-[#1a1a1a] mb-4">Payouts</h2>

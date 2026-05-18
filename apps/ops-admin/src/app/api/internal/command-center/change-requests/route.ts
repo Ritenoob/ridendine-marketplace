@@ -2,6 +2,7 @@ import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 
 type ChangeRequestStatus = 'requested' | 'planned' | 'in_progress' | 'done' | 'blocked';
 
@@ -29,6 +30,12 @@ function forbidden() {
   return NextResponse.json({ error: 'Internal command center API is disabled.' }, { status: 403 });
 }
 
+async function guardCommandCenter() {
+  if (!isEnabled()) return forbidden();
+  const actor = await getOpsActorContext();
+  return guardPlatformApi(actor, 'team_manage');
+}
+
 function readStore(): { generatedAt: string; changeRequests: ChangeRequest[] } {
   if (!existsSync(filePath)) {
     return { generatedAt: new Date().toISOString(), changeRequests: [] };
@@ -50,12 +57,14 @@ function nextId(changeRequests: ChangeRequest[]) {
 }
 
 export async function GET() {
-  if (!isEnabled()) return forbidden();
+  const denied = await guardCommandCenter();
+  if (denied) return denied;
   return NextResponse.json(readStore());
 }
 
 export async function POST(request: NextRequest) {
-  if (!isEnabled()) return forbidden();
+  const denied = await guardCommandCenter();
+  if (denied) return denied;
   const body = await request.json();
   const now = new Date().toISOString();
   const store = readStore();
@@ -83,7 +92,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  if (!isEnabled()) return forbidden();
+  const denied = await guardCommandCenter();
+  if (denied) return denied;
   const body = await request.json();
   const store = readStore();
   const index = store.changeRequests.findIndex((changeRequest) => changeRequest.id === body.id);

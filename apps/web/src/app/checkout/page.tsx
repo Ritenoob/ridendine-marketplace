@@ -63,22 +63,38 @@ interface OrderBreakdown {
   surgeActive?: boolean;
 }
 
-function mapCheckoutError(code?: string, fallback?: string): string {
+function errorText(fallback?: unknown): string | undefined {
+  if (!fallback) {
+    return undefined;
+  }
+  if (typeof fallback === 'string') {
+    return fallback;
+  }
+  if (typeof fallback === 'object' && 'message' in fallback) {
+    const message = (fallback as { message?: unknown }).message;
+    return typeof message === 'string' ? message : undefined;
+  }
+  return undefined;
+}
+
+function mapCheckoutError(code?: string, fallback?: unknown): string {
+  const fallbackText = errorText(fallback);
+
   switch (code) {
     case 'VALIDATION_ERROR':
-      return fallback || 'Your cart or checkout details are invalid. Please review and try again.';
+      return fallbackText || 'Your cart or checkout details are invalid. Please review and try again.';
     case 'RISK_BLOCKED':
-      return fallback || 'This order was blocked by risk checks. Please contact support if needed.';
+      return fallbackText || 'This order was blocked by risk checks. Please contact support if needed.';
     case 'PAYMENT_CONFIG_ERROR':
       return 'Payment is temporarily unavailable. Please try again shortly.';
     case 'PAYMENT_FAILED':
-      return fallback || 'Payment failed. Please try a different card.';
+      return fallbackText || 'Payment failed. Please try a different card.';
     case 'IDEMPOTENCY_CONFLICT':
       return 'Duplicate checkout detected. Please wait and refresh your order status.';
     case 'INTERNAL_ERROR':
       return 'Something went wrong while creating checkout. Please try again.';
     default:
-      return fallback || 'Failed to create checkout';
+      return fallbackText || 'Failed to create checkout';
   }
 }
 
@@ -249,19 +265,28 @@ function CheckoutContent() {
     setError('');
 
     try {
+      const checkoutPayload: Record<string, unknown> = {
+        storefrontId,
+        deliveryAddressId: selectedAddress,
+        specialInstructions: deliveryInstructions,
+        tip: tipDollars(),
+        saveCard,
+      };
+
+      if (promoStatus === 'valid' && promoCode) {
+        checkoutPayload.promoCode = promoCode;
+      }
+      if (scheduledFor) {
+        checkoutPayload.scheduledFor = scheduledFor;
+      }
+      if (savedPaymentMethodId) {
+        checkoutPayload.savedPaymentMethodId = savedPaymentMethodId;
+      }
+
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          storefrontId,
-          deliveryAddressId: selectedAddress,
-          specialInstructions: deliveryInstructions,
-          tip: tipDollars(),
-          promoCode: promoStatus === 'valid' ? promoCode : null,
-          scheduledFor: scheduledFor ?? null,
-          savedPaymentMethodId: savedPaymentMethodId ?? null,
-          saveCard,
-        }),
+        body: JSON.stringify(checkoutPayload),
       });
 
       const result = await response.json();

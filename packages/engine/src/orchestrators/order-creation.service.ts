@@ -64,6 +64,8 @@ export interface CreateOrderInput {
     modifiers?: Array<{
       optionId: string;
       valueId: string;
+      optionName?: string;
+      valueName?: string;
       priceAdjustment: number;
     }>;
   }>;
@@ -140,6 +142,7 @@ export class OrderCreationService {
 
     let subtotal = 0;
     const orderItems: Array<{
+      input_index: number;
       menu_item_id: string;
       menu_item_name: string;
       quantity: number;
@@ -148,7 +151,7 @@ export class OrderCreationService {
       special_instructions?: string;
     }> = [];
 
-    for (const inputItem of input.items) {
+    for (const [index, inputItem] of input.items.entries()) {
       const menuItem = menuItems.find((m) => m.id === inputItem.menuItemId);
       if (!menuItem) continue;
 
@@ -163,6 +166,7 @@ export class OrderCreationService {
       // depend on the trigger and the column gets the *current* name even if the
       // menu item is later renamed.
       orderItems.push({
+        input_index: index,
         menu_item_id: inputItem.menuItemId,
         menu_item_name: menuItem.name,
         quantity: inputItem.quantity,
@@ -214,9 +218,16 @@ export class OrderCreationService {
       };
     }
 
-    const { error: itemsError } = await this.client
-      .from('order_items')
-      .insert(orderItems.map((item) => ({ ...item, order_id: order.id })));
+    const orderItemRows = orderItems.map(({ input_index: _inputIndex, ...item }) => ({
+      ...item,
+      order_id: order.id,
+    }));
+    const hasModifiers = input.items.some((item) => (item.modifiers?.length ?? 0) > 0);
+    const orderItemsInsert = this.client.from('order_items').insert(orderItemRows);
+    const insertedItemsResult = hasModifiers
+      ? await orderItemsInsert.select('id, menu_item_id')
+      : await orderItemsInsert;
+    const itemsError = insertedItemsResult.error;
 
     if (itemsError) {
       await this.client.from('orders').delete().eq('id', order.id);
@@ -224,6 +235,54 @@ export class OrderCreationService {
         success: false,
         error: { code: 'ITEMS_FAILED', message: 'Failed to create order items' },
       };
+    }
+
+    if (hasModifiers) {
+      const insertedItems = (insertedItemsResult.data ?? []) as Array<{
+        id: string;
+        menu_item_id: string;
+      }>;
+      const modifierRows: Array<{
+        order_item_id: string;
+        option_name: string;
+        value_name: string;
+        price_adjustment: number;
+      }> = [];
+
+      for (const [index, inputItem] of input.items.entries()) {
+        const modifiers = inputItem.modifiers ?? [];
+        if (modifiers.length === 0) continue;
+        const insertedItem = insertedItems[index];
+        if (!insertedItem?.id) {
+          await this.client.from('orders').delete().eq('id', order.id);
+          return {
+            success: false,
+            error: { code: 'ITEMS_FAILED', message: 'Failed to create order item modifier snapshot' },
+          };
+        }
+
+        for (const modifier of modifiers) {
+          modifierRows.push({
+            order_item_id: insertedItem.id,
+            option_name: modifier.optionName ?? modifier.optionId,
+            value_name: modifier.valueName ?? modifier.valueId,
+            price_adjustment: modifier.priceAdjustment,
+          });
+        }
+      }
+
+      if (modifierRows.length > 0) {
+        const { error: modifiersError } = await this.client
+          .from('order_item_modifiers')
+          .insert(modifierRows);
+        if (modifiersError) {
+          await this.client.from('orders').delete().eq('id', order.id);
+          return {
+            success: false,
+            error: { code: 'ITEMS_FAILED', message: 'Failed to create order item modifiers' },
+          };
+        }
+      }
     }
 
     this.events.emit(

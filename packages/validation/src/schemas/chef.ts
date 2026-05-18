@@ -74,6 +74,15 @@ export const createMenuItemOptionSchema = z.object({
 
 export const updateMenuItemOptionSchema = createMenuItemOptionSchema.partial();
 
+export const createMenuItemOptionValueSchema = z.object({
+  name: z.string().min(1).max(100),
+  priceAdjustment: z.number().default(0),
+  isAvailable: z.boolean().default(true),
+  sortOrder: z.number().int().default(0),
+});
+
+export const updateMenuItemOptionValueSchema = createMenuItemOptionValueSchema.partial();
+
 export const setAvailabilitySchema = z.object({
   dayOfWeek: dayOfWeekSchema,
   startTime: timeSchema,
@@ -184,6 +193,7 @@ export type CreateMenuCategoryInput = z.infer<typeof createMenuCategorySchema>;
 export type CreateMenuItemInput = z.infer<typeof createMenuItemSchema>;
 export type UpdateMenuItemInput = z.infer<typeof updateMenuItemSchema>;
 export type CreateMenuItemOptionInput = z.infer<typeof createMenuItemOptionSchema>;
+export type CreateMenuItemOptionValueInput = z.infer<typeof createMenuItemOptionValueSchema>;
 export type SetAvailabilityInput = z.infer<typeof setAvailabilitySchema>;
 export type CreateDeliveryZoneInput = z.infer<typeof createDeliveryZoneSchema>;
 export type RouteCreateMenuCategoryInput = z.infer<typeof routeCreateMenuCategorySchema>;

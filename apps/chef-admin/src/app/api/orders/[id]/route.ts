@@ -106,7 +106,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return errorResponse('FORBIDDEN', 'This order does not belong to your storefront', 403);
     }
 
-    const body = await request.json();
+    const rawBody = await request.text();
+    const body = rawBody.trim() ? JSON.parse(rawBody) : {};
     const { action, ...actionParams } = body;
 
     const engine = getEngine();

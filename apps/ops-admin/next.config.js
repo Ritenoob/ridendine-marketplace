@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
+const { loadRootEnv } = require('../../scripts/load-root-env.cjs');
+
+loadRootEnv(__dirname);
+
 const nextConfig = {
   transpilePackages: [
     '@ridendine/db',

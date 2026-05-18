@@ -190,6 +190,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
             </div>
           </div>
           <button
+            data-testid="driver-online-toggle"
             onClick={toggleOnlineStatus}
             disabled={isTogglingStatus}
             className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition-all disabled:opacity-60 ${
@@ -332,6 +333,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
               Tap &quot;Go Online&quot; to start receiving delivery requests
             </p>
             <button
+              data-testid="driver-online-toggle"
               onClick={toggleOnlineStatus}
               className="mt-4 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primaryHover"
             >

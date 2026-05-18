@@ -20,6 +20,21 @@ interface OfferAlertProps {
   onChannelStatus?: (status: LiveIndicatorStatus) => void;
 }
 
+function offerErrorMessage(code?: string, fallback?: string) {
+  switch (code) {
+    case 'OFFER_EXPIRED':
+    case 'EXPIRED':
+      return 'This offer has expired.';
+    case 'OFFER_ALREADY_ACCEPTED':
+    case 'ALREADY_ACCEPTED':
+      return 'Another driver already accepted this offer.';
+    case 'FORBIDDEN':
+      return 'You are not eligible to accept this offer.';
+    default:
+      return fallback || 'Unable to respond to this offer.';
+  }
+}
+
 function mapBroadcastToOffer(payload: Record<string, unknown>): DeliveryOffer | null {
   const attemptId = typeof payload.attemptId === 'string' ? payload.attemptId : null;
   const deliveryId = typeof payload.deliveryId === 'string' ? payload.deliveryId : null;
@@ -140,6 +155,7 @@ export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertPr
   const [offer, setOffer] = useState<DeliveryOffer | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [responding, setResponding] = useState(false);
+  const [responseError, setResponseError] = useState<string | null>(null);
   const hasPlayedSound = useRef(false);
 
   useEffect(() => {
@@ -207,9 +223,10 @@ export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertPr
   const respond = async (action: 'accept' | 'decline') => {
     if (!offer) return;
     setResponding(true);
+    setResponseError(null);
 
     try {
-      await fetch('/api/offers', {
+      const response = await fetch('/api/offers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -219,12 +236,19 @@ export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertPr
           ...(action === 'decline' ? { reason: 'driver_declined' } : {}),
         }),
       });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setResponseError(offerErrorMessage(payload?.code, payload?.error));
+        return;
+      }
 
       if (action === 'accept') {
         window.location.href = `/delivery/${offer.deliveryId}`;
       }
     } catch (error) {
       console.error('Failed to respond to offer:', error);
+      setResponseError('Network error while responding to this offer.');
     } finally {
       if (action === 'decline') {
         setOffer(null);
@@ -246,6 +270,12 @@ export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertPr
         <RouteDisplay pickupAddress={offer.pickupAddress} dropoffAddress={offer.dropoffAddress} />
 
         <OfferStats distanceKm={offer.distanceKm} estimatedPayout={offer.estimatedPayout} />
+
+        {responseError ? (
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {responseError}
+          </div>
+        ) : null}
 
         <div className="mt-5 flex gap-3">
           <Button

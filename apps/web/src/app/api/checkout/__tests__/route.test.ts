@@ -6,6 +6,7 @@ import { POST } from '../route';
 
 const mockGetCartWithItems = jest.fn();
 const mockCreateAdminClient = jest.fn();
+const mockClearCart = jest.fn();
 const mockAssertStripeConfigured = jest.fn();
 const mockGetStripeClient = jest.fn();
 const mockEvaluateCheckoutRisk = jest.fn();
@@ -26,7 +27,7 @@ const mockEarnPoints = jest.fn();
 jest.mock('@ridendine/db', () => ({
   createAdminClient: () => mockCreateAdminClient(),
   getCartWithItems: (...args: unknown[]) => mockGetCartWithItems(...args),
-  clearCart: jest.fn().mockResolvedValue(undefined),
+  clearCart: (...args: unknown[]) => mockClearCart(...args),
 }));
 
 jest.mock('@ridendine/engine', () => ({
@@ -86,6 +87,8 @@ type IdemRecord = {
 
 function createAdminClientMock() {
   const idemTable = new Map<string, IdemRecord>();
+  const rpcCalls: Array<{ fn: string; args: unknown }> = [];
+  let addressRow: { lat: number; lng: number } | null = { lat: 43.2557, lng: -79.8711 };
   const menuRows = [
     {
       id: 'menu-1',
@@ -113,6 +116,13 @@ function createAdminClientMock() {
             eq: () => ({
               eq: async () => ({ data: null }),
             }),
+          }),
+        };
+      }
+      if (table === 'menu_item_options') {
+        return {
+          select: () => ({
+            in: async () => ({ data: [], error: null }),
           }),
         };
       }
@@ -184,14 +194,20 @@ function createAdminClientMock() {
       }
       if (table === 'customer_addresses') {
         return {
-          select: () => ({
-            eq: () => ({
+          select: () => {
+            const chain = {
+              eq: () => chain,
               single: async () => ({
-                data: { lat: 43.2557, lng: -79.8711 },
+                data: addressRow,
                 error: null,
               }),
-            }),
-          }),
+              maybeSingle: async () => ({
+                data: addressRow,
+                error: null,
+              }),
+            };
+            return chain;
+          },
         };
       }
       return {
@@ -203,7 +219,14 @@ function createAdminClientMock() {
         }),
       };
     },
-    rpc: async () => ({ data: true, error: null }),
+    __rpcCalls: rpcCalls,
+    __setAddressRow: (row: { lat: number; lng: number } | null) => {
+      addressRow = row;
+    },
+    rpc: async (fn: string, args: unknown) => {
+      rpcCalls.push({ fn, args });
+      return { data: true, error: null };
+    },
   };
 }
 
@@ -244,6 +267,7 @@ describe('POST /api/checkout Phase C hardening', () => {
     mockEstimateDistance.mockReturnValue(1.2);
     mockGetSurgeMultiplier.mockResolvedValue(1.0);
     mockEarnPoints.mockResolvedValue(undefined);
+    mockClearCart.mockResolvedValue(undefined);
     mockValidateReadiness.mockResolvedValue({ ok: true });
     mockCreateOrder.mockResolvedValue({
       success: true,
@@ -322,6 +346,35 @@ describe('POST /api/checkout Phase C hardening', () => {
     expect(body.success).toBe(true);
     expect(body.data.orderId).toBe('order-1');
     expect(body.data.total).toBeGreaterThan(0);
+  });
+
+  it('creates a payment intent but leaves payment authorization side effects to the webhook', async () => {
+    const adminClient = createAdminClientMock();
+    mockCreateAdminClient.mockReturnValue(adminClient);
+
+    const stripeCreate = jest.fn().mockResolvedValue({ id: 'pi_pending', client_secret: 'cs_pending' });
+    mockGetStripeClient.mockReturnValue({ paymentIntents: { create: stripeCreate } });
+
+    const res = await POST(
+      buildRequest({
+        storefrontId: '11111111-1111-1111-1111-111111111111',
+        deliveryAddressId: '22222222-2222-2222-2222-222222222222',
+        tip: 2,
+      })
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.clientSecret).toBe('cs_pending');
+    expect(mockCreateOrder).toHaveBeenCalledTimes(1);
+    expect(stripeCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: Math.round(body.data.total * 100) }),
+      expect.any(Object)
+    );
+    expect(mockAuthorizePayment).not.toHaveBeenCalled();
+    expect(mockClearCart).not.toHaveBeenCalled();
+    expect(mockEarnPoints).not.toHaveBeenCalled();
+    expect(adminClient.__rpcCalls).toEqual([]);
   });
 
   it('replays the same idempotency key without creating duplicate order/payment', async () => {
@@ -420,6 +473,25 @@ describe('POST /api/checkout Phase C hardening', () => {
     expect(res.status).toBe(400);
     expect(body.code).toBe('OUTSIDE_DELIVERY_ZONE');
     expect(body.error).toContain('Hamilton');
+    expect(mockCreateOrder).not.toHaveBeenCalled();
+  });
+
+  it('rejects checkout when delivery address does not belong to the customer', async () => {
+    const adminClient = createAdminClientMock();
+    adminClient.__setAddressRow(null);
+    mockCreateAdminClient.mockReturnValue(adminClient);
+
+    const res = await POST(
+      buildRequest({
+        storefrontId: '11111111-1111-1111-1111-111111111111',
+        deliveryAddressId: '22222222-2222-2222-2222-222222222222',
+        tip: 0,
+      })
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.code).toBe('ADDRESS_NOT_FOUND');
     expect(mockCreateOrder).not.toHaveBeenCalled();
   });
 

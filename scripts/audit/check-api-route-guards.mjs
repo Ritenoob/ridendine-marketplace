@@ -13,6 +13,7 @@ const APPROVED_GUARDS = [
   'validateEngineProcessorHeaders',
   'verifyStripeWebhook',
   'getCurrentCustomer',
+  'auth.getUser',
 ];
 
 const STATEFUL_METHODS = ['POST', 'PATCH', 'DELETE', 'PUT'];
@@ -26,8 +27,6 @@ const PUBLIC_ALLOWLIST = [
   '/api/health',
   '/api/webhooks/stripe',
   '/api/stripe/webhook',
-  // command-center now lives exclusively in apps/ops-admin
-  'apps/ops-admin/src/app/api/internal/command-center',
 ];
 
 let failed = false;

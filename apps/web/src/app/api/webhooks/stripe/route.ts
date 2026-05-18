@@ -6,8 +6,9 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import type Stripe from 'stripe';
-import { createAdminClient } from '@ridendine/db';
+import { clearCart, createAdminClient } from '@ridendine/db';
 import {
+  createLoyaltyService,
   getStripeClient,
   claimStripeWebhookEventForProcessing,
   finalizeStripeWebhookSuccess,
@@ -43,6 +44,30 @@ function webhookErrorMessage(err: unknown): string {
 
 function safeWebhookLog(err: unknown): string {
   return redactSensitiveForLog(webhookErrorMessage(err));
+}
+
+async function getOrderPaymentSnapshot(admin: ReturnType<typeof createAdminClient>, orderId: string) {
+  const { data, error } = await (admin as any)
+    .from('orders')
+    .select('id, customer_id, subtotal, total, payment_status, engine_status')
+    .eq('id', orderId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as {
+    id: string;
+    customer_id: string;
+    subtotal: number;
+    total: number;
+    payment_status: string;
+    engine_status: string;
+  };
+}
+
+function stripePaymentAmountCents(paymentIntent: Stripe.PaymentIntent): number {
+  return paymentIntent.amount_received && paymentIntent.amount_received > 0
+    ? paymentIntent.amount_received
+    : paymentIntent.amount;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -156,16 +181,68 @@ export async function POST(request: Request): Promise<Response> {
         const orderId = orderIdFromPaymentIntent(paymentIntent);
 
         if (orderId) {
-          const submitResult = await engine.orderCreation.submitToKitchen(
-            orderId,
-            systemActor
-          );
+          const orderSnapshot = await getOrderPaymentSnapshot(admin, orderId);
+          if (!orderSnapshot) {
+            throw new Error(`Order not found for Stripe PaymentIntent ${paymentIntent.id}`);
+          }
 
-          if (!submitResult.success) {
-            console.error(
-              'Failed to submit order to kitchen:',
-              submitResult.error?.code,
-              redactSensitiveForLog(submitResult.error?.message || '')
+          const expectedAmountCents = Math.round(Number(orderSnapshot.total) * 100);
+          const paidAmountCents = stripePaymentAmountCents(paymentIntent);
+          if (paidAmountCents !== expectedAmountCents) {
+            throw new Error(
+              `Stripe amount mismatch for order ${orderId}: expected ${expectedAmountCents}, received ${paidAmountCents}`
+            );
+          }
+
+          if (orderSnapshot.payment_status !== 'completed') {
+            const authResult = await engine.orderCreation.authorizePayment(
+              orderId,
+              paymentIntent.id,
+              systemActor
+            );
+
+            if (!authResult.success) {
+              throw new Error(
+                `Failed to authorize payment for order ${orderId}: ${authResult.error?.message ?? authResult.error?.code ?? 'unknown'}`
+              );
+            }
+
+            await (admin as any)
+              .from('orders')
+              .update({
+                payment_status: 'completed',
+                payment_intent_id: paymentIntent.id,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', orderId);
+
+            const submitResult = await engine.orderCreation.submitToKitchen(
+              orderId,
+              systemActor
+            );
+
+            if (!submitResult.success) {
+              console.error(
+                'Failed to submit order to kitchen:',
+                submitResult.error?.code,
+                redactSensitiveForLog(submitResult.error?.message || '')
+              );
+            }
+
+            const cartId = paymentIntent.metadata?.cart_id;
+            if (cartId) {
+              await clearCart(admin as any, cartId);
+            }
+
+            const promoCodeId = paymentIntent.metadata?.promo_code_id;
+            if (promoCodeId) {
+              await (admin as any).rpc('increment_promo_usage', { promo_id: promoCodeId });
+            }
+
+            await createLoyaltyService(admin as any).earnPoints(
+              orderSnapshot.customer_id,
+              orderId,
+              Math.round(Number(orderSnapshot.subtotal) * 100)
             );
           }
 
@@ -194,6 +271,7 @@ export async function POST(request: Request): Promise<Response> {
           });
 
           await engine.events.flush();
+
         }
         await handleStripeFinanceWebhook(admin, engine, event, systemActor);
         await finalizeStripeWebhookSuccess(admin, event.id, orderId);

@@ -6,6 +6,26 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ActorContext, AuditEntry, AuditAction } from '@ridendine/types';
 
+function auditActorType(actor: ActorContext): 'user' | 'system' | 'admin' {
+  if (actor.role === 'system') {
+    return 'system';
+  }
+
+  if (
+    actor.role === 'ops_agent' ||
+    actor.role === 'ops_admin' ||
+    actor.role === 'ops_manager' ||
+    actor.role === 'finance_admin' ||
+    actor.role === 'finance_manager' ||
+    actor.role === 'support_agent' ||
+    actor.role === 'super_admin'
+  ) {
+    return 'admin';
+  }
+
+  return 'user';
+}
+
 export class AuditLogger {
   private client: SupabaseClient;
 
@@ -41,6 +61,8 @@ export class AuditLogger {
 
     const { error } = await this.client.from('audit_logs').insert({
       id: entry.id,
+      actor_type: auditActorType(entry.actor),
+      actor_id: entry.actor.userId === 'system' ? null : entry.actor.userId,
       entity_type: entry.entityType,
       entity_id: entry.entityId,
       action: entry.action,

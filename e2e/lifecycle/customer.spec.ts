@@ -22,6 +22,36 @@ const SEED_STOREFRONT_SLUG = 'every-bite-yum';
 const SEED_ITEM_1 = 'Classic Smash Burger';
 const SEED_ITEM_2 = 'Nashville Hot Chicken Sandwich';
 
+async function waitForCartCount(page: import('@playwright/test').Page) {
+  await expect(page.getByText(/your cart is empty/i)).toBeHidden({ timeout: 30_000 });
+  await expect(page.locator('a[href="/cart"]').filter({ hasText: /\d+/ }).first()).toBeVisible({
+    timeout: 30_000,
+  });
+}
+
+function menuAddButton(page: import('@playwright/test').Page, itemName?: string) {
+  const button = page.getByRole('button', { name: /^add$/i });
+
+  if (!itemName) {
+    return button.first();
+  }
+
+  return page.getByRole('heading', { name: itemName }).locator('..').locator('..').getByRole('button', { name: /^add$/i });
+}
+
+async function signInCustomer(page: import('@playwright/test').Page) {
+  await page.goto('/auth/login');
+  await page.getByLabel(/email/i).fill('alice@example.com');
+  await page.getByLabel(/password/i).fill('password123');
+  await page.getByRole('button', { name: /sign in|log in/i }).click();
+  await page.waitForURL((url) => !url.pathname.startsWith('/auth/login'), { timeout: 15_000 });
+}
+
+async function openCartFromStorefront(page: import('@playwright/test').Page) {
+  await page.getByRole('link', { name: /view cart/i }).first().click();
+  await expect(page).toHaveURL(/\/cart(?:\?storefrontId=)?/);
+}
+
 test.describe('customer lifecycle @lifecycle', () => {
   test.use({ baseURL: 'http://127.0.0.1:3000' });
 
@@ -45,33 +75,36 @@ test.describe('customer lifecycle @lifecycle', () => {
     // Seed storefront must appear
     const storefrontLink = page.getByRole('link', { name: /every bite yum/i });
     await expect(storefrontLink).toBeVisible();
-    await storefrontLink.click();
+    await expect(storefrontLink).toHaveAttribute('href', `/chefs/${SEED_STOREFRONT_SLUG}`);
+    await page.goto(`/chefs/${SEED_STOREFRONT_SLUG}`);
     await expect(page).toHaveURL(new RegExp(SEED_STOREFRONT_SLUG));
   });
 
   test('customer can add menu items to cart from seed storefront', async ({ page }) => {
+    await signInCustomer(page);
     await page.goto(`/chefs/${SEED_STOREFRONT_SLUG}`);
     // Add first item
-    const addBtn1 = page.getByRole('button', { name: /add/i }).first();
+    const addBtn1 = menuAddButton(page);
     await expect(addBtn1).toBeVisible();
     await addBtn1.click();
     // Add second item
-    const addBtn2 = page.getByText(SEED_ITEM_2).locator('..').getByRole('button', { name: /add/i }).first();
+    const addBtn2 = menuAddButton(page, SEED_ITEM_2);
     if (await addBtn2.isVisible()) {
       await addBtn2.click();
     }
     // Cart badge / count should be > 0
-    const cartBadge = page.locator('[data-testid="cart-count"], .cart-badge, [aria-label*="cart"]');
-    await expect(cartBadge.first()).toBeVisible({ timeout: 5_000 });
+    await waitForCartCount(page);
   });
 
   test('cart page shows totals including service fee, tax, tip, delivery', async ({ page }) => {
+    await signInCustomer(page);
     // Pre-seed: navigate to storefront and add an item to build cart state
     await page.goto(`/chefs/${SEED_STOREFRONT_SLUG}`);
-    const addBtn = page.getByRole('button', { name: /add/i }).first();
+    const addBtn = menuAddButton(page);
     await expect(addBtn).toBeVisible();
     await addBtn.click();
-    await page.goto('/cart');
+    await waitForCartCount(page);
+    await openCartFromStorefront(page);
     await expect(page.getByText(/subtotal/i)).toBeVisible();
     // At minimum one fee line should appear
     const feeLines = page.locator('text=/fee|tax|tip|delivery/i');
@@ -82,22 +115,26 @@ test.describe('customer lifecycle @lifecycle', () => {
     if (!process.env.STRIPE_SECRET_KEY) {
       test.skip();
     }
+    await signInCustomer(page);
     await page.goto(`/chefs/${SEED_STOREFRONT_SLUG}`);
-    const addBtn = page.getByRole('button', { name: /add/i }).first();
+    const addBtn = menuAddButton(page);
     await expect(addBtn).toBeVisible();
     await addBtn.click();
-    await page.goto('/checkout');
+    await waitForCartCount(page);
+    await openCartFromStorefront(page);
+    await page.getByRole('link', { name: /proceed to checkout/i }).first().click();
+    await expect(page).toHaveURL(/\/checkout\?storefrontId=/);
     // Select/confirm address if prompted
     const addressOption = page.getByText(/main st|hamilton/i).first();
     if (await addressOption.isVisible()) {
       await addressOption.click();
     }
     await page.getByRole('button', { name: /proceed|continue|pay/i }).first().click();
-    // Fill Stripe iframe card number
-    const stripeFrame = page.frameLocator('[title*="Secure payment"]').first();
-    await stripeFrame.getByRole('textbox', { name: /card number/i }).fill(STRIPE_CARD);
-    await stripeFrame.getByRole('textbox', { name: /expiry|expiration/i }).fill('12/26');
-    await stripeFrame.getByRole('textbox', { name: /cvc|cvv/i }).fill('123');
+    const stripeFrame = page.frameLocator('iframe').first();
+    await stripeFrame.getByRole('button', { name: /^card$/i }).click();
+    await stripeFrame.locator('input[name="number"]').fill(STRIPE_CARD);
+    await stripeFrame.locator('input[name="expiry"]').fill('12/26');
+    await stripeFrame.locator('input[name="cvc"]').fill('123');
     await page.getByRole('button', { name: /place order|pay now|confirm/i }).click();
     await expect(page).toHaveURL(/order-confirmation|orders\/[a-z0-9-]+/, { timeout: 30_000 });
   });
@@ -106,9 +143,10 @@ test.describe('customer lifecycle @lifecycle', () => {
     if (!process.env.STRIPE_SECRET_KEY) {
       test.skip();
     }
+    await signInCustomer(page);
     await page.goto('/account/orders');
     // After Stripe checkout test, at least one order should appear
-    const orderRow = page.locator('[data-testid*="order"], .order-card, tr').first();
+    const orderRow = page.getByRole('link', { name: /view details/i }).first();
     await expect(orderRow).toBeVisible();
     await expect(page.getByText(/pending|placed|accepted/i).first()).toBeVisible();
   });
