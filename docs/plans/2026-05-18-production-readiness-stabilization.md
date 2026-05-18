@@ -227,7 +227,7 @@ This is the **terminal readiness plan** for the Hamilton soft-launch. It is subo
 
 **Task 10 — partial audit complete, one gap surfaced:**
 - `[x]` All 5 distinct sensitive tables audited (the 7-name list in the plan collapses — `support_threads`+`support_messages` were aliases for the real `support_tickets`; `audit_log` is actually `audit_logs`): `ledger_entries` ✅, `chef_payout_accounts` ✅, `order_exceptions` ✅, `support_tickets` ✅, `audit_logs` ✅, `driver_documents` ⚠️ (gap).
-- `[x]` Gap: `driver_documents` has driver-self ALL policy but NO ops-read policy. Ops driver-approval flow (Gate 5 of PILOT_CHEF_LAUNCH_PLAN) currently relies on the engine's admin-client bypass. Migration drafted in the audit doc; awaits Sean's decision (apply explicit policy vs document the admin-client reliance).
+- `[x]` Gap: `driver_documents` has driver-self ALL policy but NO ops-read policy. Ops driver-approval flow (Gate 5 of PILOT_CHEF_LAUNCH_PLAN) currently relies on the engine's admin-client bypass. **Migration landed:** `supabase/migrations/00039_driver_documents_ops_read.sql` — additive `FOR SELECT` policy for platform staff using existing `public.is_platform_staff(auth.uid())` helper from migration 00025. Apply via `supabase db push` when ready (Sean's operator step).
 - `[ ]` Legal copy replacement, DRAFT banner removal — **operator deliverable** (Sean's reviewed text).
 - `[ ]` Verification SQL run on staging — gated on staging environment work (Task 5).
 
