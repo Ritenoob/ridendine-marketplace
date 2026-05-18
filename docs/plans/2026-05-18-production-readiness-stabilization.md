@@ -183,7 +183,7 @@ This is the **terminal readiness plan** for the Hamilton soft-launch. It is subo
 - [ ] Task 8: Stripe live keys cutover and ops finance webhook
 - [ ] Task 9: Distributed rate limiting (Upstash) + Sentry wire-up (code complete; gated on Vercel env-var push)
 - [ ] Task 10: RLS depth audit + legal copy cutover (4/7 sensitive tables audited; 1 gap surfaced + migration drafted)
-- [ ] Task 11: External monitoring + daily reconciliation owner
+- [ ] Task 11: External monitoring + daily reconciliation owner (runbook drafted; UptimeRobot/Sentry/Stripe-alerts setup are operator)
 - [ ] Task 12: Load test execution + backup-restore drill
 
 ### Session 1 progress notes (2026-05-18)
@@ -216,6 +216,13 @@ This is the **terminal readiness plan** for the Hamilton soft-launch. It is subo
 - During the 2026-05-18 audit it was discovered that the launch checklist T15-referenced migration (`00026_notification_preferences.sql`) was never authored — the actual 00026 is `driver_payout_accounts.sql` and zero references to a `notification_preferences` table exist anywhere in the codebase.
 - Task 3 body in this plan has been updated to reflect this reality and to capture the two paths forward (drop T15 as deferred OR author the migration), awaiting Sean's choice before the migration is created. Schema-design-without-requirements is a scope violation; the task does not proceed past the discovery until Sean weighs in.
 - Migration count check: repo has 38 (`ls supabase/migrations/*.sql | wc -l`); prod is reportedly synced per the 2026-05-14 verification.
+
+**Task 11 — runbook drafted, operator setup remaining:**
+- `[x]` `docs/MONITORING_RUNBOOK.md` written — covers UptimeRobot monitor config (4 monitors, one per app), Sentry alert rules (single project, tagged by app), Stripe webhook delivery-failure alerts, synthetic monitor for engine processor freshness, daily reconciliation email recipient (`FINANCE_RECONCILIATION_EMAIL`), and the deliberate-misconfiguration drill procedure (Truth 2 verification). Drill log section ready to fill in after first run.
+- `[ ]` UptimeRobot account setup + 4 monitors configured — **OPERATOR (Sean)**.
+- `[ ]` Stripe Dashboard webhook delivery-failure alerts toggled ON — **OPERATOR (Sean)**.
+- `[ ]` `FINANCE_RECONCILIATION_EMAIL` set in ops-admin Vercel project — **OPERATOR (Sean)**.
+- `[ ]` First drill completed and drill log row recorded — gated on Task 5 (lifecycle E2E running) AND operator setup above.
 
 **Task 10 — partial audit complete, one gap surfaced:**
 - `[x]` 4 of 7 sensitive tables audited and recorded in `docs/RLS_AUDIT_2026-05-18.md`: `ledger_entries` ✅, `chef_payout_accounts` ✅, `order_exceptions` ✅, `driver_documents` ⚠️ (gap).
