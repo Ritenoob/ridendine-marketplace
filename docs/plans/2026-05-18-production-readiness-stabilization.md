@@ -201,10 +201,11 @@ This is the **terminal readiness plan** for the Hamilton soft-launch. It is subo
 - `[x]` `GET /api/engine/health` payload now includes `readiness.processorRuns.<name>.lastSuccessAt` (3 tests passing: `pnpm --filter @ridendine/ops-admin test -- engine/health`)
 - `[x]` `scripts/local-cron.mjs` now invokes canonical `/api/engine/processors/*` paths in dev (matches prod)
 - `[x]` `docs/KNOWN_ISSUES_2026-05-14.md` updated with resolution log entry for issue #1 code-side
-- `[ ]` `CRON_SECRET` and `ENGINE_PROCESSOR_TOKEN` set in Vercel `ridendine-ops-admin` production — **OPERATOR ACTION (Sean)** — code is ready; this is a Vercel env-var push only
-- `[ ]` `curl ... /api/engine/processors/sla` returns 200 — gated on env-var push above
-- `[ ]` `ops_processor_runs` has ≥5 rows from production within 24h of env-var push — gated on env-var push
-- `[ ]` Stuck order `dd162200-b218-464c-955d-965734fae1b2` has `engine_status='cancelled'` — gated on env-var push; auto-resolves on first SLA tick post-push
+- `[x]` Sean pushed `CRON_SECRET` + `ENGINE_PROCESSOR_TOKEN` to Vercel `ridendine-ops-admin` production scope; two redeploys triggered (`dpl_FtzCuByv1AZX3wB9cPpKxzkgf9ha`, `dpl_5BEUe8Wvqkj6MJLcNYyR58UMntPC`, both READY 2026-05-18 ~15:55 UTC).
+- **🔴 Discovered additional blocker:** Vercel runtime logs show ZERO cron-path invocations across all deployments since env var push. Build log reveals project `entrypoint: "."` (repo root) but `vercel.json` lives at `apps/ops-admin/vercel.json`. Vercel reads the wrong location → **0 crons registered** despite valid `vercel.json` content. Vercel Cron Jobs settings page confirms: empty (only generic getting-started text).
+- `[ ]` **OPERATOR FIX (Sean):** Vercel Dashboard → ridendine-ops-admin → Settings → General → Root Directory → set to `apps/ops-admin` AND enable "Include source files outside of the Root Directory in the Build Step" (required for the Turborepo monorepo to find `packages/*`). Redeploy without build cache. Confirm Cron Jobs page now shows 5 entries.
+- `[ ]` After Root Directory fix: SLA processor fires within ~2 min; `ops_processor_runs` populates; stuck order `dd162200-b218-464c-955d-965734fae1b2` auto-cancels via `engine_status='cancelled'`/`cancellation_reason='sla_breach'`.
+- **Likely needs same Root Directory fix on the other 3 Vercel projects** (`ridendine-web`, `ridendine-chef-admin`, `ridendine-driver-app`) since they're all sourced from the same Turborepo. Confirm each project's Root Directory matches its `apps/<name>` path.
 
 **Task 4 — complete:**
 - `[x]` `docs/CROSS_APP_CONTRACTS.md` documents all four boundaries (customer↔server, chef↔server, driver↔server, server→ops) with writer + reader file:line references for every payload
