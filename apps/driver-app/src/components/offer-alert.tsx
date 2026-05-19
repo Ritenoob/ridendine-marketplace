@@ -272,7 +272,7 @@ export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertPr
         <OfferStats distanceKm={offer.distanceKm} estimatedPayout={offer.estimatedPayout} />
 
         {responseError ? (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mt-4 rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-sm text-danger">
             {responseError}
           </div>
         ) : null}
