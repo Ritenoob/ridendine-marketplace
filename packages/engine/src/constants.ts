@@ -39,9 +39,14 @@ export const PAYMENT_STATUS = {
   COMPLETED: 'completed',
   FAILED: 'failed',
   REFUNDED: 'refunded',
+  PARTIALLY_REFUNDED: 'partially_refunded',
 } as const;
 
 export type PaymentStatusType = (typeof PAYMENT_STATUS)[keyof typeof PAYMENT_STATUS];
+
+export function calculateDriverPayoutAmount(deliveryFee: number): number {
+  return Math.round(deliveryFee * DRIVER_PAYOUT_PERCENT) / 100;
+}
 
 // Delivery Status Flow
 export const DELIVERY_STATUS = {

@@ -1,8 +1,12 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('platform auth smoke', () => {
+  const devAutologinEnabled =
+    process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_AUTOLOGIN === 'true';
+
   test('chef-admin boot + protected route guard @smoke', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'chef-admin-smoke', 'chef-admin-only test');
+    test.skip(devAutologinEnabled, 'dev autologin intentionally bypasses protected-route redirects');
     await page.goto('/auth/login');
     await expect(page).toHaveURL(/\/auth\/login/);
     await page.goto('/dashboard');
@@ -11,6 +15,7 @@ test.describe('platform auth smoke', () => {
 
   test('ops-admin boot + protected route guard @smoke', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'ops-admin-smoke', 'ops-admin-only test');
+    test.skip(devAutologinEnabled, 'dev autologin intentionally bypasses protected-route redirects');
     await page.goto('/auth/login');
     await expect(page).toHaveURL(/\/auth\/login/);
     await page.goto('/dashboard/orders');
@@ -19,6 +24,7 @@ test.describe('platform auth smoke', () => {
 
   test('driver-app boot + protected route guard @smoke', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'driver-app-smoke', 'driver-app-only test');
+    test.skip(devAutologinEnabled, 'dev autologin intentionally bypasses protected-route redirects');
     await page.goto('/auth/login');
     await expect(page).toHaveURL(/\/auth\/login/);
     await page.goto('/delivery/123');

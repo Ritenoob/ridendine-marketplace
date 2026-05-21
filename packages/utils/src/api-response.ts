@@ -107,12 +107,12 @@ export function operationalHealthPayload(params: {
     db: params.dbReady ? 'ok' : 'not_ready',
     env: params.envReady ? 'ok' : 'not_ready',
     stripe: stripeStatus,
-    rateLimit: params.rateLimitReady ? 'ok' : 'degraded',
+    rateLimit: params.rateLimitReady ? 'ok' : 'not_ready',
     checkoutIdempotencyMigration: checkoutMigration,
   };
 
   const readiness: HealthReadiness =
-    checks.db === 'ok' && checks.env === 'ok' && checks.stripe !== 'not_ready'
+    checks.db === 'ok' && checks.env === 'ok' && checks.stripe !== 'not_ready' && checks.rateLimit !== 'not_ready'
       ? checks.rateLimit === 'ok'
         ? 'ready'
         : 'degraded'

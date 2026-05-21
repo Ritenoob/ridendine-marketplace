@@ -270,6 +270,57 @@ describe('DispatchOrchestrator', () => {
       expect(data.status).toBe('pending');
       expect(offerManagement.offerToNextDriver).toHaveBeenCalledWith(delivery.id, SYS_ACTOR);
     });
+
+    it('calculates delivery driver_payout from the actual order delivery_fee', async () => {
+      const order = makeOrder();
+      order.delivery_fee = 8.5;
+      const delivery = makeDelivery({ delivery_fee: 8.5, driver_payout: 6.8 });
+      let insertedDelivery: Record<string, unknown> | null = null;
+
+      const { orchestrator } = createOrchestrator((table) => {
+        if (table === 'orders') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: order, error: null }),
+              }),
+            }),
+            update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+          };
+        }
+        if (table === 'deliveries') {
+          let callCount = 0;
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockImplementation(() => {
+                  callCount += 1;
+                  if (callCount === 1) return Promise.resolve({ data: null, error: null });
+                  return Promise.resolve({ data: delivery, error: null });
+                }),
+              }),
+            }),
+            insert: vi.fn().mockImplementation((row: Record<string, unknown>) => {
+              insertedDelivery = row;
+              return {
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({ data: delivery, error: null }),
+                }),
+              };
+            }),
+          };
+        }
+        return makeChain();
+      });
+
+      const result = await orchestrator.requestDispatch(ORDER_ID, SYS_ACTOR);
+
+      expect(result.success).toBe(true);
+      expect(insertedDelivery).toMatchObject({
+        delivery_fee: 8.5,
+        driver_payout: 6.8,
+      });
+    });
   });
 
   describe('manualAssign', () => {

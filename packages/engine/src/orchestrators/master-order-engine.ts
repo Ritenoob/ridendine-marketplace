@@ -522,7 +522,7 @@ export class MasterOrderEngine {
       stripePaymentIntentId: order.payment_intent_id ?? null,
     });
     if (captureResult.errors.length > 0) {
-      console.error('[completeOrder] ledger capture', captureResult.errors);
+      console.error('[completeOrder] ledger customer payment', captureResult.errors);
     }
 
     const payResult = await ledger.recordOrderPayment({

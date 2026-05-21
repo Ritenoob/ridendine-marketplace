@@ -207,3 +207,106 @@ describe('Platform constants are valid', () => {
     expect(DRIVER_PAYOUT_PERCENT).toBeLessThanOrEqual(100);
   });
 });
+
+// ==========================================
+// Production readiness regressions (2026-05-20)
+// ==========================================
+describe('Production readiness payment and schema regressions', () => {
+  it('uses partially_refunded as the only partial-refund payment status written by platform workflows', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const source = fs.readFileSync(
+      path.resolve(__dirname, './platform.engine.ts'),
+      'utf-8'
+    );
+
+    expect(source).toContain("const nextPaymentStatus = isFullRefund ? 'refunded' : 'partially_refunded'");
+    expect(source).not.toContain("'partial_refunded'");
+  });
+
+  it('database migrations allow partially_refunded payment status and validate order FKs', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const migrationsDir = path.resolve(__dirname, '../../../../supabase/migrations');
+    const sql = fs.readdirSync(migrationsDir)
+      .filter((file) => file.endsWith('.sql'))
+      .sort()
+      .map((file) => fs.readFileSync(path.join(migrationsDir, file), 'utf-8'))
+      .join('\n');
+    const uncommentedSql = sql
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('--'))
+      .join('\n');
+
+    expect(uncommentedSql).toContain('partially_refunded');
+    expect(uncommentedSql).toMatch(/ALTER TABLE orders\s+VALIDATE CONSTRAINT orders_customer_id_fkey/i);
+    expect(uncommentedSql).toMatch(/ALTER TABLE orders\s+VALIDATE CONSTRAINT orders_storefront_id_fkey/i);
+  });
+
+  it('migration numeric prefixes are unique to keep replay order unambiguous', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const migrationsDir = path.resolve(__dirname, '../../../../supabase/migrations');
+    const prefixes = fs.readdirSync(migrationsDir)
+      .filter((file) => file.endsWith('.sql'))
+      .map((file) => file.slice(0, 5));
+    const duplicates = prefixes.filter((prefix, index) => prefixes.indexOf(prefix) !== index);
+
+    expect(duplicates).toEqual([]);
+  });
+
+  it('pickup transition no longer claims to capture payment after checkout has already captured it', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../../types/src/engine/transitions.ts'),
+      'utf-8'
+    );
+    const pickupTransition = source.slice(
+      source.indexOf("action: 'confirm_pickup'"),
+      source.indexOf("action: 'start_dropoff_route'")
+    );
+
+    expect(pickupTransition).toContain('DELIVERY_PICKED_UP');
+    expect(pickupTransition).not.toContain('capture_payment');
+    expect(pickupTransition).not.toContain('ORDER_PAYMENT_CAPTURED');
+  });
+
+  it('Playwright smoke config uses isolated ports and only reuses servers by explicit opt-in', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../../../playwright.config.ts'),
+      'utf-8'
+    );
+
+    expect(source).toContain('SMOKE_OPS_PORT ?? 3102');
+    expect(source).toContain('selectedSmokeApps');
+    expect(source).toContain('SMOKE_APP');
+    expect(source).toContain("process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === 'true'");
+    expect(source).toContain('reuseExistingServer');
+  });
+
+  it('root production build runs Next app builds sequentially to avoid local OOM flakiness', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '../../../../package.json'), 'utf-8')
+    );
+
+    expect(packageJson.scripts.build).toContain('turbo build --concurrency=1');
+  });
+
+  it('driver delivery proof uploads use private signed URLs instead of public bucket URLs', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../../../apps/driver-app/src/app/api/upload/route.ts'),
+      'utf-8'
+    );
+
+    expect(source).toContain('public: false');
+    expect(source).toContain('createSignedUrl');
+    expect(source).not.toContain('getPublicUrl');
+  });
+});

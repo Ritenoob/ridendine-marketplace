@@ -166,8 +166,8 @@ export const ORDER_TRANSITIONS: StateTransition<EngineOrderStatus, OrderAction>[
     action: 'confirm_pickup',
     allowedActors: [ActorRole.DRIVER, ActorRole.OPS_AGENT, ActorRole.OPS_ADMIN, ActorRole.OPS_MANAGER],
     preconditions: ['at_pickup_location'],
-    sideEffects: ['notify_customer', 'capture_payment', 'complete_pickup_sla'],
-    emittedEvents: [DomainEventType.DELIVERY_PICKED_UP, DomainEventType.ORDER_PAYMENT_CAPTURED],
+    sideEffects: ['notify_customer', 'complete_pickup_sla'],
+    emittedEvents: [DomainEventType.DELIVERY_PICKED_UP],
     auditRequired: true,
   },
   {

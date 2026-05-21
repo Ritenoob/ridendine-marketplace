@@ -9,6 +9,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { createCentralEngine } from '../core/engine.factory';
+import { calculateDriverPayoutAmount } from '../constants';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -211,7 +212,7 @@ async function run() {
       dropoff_lat: address.lat || 43.2600,
       dropoff_lng: address.lng || -79.8650,
       delivery_fee: deliveryFee,
-      driver_payout: 4.00,
+      driver_payout: calculateDriverPayoutAmount(deliveryFee),
       assignment_attempts_count: 0,
     })
     .select()

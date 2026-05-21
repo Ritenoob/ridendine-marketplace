@@ -227,7 +227,7 @@ export class PlatformWorkflowEngine {
 
     const isFullRefund = input.refundedAmountCents >= input.totalAmountCents;
     const nextEngineStatus = isFullRefund ? 'refunded' : 'partially_refunded';
-    const nextPaymentStatus = isFullRefund ? 'refunded' : 'partial_refunded';
+    const nextPaymentStatus = isFullRefund ? 'refunded' : 'partially_refunded';
 
     const existingRefundLedger = await this.client
       .from('ledger_entries')

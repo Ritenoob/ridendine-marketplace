@@ -25,7 +25,7 @@ describe('GET /api/health', () => {
     process.env = OLD_ENV;
   });
 
-  it('reports degraded readiness when distributed rate limit provider is missing in production', async () => {
+  it('reports not_ready when distributed rate limit provider is missing in production', async () => {
     process.env.NODE_ENV = 'production';
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co';
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'anon-key';
@@ -39,9 +39,9 @@ describe('GET /api/health', () => {
     const payload = await response.json();
     const payloadString = JSON.stringify(payload);
 
-    expect(response.status).toBe(200);
-    expect(payload.data.readiness).toBe('degraded');
-    expect(payload.data.checks.rateLimit).toBe('degraded');
+    expect(response.status).toBe(503);
+    expect(payload.data.readiness).toBe('not_ready');
+    expect(payload.data.checks.rateLimit).toBe('not_ready');
     expect(payload.data.details.rateLimitProvider).toBe('memory');
     expect(payloadString).not.toContain('sk_live_secret_should_not_leak');
     expect(payloadString).not.toContain('whsec_should_not_leak');

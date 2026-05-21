@@ -16,7 +16,7 @@ import type { MasterOrderEngine } from './master-order-engine';
 import type { DeliveryEngine as MasterDeliveryEngine } from './delivery-engine';
 import type { OfferManagementService } from './offer-management.service';
 import type { DriverMatchingService, EligibleDriver } from './driver-matching.service';
-import { DRIVER_PAYOUT_PERCENT, BASE_DELIVERY_FEE } from '../constants';
+import { calculateDriverPayoutAmount } from '../constants';
 
 // ==========================================
 // TYPES
@@ -112,7 +112,7 @@ export class DispatchOrchestrator {
 
     const distance = haversineKm(pickup.lat, pickup.lng, dropoff.lat, dropoff.lng);
     const estimatedMinutes = Math.round((distance / 30) * 60) + 5;
-    const driverPayout = Math.round(BASE_DELIVERY_FEE * (DRIVER_PAYOUT_PERCENT / 100)) / 100;
+    const driverPayout = calculateDriverPayoutAmount(order.delivery_fee);
 
     const { data: delivery, error: deliveryError } = await this.client
       .from('deliveries')

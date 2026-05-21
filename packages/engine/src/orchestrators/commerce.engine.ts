@@ -163,7 +163,7 @@ export class CommerceLedgerEngine {
   }
 
   /**
-   * Record payment capture (after delivery)
+   * Record customer payment recognition and marketplace splits.
    */
   async recordPaymentCapture(
     orderId: string,
@@ -193,13 +193,14 @@ export class CommerceLedgerEngine {
 
     const entries: Partial<LedgerEntry>[] = [];
 
-    // Customer charge capture
+    // Customer payment was captured by Stripe at checkout; retain the existing
+    // ledger type for reconciliation compatibility.
     entries.push({
       orderId,
       type: 'customer_charge_capture' as LedgerEntryType,
       amountCents: Math.round(order.total * 100),
       currency: 'CAD',
-      description: 'Payment captured',
+      description: 'Customer payment recognized',
       stripeId: stripePaymentIntentId,
     });
 

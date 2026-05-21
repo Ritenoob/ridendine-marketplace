@@ -68,7 +68,9 @@ export class LedgerService {
   }
 
   /**
-   * Customer capture + tax (order completion). Separate from payables split.
+   * Customer payment recognition + tax. Stripe capture occurs at checkout via
+   * automatic PaymentIntents; this ledger entry keeps the existing accounting
+   * type while recording local settlement recognition.
    */
   async recordCustomerCapture(input: {
     orderId: string;
@@ -84,7 +86,7 @@ export class LedgerService {
       entry_type: 'customer_charge_capture',
       amount_cents: input.totalCents,
       currency: input.currency,
-      description: `Payment captured for order ${input.orderNumber}`,
+      description: `Customer payment recognized for order ${input.orderNumber}`,
       stripe_id: input.stripePaymentIntentId ?? null,
       idempotency_key: makeLedgerIdempotencyKey('customer_charge_capture', input.orderId),
     });

@@ -14,6 +14,17 @@ import { expect, test } from '@playwright/test';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+const smokePorts = {
+  web: Number(process.env.SMOKE_WEB_PORT ?? 3100),
+  chef: Number(process.env.SMOKE_CHEF_PORT ?? 3101),
+  ops: Number(process.env.SMOKE_OPS_PORT ?? 3102),
+  driver: Number(process.env.SMOKE_DRIVER_PORT ?? 3103),
+};
+
+function localUrl(port: number) {
+  return `http://127.0.0.1:${port}`;
+}
+
 interface RouteCheck {
   path: string;
   /** Text expected to appear somewhere on the page (loose assertion). */
@@ -58,7 +69,7 @@ async function smokeRoute(
   return { jsErrors, serverErrors };
 }
 
-// ── Web (port 3000) ───────────────────────────────────────────────────────────
+// ── Web ──────────────────────────────────────────────────────────────────────
 
 const WEB_ROUTES: RouteCheck[] = [
   { path: '/', expectedText: /home.?cooked|browse chefs|ridendine/i },
@@ -72,17 +83,18 @@ const WEB_ROUTES: RouteCheck[] = [
 ];
 
 test.describe('web smoke — no console errors and no 5xx', () => {
-  test.use({ baseURL: 'http://127.0.0.1:3000' });
+  test.use({ baseURL: localUrl(smokePorts.web) });
 
   for (const route of WEB_ROUTES) {
-    test(`web ${route.path} has no 5xx errors @smoke`, async ({ page }) => {
+    test(`web ${route.path} has no 5xx errors @smoke`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'web-smoke', 'web-only smoke route');
       const { serverErrors } = await smokeRoute(page, route);
       expect(serverErrors, `5xx on ${route.path}: ${serverErrors.join(', ')}`).toHaveLength(0);
     });
   }
 });
 
-// ── Chef-admin (port 3001) ────────────────────────────────────────────────────
+// ── Chef-admin ───────────────────────────────────────────────────────────────
 
 const CHEF_ADMIN_ROUTES: RouteCheck[] = [
   { path: '/auth/login', expectedText: /sign in|log in/i },
@@ -95,17 +107,18 @@ const CHEF_ADMIN_ROUTES: RouteCheck[] = [
 ];
 
 test.describe('chef-admin smoke — no console errors and no 5xx', () => {
-  test.use({ baseURL: 'http://127.0.0.1:3001' });
+  test.use({ baseURL: localUrl(smokePorts.chef) });
 
   for (const route of CHEF_ADMIN_ROUTES) {
-    test(`chef-admin ${route.path} has no 5xx errors @smoke`, async ({ page }) => {
+    test(`chef-admin ${route.path} has no 5xx errors @smoke`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'chef-admin-smoke', 'chef-admin-only smoke route');
       const { serverErrors } = await smokeRoute(page, route);
       expect(serverErrors, `5xx on ${route.path}: ${serverErrors.join(', ')}`).toHaveLength(0);
     });
   }
 });
 
-// ── Ops-admin (port 3002) ─────────────────────────────────────────────────────
+// ── Ops-admin ────────────────────────────────────────────────────────────────
 
 const OPS_ADMIN_ROUTES: RouteCheck[] = [
   { path: '/auth/login', expectedText: /sign in|log in/i },
@@ -118,17 +131,18 @@ const OPS_ADMIN_ROUTES: RouteCheck[] = [
 ];
 
 test.describe('ops-admin smoke — no console errors and no 5xx', () => {
-  test.use({ baseURL: 'http://127.0.0.1:3002' });
+  test.use({ baseURL: localUrl(smokePorts.ops) });
 
   for (const route of OPS_ADMIN_ROUTES) {
-    test(`ops-admin ${route.path} has no 5xx errors @smoke`, async ({ page }) => {
+    test(`ops-admin ${route.path} has no 5xx errors @smoke`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'ops-admin-smoke', 'ops-admin-only smoke route');
       const { serverErrors } = await smokeRoute(page, route);
       expect(serverErrors, `5xx on ${route.path}: ${serverErrors.join(', ')}`).toHaveLength(0);
     });
   }
 });
 
-// ── Driver-app (port 3003) ────────────────────────────────────────────────────
+// ── Driver-app ───────────────────────────────────────────────────────────────
 
 const DRIVER_APP_ROUTES: RouteCheck[] = [
   { path: '/auth/login', expectedText: /sign in|log in/i },
@@ -141,10 +155,11 @@ const DRIVER_APP_ROUTES: RouteCheck[] = [
 ];
 
 test.describe('driver-app smoke — no console errors and no 5xx', () => {
-  test.use({ baseURL: 'http://127.0.0.1:3003' });
+  test.use({ baseURL: localUrl(smokePorts.driver) });
 
   for (const route of DRIVER_APP_ROUTES) {
-    test(`driver-app ${route.path} has no 5xx errors @smoke`, async ({ page }) => {
+    test(`driver-app ${route.path} has no 5xx errors @smoke`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'driver-app-smoke', 'driver-app-only smoke route');
       const { serverErrors } = await smokeRoute(page, route);
       expect(serverErrors, `5xx on ${route.path}: ${serverErrors.join(', ')}`).toHaveLength(0);
     });

@@ -29,6 +29,10 @@ const PUBLIC_ALLOWLIST = [
   '/api/stripe/webhook',
 ];
 
+const RETIRED_ALLOWLIST = [
+  '/api/cron/sla-tick',
+];
+
 let failed = false;
 let scanned = 0;
 let allowlisted = 0;
@@ -42,6 +46,14 @@ for await (const file of glob('apps/*/src/app/api/**/route.ts')) {
     continue;
   }
   const src = readFileSync(file, 'utf8');
+  if (
+    RETIRED_ALLOWLIST.some(p => normalized.includes(p)) &&
+    src.includes('DEPRECATED_CRON_ROUTE') &&
+    src.includes('{ status: 410 }')
+  ) {
+    allowlisted++;
+    continue;
+  }
   const hasStateful = STATEFUL_METHODS.some(m =>
     new RegExp(`export\\s+(async\\s+)?function\\s+${m}\\b`).test(src)
   );

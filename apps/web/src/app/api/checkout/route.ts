@@ -365,6 +365,7 @@ export async function POST(request: Request): Promise<Response> {
       const piParams: Parameters<typeof stripe.paymentIntents.create>[0] = {
         amount: totalCents,
         currency: 'cad',
+        capture_method: 'automatic',
         metadata: {
           order_id: order.id,
           order_number: order.order_number,

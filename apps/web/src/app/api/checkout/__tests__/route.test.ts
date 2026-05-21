@@ -377,6 +377,27 @@ describe('POST /api/checkout Phase C hardening', () => {
     expect(adminClient.__rpcCalls).toEqual([]);
   });
 
+  it('declares automatic capture on the PaymentIntent because checkout captures before kitchen submission', async () => {
+    const stripeCreate = jest.fn().mockResolvedValue({ id: 'pi_auto_capture', client_secret: 'cs_auto_capture' });
+    mockGetStripeClient.mockReturnValue({ paymentIntents: { create: stripeCreate } });
+
+    const res = await POST(
+      buildRequest({
+        storefrontId: '11111111-1111-1111-1111-111111111111',
+        deliveryAddressId: '22222222-2222-2222-2222-222222222222',
+        tip: 2,
+      })
+    );
+
+    expect(res.status).toBe(200);
+    expect(stripeCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        capture_method: 'automatic',
+      }),
+      expect.any(Object)
+    );
+  });
+
   it('replays the same idempotency key without creating duplicate order/payment', async () => {
     const sharedClient = createAdminClientMock();
     mockCreateAdminClient.mockReturnValue(sharedClient);

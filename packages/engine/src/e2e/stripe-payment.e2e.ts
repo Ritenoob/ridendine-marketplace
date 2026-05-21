@@ -12,6 +12,7 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { createCentralEngine } from '../core/engine.factory';
+import { calculateDriverPayoutAmount } from '../constants';
 import { STRIPE_API_VERSION } from '../services/stripe.service';
 
 const STRIPE_KEY = process.env.STRIPE_SECRET_KEY;
@@ -80,6 +81,7 @@ async function run() {
     paymentIntent = await stripe.paymentIntents.create({
       amount: totalCents,
       currency: 'cad',
+      capture_method: 'automatic',
       metadata: {
         customer_id: customer.id,
         storefront_id: storefront.id,
@@ -101,7 +103,11 @@ async function run() {
     log('Payment Confirm', 'FAIL', `Expected succeeded, got ${paymentIntent.status}`);
     return done();
   }
-  log('Payment Confirm', 'PASS', `Payment succeeded. Card: Visa ending 4242`);
+  if (paymentIntent.capture_method !== 'automatic') {
+    log('Payment Confirm', 'FAIL', `Expected automatic capture, got ${paymentIntent.capture_method}`);
+    return done();
+  }
+  log('Payment Confirm', 'PASS', 'Payment succeeded with automatic capture');
 
   // Step 5: Create the order in DB (TEST SETUP: mimics what checkout route does before webhook)
   const orderNumber = `STRIPE-E2E-${Date.now().toString(36).toUpperCase()}`;
@@ -197,7 +203,9 @@ async function run() {
     order_id: order.id, status: 'pending',
     pickup_address: 'Every Bite Yum Kitchen', pickup_lat: 43.2557, pickup_lng: -79.8711,
     dropoff_address: '88 James St S, Hamilton', dropoff_lat: 43.2600, dropoff_lng: -79.8650,
-    delivery_fee: deliveryFee, driver_payout: 4.00, assignment_attempts_count: 0,
+    delivery_fee: deliveryFee,
+    driver_payout: calculateDriverPayoutAmount(deliveryFee),
+    assignment_attempts_count: 0,
   }).select().single();
 
   const { data: drivers } = await supabase.from('drivers').select('id, first_name').eq('status', 'approved').limit(1);
@@ -250,20 +258,25 @@ async function run() {
     });
   }
 
-  // Complete order + capture payment in ledger — routed through engine
+  // Complete order and recognize payment/payables in the ledger.
   await engine.masterOrder.completeOrder({
     orderId: order.id,
     actorId: 'system',
     actorRole: 'system',
   });
 
-  await supabase.from('ledger_entries').insert([
-    { order_id: order.id, entry_type: 'customer_charge_capture', amount_cents: totalCents, currency: 'CAD', description: 'Payment captured', stripe_id: paymentIntent.id },
-    { order_id: order.id, entry_type: 'platform_fee', amount_cents: Math.round(subtotal * 0.15 * 100), currency: 'CAD', description: 'Platform 15%' },
-    { order_id: order.id, entry_type: 'chef_payable', amount_cents: Math.round(subtotal * 0.85 * 100), currency: 'CAD', description: 'Chef earnings', entity_type: 'chef', entity_id: storefront.chef_id },
-    { order_id: order.id, entry_type: 'tax_collected', amount_cents: Math.round(tax * 100), currency: 'CAD', description: 'HST' },
-  ]);
-  log('Ledger', 'PASS', `Payment captured, fees split, chef payable: $${(subtotal * 0.85).toFixed(2)}`);
+  const { data: settledLedger } = await supabase
+    .from('ledger_entries')
+    .select('entry_type, amount_cents')
+    .eq('order_id', order.id);
+  const settledTypes = (settledLedger || []).map((e: any) => e.entry_type);
+  const expectedLedgerTypes = ['customer_charge_capture', 'platform_fee', 'chef_payable', 'driver_payable', 'tax_collected'];
+  const missingLedgerTypes = expectedLedgerTypes.filter((type) => !settledTypes.includes(type));
+  if (missingLedgerTypes.length > 0) {
+    log('Ledger', 'FAIL', `Missing settlement ledger entries: ${missingLedgerTypes.join(', ')}`);
+    return done();
+  }
+  log('Ledger', 'PASS', `Payment recognized, fees split, chef payable: $${(subtotal * 0.85).toFixed(2)}`);
 
   log('Complete', 'PASS', 'Order completed with Stripe payment');
 

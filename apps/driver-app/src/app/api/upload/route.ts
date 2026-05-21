@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE = 5 * 1024 * 1024;
 const BUCKET = 'delivery-photos';
+const SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 10;
 const CONTEXTS = new Set(['pickup', 'dropoff', 'signature']);
 
 function parseDataUrl(dataUrl: unknown): { mimeType: string; buffer: Uint8Array } | { error: string } {
@@ -39,11 +40,16 @@ function parseDataUrl(dataUrl: unknown): { mimeType: string; buffer: Uint8Array 
 }
 
 async function ensureBucketExists(client: ReturnType<typeof createAdminClient>) {
-  await client.storage.createBucket(BUCKET, {
-    public: true,
+  const options = {
+    public: false,
     allowedMimeTypes: ALLOWED_TYPES,
     fileSizeLimit: MAX_SIZE,
-  });
+  };
+  const { error } = await client.storage.createBucket(BUCKET, options);
+  if (error && !error.message?.includes('already exists')) {
+    throw error;
+  }
+  await client.storage.updateBucket(BUCKET, options);
 }
 
 async function uploadImage(
@@ -68,6 +74,21 @@ async function uploadImage(
 
   if (retry.error) return { error: retry.error.message };
   return { path: retry.data.path };
+}
+
+async function signedDeliveryProofUrl(
+  client: ReturnType<typeof createAdminClient>,
+  path: string
+): Promise<{ url: string } | { error: string }> {
+  const { data, error } = await client.storage
+    .from(BUCKET)
+    .createSignedUrl(path, SIGNED_URL_EXPIRES_IN_SECONDS);
+
+  if (error || !data?.signedUrl) {
+    return { error: error?.message || 'Failed to create signed proof URL' };
+  }
+
+  return { url: data.signedUrl };
 }
 
 export async function POST(request: NextRequest) {
@@ -130,13 +151,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: upload.error }, { status: 500 });
     }
 
-    const { data: urlData } = client.storage.from(BUCKET).getPublicUrl(upload.path);
+    const signedUrl = await signedDeliveryProofUrl(client, upload.path);
+    if ('error' in signedUrl) {
+      return NextResponse.json({ error: signedUrl.error }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,
-      url: urlData.publicUrl,
+      url: signedUrl.url,
       path: upload.path,
       context: proofContext,
+      urlExpiresInSeconds: SIGNED_URL_EXPIRES_IN_SECONDS,
     });
   } catch (error) {
     console.error(
