@@ -45,4 +45,18 @@ describe('driver-app smoke wiring', () => {
     expect(src).toContain('Failed to update delivery status');
     expect(src).toContain('Failed to complete delivery');
   });
+
+  it('delivery detail safely renders assigned deliveries and database numeric values', () => {
+    const src = read('app/delivery/[id]/components/DeliveryDetail.tsx');
+    expect(src).toContain("'assigned'");
+    expect(src).toContain("assigned: { label: 'Start Navigation to Pickup'");
+    expect(src).toContain('formatCurrency(delivery.driver_payout)');
+    expect(src).toContain('formatDistance(delivery.distance_km)');
+    expect(src).toContain('formatCurrency(delivery.delivery_fee)');
+    expect(src).toContain('formatCurrency(deliveryWithContact.driver_tip)');
+    expect(src).not.toContain('delivery.driver_payout.toFixed');
+    expect(src).not.toContain('delivery.delivery_fee.toFixed');
+    expect(src).not.toContain('delivery.distance_km?.toFixed');
+    expect(src).not.toContain('deliveryWithContact.driver_tip || 0).toFixed');
+  });
 });

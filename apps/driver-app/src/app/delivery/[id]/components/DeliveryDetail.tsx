@@ -7,7 +7,15 @@ import type { Delivery } from '@ridendine/db';
 import { useLocationTracker } from '@/hooks/use-location-tracker';
 import { RouteMap } from '@/components/map/route-map';
 
-type DeliveryStatus = 'accepted' | 'en_route_to_pickup' | 'arrived_at_pickup' | 'picked_up' | 'en_route_to_dropoff' | 'arrived_at_dropoff';
+type DeliveryStatus =
+  | 'assigned'
+  | 'accepted'
+  | 'en_route_to_pickup'
+  | 'arrived_at_pickup'
+  | 'picked_up'
+  | 'en_route_to_dropoff'
+  | 'arrived_at_dropoff';
+type NumericDisplayValue = number | string | null | undefined;
 
 interface DeliveryDetailProps {
   delivery: Delivery;
@@ -22,8 +30,31 @@ interface DeliveryOrder {
 
 type DeliveryWithContact = Delivery & {
   pickup_phone?: string | null;
-  driver_tip?: number | null;
+  driver_tip?: NumericDisplayValue;
 };
+
+function toFiniteNumber(value: NumericDisplayValue): number | null {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function formatCurrency(value: NumericDisplayValue): string {
+  return `$${(toFiniteNumber(value) ?? 0).toFixed(2)}`;
+}
+
+function formatDistance(value: NumericDisplayValue): string {
+  const parsed = toFiniteNumber(value);
+  return parsed === null ? '— km' : `${parsed.toFixed(1)} km`;
+}
+
+function isPickupStage(status: DeliveryStatus): boolean {
+  return (
+    status === 'assigned' ||
+    status === 'accepted' ||
+    status === 'en_route_to_pickup' ||
+    status === 'arrived_at_pickup'
+  );
+}
 
 export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps) {
   const deliveryWithContact = delivery as DeliveryWithContact;
@@ -61,7 +92,8 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
       { id: 'en_route_to_dropoff', label: 'En Route to Customer' },
       { id: 'arrived_at_dropoff', label: 'At Customer' },
     ];
-    const currentIndex = steps.findIndex((s) => s.id === status);
+    const progressStatus = status === 'assigned' ? 'accepted' : status;
+    const currentIndex = steps.findIndex((s) => s.id === progressStatus);
     return steps.map((step, i) => ({
       ...step,
       completed: i < currentIndex,
@@ -71,6 +103,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
   const getNextAction = (): { label: string; nextStatus: DeliveryStatus } | null => {
     const actions: Record<DeliveryStatus, { label: string; nextStatus: DeliveryStatus } | null> = {
+      assigned: { label: 'Start Navigation to Pickup', nextStatus: 'en_route_to_pickup' },
       accepted: { label: 'Start Navigation to Pickup', nextStatus: 'en_route_to_pickup' },
       en_route_to_pickup: { label: 'Arrived at Restaurant', nextStatus: 'arrived_at_pickup' },
       arrived_at_pickup: { label: 'Confirm Pickup', nextStatus: 'picked_up' },
@@ -365,7 +398,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
             </p>
           </div>
           <div className="rounded-lg bg-white/20 px-4 py-2">
-            <p className="text-[18px] font-bold">${delivery.driver_payout.toFixed(2)}</p>
+            <p className="text-[18px] font-bold">{formatCurrency(delivery.driver_payout)}</p>
           </div>
         </div>
       </div>
@@ -399,8 +432,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
           variant="outline"
           className="w-full rounded-lg border-info text-info hover:bg-infoSoft"
           onClick={() => {
-            const isPickup = status.includes('pickup') || status === 'accepted';
-            if (isPickup) {
+            if (isPickupStage(status)) {
               openNavigation(delivery.pickup_address, delivery.pickup_lat, delivery.pickup_lng);
             } else {
               openNavigation(delivery.dropoff_address, delivery.dropoff_lat, delivery.dropoff_lng);
@@ -431,7 +463,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
       {/* Destination Card */}
       <div className="p-4 pt-0">
         <Card className="border-0 shadow-sm">
-          {status.includes('pickup') || status === 'accepted' ? (
+          {isPickupStage(status) ? (
             <>
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-[#22c55e]" />
@@ -488,25 +520,25 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
             <div className="flex justify-between text-[14px]">
               <span className="text-[#6b7280]">Distance</span>
               <span className="font-medium text-[#1a1a1a]">
-                {delivery.distance_km?.toFixed(1) ?? '—'} km
+                {formatDistance(delivery.distance_km)}
               </span>
             </div>
             <div className="flex justify-between text-[14px]">
               <span className="text-[#6b7280]">Delivery Fee</span>
               <span className="font-medium text-[#1a1a1a]">
-                ${delivery.delivery_fee.toFixed(2)}
+                {formatCurrency(delivery.delivery_fee)}
               </span>
             </div>
             <div className="flex justify-between text-[14px]">
               <span className="text-[#6b7280]">Tip</span>
               <span className="font-medium text-[#1a1a1a]">
-                ${(deliveryWithContact.driver_tip || 0).toFixed(2)}
+                {formatCurrency(deliveryWithContact.driver_tip)}
               </span>
             </div>
             <div className="border-t pt-2 flex justify-between text-[14px]">
               <span className="text-[#6b7280]">Your Earnings</span>
               <span className="font-semibold text-[#22c55e]">
-                ${delivery.driver_payout.toFixed(2)}
+                {formatCurrency(delivery.driver_payout)}
               </span>
             </div>
           </div>
