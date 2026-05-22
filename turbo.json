@@ -20,7 +20,10 @@
         "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
         "NEXT_PUBLIC_SENTRY_DSN",
         "ENGINE_PROCESSOR_TOKEN",
-        "CRON_SECRET"
+        "CRON_SECRET",
+        "BYPASS_AUTH",
+        "UPSTASH_REDIS_REST_URL",
+        "UPSTASH_REDIS_REST_TOKEN"
       ]
     },
     "dev": {
