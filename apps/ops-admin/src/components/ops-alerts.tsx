@@ -26,32 +26,9 @@ interface SystemAlertRow {
   created_at: string;
 }
 
-function playAlertBeep(severity: string) {
-  try {
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = severity === 'critical' ? 1200 : severity === 'error' ? 900 : 600;
-    osc.type = 'sine';
-    gain.gain.value = 0.2;
-    osc.start();
-    osc.stop(ctx.currentTime + 0.15);
-    if (severity === 'critical' || severity === 'error') {
-      setTimeout(() => {
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.frequency.value = severity === 'critical' ? 1400 : 1100;
-        osc2.type = 'sine';
-        gain2.gain.value = 0.2;
-        osc2.start();
-        osc2.stop(ctx.currentTime + 0.15);
-      }, 200);
-    }
-  } catch { /* audio unavailable */ }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function playAlertBeep(_severity: string) {
+  // Sound disabled per user preference
 }
 
 function buildAlertLink(entityType: string, entityId: string): string {
