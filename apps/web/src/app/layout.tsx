@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import { AuthProvider } from '@ridendine/auth';
 import { CartProvider } from '@/contexts/cart-context';
-import { ToastProvider } from '@ridendine/ui';
+import { ToastProvider, ErrorBoundary } from '@ridendine/ui';
 import { SwRegistration } from '@/components/layout/sw-registration';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/react';
@@ -39,11 +39,13 @@ export default function RootLayout({
     <html lang="en" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen bg-surfaceMuted font-sans antialiased">
         <SwRegistration />
-        <AuthProvider>
-          <CartProvider>
-            <ToastProvider>{children}</ToastProvider>
-          </CartProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <CartProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </CartProvider>
+          </AuthProvider>
+        </ErrorBoundary>
         <SpeedInsights />
         <Analytics />
       </body>

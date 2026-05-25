@@ -24,7 +24,7 @@ export * from './components/modal';
 export { PasswordStrength } from './components/password-strength';
 export { AuthLayout } from './components/auth-layout';
 export { AddressInput } from './components/address-input';
-export { GlobalError } from './components/error-boundary';
+export { GlobalError, ErrorBoundary } from './components/error-boundary';
 export * from './components/platform';
 export { KpiTile } from './components/kpi-tile';
 export { StatusBadge } from './components/status-badge';

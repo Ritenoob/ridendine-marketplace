@@ -10,11 +10,20 @@ async function run(request: NextRequest) {
   if (!validateEngineProcessorHeaders(request.headers)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
-  const client = createAdminClient();
-  const engine = createCentralEngine(client);
+
   const day = new Date().toISOString().slice(0, 10);
-  const summary = await engine.reconciliation.runDaily(day);
-  return NextResponse.json({ success: true, data: summary });
+  const runKey = `reconciliation-daily:${day}`;
+
+  try {
+    const client = createAdminClient();
+    const engine = createCentralEngine(client);
+    const summary = await engine.reconciliation.runDaily(day);
+    return NextResponse.json({ success: true, data: summary, runKey });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[${runKey}] Failed:`, err);
+    return NextResponse.json({ success: false, error: message, runKey }, { status: 500 });
+  }
 }
 
 export async function GET(request: NextRequest) {

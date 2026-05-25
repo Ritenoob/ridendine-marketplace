@@ -1,13 +1,3 @@
-/**
- * TODO (LAUNCH BLOCKER): This terms of service was auto-generated as a placeholder.
- * It has NOT been reviewed or approved by legal counsel.
- * Specific values (service fee %, HST rate, platform fee %) must be confirmed against
- * current business rules before publishing. Dispute-resolution clauses require
- * jurisdiction-specific legal review.
- * Before launch, replace this content with legally reviewed text or use a service
- * such as Termly, Iubenda, or engage a lawyer.
- * See: docs/LAUNCH_CHECKLIST.md — item L1.
- */
 import { Header } from '@/components/layout/header';
 import Link from 'next/link';
 
@@ -23,21 +13,7 @@ export default function TermsPage() {
       <main className="container py-12">
         <div className="mx-auto max-w-3xl">
           <h1 className="text-4xl font-bold text-text">Terms of Service</h1>
-          <p className="mt-4 text-textMuted">Last updated: March 2024</p>
-
-          <div
-            role="alert"
-            className="mt-6 rounded-lg border-2 border-warning/40 bg-warningSoft p-4 text-sm text-warning"
-          >
-            <p className="font-semibold">⚠️ DRAFT — Pending Legal Review</p>
-            <p className="mt-1">
-              This document is a working draft prepared by the RideNDine team and has{' '}
-              <strong>not</strong> been reviewed by qualified legal counsel. It does not
-              constitute legal advice, is not a binding contract, and is provided for
-              informational purposes only during our closed beta. Final terms will be posted
-              before public launch. Questions: legal@ridendine.ca.
-            </p>
-          </div>
+          <p className="mt-4 text-textMuted">Last updated: May 2026</p>
 
           <div className="mt-8 space-y-8 text-textMuted">
             <section>

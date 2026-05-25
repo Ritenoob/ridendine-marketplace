@@ -21,6 +21,34 @@ export interface PromoValidationResult {
   error?: string;
 }
 
+export async function hasCustomerUsedPromo(
+  client: SupabaseClient,
+  promoId: string,
+  customerId: string
+): Promise<boolean> {
+  const { data } = await client
+    .from('promo_code_usages')
+    .select('id')
+    .eq('promo_id', promoId)
+    .eq('customer_id', customerId)
+    .maybeSingle();
+  return !!data;
+}
+
+export async function recordPromoUsage(
+  client: SupabaseClient,
+  promoId: string,
+  customerId: string,
+  orderId: string
+): Promise<void> {
+  const { error } = await client
+    .from('promo_code_usages')
+    .insert({ promo_id: promoId, customer_id: customerId, order_id: orderId });
+  if (error && error.code !== '23505') { // ignore unique violation (idempotent)
+    throw error;
+  }
+}
+
 export async function getPromoCodeByCode(
   client: SupabaseClient,
   code: string
@@ -42,7 +70,8 @@ export async function getPromoCodeByCode(
 export async function validatePromoCode(
   client: SupabaseClient,
   code: string,
-  subtotal: number
+  subtotal: number,
+  customerId?: string
 ): Promise<PromoValidationResult> {
   const promo = await getPromoCodeByCode(client, code);
 
@@ -60,6 +89,13 @@ export async function validatePromoCode(
 
   if (promo.usage_limit !== null && promo.usage_count >= promo.usage_limit) {
     return { valid: false, error: 'Promo code has reached its usage limit' };
+  }
+
+  if (customerId) {
+    const used = await hasCustomerUsedPromo(client, promo.id, customerId);
+    if (used) {
+      return { valid: false, error: 'You have already used this promo code' };
+    }
   }
 
   if (promo.min_order_amount !== null && subtotal < promo.min_order_amount) {

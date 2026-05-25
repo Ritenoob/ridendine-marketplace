@@ -1,5 +1,5 @@
 -- ============================================================================
--- 00039_scheduled_orders.sql
+-- 00040_scheduled_orders.sql
 -- ----------------------------------------------------------------------------
 -- Adds first-class scheduled-order support to the orders table.
 --

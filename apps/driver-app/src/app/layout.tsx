@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import { AuthProvider } from '@ridendine/auth';
+import { ErrorBoundary } from '@ridendine/ui';
 import { ServiceWorkerRegister } from '../components/sw-register';
 import './globals.css';
 
@@ -55,7 +56,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="RideNDine Driver" />
       </head>
       <body className="min-h-screen bg-background font-sans text-text antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>{children}</AuthProvider>
+        </ErrorBoundary>
         <ServiceWorkerRegister />
       </body>
     </html>

@@ -257,11 +257,50 @@ export async function createOrder(
   return data;
 }
 
+export class InvalidOrderTransitionError extends Error {
+  constructor(from: string, to: string) {
+    super(`Invalid order status transition: '${from}' -> '${to}'`);
+    this.name = 'InvalidOrderTransitionError';
+  }
+}
+
+const VALID_ORDER_TRANSITIONS: Record<string, string[]> = {
+  pending:          ['accepted', 'rejected', 'cancelled'],
+  scheduled:        ['accepted', 'cancelled'],
+  accepted:         ['preparing', 'cancelled'],
+  rejected:         [],
+  preparing:        ['ready_for_pickup', 'cancelled'],
+  ready_for_pickup: ['picked_up', 'cancelled'],
+  picked_up:        ['in_transit'],
+  in_transit:       ['delivered'],
+  delivered:        ['completed', 'refunded'],
+  completed:        ['refunded'],
+  cancelled:        [],
+  refunded:         [],
+};
+
+async function fetchCurrentStatus(client: SupabaseClient, id: string): Promise<string> {
+  const { data, error } = await client
+    .from('orders')
+    .select('status')
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+  return (data as { status: string }).status;
+}
+
 export async function updateOrderStatus(
   client: SupabaseClient,
   id: string,
   status: string
 ): Promise<Order> {
+  const currentStatus = await fetchCurrentStatus(client, id);
+  const allowed = VALID_ORDER_TRANSITIONS[currentStatus] ?? [];
+
+  if (!allowed.includes(status)) {
+    throw new InvalidOrderTransitionError(currentStatus, status);
+  }
+
   const updates: Partial<Order> = {
     status,
     updated_at: new Date().toISOString(),

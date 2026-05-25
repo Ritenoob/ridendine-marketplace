@@ -14,17 +14,23 @@ async function run(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const client = createAdminClient();
-  const engine = createCentralEngine(client);
-  const processed = await engine.dispatch.processExpiredOffers(SYSTEM_ACTOR);
+  const ts = new Date();
+  const runKey = `expired-offers:${ts.toISOString().slice(0, 16)}`;
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      processed,
-      ts: new Date().toISOString(),
-    },
-  });
+  try {
+    const client = createAdminClient();
+    const engine = createCentralEngine(client);
+    const processed = await engine.dispatch.processExpiredOffers(SYSTEM_ACTOR);
+    return NextResponse.json({
+      success: true,
+      data: { processed, ts: ts.toISOString() },
+      runKey,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[${runKey}] Failed:`, err);
+    return NextResponse.json({ success: false, error: message, runKey }, { status: 500 });
+  }
 }
 
 export async function GET(request: NextRequest) {

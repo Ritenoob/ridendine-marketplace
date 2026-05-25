@@ -10,10 +10,20 @@ async function run(request: NextRequest) {
   if (!validateEngineProcessorHeaders(request.headers)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
-  const client = createAdminClient();
-  const engine = createCentralEngine(client);
-  const preview = await engine.payoutAutomation.previewChefRun(new Date());
-  return NextResponse.json({ success: true, data: preview });
+
+  const day = new Date().toISOString().slice(0, 10);
+  const runKey = `payouts-chef-preview:${day}`;
+
+  try {
+    const client = createAdminClient();
+    const engine = createCentralEngine(client);
+    const preview = await engine.payoutAutomation.previewChefRun(new Date());
+    return NextResponse.json({ success: true, data: preview, runKey });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[${runKey}] Failed:`, err);
+    return NextResponse.json({ success: false, error: message, runKey }, { status: 500 });
+  }
 }
 
 export async function GET(request: NextRequest) {
