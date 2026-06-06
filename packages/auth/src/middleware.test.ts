@@ -205,6 +205,24 @@ describe('createAuthMiddleware', () => {
     expect(NextResponse.redirect).toHaveBeenCalled();
   });
 
+  it('does not redirect authenticated users away from public API auth routes by default', async () => {
+    vi.mocked(createServerClient).mockImplementation(
+      () => makeSupabaseClient({ user: { id: 'user-abc' } }) as any
+    );
+
+    const middleware = createAuthMiddleware({
+      publicRoutes: ['/auth/login', '/api/auth/login'],
+      loginRoute: '/auth/login',
+      authenticatedRedirect: '/',
+    });
+
+    const request = createMockRequest('/api/auth/login');
+    const result = await middleware(request);
+
+    expect((result as any).type).toBe('next');
+    expect(NextResponse.redirect).not.toHaveBeenCalled();
+  });
+
   // ---- Selective protection mode (protectedRoutes) ----
 
   it('allows unauthenticated user on non-protected route in selective mode', async () => {

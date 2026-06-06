@@ -59,6 +59,12 @@ function createSupabaseMiddlewareClient(request: NextRequest) {
   return { supabase, response: () => response };
 }
 
+function isDefaultAuthRoute(pathname: string, publicRoutes: string[]) {
+  return publicRoutes
+    .filter((route) => route === '/auth' || route.startsWith('/auth/'))
+    .some((route) => pathname.startsWith(route));
+}
+
 /**
  * Create a configured auth middleware function.
  *
@@ -101,7 +107,7 @@ export function createAuthMiddleware(config: AuthMiddlewareConfig) {
     const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
     const isAuthRoute = authRoutes
       ? authRoutes.some((route) => pathname.startsWith(route))
-      : isPublicRoute;
+      : isDefaultAuthRoute(pathname, publicRoutes);
 
     // Determine if route needs protection
     let needsAuth: boolean;
