@@ -5,6 +5,13 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { notFound } from 'next/navigation';
 import { OrderStatusActions } from './status-actions';
 import { getEngine, getOpsActorContext } from '@/lib/engine';
+import {
+  buildFinanceTraceSummary,
+  formatFinanceCents,
+  formatLedgerEntryType,
+  getLedgerEntryTone,
+  type FinanceTraceLedgerEntry,
+} from './finance-trace-model';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,6 +50,13 @@ function formatAddress(address: {
   ]
     .filter(Boolean)
     .join(', ');
+}
+
+function formatLedgerEntity(entry: FinanceTraceLedgerEntry) {
+  if (entry.entityType && entry.entityId) {
+    return `${entry.entityType}: ${entry.entityId}`;
+  }
+  return 'Not linked';
 }
 
 async function getOrderDetailPageData(orderId: string) {
@@ -94,6 +108,7 @@ export default async function OrderDetailPage({
   }
 
   const { order, timeline, allowedActions, financials, exceptions } = data;
+  const financeTraceSummary = financials ? buildFinanceTraceSummary(financials) : null;
 
   return (
     <DashboardLayout>
@@ -331,38 +346,130 @@ export default async function OrderDetailPage({
 
             <div className="rounded-lg border border-border bg-surface p-4">
               <h3 className="text-sm font-semibold text-white">
-                Ledger Context
+                Finance Trace
               </h3>
               {financials ? (
-                <div className="mt-3 space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-textMuted">Platform Fee</span>
-                    <span className="text-white">
-                      {formatMoney(financials.platformFee)}
-                    </span>
+                <div className="mt-3 space-y-4 text-sm">
+                  {financeTraceSummary?.warnings.map((warning) => (
+                    <div
+                      key={warning}
+                      className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-warning"
+                    >
+                      {warning}
+                    </div>
+                  ))}
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-lg border border-border bg-surfaceMuted p-3">
+                      <p className="text-xs uppercase tracking-wide text-textMuted">
+                        Ledger entries
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-white">
+                        {financeTraceSummary?.ledgerEntryCount ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border bg-surfaceMuted p-3">
+                      <p className="text-xs uppercase tracking-wide text-textMuted">
+                        Stripe references
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-white">
+                        {financeTraceSummary?.stripeReferenceCount ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border bg-surfaceMuted p-3">
+                      <p className="text-xs uppercase tracking-wide text-textMuted">
+                        Customer charge entries
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-success">
+                        {formatFinanceCents(financeTraceSummary?.customerChargeCents)}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border bg-surfaceMuted p-3">
+                      <p className="text-xs uppercase tracking-wide text-textMuted">
+                        Refund entries
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-danger">
+                        {formatFinanceCents(-(financeTraceSummary?.refundCents ?? 0))}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-textMuted">Chef Payable</span>
-                    <span className="text-white">
-                      {formatMoney(financials.chefPayable)}
-                    </span>
+
+                  <div className="space-y-2 border-t border-border pt-3">
+                    <div className="flex justify-between">
+                      <span className="text-textMuted">Platform Fee</span>
+                      <span className="text-white">{formatMoney(financials.platformFee)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-textMuted">Chef Payable</span>
+                      <span className="text-white">{formatMoney(financials.chefPayable)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-textMuted">Driver Payable</span>
+                      <span className="text-white">{formatMoney(financials.driverPayable)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-textMuted">Tip Payable</span>
+                      <span className="text-white">{formatMoney(financials.tipPayable)}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-border pt-2 font-semibold">
+                      <span className="text-white">Total Payables</span>
+                      <span className="text-success">
+                        {formatFinanceCents(financeTraceSummary?.payableCents)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-textMuted">Driver Payable</span>
-                    <span className="text-white">
-                      {formatMoney(financials.driverPayable)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-textMuted">Tip Payable</span>
-                    <span className="text-white">
-                      {formatMoney(financials.tipPayable)}
-                    </span>
-                  </div>
-                  <div className="pt-2 text-xs text-textMuted">
-                    {financials.ledgerEntries.length} ledger entries recorded for
-                    this order.
-                  </div>
+
+                  {financials.ledgerEntries.length > 0 && (
+                    <div className="overflow-x-auto border-t border-border pt-3">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-border text-textMuted">
+                            <th className="pb-2 pr-3">Ledger type</th>
+                            <th className="pb-2 pr-3 text-right">Amount</th>
+                            <th className="pb-2 pr-3">Entity</th>
+                            <th className="pb-2 pr-3">Stripe/ref</th>
+                            <th className="pb-2">Created</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {financials.ledgerEntries.map((entry: FinanceTraceLedgerEntry) => {
+                            const tone = getLedgerEntryTone(entry);
+                            const amountClass =
+                              tone === 'negative'
+                                ? 'text-danger'
+                                : tone === 'positive'
+                                  ? 'text-success'
+                                  : 'text-textMuted';
+
+                            return (
+                              <tr key={entry.id ?? `${entry.type}-${entry.createdAt}`} className="border-b border-border">
+                                <td className="py-2 pr-3 text-white">
+                                  <div>{formatLedgerEntryType(entry.type)}</div>
+                                  {entry.description && (
+                                    <div className="mt-1 max-w-48 truncate text-textMuted">
+                                      {entry.description}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className={`py-2 pr-3 text-right font-mono ${amountClass}`}>
+                                  {formatFinanceCents(entry.amountCents)}
+                                </td>
+                                <td className="py-2 pr-3 text-textSubtle">
+                                  {formatLedgerEntity(entry)}
+                                </td>
+                                <td className="py-2 pr-3 font-mono text-textMuted">
+                                  {entry.stripeId || 'None'}
+                                </td>
+                                <td className="py-2 text-textMuted">
+                                  {formatTimestamp(entry.createdAt)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="mt-3 text-sm text-textMuted">
