@@ -7,14 +7,14 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { OrdersList } from '../components/orders/orders-list';
 
-const removeChannelMock = jest.fn();
-const subscribeMock = jest.fn((callback?: (status: string) => void) => {
+const mockRemoveChannel = jest.fn();
+const mockSubscribe = jest.fn((callback?: (status: string) => void) => {
   callback?.('SUBSCRIBED');
-  return channelMock;
+  return mockChannel;
 });
-const channelMock = {
-  on: jest.fn(() => channelMock),
-  subscribe: subscribeMock,
+const mockChannel = {
+  on: jest.fn(() => mockChannel),
+  subscribe: mockSubscribe,
 };
 
 jest.mock('next/link', () => {
@@ -57,8 +57,8 @@ jest.mock('@ridendine/ui', () => ({
 jest.mock('@ridendine/db', () => ({
   chefStorefrontOrdersChannel: (storefrontId: string) => `chef-orders:${storefrontId}`,
   createBrowserClient: () => ({
-    channel: jest.fn(() => channelMock),
-    removeChannel: removeChannelMock,
+    channel: jest.fn(() => mockChannel),
+    removeChannel: mockRemoveChannel,
   }),
   parseOrdersRealtimeRow: (row: unknown) => row,
 }));
