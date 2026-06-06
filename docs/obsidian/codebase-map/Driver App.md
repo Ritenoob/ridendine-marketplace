@@ -11,8 +11,8 @@
 
 ## Status Summary
 
-- Page routes: 10 total, 8 WIRED, 2 PARTIAL, 0 MISSING.
-- API route files: 16 total, 15 WIRED, 1 PARTIAL.
+- Page routes: 10 total, 10 WIRED, 0 PARTIAL, 0 MISSING.
+- API route files: 16 total, 16 WIRED, 0 PARTIAL.
 - Internal link/API references: 44 total, 0 BROKEN, 0 UNKNOWN_DYNAMIC.
 
 ## Standalone App Diagram
@@ -40,8 +40,8 @@ flowchart TB
 
 | Status | Route | Page file | Layout | Auth | Tables | APIs called | Components |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| PARTIAL | `/auth/login` | [apps/driver-app/src/app/auth/login/page.tsx](../../../apps/driver-app/src/app/auth/login/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Public | None detected | `/api/auth/login` | `Button` |
-| PARTIAL | `/auth/signup` | [apps/driver-app/src/app/auth/signup/page.tsx](../../../apps/driver-app/src/app/auth/signup/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Public | None detected | `/api/auth/signup` | `Button`, `Input`, `PasswordStrength` |
+| WIRED | `/auth/login` | [apps/driver-app/src/app/auth/login/page.tsx](../../../apps/driver-app/src/app/auth/login/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Public auth | None detected | `/api/auth/login` | `Button` |
+| WIRED | `/auth/signup` | [apps/driver-app/src/app/auth/signup/page.tsx](../../../apps/driver-app/src/app/auth/signup/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Public auth | None detected | `/api/auth/signup` | `Button`, `Input`, `PasswordStrength` |
 | WIRED | `/delivery/:id` | [apps/driver-app/src/app/delivery/[id]/page.tsx](../../../apps/driver-app/src/app/delivery/[id]/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Detected | `assignment_attempts`, `orders` | None detected | None detected |
 | WIRED | `/earnings` | [apps/driver-app/src/app/earnings/page.tsx](../../../apps/driver-app/src/app/earnings/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Detected | `platform_accounts` | None detected | None detected |
 | WIRED | `/history` | [apps/driver-app/src/app/history/page.tsx](../../../apps/driver-app/src/app/history/page.tsx) | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) | Detected | None detected | None detected | None detected |
@@ -65,7 +65,7 @@ flowchart TB
 | WIRED | `/api/driver/presence` | GET, PATCH | [apps/driver-app/src/app/api/driver/presence/route.ts](../../../apps/driver-app/src/app/api/driver/presence/route.ts) | Detected | `deliveries`, `driver_presence` | @ridendine/db | None detected |
 | WIRED | `/api/driver` | GET, PATCH | [apps/driver-app/src/app/api/driver/route.ts](../../../apps/driver-app/src/app/api/driver/route.ts) | Detected | `drivers` | @ridendine/db | Supabase |
 | WIRED | `/api/earnings` | GET | [apps/driver-app/src/app/api/earnings/route.ts](../../../apps/driver-app/src/app/api/earnings/route.ts) | Detected | None detected | @ridendine/db | Supabase |
-| PARTIAL | `/api/health` | GET | [apps/driver-app/src/app/api/health/route.ts](../../../apps/driver-app/src/app/api/health/route.ts) | Undetected | `drivers` | @ridendine/db, @ridendine/utils | Stripe, Supabase |
+| WIRED | `/api/health` | GET | [apps/driver-app/src/app/api/health/route.ts](../../../apps/driver-app/src/app/api/health/route.ts) | Public health check | `drivers` | @ridendine/db, @ridendine/utils | Stripe, Supabase |
 | WIRED | `/api/location` | POST | [apps/driver-app/src/app/api/location/route.ts](../../../apps/driver-app/src/app/api/location/route.ts) | Detected | `deliveries`, `delivery_tracking_events`, `driver_locations`, `driver_presence`, `orders` | @ridendine/db, @ridendine/utils, @ridendine/validation | None detected |
 | WIRED | `/api/offers` | GET, POST | [apps/driver-app/src/app/api/offers/route.ts](../../../apps/driver-app/src/app/api/offers/route.ts) | Detected | `assignment_attempts` | @ridendine/db | None detected |
 | WIRED | `/api/payouts/instant` | POST | [apps/driver-app/src/app/api/payouts/instant/route.ts](../../../apps/driver-app/src/app/api/payouts/instant/route.ts) | Detected | `drivers` | @ridendine/db, @ridendine/engine | Supabase |

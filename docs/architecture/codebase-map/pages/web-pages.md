@@ -87,10 +87,12 @@ flowchart TB
   Page["Customer Web<br/>/account/addresses"]
   Layout["Layout<br/>apps/web/src/app/account/layout.tsx"]
   File["Page file<br/>apps/web/src/app/account/addresses/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Customer protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>customer_addresses"]
+  Page --> Table0
   Api0["API/fetch<br/>/api/addresses"]
   Page --> Api0
   Api1["API/fetch<br/>/api/addresses?id=${id}"]
@@ -110,6 +112,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
   class Api0,Api1 api
 ```
 
@@ -120,17 +123,17 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/account/addresses` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Customer protected |
 | Page file | [apps/web/src/app/account/addresses/page.tsx](../../../../apps/web/src/app/account/addresses/page.tsx) |
 | Layout | [apps/web/src/app/account/layout.tsx](../../../../apps/web/src/app/account/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Customer address management via account layout and address APIs |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `customer_addresses` |
 | Fetch/API calls | `/api/addresses` (DELETE, GET, PATCH, POST)<br>`/api/addresses?id=${id}` (DELETE, GET, PATCH, POST) |
 | Shared packages | @ridendine/auth, @ridendine/ui |
 | Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input`, `Select` |
@@ -155,7 +158,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -243,10 +246,14 @@ flowchart TB
   Page["Customer Web<br/>/account/orders"]
   Layout["Layout<br/>apps/web/src/app/account/layout.tsx"]
   File["Page file<br/>apps/web/src/app/account/orders/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Customer protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>order_items"]
+  Page --> Table0
+  Table1["DB table/RPC<br/>orders"]
+  Page --> Table1
   Api0["API/fetch<br/>/api/cart"]
   Page --> Api0
   Api1["API/fetch<br/>/api/orders"]
@@ -270,6 +277,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0,Table1 data
   class Api0,Api1,Api2 api
 ```
 
@@ -280,17 +288,17 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/account/orders` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Customer protected |
 | Page file | [apps/web/src/app/account/orders/page.tsx](../../../../apps/web/src/app/account/orders/page.tsx) |
 | Layout | [apps/web/src/app/account/layout.tsx](../../../../apps/web/src/app/account/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Customer order history and reorder flow via cart/order APIs |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `order_items`, `orders` |
 | Fetch/API calls | `/api/cart` (DELETE, GET, PATCH, POST)<br>`/api/orders` (GET)<br>`/api/orders/${order.id}` (GET, PATCH) |
 | Shared packages | @ridendine/auth, @ridendine/ui |
 | Components/imports | `@/components/layout/header`, `Badge`, `Button`, `Card`, `NoOrdersEmpty`, `Spinner` |
@@ -318,7 +326,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -411,10 +419,12 @@ flowchart TB
   Page["Customer Web<br/>/account/settings"]
   Layout["Layout<br/>apps/web/src/app/account/layout.tsx"]
   File["Page file<br/>apps/web/src/app/account/settings/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Customer protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>customers"]
+  Page --> Table0
   Api0["API/fetch<br/>/api/profile"]
   Page --> Api0
   Component0["Component/import<br/>@/components/layout/header"]
@@ -430,6 +440,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
   class Api0 api
 ```
 
@@ -440,17 +451,17 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/account/settings` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Customer protected |
 | Page file | [apps/web/src/app/account/settings/page.tsx](../../../../apps/web/src/app/account/settings/page.tsx) |
 | Layout | [apps/web/src/app/account/layout.tsx](../../../../apps/web/src/app/account/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Customer profile settings via profile API |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `customers` |
 | Fetch/API calls | `/api/profile` (GET, PATCH) |
 | Shared packages | @ridendine/auth, @ridendine/ui |
 | Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input` |
@@ -478,7 +489,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -492,7 +503,7 @@ flowchart TB
   Page["Customer Web<br/>/auth/forgot-password"]
   Layout["Layout<br/>apps/web/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/web/src/app/auth/forgot-password/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -516,11 +527,11 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/auth/forgot-password` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/web/src/app/auth/forgot-password/page.tsx](../../../../apps/web/src/app/auth/forgot-password/page.tsx) |
 | Layout | [apps/web/src/app/auth/layout.tsx](../../../../apps/web/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Public password reset request surface |
 
 ### Data And API Wiring
 
@@ -552,7 +563,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -566,7 +577,7 @@ flowchart TB
   Page["Customer Web<br/>/auth/login"]
   Layout["Layout<br/>apps/web/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/web/src/app/auth/login/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -591,11 +602,11 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/auth/login` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/web/src/app/auth/login/page.tsx](../../../../apps/web/src/app/auth/login/page.tsx) |
 | Layout | [apps/web/src/app/auth/layout.tsx](../../../../apps/web/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public customer login surface wired to app-owned login API |
 
 ### Data And API Wiring
 
@@ -638,7 +649,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -652,7 +663,7 @@ flowchart TB
   Page["Customer Web<br/>/auth/signup"]
   Layout["Layout<br/>apps/web/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/web/src/app/auth/signup/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -679,11 +690,11 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/auth/signup` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/web/src/app/auth/signup/page.tsx](../../../../apps/web/src/app/auth/signup/page.tsx) |
 | Layout | [apps/web/src/app/auth/layout.tsx](../../../../apps/web/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Public customer signup surface with referral application path |
 
 ### Data And API Wiring
 
@@ -722,7 +733,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -812,10 +823,14 @@ flowchart TB
   Page["Customer Web<br/>/checkout"]
   Layout["Layout<br/>apps/web/src/app/layout.tsx"]
   File["Page file<br/>apps/web/src/app/checkout/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Customer protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>carts"]
+  Page --> Table0
+  Table1["DB table/RPC<br/>orders"]
+  Page --> Table1
   Api0["API/fetch<br/>/api/addresses"]
   Page --> Api0
   Api1["API/fetch<br/>/api/cart?storefrontId=${storefrontId}"]
@@ -839,6 +854,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0,Table1 data
   class Api0,Api1,Api2 api
 ```
 
@@ -849,17 +865,17 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/checkout` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Customer protected |
 | Page file | [apps/web/src/app/checkout/page.tsx](../../../../apps/web/src/app/checkout/page.tsx) |
 | Layout | [apps/web/src/app/layout.tsx](../../../../apps/web/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Customer checkout surface with addresses, cart, and checkout APIs |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `carts`, `orders` |
 | Fetch/API calls | `/api/addresses` (DELETE, GET, PATCH, POST)<br>`/api/cart?storefrontId=${storefrontId}` (DELETE, GET, PATCH, POST)<br>`/api/checkout` (POST) |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/checkout/checkout-skeleton`, `@/components/checkout/delivery-time-picker`, `@/components/checkout/saved-card-selector`, `@/components/checkout/stripe-payment-form`, `@/components/layout/header`, `Button`, `Card`, `Input` |
@@ -890,7 +906,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -985,7 +1001,7 @@ flowchart TB
   Page["Customer Web<br/>/chef-signup"]
   Layout["Layout<br/>apps/web/src/app/layout.tsx"]
   File["Page file<br/>apps/web/src/app/chef-signup/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Public marketplace"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -1013,11 +1029,11 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/chef-signup` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Public marketplace |
 | Page file | [apps/web/src/app/chef-signup/page.tsx](../../../../apps/web/src/app/chef-signup/page.tsx) |
 | Layout | [apps/web/src/app/layout.tsx](../../../../apps/web/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public chef acquisition and signup information page |
 
 ### Data And API Wiring
 
@@ -1051,7 +1067,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -1222,10 +1238,12 @@ flowchart TB
   Page["Customer Web<br/>/contact"]
   Layout["Layout<br/>apps/web/src/app/layout.tsx"]
   File["Page file<br/>apps/web/src/app/contact/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Public support"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>support_tickets"]
+  Page --> Table0
   Api0["API/fetch<br/>/api/support"]
   Page --> Api0
   Component0["Component/import<br/>@/components/layout/header"]
@@ -1243,6 +1261,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
   class Api0 api
 ```
 
@@ -1253,17 +1272,17 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/contact` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Public support |
 | Page file | [apps/web/src/app/contact/page.tsx](../../../../apps/web/src/app/contact/page.tsx) |
 | Layout | [apps/web/src/app/layout.tsx](../../../../apps/web/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public contact form wired to support API |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `support_tickets` |
 | Fetch/API calls | `/api/support` (GET, POST) |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input`, `Textarea` |
@@ -1288,7 +1307,7 @@ No outgoing page-navigation links detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---

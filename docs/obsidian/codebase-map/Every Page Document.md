@@ -30,21 +30,21 @@ flowchart TB
 | App | Route | Status | Page file |
 | --- | --- | --- | --- |
 | Customer Web | `/about` | WIRED | [apps/web/src/app/about/page.tsx](../../../apps/web/src/app/about/page.tsx) |
-| Customer Web | `/account/addresses` | PARTIAL | [apps/web/src/app/account/addresses/page.tsx](../../../apps/web/src/app/account/addresses/page.tsx) |
+| Customer Web | `/account/addresses` | WIRED | [apps/web/src/app/account/addresses/page.tsx](../../../apps/web/src/app/account/addresses/page.tsx) |
 | Customer Web | `/account/favorites` | WIRED | [apps/web/src/app/account/favorites/page.tsx](../../../apps/web/src/app/account/favorites/page.tsx) |
-| Customer Web | `/account/orders` | PARTIAL | [apps/web/src/app/account/orders/page.tsx](../../../apps/web/src/app/account/orders/page.tsx) |
+| Customer Web | `/account/orders` | WIRED | [apps/web/src/app/account/orders/page.tsx](../../../apps/web/src/app/account/orders/page.tsx) |
 | Customer Web | `/account` | WIRED | [apps/web/src/app/account/page.tsx](../../../apps/web/src/app/account/page.tsx) |
-| Customer Web | `/account/settings` | PARTIAL | [apps/web/src/app/account/settings/page.tsx](../../../apps/web/src/app/account/settings/page.tsx) |
-| Customer Web | `/auth/forgot-password` | PARTIAL | [apps/web/src/app/auth/forgot-password/page.tsx](../../../apps/web/src/app/auth/forgot-password/page.tsx) |
-| Customer Web | `/auth/login` | PARTIAL | [apps/web/src/app/auth/login/page.tsx](../../../apps/web/src/app/auth/login/page.tsx) |
-| Customer Web | `/auth/signup` | PARTIAL | [apps/web/src/app/auth/signup/page.tsx](../../../apps/web/src/app/auth/signup/page.tsx) |
+| Customer Web | `/account/settings` | WIRED | [apps/web/src/app/account/settings/page.tsx](../../../apps/web/src/app/account/settings/page.tsx) |
+| Customer Web | `/auth/forgot-password` | WIRED | [apps/web/src/app/auth/forgot-password/page.tsx](../../../apps/web/src/app/auth/forgot-password/page.tsx) |
+| Customer Web | `/auth/login` | WIRED | [apps/web/src/app/auth/login/page.tsx](../../../apps/web/src/app/auth/login/page.tsx) |
+| Customer Web | `/auth/signup` | WIRED | [apps/web/src/app/auth/signup/page.tsx](../../../apps/web/src/app/auth/signup/page.tsx) |
 | Customer Web | `/cart` | WIRED | [apps/web/src/app/cart/page.tsx](../../../apps/web/src/app/cart/page.tsx) |
-| Customer Web | `/checkout` | PARTIAL | [apps/web/src/app/checkout/page.tsx](../../../apps/web/src/app/checkout/page.tsx) |
+| Customer Web | `/checkout` | WIRED | [apps/web/src/app/checkout/page.tsx](../../../apps/web/src/app/checkout/page.tsx) |
 | Customer Web | `/chef-resources` | WIRED | [apps/web/src/app/chef-resources/page.tsx](../../../apps/web/src/app/chef-resources/page.tsx) |
-| Customer Web | `/chef-signup` | PARTIAL | [apps/web/src/app/chef-signup/page.tsx](../../../apps/web/src/app/chef-signup/page.tsx) |
+| Customer Web | `/chef-signup` | WIRED | [apps/web/src/app/chef-signup/page.tsx](../../../apps/web/src/app/chef-signup/page.tsx) |
 | Customer Web | `/chefs/:slug` | WIRED | [apps/web/src/app/chefs/[slug]/page.tsx](../../../apps/web/src/app/chefs/[slug]/page.tsx) |
 | Customer Web | `/chefs` | WIRED | [apps/web/src/app/chefs/page.tsx](../../../apps/web/src/app/chefs/page.tsx) |
-| Customer Web | `/contact` | PARTIAL | [apps/web/src/app/contact/page.tsx](../../../apps/web/src/app/contact/page.tsx) |
+| Customer Web | `/contact` | WIRED | [apps/web/src/app/contact/page.tsx](../../../apps/web/src/app/contact/page.tsx) |
 | Customer Web | `/how-it-works` | WIRED | [apps/web/src/app/how-it-works/page.tsx](../../../apps/web/src/app/how-it-works/page.tsx) |
 | Customer Web | `/maintenance` | WIRED | [apps/web/src/app/maintenance/page.tsx](../../../apps/web/src/app/maintenance/page.tsx) |
 | Customer Web | `/order-confirmation/:orderId` | WIRED | [apps/web/src/app/order-confirmation/[orderId]/page.tsx](../../../apps/web/src/app/order-confirmation/[orderId]/page.tsx) |
@@ -52,20 +52,20 @@ flowchart TB
 | Customer Web | `/` | WIRED | [apps/web/src/app/page.tsx](../../../apps/web/src/app/page.tsx) |
 | Customer Web | `/privacy` | WIRED | [apps/web/src/app/privacy/page.tsx](../../../apps/web/src/app/privacy/page.tsx) |
 | Customer Web | `/terms` | WIRED | [apps/web/src/app/terms/page.tsx](../../../apps/web/src/app/terms/page.tsx) |
-| Ops Admin | `/auth/login` | PARTIAL | [apps/ops-admin/src/app/auth/login/page.tsx](../../../apps/ops-admin/src/app/auth/login/page.tsx) |
+| Ops Admin | `/auth/login` | WIRED | [apps/ops-admin/src/app/auth/login/page.tsx](../../../apps/ops-admin/src/app/auth/login/page.tsx) |
 | Ops Admin | `/dashboard/activity` | WIRED | [apps/ops-admin/src/app/dashboard/activity/page.tsx](../../../apps/ops-admin/src/app/dashboard/activity/page.tsx) |
-| Ops Admin | `/dashboard/analytics` | PARTIAL | [apps/ops-admin/src/app/dashboard/analytics/page.tsx](../../../apps/ops-admin/src/app/dashboard/analytics/page.tsx) |
-| Ops Admin | `/dashboard/announcements` | PARTIAL | [apps/ops-admin/src/app/dashboard/announcements/page.tsx](../../../apps/ops-admin/src/app/dashboard/announcements/page.tsx) |
-| Ops Admin | `/dashboard/automation` | PARTIAL | [apps/ops-admin/src/app/dashboard/automation/page.tsx](../../../apps/ops-admin/src/app/dashboard/automation/page.tsx) |
+| Ops Admin | `/dashboard/analytics` | WIRED | [apps/ops-admin/src/app/dashboard/analytics/page.tsx](../../../apps/ops-admin/src/app/dashboard/analytics/page.tsx) |
+| Ops Admin | `/dashboard/announcements` | WIRED | [apps/ops-admin/src/app/dashboard/announcements/page.tsx](../../../apps/ops-admin/src/app/dashboard/announcements/page.tsx) |
+| Ops Admin | `/dashboard/automation` | WIRED | [apps/ops-admin/src/app/dashboard/automation/page.tsx](../../../apps/ops-admin/src/app/dashboard/automation/page.tsx) |
 | Ops Admin | `/dashboard/chefs/:id` | WIRED | [apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx](../../../apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx) |
-| Ops Admin | `/dashboard/chefs/approvals` | PARTIAL | [apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx](../../../apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx) |
+| Ops Admin | `/dashboard/chefs/approvals` | WIRED | [apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx](../../../apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx) |
 | Ops Admin | `/dashboard/chefs` | WIRED | [apps/ops-admin/src/app/dashboard/chefs/page.tsx](../../../apps/ops-admin/src/app/dashboard/chefs/page.tsx) |
 | Ops Admin | `/dashboard/compliance` | WIRED | [apps/ops-admin/src/app/dashboard/compliance/page.tsx](../../../apps/ops-admin/src/app/dashboard/compliance/page.tsx) |
 | Ops Admin | `/dashboard/customers/:id` | WIRED | [apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx](../../../apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx) |
-| Ops Admin | `/dashboard/customers` | PARTIAL | [apps/ops-admin/src/app/dashboard/customers/page.tsx](../../../apps/ops-admin/src/app/dashboard/customers/page.tsx) |
+| Ops Admin | `/dashboard/customers` | WIRED | [apps/ops-admin/src/app/dashboard/customers/page.tsx](../../../apps/ops-admin/src/app/dashboard/customers/page.tsx) |
 | Ops Admin | `/dashboard/deliveries/:id` | WIRED | [apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx](../../../apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx) |
-| Ops Admin | `/dashboard/deliveries` | PARTIAL | [apps/ops-admin/src/app/dashboard/deliveries/page.tsx](../../../apps/ops-admin/src/app/dashboard/deliveries/page.tsx) |
-| Ops Admin | `/dashboard/dispatch` | PARTIAL | [apps/ops-admin/src/app/dashboard/dispatch/page.tsx](../../../apps/ops-admin/src/app/dashboard/dispatch/page.tsx) |
+| Ops Admin | `/dashboard/deliveries` | WIRED | [apps/ops-admin/src/app/dashboard/deliveries/page.tsx](../../../apps/ops-admin/src/app/dashboard/deliveries/page.tsx) |
+| Ops Admin | `/dashboard/dispatch` | WIRED | [apps/ops-admin/src/app/dashboard/dispatch/page.tsx](../../../apps/ops-admin/src/app/dashboard/dispatch/page.tsx) |
 | Ops Admin | `/dashboard/drivers/:id` | WIRED | [apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx](../../../apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx) |
 | Ops Admin | `/dashboard/drivers` | WIRED | [apps/ops-admin/src/app/dashboard/drivers/page.tsx](../../../apps/ops-admin/src/app/dashboard/drivers/page.tsx) |
 | Ops Admin | `/dashboard/exceptions` | WIRED | [apps/ops-admin/src/app/dashboard/exceptions/page.tsx](../../../apps/ops-admin/src/app/dashboard/exceptions/page.tsx) |
@@ -83,34 +83,34 @@ flowchart TB
 | Ops Admin | `/dashboard/integrations` | WIRED | [apps/ops-admin/src/app/dashboard/integrations/page.tsx](../../../apps/ops-admin/src/app/dashboard/integrations/page.tsx) |
 | Ops Admin | `/dashboard/map` | WIRED | [apps/ops-admin/src/app/dashboard/map/page.tsx](../../../apps/ops-admin/src/app/dashboard/map/page.tsx) |
 | Ops Admin | `/dashboard/orders/:id` | WIRED | [apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx](../../../apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx) |
-| Ops Admin | `/dashboard/orders` | PARTIAL | [apps/ops-admin/src/app/dashboard/orders/page.tsx](../../../apps/ops-admin/src/app/dashboard/orders/page.tsx) |
+| Ops Admin | `/dashboard/orders` | WIRED | [apps/ops-admin/src/app/dashboard/orders/page.tsx](../../../apps/ops-admin/src/app/dashboard/orders/page.tsx) |
 | Ops Admin | `/dashboard` | WIRED | [apps/ops-admin/src/app/dashboard/page.tsx](../../../apps/ops-admin/src/app/dashboard/page.tsx) |
-| Ops Admin | `/dashboard/promos` | PARTIAL | [apps/ops-admin/src/app/dashboard/promos/page.tsx](../../../apps/ops-admin/src/app/dashboard/promos/page.tsx) |
+| Ops Admin | `/dashboard/promos` | WIRED | [apps/ops-admin/src/app/dashboard/promos/page.tsx](../../../apps/ops-admin/src/app/dashboard/promos/page.tsx) |
 | Ops Admin | `/dashboard/reports` | WIRED | [apps/ops-admin/src/app/dashboard/reports/page.tsx](../../../apps/ops-admin/src/app/dashboard/reports/page.tsx) |
 | Ops Admin | `/dashboard/settings` | WIRED | [apps/ops-admin/src/app/dashboard/settings/page.tsx](../../../apps/ops-admin/src/app/dashboard/settings/page.tsx) |
-| Ops Admin | `/dashboard/support` | PARTIAL | [apps/ops-admin/src/app/dashboard/support/page.tsx](../../../apps/ops-admin/src/app/dashboard/support/page.tsx) |
-| Ops Admin | `/dashboard/team` | PARTIAL | [apps/ops-admin/src/app/dashboard/team/page.tsx](../../../apps/ops-admin/src/app/dashboard/team/page.tsx) |
+| Ops Admin | `/dashboard/support` | WIRED | [apps/ops-admin/src/app/dashboard/support/page.tsx](../../../apps/ops-admin/src/app/dashboard/support/page.tsx) |
+| Ops Admin | `/dashboard/team` | WIRED | [apps/ops-admin/src/app/dashboard/team/page.tsx](../../../apps/ops-admin/src/app/dashboard/team/page.tsx) |
 | Ops Admin | `/internal/command-center` | WIRED | [apps/ops-admin/src/app/internal/command-center/page.tsx](../../../apps/ops-admin/src/app/internal/command-center/page.tsx) |
 | Ops Admin | `/` | WIRED | [apps/ops-admin/src/app/page.tsx](../../../apps/ops-admin/src/app/page.tsx) |
-| Chef Admin | `/auth/forgot-password` | PARTIAL | [apps/chef-admin/src/app/auth/forgot-password/page.tsx](../../../apps/chef-admin/src/app/auth/forgot-password/page.tsx) |
-| Chef Admin | `/auth/login` | PARTIAL | [apps/chef-admin/src/app/auth/login/page.tsx](../../../apps/chef-admin/src/app/auth/login/page.tsx) |
-| Chef Admin | `/auth/signup` | PARTIAL | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../apps/chef-admin/src/app/auth/signup/page.tsx) |
-| Chef Admin | `/dashboard/analytics` | PARTIAL | [apps/chef-admin/src/app/dashboard/analytics/page.tsx](../../../apps/chef-admin/src/app/dashboard/analytics/page.tsx) |
+| Chef Admin | `/auth/forgot-password` | WIRED | [apps/chef-admin/src/app/auth/forgot-password/page.tsx](../../../apps/chef-admin/src/app/auth/forgot-password/page.tsx) |
+| Chef Admin | `/auth/login` | WIRED | [apps/chef-admin/src/app/auth/login/page.tsx](../../../apps/chef-admin/src/app/auth/login/page.tsx) |
+| Chef Admin | `/auth/signup` | WIRED | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../apps/chef-admin/src/app/auth/signup/page.tsx) |
+| Chef Admin | `/dashboard/analytics` | WIRED | [apps/chef-admin/src/app/dashboard/analytics/page.tsx](../../../apps/chef-admin/src/app/dashboard/analytics/page.tsx) |
 | Chef Admin | `/dashboard/availability` | WIRED | [apps/chef-admin/src/app/dashboard/availability/page.tsx](../../../apps/chef-admin/src/app/dashboard/availability/page.tsx) |
 | Chef Admin | `/dashboard/menu` | WIRED | [apps/chef-admin/src/app/dashboard/menu/page.tsx](../../../apps/chef-admin/src/app/dashboard/menu/page.tsx) |
 | Chef Admin | `/dashboard/orders/:id` | WIRED | [apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx](../../../apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx) |
 | Chef Admin | `/dashboard/orders` | WIRED | [apps/chef-admin/src/app/dashboard/orders/page.tsx](../../../apps/chef-admin/src/app/dashboard/orders/page.tsx) |
 | Chef Admin | `/dashboard` | WIRED | [apps/chef-admin/src/app/dashboard/page.tsx](../../../apps/chef-admin/src/app/dashboard/page.tsx) |
 | Chef Admin | `/dashboard/payouts` | WIRED | [apps/chef-admin/src/app/dashboard/payouts/page.tsx](../../../apps/chef-admin/src/app/dashboard/payouts/page.tsx) |
-| Chef Admin | `/dashboard/reviews` | PARTIAL | [apps/chef-admin/src/app/dashboard/reviews/page.tsx](../../../apps/chef-admin/src/app/dashboard/reviews/page.tsx) |
+| Chef Admin | `/dashboard/reviews` | WIRED | [apps/chef-admin/src/app/dashboard/reviews/page.tsx](../../../apps/chef-admin/src/app/dashboard/reviews/page.tsx) |
 | Chef Admin | `/dashboard/settings` | WIRED | [apps/chef-admin/src/app/dashboard/settings/page.tsx](../../../apps/chef-admin/src/app/dashboard/settings/page.tsx) |
 | Chef Admin | `/dashboard/storefront` | WIRED | [apps/chef-admin/src/app/dashboard/storefront/page.tsx](../../../apps/chef-admin/src/app/dashboard/storefront/page.tsx) |
 | Chef Admin | `/dashboard/storefront/setup` | WIRED | [apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx](../../../apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx) |
 | Chef Admin | `/` | WIRED | [apps/chef-admin/src/app/page.tsx](../../../apps/chef-admin/src/app/page.tsx) |
 | Chef Admin | `/privacy` | WIRED | [apps/chef-admin/src/app/privacy/page.tsx](../../../apps/chef-admin/src/app/privacy/page.tsx) |
 | Chef Admin | `/terms` | WIRED | [apps/chef-admin/src/app/terms/page.tsx](../../../apps/chef-admin/src/app/terms/page.tsx) |
-| Driver App | `/auth/login` | PARTIAL | [apps/driver-app/src/app/auth/login/page.tsx](../../../apps/driver-app/src/app/auth/login/page.tsx) |
-| Driver App | `/auth/signup` | PARTIAL | [apps/driver-app/src/app/auth/signup/page.tsx](../../../apps/driver-app/src/app/auth/signup/page.tsx) |
+| Driver App | `/auth/login` | WIRED | [apps/driver-app/src/app/auth/login/page.tsx](../../../apps/driver-app/src/app/auth/login/page.tsx) |
+| Driver App | `/auth/signup` | WIRED | [apps/driver-app/src/app/auth/signup/page.tsx](../../../apps/driver-app/src/app/auth/signup/page.tsx) |
 | Driver App | `/delivery/:id` | WIRED | [apps/driver-app/src/app/delivery/[id]/page.tsx](../../../apps/driver-app/src/app/delivery/[id]/page.tsx) |
 | Driver App | `/earnings` | WIRED | [apps/driver-app/src/app/earnings/page.tsx](../../../apps/driver-app/src/app/earnings/page.tsx) |
 | Driver App | `/history` | WIRED | [apps/driver-app/src/app/history/page.tsx](../../../apps/driver-app/src/app/history/page.tsx) |
@@ -205,10 +205,12 @@ flowchart TB
   Page["Customer Web<br/>/account/addresses"]
   Layout["Layout<br/>apps/web/src/app/account/layout.tsx"]
   File["Page file<br/>apps/web/src/app/account/addresses/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Customer protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>customer_addresses"]
+  Page --> Table0
   Api0["API/fetch<br/>/api/addresses"]
   Page --> Api0
   Api1["API/fetch<br/>/api/addresses?id=${id}"]
@@ -228,6 +230,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
   class Api0,Api1 api
 ```
 
@@ -238,17 +241,17 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/account/addresses` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Customer protected |
 | Page file | [apps/web/src/app/account/addresses/page.tsx](../../../apps/web/src/app/account/addresses/page.tsx) |
 | Layout | [apps/web/src/app/account/layout.tsx](../../../apps/web/src/app/account/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Customer address management via account layout and address APIs |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `customer_addresses` |
 | Fetch/API calls | `/api/addresses` (DELETE, GET, PATCH, POST)<br>`/api/addresses?id=${id}` (DELETE, GET, PATCH, POST) |
 | Shared packages | @ridendine/auth, @ridendine/ui |
 | Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input`, `Select` |
@@ -273,7 +276,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -361,10 +364,14 @@ flowchart TB
   Page["Customer Web<br/>/account/orders"]
   Layout["Layout<br/>apps/web/src/app/account/layout.tsx"]
   File["Page file<br/>apps/web/src/app/account/orders/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Customer protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>order_items"]
+  Page --> Table0
+  Table1["DB table/RPC<br/>orders"]
+  Page --> Table1
   Api0["API/fetch<br/>/api/cart"]
   Page --> Api0
   Api1["API/fetch<br/>/api/orders"]
@@ -388,6 +395,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0,Table1 data
   class Api0,Api1,Api2 api
 ```
 
@@ -398,17 +406,17 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/account/orders` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Customer protected |
 | Page file | [apps/web/src/app/account/orders/page.tsx](../../../apps/web/src/app/account/orders/page.tsx) |
 | Layout | [apps/web/src/app/account/layout.tsx](../../../apps/web/src/app/account/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Customer order history and reorder flow via cart/order APIs |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `order_items`, `orders` |
 | Fetch/API calls | `/api/cart` (DELETE, GET, PATCH, POST)<br>`/api/orders` (GET)<br>`/api/orders/${order.id}` (GET, PATCH) |
 | Shared packages | @ridendine/auth, @ridendine/ui |
 | Components/imports | `@/components/layout/header`, `Badge`, `Button`, `Card`, `NoOrdersEmpty`, `Spinner` |
@@ -436,7 +444,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -529,10 +537,12 @@ flowchart TB
   Page["Customer Web<br/>/account/settings"]
   Layout["Layout<br/>apps/web/src/app/account/layout.tsx"]
   File["Page file<br/>apps/web/src/app/account/settings/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Customer protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>customers"]
+  Page --> Table0
   Api0["API/fetch<br/>/api/profile"]
   Page --> Api0
   Component0["Component/import<br/>@/components/layout/header"]
@@ -548,6 +558,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
   class Api0 api
 ```
 
@@ -558,17 +569,17 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/account/settings` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Customer protected |
 | Page file | [apps/web/src/app/account/settings/page.tsx](../../../apps/web/src/app/account/settings/page.tsx) |
 | Layout | [apps/web/src/app/account/layout.tsx](../../../apps/web/src/app/account/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Customer profile settings via profile API |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `customers` |
 | Fetch/API calls | `/api/profile` (GET, PATCH) |
 | Shared packages | @ridendine/auth, @ridendine/ui |
 | Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input` |
@@ -596,7 +607,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -610,7 +621,7 @@ flowchart TB
   Page["Customer Web<br/>/auth/forgot-password"]
   Layout["Layout<br/>apps/web/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/web/src/app/auth/forgot-password/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -634,11 +645,11 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/auth/forgot-password` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/web/src/app/auth/forgot-password/page.tsx](../../../apps/web/src/app/auth/forgot-password/page.tsx) |
 | Layout | [apps/web/src/app/auth/layout.tsx](../../../apps/web/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Public password reset request surface |
 
 ### Data And API Wiring
 
@@ -670,7 +681,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -684,7 +695,7 @@ flowchart TB
   Page["Customer Web<br/>/auth/login"]
   Layout["Layout<br/>apps/web/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/web/src/app/auth/login/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -709,11 +720,11 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/auth/login` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/web/src/app/auth/login/page.tsx](../../../apps/web/src/app/auth/login/page.tsx) |
 | Layout | [apps/web/src/app/auth/layout.tsx](../../../apps/web/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public customer login surface wired to app-owned login API |
 
 ### Data And API Wiring
 
@@ -756,7 +767,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -770,7 +781,7 @@ flowchart TB
   Page["Customer Web<br/>/auth/signup"]
   Layout["Layout<br/>apps/web/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/web/src/app/auth/signup/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -797,11 +808,11 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/auth/signup` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/web/src/app/auth/signup/page.tsx](../../../apps/web/src/app/auth/signup/page.tsx) |
 | Layout | [apps/web/src/app/auth/layout.tsx](../../../apps/web/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Public customer signup surface with referral application path |
 
 ### Data And API Wiring
 
@@ -840,7 +851,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -930,10 +941,14 @@ flowchart TB
   Page["Customer Web<br/>/checkout"]
   Layout["Layout<br/>apps/web/src/app/layout.tsx"]
   File["Page file<br/>apps/web/src/app/checkout/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Customer protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>carts"]
+  Page --> Table0
+  Table1["DB table/RPC<br/>orders"]
+  Page --> Table1
   Api0["API/fetch<br/>/api/addresses"]
   Page --> Api0
   Api1["API/fetch<br/>/api/cart?storefrontId=${storefrontId}"]
@@ -957,6 +972,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0,Table1 data
   class Api0,Api1,Api2 api
 ```
 
@@ -967,17 +983,17 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/checkout` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Customer protected |
 | Page file | [apps/web/src/app/checkout/page.tsx](../../../apps/web/src/app/checkout/page.tsx) |
 | Layout | [apps/web/src/app/layout.tsx](../../../apps/web/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Customer checkout surface with addresses, cart, and checkout APIs |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `carts`, `orders` |
 | Fetch/API calls | `/api/addresses` (DELETE, GET, PATCH, POST)<br>`/api/cart?storefrontId=${storefrontId}` (DELETE, GET, PATCH, POST)<br>`/api/checkout` (POST) |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/checkout/checkout-skeleton`, `@/components/checkout/delivery-time-picker`, `@/components/checkout/saved-card-selector`, `@/components/checkout/stripe-payment-form`, `@/components/layout/header`, `Button`, `Card`, `Input` |
@@ -1008,7 +1024,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -1103,7 +1119,7 @@ flowchart TB
   Page["Customer Web<br/>/chef-signup"]
   Layout["Layout<br/>apps/web/src/app/layout.tsx"]
   File["Page file<br/>apps/web/src/app/chef-signup/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Public marketplace"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -1131,11 +1147,11 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/chef-signup` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Public marketplace |
 | Page file | [apps/web/src/app/chef-signup/page.tsx](../../../apps/web/src/app/chef-signup/page.tsx) |
 | Layout | [apps/web/src/app/layout.tsx](../../../apps/web/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public chef acquisition and signup information page |
 
 ### Data And API Wiring
 
@@ -1169,7 +1185,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -1340,10 +1356,12 @@ flowchart TB
   Page["Customer Web<br/>/contact"]
   Layout["Layout<br/>apps/web/src/app/layout.tsx"]
   File["Page file<br/>apps/web/src/app/contact/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Public support"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>support_tickets"]
+  Page --> Table0
   Api0["API/fetch<br/>/api/support"]
   Page --> Api0
   Component0["Component/import<br/>@/components/layout/header"]
@@ -1361,6 +1379,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
   class Api0 api
 ```
 
@@ -1371,17 +1390,17 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/contact` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Public support |
 | Page file | [apps/web/src/app/contact/page.tsx](../../../apps/web/src/app/contact/page.tsx) |
 | Layout | [apps/web/src/app/layout.tsx](../../../apps/web/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public contact form wired to support API |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `support_tickets` |
 | Fetch/API calls | `/api/support` (GET, POST) |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input`, `Textarea` |
@@ -1406,7 +1425,7 @@ No outgoing page-navigation links detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -1930,7 +1949,7 @@ flowchart TB
   Page["Ops Admin<br/>/auth/login"]
   Layout["Layout<br/>apps/ops-admin/src/app/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/auth/login/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -1957,11 +1976,11 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/auth/login` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/ops-admin/src/app/auth/login/page.tsx](../../../apps/ops-admin/src/app/auth/login/page.tsx) |
 | Layout | [apps/ops-admin/src/app/layout.tsx](../../../apps/ops-admin/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public ops login surface wired to app-owned login API |
 
 ### Data And API Wiring
 
@@ -1992,7 +2011,7 @@ No outgoing page-navigation links detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -2081,7 +2100,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/analytics"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/analytics/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -2112,11 +2131,11 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/analytics` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/analytics/page.tsx](../../../apps/ops-admin/src/app/dashboard/analytics/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | table:driver_presence, table:drivers, table:orders, @ridendine/db, @ridendine/ui |
+| Data source summary | Ops analytics dashboard reading operational metrics |
 
 ### Data And API Wiring
 
@@ -2142,7 +2161,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -2156,7 +2175,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/announcements"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/announcements/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -2183,11 +2202,11 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/announcements` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/announcements/page.tsx](../../../apps/ops-admin/src/app/dashboard/announcements/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Ops announcements management surface |
 
 ### Data And API Wiring
 
@@ -2217,7 +2236,7 @@ No outgoing page-navigation links detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -2231,7 +2250,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/automation"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/automation/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -2258,11 +2277,11 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/automation` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/automation/page.tsx](../../../apps/ops-admin/src/app/dashboard/automation/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Ops automation rules surface |
 
 ### Data And API Wiring
 
@@ -2290,7 +2309,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -2383,10 +2402,12 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/chefs/approvals"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>chef_profiles"]
+  Page --> Table0
   Api0["API/fetch<br/>/api/chefs"]
   Page --> Api0
   Api1["API/fetch<br/>/api/chefs/${id}"]
@@ -2402,6 +2423,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
   class Api0,Api1 api
 ```
 
@@ -2412,17 +2434,17 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/chefs/approvals` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx](../../../apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Ops chef approval workflow surface |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `chef_profiles` |
 | Fetch/API calls | `/api/chefs` (GET, POST)<br>`/api/chefs/${id}` (PATCH) |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `Badge`, `Card` |
@@ -2448,7 +2470,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -2697,10 +2719,12 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/customers"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/customers/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>customers"]
+  Page --> Table0
   Api0["API/fetch<br/>/api/customers"]
   Page --> Api0
   Api1["API/fetch<br/>/api/export?type=customers"]
@@ -2718,6 +2742,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
   class Api0,Api1 api
 ```
 
@@ -2728,17 +2753,17 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/customers` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/customers/page.tsx](../../../apps/ops-admin/src/app/dashboard/customers/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Ops customer management surface |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `customers` |
 | Fetch/API calls | `/api/customers` (GET, POST)<br>`/api/export?type=customers` (GET) |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `DataTable`, `EmptyState`, `PageHeader` |
@@ -2765,7 +2790,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -2855,10 +2880,16 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/deliveries"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/deliveries/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>deliveries"]
+  Page --> Table0
+  Table1["DB table/RPC<br/>drivers"]
+  Page --> Table1
+  Table2["DB table/RPC<br/>orders"]
+  Page --> Table2
   Component0["Component/import<br/>@/components/DashboardLayout"]
   Page --> Component0
   Component1["Component/import<br/>Badge"]
@@ -2870,6 +2901,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0,Table1,Table2 data
 ```
 
 ### Actual Page Information
@@ -2879,17 +2911,17 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/deliveries` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/deliveries/page.tsx](../../../apps/ops-admin/src/app/dashboard/deliveries/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Ops delivery management surface |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `deliveries`, `drivers`, `orders` |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `Badge`, `Card` |
@@ -2919,7 +2951,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -2933,10 +2965,14 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/dispatch"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/dispatch/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>deliveries"]
+  Page --> Table0
+  Table1["DB table/RPC<br/>delivery_offers"]
+  Page --> Table1
   Api0["API/fetch<br/>/api/engine/dispatch"]
   Page --> Api0
   Api1["API/fetch<br/>/api/engine/dispatch/offer-history"]
@@ -2958,6 +2994,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0,Table1 data
   class Api0,Api1 api
 ```
 
@@ -2968,17 +3005,17 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/dispatch` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/dispatch/page.tsx](../../../apps/ops-admin/src/app/dashboard/dispatch/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/types, @ridendine/ui |
+| Data source summary | Ops dispatch control surface |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `deliveries`, `delivery_offers` |
 | Fetch/API calls | `/api/engine/dispatch` (GET, POST)<br>`/api/engine/dispatch/offer-history` (GET) |
 | Shared packages | @ridendine/types, @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `@/components/map/delivery-map`, `Button`, `Card`, `DataTable`, `EmptyState`, `Modal`, `PageHeader`, `StatusBadge` |
@@ -3005,7 +3042,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -4293,10 +4330,12 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/orders"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/orders/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>orders"]
+  Page --> Table0
   Api0["API/fetch<br/>/api/engine/orders/${orderId}"]
   Page --> Api0
   Api1["API/fetch<br/>/api/orders"]
@@ -4312,6 +4351,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
   class Api0,Api1 api
 ```
 
@@ -4322,17 +4362,17 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/orders` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/orders/page.tsx](../../../apps/ops-admin/src/app/dashboard/orders/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Ops order search and action surface |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `orders` |
 | Fetch/API calls | `/api/engine/orders/${orderId}` (GET, PATCH)<br>`/api/orders` (GET) |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `Badge`, `Card` |
@@ -4359,7 +4399,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -4462,10 +4502,12 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/promos"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/promos/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>promo_codes"]
+  Page --> Table0
   Component0["Component/import<br/>@/components/DashboardLayout"]
   Page --> Component0
   Component1["Component/import<br/>Badge"]
@@ -4481,6 +4523,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
 ```
 
 ### Actual Page Information
@@ -4490,17 +4533,17 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/promos` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/promos/page.tsx](../../../apps/ops-admin/src/app/dashboard/promos/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Ops promotions management surface |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `promo_codes` |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `Badge`, `Button`, `Card`, `Input` |
@@ -4520,7 +4563,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -4678,10 +4721,12 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/support"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/support/page.tsx"]
-  Auth["Auth<br/>Detected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>support_tickets"]
+  Page --> Table0
   Component0["Component/import<br/>@/components/DashboardLayout"]
   Page --> Component0
   Component1["Component/import<br/>Badge"]
@@ -4693,6 +4738,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
 ```
 
 ### Actual Page Information
@@ -4702,17 +4748,17 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/support` |
-| Status | `PARTIAL` |
-| Auth | Detected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/support/page.tsx](../../../apps/ops-admin/src/app/dashboard/support/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/db, @ridendine/ui |
+| Data source summary | Ops support case surface |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `support_tickets` |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/db, @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `Badge`, `Card` |
@@ -4742,7 +4788,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -4756,10 +4802,12 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/team"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/team/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Ops protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>platform_users"]
+  Page --> Table0
   Component0["Component/import<br/>@/components/DashboardLayout"]
   Page --> Component0
   Component1["Component/import<br/>Badge"]
@@ -4775,6 +4823,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
 ```
 
 ### Actual Page Information
@@ -4784,17 +4833,17 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/team` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Ops protected |
 | Page file | [apps/ops-admin/src/app/dashboard/team/page.tsx](../../../apps/ops-admin/src/app/dashboard/team/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Ops team and platform-user management surface |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `platform_users` |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `Badge`, `Button`, `Card`, `Input` |
@@ -4814,7 +4863,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -4954,7 +5003,7 @@ flowchart TB
   Page["Chef Admin<br/>/auth/forgot-password"]
   Layout["Layout<br/>apps/chef-admin/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/chef-admin/src/app/auth/forgot-password/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -4976,11 +5025,11 @@ flowchart TB
 | App | Chef Admin |
 | Domain | `chef.ridendine.ca` |
 | Route | `/auth/forgot-password` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/chef-admin/src/app/auth/forgot-password/page.tsx](../../../apps/chef-admin/src/app/auth/forgot-password/page.tsx) |
 | Layout | [apps/chef-admin/src/app/auth/layout.tsx](../../../apps/chef-admin/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Public chef password reset request surface |
 
 ### Data And API Wiring
 
@@ -5010,7 +5059,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -5024,7 +5073,7 @@ flowchart TB
   Page["Chef Admin<br/>/auth/login"]
   Layout["Layout<br/>apps/chef-admin/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/chef-admin/src/app/auth/login/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -5046,11 +5095,11 @@ flowchart TB
 | App | Chef Admin |
 | Domain | `chef.ridendine.ca` |
 | Route | `/auth/login` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/chef-admin/src/app/auth/login/page.tsx](../../../apps/chef-admin/src/app/auth/login/page.tsx) |
 | Layout | [apps/chef-admin/src/app/auth/layout.tsx](../../../apps/chef-admin/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Public chef login surface using client-side Supabase auth |
 
 ### Data And API Wiring
 
@@ -5086,7 +5135,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -5100,7 +5149,7 @@ flowchart TB
   Page["Chef Admin<br/>/auth/signup"]
   Layout["Layout<br/>apps/chef-admin/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/chef-admin/src/app/auth/signup/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -5127,11 +5176,11 @@ flowchart TB
 | App | Chef Admin |
 | Domain | `chef.ridendine.ca` |
 | Route | `/auth/signup` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../apps/chef-admin/src/app/auth/signup/page.tsx) |
 | Layout | [apps/chef-admin/src/app/auth/layout.tsx](../../../apps/chef-admin/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public chef signup surface wired to chef signup API |
 
 ### Data And API Wiring
 
@@ -5170,7 +5219,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -5184,10 +5233,14 @@ flowchart TB
   Page["Chef Admin<br/>/dashboard/analytics"]
   Layout["Layout<br/>apps/chef-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/chef-admin/src/app/dashboard/analytics/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Chef protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>chef_storefronts"]
+  Page --> Table0
+  Table1["DB table/RPC<br/>orders"]
+  Page --> Table1
   Api0["API/fetch<br/>/api/analytics?period=${p}"]
   Page --> Api0
   Component0["Component/import<br/>Card"]
@@ -5197,6 +5250,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0,Table1 data
   class Api0 api
 ```
 
@@ -5207,17 +5261,17 @@ flowchart TB
 | App | Chef Admin |
 | Domain | `chef.ridendine.ca` |
 | Route | `/dashboard/analytics` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Chef protected |
 | Page file | [apps/chef-admin/src/app/dashboard/analytics/page.tsx](../../../apps/chef-admin/src/app/dashboard/analytics/page.tsx) |
 | Layout | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../apps/chef-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Chef analytics dashboard wired to analytics API |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `chef_storefronts`, `orders` |
 | Fetch/API calls | `/api/analytics?period=${p}` (GET) |
 | Shared packages | @ridendine/ui |
 | Components/imports | `Card` |
@@ -5239,7 +5293,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -5706,7 +5760,7 @@ flowchart TB
   Page["Chef Admin<br/>/dashboard/reviews"]
   Layout["Layout<br/>apps/chef-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/chef-admin/src/app/dashboard/reviews/page.tsx"]
-  Auth["Auth<br/>Detected"]
+  Auth["Auth<br/>Chef protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -5737,11 +5791,11 @@ flowchart TB
 | App | Chef Admin |
 | Domain | `chef.ridendine.ca` |
 | Route | `/dashboard/reviews` |
-| Status | `PARTIAL` |
-| Auth | Detected |
+| Status | `WIRED` |
+| Auth | Chef protected |
 | Page file | [apps/chef-admin/src/app/dashboard/reviews/page.tsx](../../../apps/chef-admin/src/app/dashboard/reviews/page.tsx) |
 | Layout | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../apps/chef-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | table:chef_profiles, table:chef_storefronts, table:reviews, @ridendine/db, @ridendine/ui |
+| Data source summary | Chef review management surface |
 
 ### Data And API Wiring
 
@@ -5767,7 +5821,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -6201,7 +6255,7 @@ flowchart TB
   Page["Driver App<br/>/auth/login"]
   Layout["Layout<br/>apps/driver-app/src/app/layout.tsx"]
   File["Page file<br/>apps/driver-app/src/app/auth/login/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -6224,11 +6278,11 @@ flowchart TB
 | App | Driver App |
 | Domain | `driver.ridendine.ca` |
 | Route | `/auth/login` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/driver-app/src/app/auth/login/page.tsx](../../../apps/driver-app/src/app/auth/login/page.tsx) |
 | Layout | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public driver login surface wired to app-owned login API |
 
 ### Data And API Wiring
 
@@ -6264,7 +6318,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -6278,7 +6332,7 @@ flowchart TB
   Page["Driver App<br/>/auth/signup"]
   Layout["Layout<br/>apps/driver-app/src/app/layout.tsx"]
   File["Page file<br/>apps/driver-app/src/app/auth/signup/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -6305,11 +6359,11 @@ flowchart TB
 | App | Driver App |
 | Domain | `driver.ridendine.ca` |
 | Route | `/auth/signup` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/driver-app/src/app/auth/signup/page.tsx](../../../apps/driver-app/src/app/auth/signup/page.tsx) |
 | Layout | [apps/driver-app/src/app/layout.tsx](../../../apps/driver-app/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public driver signup surface wired to driver signup API |
 
 ### Data And API Wiring
 
@@ -6347,7 +6401,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---

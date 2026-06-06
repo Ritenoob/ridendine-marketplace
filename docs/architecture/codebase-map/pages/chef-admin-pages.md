@@ -13,7 +13,7 @@ flowchart TB
   Page["Chef Admin<br/>/auth/forgot-password"]
   Layout["Layout<br/>apps/chef-admin/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/chef-admin/src/app/auth/forgot-password/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -35,11 +35,11 @@ flowchart TB
 | App | Chef Admin |
 | Domain | `chef.ridendine.ca` |
 | Route | `/auth/forgot-password` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/chef-admin/src/app/auth/forgot-password/page.tsx](../../../../apps/chef-admin/src/app/auth/forgot-password/page.tsx) |
 | Layout | [apps/chef-admin/src/app/auth/layout.tsx](../../../../apps/chef-admin/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Public chef password reset request surface |
 
 ### Data And API Wiring
 
@@ -69,7 +69,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -83,7 +83,7 @@ flowchart TB
   Page["Chef Admin<br/>/auth/login"]
   Layout["Layout<br/>apps/chef-admin/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/chef-admin/src/app/auth/login/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -105,11 +105,11 @@ flowchart TB
 | App | Chef Admin |
 | Domain | `chef.ridendine.ca` |
 | Route | `/auth/login` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) |
 | Layout | [apps/chef-admin/src/app/auth/layout.tsx](../../../../apps/chef-admin/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/auth, @ridendine/ui |
+| Data source summary | Public chef login surface using client-side Supabase auth |
 
 ### Data And API Wiring
 
@@ -145,7 +145,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -159,7 +159,7 @@ flowchart TB
   Page["Chef Admin<br/>/auth/signup"]
   Layout["Layout<br/>apps/chef-admin/src/app/auth/layout.tsx"]
   File["Page file<br/>apps/chef-admin/src/app/auth/signup/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -186,11 +186,11 @@ flowchart TB
 | App | Chef Admin |
 | Domain | `chef.ridendine.ca` |
 | Route | `/auth/signup` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../../apps/chef-admin/src/app/auth/signup/page.tsx) |
 | Layout | [apps/chef-admin/src/app/auth/layout.tsx](../../../../apps/chef-admin/src/app/auth/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public chef signup surface wired to chef signup API |
 
 ### Data And API Wiring
 
@@ -229,7 +229,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -243,10 +243,14 @@ flowchart TB
   Page["Chef Admin<br/>/dashboard/analytics"]
   Layout["Layout<br/>apps/chef-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/chef-admin/src/app/dashboard/analytics/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Chef protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>chef_storefronts"]
+  Page --> Table0
+  Table1["DB table/RPC<br/>orders"]
+  Page --> Table1
   Api0["API/fetch<br/>/api/analytics?period=${p}"]
   Page --> Api0
   Component0["Component/import<br/>Card"]
@@ -256,6 +260,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0,Table1 data
   class Api0 api
 ```
 
@@ -266,17 +271,17 @@ flowchart TB
 | App | Chef Admin |
 | Domain | `chef.ridendine.ca` |
 | Route | `/dashboard/analytics` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Chef protected |
 | Page file | [apps/chef-admin/src/app/dashboard/analytics/page.tsx](../../../../apps/chef-admin/src/app/dashboard/analytics/page.tsx) |
 | Layout | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../../apps/chef-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Chef analytics dashboard wired to analytics API |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `chef_storefronts`, `orders` |
 | Fetch/API calls | `/api/analytics?period=${p}` (GET) |
 | Shared packages | @ridendine/ui |
 | Components/imports | `Card` |
@@ -298,7 +303,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -765,7 +770,7 @@ flowchart TB
   Page["Chef Admin<br/>/dashboard/reviews"]
   Layout["Layout<br/>apps/chef-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/chef-admin/src/app/dashboard/reviews/page.tsx"]
-  Auth["Auth<br/>Detected"]
+  Auth["Auth<br/>Chef protected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -796,11 +801,11 @@ flowchart TB
 | App | Chef Admin |
 | Domain | `chef.ridendine.ca` |
 | Route | `/dashboard/reviews` |
-| Status | `PARTIAL` |
-| Auth | Detected |
+| Status | `WIRED` |
+| Auth | Chef protected |
 | Page file | [apps/chef-admin/src/app/dashboard/reviews/page.tsx](../../../../apps/chef-admin/src/app/dashboard/reviews/page.tsx) |
 | Layout | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../../apps/chef-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | table:chef_profiles, table:chef_storefronts, table:reviews, @ridendine/db, @ridendine/ui |
+| Data source summary | Chef review management surface |
 
 ### Data And API Wiring
 
@@ -826,7 +831,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---

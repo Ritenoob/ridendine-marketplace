@@ -8,6 +8,7 @@ const architectureDir = path.join(root, 'docs', 'architecture', 'codebase-map');
 const architectureWiringDir = path.join(architectureDir, 'wiring');
 const obsidianDir = path.join(root, 'docs', 'obsidian', 'codebase-map');
 const graphifyDir = path.join(root, 'graphify-out', 'ridendine-codebase-map');
+const { pageContracts, apiContracts } = require('./wiring-contracts.cjs');
 
 const apps = [
   {
@@ -148,6 +149,19 @@ function nearestLayout(appDir, file) {
 
 function unique(arr) {
   return [...new Set(arr.filter(Boolean))].sort();
+}
+
+function list(value) {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function contractFor(contracts, app, route, file) {
+  return contracts[file] || contracts[`${app.slug}:${route}`] || contracts[`${app.name}:${route}`] || null;
+}
+
+function mergeContractValues(detected, contractValues) {
+  return unique([...detected, ...list(contractValues)]);
 }
 
 function cleanTarget(raw) {
@@ -293,8 +307,10 @@ function detectAuth(text, route) {
   return 'Undetected';
 }
 
-function statusFor({ auth, tables, apis, text }) {
+function statusFor({ auth, tables, apis, text, contract }) {
   if (/redirect\(|notFound\(|permanentRedirect\(/.test(text)) return 'WIRED';
+  if (contract?.status) return contract.status;
+  if (contract?.intent) return 'WIRED';
   if (/TODO|Coming Soon|not implemented|placeholder/i.test(text)) return 'PARTIAL';
   if (auth === 'Undetected' && tables.length === 0 && apis.length === 0 && !/static|metadata|return\s*\(/.test(text)) return 'MISSING';
   if (auth === 'Undetected' && (tables.length || apis.length)) return 'PARTIAL';
@@ -308,13 +324,14 @@ function collectRoutes() {
     for (const file of pages) {
       const text = read(file);
       const route = routeFromFile(app.appDir, file);
-      const tables = extractTables(text);
-      const apis = extractApis(text);
-      const packages = extractPackages(text);
+      const contract = contractFor(pageContracts, app, route, file);
+      const tables = mergeContractValues(extractTables(text), contract?.tables);
+      const apis = mergeContractValues(extractApis(text), contract?.apis);
+      const packages = mergeContractValues(extractPackages(text), contract?.packages);
       const links = extractLinks(text);
       const envVars = extractEnvVars(text);
-      const components = extractComponents(text);
-      const auth = detectAuth(text, route);
+      const components = mergeContractValues(extractComponents(text), contract?.components);
+      const auth = contract?.auth || detectAuth(text, route);
       routes.push({
         app: app.name,
         slug: app.slug,
@@ -322,14 +339,15 @@ function collectRoutes() {
         file,
         layout: nearestLayout(app.appDir, file),
         auth,
-        dataSource: [...tables.map((t) => `table:${t}`), ...packages].join(', ') || 'Static/client component/undetected',
+        dataSource: contract?.dataSource || [...tables.map((t) => `table:${t}`), ...packages].join(', ') || 'Static/client component/undetected',
         apis,
         tables,
         packages,
         links,
         envVars,
         components,
-        status: statusFor({ auth, tables, apis, text }),
+        contract,
+        status: statusFor({ auth, tables, apis, text, contract }),
       });
     }
   }
@@ -343,30 +361,32 @@ function collectApis() {
     for (const file of files) {
       const text = read(file);
       const methods = extractMethods(text);
-      const tables = extractTables(text);
-      const packages = extractPackages(text);
-      const envVars = extractEnvVars(text);
-      const auth = detectAuth(text, '/api');
       const endpoint = endpointFromRouteFile(app.appDir, file);
-      const external = unique([
+      const contract = contractFor(apiContracts, app, endpoint, file);
+      const tables = mergeContractValues(extractTables(text), contract?.tables);
+      const packages = mergeContractValues(extractPackages(text), contract?.packages);
+      const envVars = extractEnvVars(text);
+      const auth = contract?.auth || detectAuth(text, '/api');
+      const external = mergeContractValues([
         /stripe/i.test(text) ? 'Stripe' : '',
         /mapbox|osrm|routing/i.test(text) ? 'Routing provider' : '',
         /supabase/i.test(text) ? 'Supabase' : '',
         /sentry/i.test(text) ? 'Sentry' : '',
-      ]);
+      ], contract?.external);
       apis.push({
         app: app.name,
         endpoint,
         file,
         methods: methods.length ? methods : ['UNDETECTED'],
-        request: /z\.object|Schema|parse\(|safeParse\(/.test(text) ? 'Validation/schema detectable' : 'Undetected',
-        response: /NextResponse\.json|Response\.json/.test(text) ? 'JSON response' : 'Undetected',
+        request: contract?.request || (/z\.object|Schema|parse\(|safeParse\(/.test(text) ? 'Validation/schema detectable' : 'Undetected'),
+        response: contract?.response || (/NextResponse\.json|Response\.json/.test(text) ? 'JSON response' : 'Undetected'),
         auth,
         packages,
         tables,
         envVars,
         external,
-        status: methods.length ? statusFor({ auth, tables, apis: packages, text }) : 'PARTIAL',
+        contract,
+        status: methods.length ? statusFor({ auth, tables, apis: packages, text, contract }) : 'PARTIAL',
       });
     }
   }
@@ -411,6 +431,43 @@ function table(headers, rows) {
     `| ${headers.map(() => '---').join(' | ')} |`,
     ...rows.map((row) => `| ${row.map((cell) => String(cell ?? '').replace(/\n/g, '<br>').replace(/\|/g, '\\|')).join(' | ')} |`),
   ].join('\n');
+}
+
+function generateWiringContracts() {
+  const pageRows = Object.entries(pageContracts).map(([file, contract]) => [
+    mdLink(file),
+    contract.auth,
+    contract.dataSource || contract.intent || '',
+    list(contract.apis).map((api) => `\`${api}\``).join(', ') || 'None',
+    list(contract.tables).map((tableName) => `\`${tableName}\``).join(', ') || 'None',
+    contract.status,
+    contract.notes || '',
+  ]);
+  const apiRows = Object.entries(apiContracts).map(([file, contract]) => [
+    mdLink(file),
+    contract.auth,
+    contract.request,
+    contract.response,
+    list(contract.tables).map((tableName) => `\`${tableName}\``).join(', ') || 'None',
+    list(contract.external).join(', ') || 'None',
+    contract.status,
+    contract.notes || '',
+  ]);
+
+  return `# Wiring Contract Registry
+
+Generated from \`scripts/wiring/wiring-contracts.cjs\`.
+
+These contracts document route and API intent that static text scanning cannot reliably infer. They do not replace runtime tests; they keep generated wiring maps honest about known public, protected, health, and marketplace-read surfaces.
+
+## Page Contracts
+
+${table(['Page file', 'Auth intent', 'Data/API intent', 'APIs', 'Tables', 'Status', 'Notes'], pageRows)}
+
+## API Contracts
+
+${table(['API file', 'Auth intent', 'Request contract', 'Response contract', 'Tables', 'External', 'Status', 'Notes'], apiRows)}
+`;
 }
 
 function generateRouteInventory(routes) {
@@ -878,6 +935,7 @@ function generateCompletion(routes, apis, map) {
 
 - \`docs/wiring/ROUTE_INVENTORY.md\`
 - \`docs/wiring/API_INVENTORY.md\`
+- \`docs/wiring/WIRING_CONTRACTS.md\`
 - \`docs/wiring/DATA_ENGINE_MAP.md\`
 - \`docs/wiring/PAGE_WIRING_MATRIX.md\`
 - \`docs/wiring/ACTION_MAP.md\`
@@ -1839,6 +1897,7 @@ flowchart LR
 `);
 
   writeTo(obsidianDir, 'API Wiring.md', rebaseMdLinks(generateApiInventory(apis), '../../../').replace(/^# API Inventory/, '# API Wiring'));
+  writeTo(obsidianDir, 'Wiring Contracts.md', rebaseMdLinks(generateWiringContracts(), '../../../'));
   writeTo(obsidianDir, 'Link Wiring.md', rebaseMdLinks(generateLinkMatrix(linkRows), '../../../').replace(/^# Link Wiring Matrix/, '# Link Wiring'));
   writeTo(obsidianDir, 'Database And Engine.md', rebaseMdLinks(generateDataEngineMap(map), '../../../').replace(/^# Data And Engine Map/, '# Database And Engine'));
   writeTo(obsidianDir, 'Known Gaps.md', rebaseMdLinks(generateMissing(routes, apis), '../../../').replace(/^# Missing Wiring Report/, '# Known Gaps'));
@@ -1862,6 +1921,7 @@ ${apps.map((app) => `- [${app.name}](apps/${app.slug}.md): ${app.domain} — ${a
   writeTo(architectureWiringDir, 'ENVIRONMENT_WIRING_MATRIX.md', rebaseMdLinks(generateEnvMatrix(routes, apis), '../../../../'));
   writeTo(architectureWiringDir, 'ROUTE_INVENTORY.md', rebaseMdLinks(generateRouteInventory(routes), '../../../../'));
   writeTo(architectureWiringDir, 'API_INVENTORY.md', rebaseMdLinks(generateApiInventory(apis), '../../../../'));
+  writeTo(architectureWiringDir, 'WIRING_CONTRACTS.md', rebaseMdLinks(generateWiringContracts(), '../../../../'));
   writeTo(architectureWiringDir, 'MISSING_WIRING_REPORT.md', rebaseMdLinks(generateMissing(routes, apis), '../../../../'));
 }
 
@@ -1875,6 +1935,7 @@ function main() {
 
   write('ROUTE_INVENTORY.md', generateRouteInventory(routes));
   write('API_INVENTORY.md', generateApiInventory(apis));
+  write('WIRING_CONTRACTS.md', generateWiringContracts());
   write('DATA_ENGINE_MAP.md', generateDataEngineMap(map));
   write('PAGE_WIRING_MATRIX.md', generatePageMatrix(routes));
   write('ACTION_MAP.md', generateActionMap(apis));

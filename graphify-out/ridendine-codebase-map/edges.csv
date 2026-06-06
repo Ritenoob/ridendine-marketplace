@@ -2,57 +2,64 @@ from,to,label,status
 app:web,route:web:/about,owns route,WIRED
 route:web:/about,file:apps/web/src/app/about/page.tsx,implemented by,WIRED
 route:web:/about,package:@ridendine/ui,imports,WIRED
-app:web,route:web:/account/addresses,owns route,PARTIAL
-route:web:/account/addresses,file:apps/web/src/app/account/addresses/page.tsx,implemented by,PARTIAL
-route:web:/account/addresses,package:@ridendine/auth,imports,PARTIAL
-route:web:/account/addresses,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/account/addresses,owns route,WIRED
+route:web:/account/addresses,file:apps/web/src/app/account/addresses/page.tsx,implemented by,WIRED
+route:web:/account/addresses,table:customer_addresses,reads/writes table,WIRED
+route:web:/account/addresses,package:@ridendine/auth,imports,WIRED
+route:web:/account/addresses,package:@ridendine/ui,imports,WIRED
 app:web,route:web:/account/favorites,owns route,WIRED
 route:web:/account/favorites,file:apps/web/src/app/account/favorites/page.tsx,implemented by,WIRED
 route:web:/account/favorites,package:@ridendine/auth,imports,WIRED
 route:web:/account/favorites,package:@ridendine/ui,imports,WIRED
-app:web,route:web:/account/orders,owns route,PARTIAL
-route:web:/account/orders,file:apps/web/src/app/account/orders/page.tsx,implemented by,PARTIAL
-route:web:/account/orders,package:@ridendine/auth,imports,PARTIAL
-route:web:/account/orders,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/account/orders,owns route,WIRED
+route:web:/account/orders,file:apps/web/src/app/account/orders/page.tsx,implemented by,WIRED
+route:web:/account/orders,table:order_items,reads/writes table,WIRED
+route:web:/account/orders,table:orders,reads/writes table,WIRED
+route:web:/account/orders,package:@ridendine/auth,imports,WIRED
+route:web:/account/orders,package:@ridendine/ui,imports,WIRED
 app:web,route:web:/account,owns route,WIRED
 route:web:/account,file:apps/web/src/app/account/page.tsx,implemented by,WIRED
 route:web:/account,package:@ridendine/auth,imports,WIRED
 route:web:/account,package:@ridendine/ui,imports,WIRED
-app:web,route:web:/account/settings,owns route,PARTIAL
-route:web:/account/settings,file:apps/web/src/app/account/settings/page.tsx,implemented by,PARTIAL
-route:web:/account/settings,package:@ridendine/auth,imports,PARTIAL
-route:web:/account/settings,package:@ridendine/ui,imports,PARTIAL
-app:web,route:web:/auth/forgot-password,owns route,PARTIAL
-route:web:/auth/forgot-password,file:apps/web/src/app/auth/forgot-password/page.tsx,implemented by,PARTIAL
-route:web:/auth/forgot-password,package:@ridendine/auth,imports,PARTIAL
-route:web:/auth/forgot-password,package:@ridendine/ui,imports,PARTIAL
-app:web,route:web:/auth/login,owns route,PARTIAL
-route:web:/auth/login,file:apps/web/src/app/auth/login/page.tsx,implemented by,PARTIAL
-route:web:/auth/login,package:@ridendine/ui,imports,PARTIAL
-app:web,route:web:/auth/signup,owns route,PARTIAL
-route:web:/auth/signup,file:apps/web/src/app/auth/signup/page.tsx,implemented by,PARTIAL
-route:web:/auth/signup,package:@ridendine/auth,imports,PARTIAL
-route:web:/auth/signup,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/account/settings,owns route,WIRED
+route:web:/account/settings,file:apps/web/src/app/account/settings/page.tsx,implemented by,WIRED
+route:web:/account/settings,table:customers,reads/writes table,WIRED
+route:web:/account/settings,package:@ridendine/auth,imports,WIRED
+route:web:/account/settings,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/auth/forgot-password,owns route,WIRED
+route:web:/auth/forgot-password,file:apps/web/src/app/auth/forgot-password/page.tsx,implemented by,WIRED
+route:web:/auth/forgot-password,package:@ridendine/auth,imports,WIRED
+route:web:/auth/forgot-password,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/auth/login,owns route,WIRED
+route:web:/auth/login,file:apps/web/src/app/auth/login/page.tsx,implemented by,WIRED
+route:web:/auth/login,package:@ridendine/ui,imports,WIRED
+app:web,route:web:/auth/signup,owns route,WIRED
+route:web:/auth/signup,file:apps/web/src/app/auth/signup/page.tsx,implemented by,WIRED
+route:web:/auth/signup,package:@ridendine/auth,imports,WIRED
+route:web:/auth/signup,package:@ridendine/ui,imports,WIRED
 app:web,route:web:/cart,owns route,WIRED
 route:web:/cart,file:apps/web/src/app/cart/page.tsx,implemented by,WIRED
 route:web:/cart,package:@ridendine/ui,imports,WIRED
-app:web,route:web:/checkout,owns route,PARTIAL
-route:web:/checkout,file:apps/web/src/app/checkout/page.tsx,implemented by,PARTIAL
-route:web:/checkout,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/checkout,owns route,WIRED
+route:web:/checkout,file:apps/web/src/app/checkout/page.tsx,implemented by,WIRED
+route:web:/checkout,table:carts,reads/writes table,WIRED
+route:web:/checkout,table:orders,reads/writes table,WIRED
+route:web:/checkout,package:@ridendine/ui,imports,WIRED
 app:web,route:web:/chef-resources,owns route,WIRED
 route:web:/chef-resources,file:apps/web/src/app/chef-resources/page.tsx,implemented by,WIRED
 route:web:/chef-resources,package:@ridendine/ui,imports,WIRED
-app:web,route:web:/chef-signup,owns route,PARTIAL
-route:web:/chef-signup,file:apps/web/src/app/chef-signup/page.tsx,implemented by,PARTIAL
-route:web:/chef-signup,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/chef-signup,owns route,WIRED
+route:web:/chef-signup,file:apps/web/src/app/chef-signup/page.tsx,implemented by,WIRED
+route:web:/chef-signup,package:@ridendine/ui,imports,WIRED
 app:web,route:web:/chefs/:slug,owns route,WIRED
 route:web:/chefs/:slug,file:apps/web/src/app/chefs/[slug]/page.tsx,implemented by,WIRED
 route:web:/chefs/:slug,package:@ridendine/db,imports,WIRED
 app:web,route:web:/chefs,owns route,WIRED
 route:web:/chefs,file:apps/web/src/app/chefs/page.tsx,implemented by,WIRED
-app:web,route:web:/contact,owns route,PARTIAL
-route:web:/contact,file:apps/web/src/app/contact/page.tsx,implemented by,PARTIAL
-route:web:/contact,package:@ridendine/ui,imports,PARTIAL
+app:web,route:web:/contact,owns route,WIRED
+route:web:/contact,file:apps/web/src/app/contact/page.tsx,implemented by,WIRED
+route:web:/contact,table:support_tickets,reads/writes table,WIRED
+route:web:/contact,package:@ridendine/ui,imports,WIRED
 app:web,route:web:/how-it-works,owns route,WIRED
 route:web:/how-it-works,file:apps/web/src/app/how-it-works/page.tsx,implemented by,WIRED
 route:web:/how-it-works,package:@ridendine/ui,imports,WIRED
@@ -75,9 +82,9 @@ app:web,route:web:/privacy,owns route,WIRED
 route:web:/privacy,file:apps/web/src/app/privacy/page.tsx,implemented by,WIRED
 app:web,route:web:/terms,owns route,WIRED
 route:web:/terms,file:apps/web/src/app/terms/page.tsx,implemented by,WIRED
-app:ops-admin,route:ops-admin:/auth/login,owns route,PARTIAL
-route:ops-admin:/auth/login,file:apps/ops-admin/src/app/auth/login/page.tsx,implemented by,PARTIAL
-route:ops-admin:/auth/login,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/auth/login,owns route,WIRED
+route:ops-admin:/auth/login,file:apps/ops-admin/src/app/auth/login/page.tsx,implemented by,WIRED
+route:ops-admin:/auth/login,package:@ridendine/ui,imports,WIRED
 app:ops-admin,route:ops-admin:/dashboard/activity,owns route,WIRED
 route:ops-admin:/dashboard/activity,file:apps/ops-admin/src/app/dashboard/activity/page.tsx,implemented by,WIRED
 route:ops-admin:/dashboard/activity,table:audit_logs,reads/writes table,WIRED
@@ -85,28 +92,29 @@ route:ops-admin:/dashboard/activity,table:ops_override_logs,reads/writes table,W
 route:ops-admin:/dashboard/activity,table:platform_users,reads/writes table,WIRED
 route:ops-admin:/dashboard/activity,package:@ridendine/db,imports,WIRED
 route:ops-admin:/dashboard/activity,package:@ridendine/ui,imports,WIRED
-app:ops-admin,route:ops-admin:/dashboard/analytics,owns route,PARTIAL
-route:ops-admin:/dashboard/analytics,file:apps/ops-admin/src/app/dashboard/analytics/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/analytics,table:driver_presence,reads/writes table,PARTIAL
-route:ops-admin:/dashboard/analytics,table:drivers,reads/writes table,PARTIAL
-route:ops-admin:/dashboard/analytics,table:orders,reads/writes table,PARTIAL
-route:ops-admin:/dashboard/analytics,package:@ridendine/db,imports,PARTIAL
-route:ops-admin:/dashboard/analytics,package:@ridendine/ui,imports,PARTIAL
-app:ops-admin,route:ops-admin:/dashboard/announcements,owns route,PARTIAL
-route:ops-admin:/dashboard/announcements,file:apps/ops-admin/src/app/dashboard/announcements/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/announcements,package:@ridendine/ui,imports,PARTIAL
-app:ops-admin,route:ops-admin:/dashboard/automation,owns route,PARTIAL
-route:ops-admin:/dashboard/automation,file:apps/ops-admin/src/app/dashboard/automation/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/automation,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/analytics,owns route,WIRED
+route:ops-admin:/dashboard/analytics,file:apps/ops-admin/src/app/dashboard/analytics/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/analytics,table:driver_presence,reads/writes table,WIRED
+route:ops-admin:/dashboard/analytics,table:drivers,reads/writes table,WIRED
+route:ops-admin:/dashboard/analytics,table:orders,reads/writes table,WIRED
+route:ops-admin:/dashboard/analytics,package:@ridendine/db,imports,WIRED
+route:ops-admin:/dashboard/analytics,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/announcements,owns route,WIRED
+route:ops-admin:/dashboard/announcements,file:apps/ops-admin/src/app/dashboard/announcements/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/announcements,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/automation,owns route,WIRED
+route:ops-admin:/dashboard/automation,file:apps/ops-admin/src/app/dashboard/automation/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/automation,package:@ridendine/ui,imports,WIRED
 app:ops-admin,route:ops-admin:/dashboard/chefs/:id,owns route,WIRED
 route:ops-admin:/dashboard/chefs/:id,file:apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx,implemented by,WIRED
 route:ops-admin:/dashboard/chefs/:id,table:chef_delivery_zones,reads/writes table,WIRED
 route:ops-admin:/dashboard/chefs/:id,table:chef_documents,reads/writes table,WIRED
 route:ops-admin:/dashboard/chefs/:id,package:@ridendine/db,imports,WIRED
 route:ops-admin:/dashboard/chefs/:id,package:@ridendine/ui,imports,WIRED
-app:ops-admin,route:ops-admin:/dashboard/chefs/approvals,owns route,PARTIAL
-route:ops-admin:/dashboard/chefs/approvals,file:apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/chefs/approvals,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/chefs/approvals,owns route,WIRED
+route:ops-admin:/dashboard/chefs/approvals,file:apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/chefs/approvals,table:chef_profiles,reads/writes table,WIRED
+route:ops-admin:/dashboard/chefs/approvals,package:@ridendine/ui,imports,WIRED
 app:ops-admin,route:ops-admin:/dashboard/chefs,owns route,WIRED
 route:ops-admin:/dashboard/chefs,file:apps/ops-admin/src/app/dashboard/chefs/page.tsx,implemented by,WIRED
 route:ops-admin:/dashboard/chefs,package:@ridendine/ui,imports,WIRED
@@ -120,20 +128,26 @@ app:ops-admin,route:ops-admin:/dashboard/customers/:id,owns route,WIRED
 route:ops-admin:/dashboard/customers/:id,file:apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx,implemented by,WIRED
 route:ops-admin:/dashboard/customers/:id,package:@ridendine/db,imports,WIRED
 route:ops-admin:/dashboard/customers/:id,package:@ridendine/ui,imports,WIRED
-app:ops-admin,route:ops-admin:/dashboard/customers,owns route,PARTIAL
-route:ops-admin:/dashboard/customers,file:apps/ops-admin/src/app/dashboard/customers/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/customers,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/customers,owns route,WIRED
+route:ops-admin:/dashboard/customers,file:apps/ops-admin/src/app/dashboard/customers/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/customers,table:customers,reads/writes table,WIRED
+route:ops-admin:/dashboard/customers,package:@ridendine/ui,imports,WIRED
 app:ops-admin,route:ops-admin:/dashboard/deliveries/:id,owns route,WIRED
 route:ops-admin:/dashboard/deliveries/:id,file:apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx,implemented by,WIRED
 route:ops-admin:/dashboard/deliveries/:id,package:@ridendine/db,imports,WIRED
 route:ops-admin:/dashboard/deliveries/:id,package:@ridendine/ui,imports,WIRED
-app:ops-admin,route:ops-admin:/dashboard/deliveries,owns route,PARTIAL
-route:ops-admin:/dashboard/deliveries,file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/deliveries,package:@ridendine/ui,imports,PARTIAL
-app:ops-admin,route:ops-admin:/dashboard/dispatch,owns route,PARTIAL
-route:ops-admin:/dashboard/dispatch,file:apps/ops-admin/src/app/dashboard/dispatch/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/dispatch,package:@ridendine/types,imports,PARTIAL
-route:ops-admin:/dashboard/dispatch,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/deliveries,owns route,WIRED
+route:ops-admin:/dashboard/deliveries,file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/deliveries,table:deliveries,reads/writes table,WIRED
+route:ops-admin:/dashboard/deliveries,table:drivers,reads/writes table,WIRED
+route:ops-admin:/dashboard/deliveries,table:orders,reads/writes table,WIRED
+route:ops-admin:/dashboard/deliveries,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/dispatch,owns route,WIRED
+route:ops-admin:/dashboard/dispatch,file:apps/ops-admin/src/app/dashboard/dispatch/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/dispatch,table:deliveries,reads/writes table,WIRED
+route:ops-admin:/dashboard/dispatch,table:delivery_offers,reads/writes table,WIRED
+route:ops-admin:/dashboard/dispatch,package:@ridendine/types,imports,WIRED
+route:ops-admin:/dashboard/dispatch,package:@ridendine/ui,imports,WIRED
 app:ops-admin,route:ops-admin:/dashboard/drivers/:id,owns route,WIRED
 route:ops-admin:/dashboard/drivers/:id,file:apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,implemented by,WIRED
 route:ops-admin:/dashboard/drivers/:id,table:driver_documents,reads/writes table,WIRED
@@ -207,9 +221,10 @@ route:ops-admin:/dashboard/orders/:id,file:apps/ops-admin/src/app/dashboard/orde
 route:ops-admin:/dashboard/orders/:id,table:order_exceptions,reads/writes table,WIRED
 route:ops-admin:/dashboard/orders/:id,package:@ridendine/db,imports,WIRED
 route:ops-admin:/dashboard/orders/:id,package:@ridendine/ui,imports,WIRED
-app:ops-admin,route:ops-admin:/dashboard/orders,owns route,PARTIAL
-route:ops-admin:/dashboard/orders,file:apps/ops-admin/src/app/dashboard/orders/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/orders,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/orders,owns route,WIRED
+route:ops-admin:/dashboard/orders,file:apps/ops-admin/src/app/dashboard/orders/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/orders,table:orders,reads/writes table,WIRED
+route:ops-admin:/dashboard/orders,package:@ridendine/ui,imports,WIRED
 app:ops-admin,route:ops-admin:/dashboard,owns route,WIRED
 route:ops-admin:/dashboard,file:apps/ops-admin/src/app/dashboard/page.tsx,implemented by,WIRED
 route:ops-admin:/dashboard,table:deliveries,reads/writes table,WIRED
@@ -218,40 +233,45 @@ route:ops-admin:/dashboard,table:drivers,reads/writes table,WIRED
 route:ops-admin:/dashboard,table:orders,reads/writes table,WIRED
 route:ops-admin:/dashboard,package:@ridendine/db,imports,WIRED
 route:ops-admin:/dashboard,package:@ridendine/ui,imports,WIRED
-app:ops-admin,route:ops-admin:/dashboard/promos,owns route,PARTIAL
-route:ops-admin:/dashboard/promos,file:apps/ops-admin/src/app/dashboard/promos/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/promos,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/promos,owns route,WIRED
+route:ops-admin:/dashboard/promos,file:apps/ops-admin/src/app/dashboard/promos/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/promos,table:promo_codes,reads/writes table,WIRED
+route:ops-admin:/dashboard/promos,package:@ridendine/ui,imports,WIRED
 app:ops-admin,route:ops-admin:/dashboard/reports,owns route,WIRED
 route:ops-admin:/dashboard/reports,file:apps/ops-admin/src/app/dashboard/reports/page.tsx,implemented by,WIRED
 route:ops-admin:/dashboard/reports,package:@ridendine/ui,imports,WIRED
 app:ops-admin,route:ops-admin:/dashboard/settings,owns route,WIRED
 route:ops-admin:/dashboard/settings,file:apps/ops-admin/src/app/dashboard/settings/page.tsx,implemented by,WIRED
 route:ops-admin:/dashboard/settings,package:@ridendine/ui,imports,WIRED
-app:ops-admin,route:ops-admin:/dashboard/support,owns route,PARTIAL
-route:ops-admin:/dashboard/support,file:apps/ops-admin/src/app/dashboard/support/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/support,package:@ridendine/db,imports,PARTIAL
-route:ops-admin:/dashboard/support,package:@ridendine/ui,imports,PARTIAL
-app:ops-admin,route:ops-admin:/dashboard/team,owns route,PARTIAL
-route:ops-admin:/dashboard/team,file:apps/ops-admin/src/app/dashboard/team/page.tsx,implemented by,PARTIAL
-route:ops-admin:/dashboard/team,package:@ridendine/ui,imports,PARTIAL
+app:ops-admin,route:ops-admin:/dashboard/support,owns route,WIRED
+route:ops-admin:/dashboard/support,file:apps/ops-admin/src/app/dashboard/support/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/support,table:support_tickets,reads/writes table,WIRED
+route:ops-admin:/dashboard/support,package:@ridendine/db,imports,WIRED
+route:ops-admin:/dashboard/support,package:@ridendine/ui,imports,WIRED
+app:ops-admin,route:ops-admin:/dashboard/team,owns route,WIRED
+route:ops-admin:/dashboard/team,file:apps/ops-admin/src/app/dashboard/team/page.tsx,implemented by,WIRED
+route:ops-admin:/dashboard/team,table:platform_users,reads/writes table,WIRED
+route:ops-admin:/dashboard/team,package:@ridendine/ui,imports,WIRED
 app:ops-admin,route:ops-admin:/internal/command-center,owns route,WIRED
 route:ops-admin:/internal/command-center,file:apps/ops-admin/src/app/internal/command-center/page.tsx,implemented by,WIRED
 app:ops-admin,route:ops-admin:/,owns route,WIRED
 route:ops-admin:/,file:apps/ops-admin/src/app/page.tsx,implemented by,WIRED
-app:chef-admin,route:chef-admin:/auth/forgot-password,owns route,PARTIAL
-route:chef-admin:/auth/forgot-password,file:apps/chef-admin/src/app/auth/forgot-password/page.tsx,implemented by,PARTIAL
-route:chef-admin:/auth/forgot-password,package:@ridendine/auth,imports,PARTIAL
-route:chef-admin:/auth/forgot-password,package:@ridendine/ui,imports,PARTIAL
-app:chef-admin,route:chef-admin:/auth/login,owns route,PARTIAL
-route:chef-admin:/auth/login,file:apps/chef-admin/src/app/auth/login/page.tsx,implemented by,PARTIAL
-route:chef-admin:/auth/login,package:@ridendine/auth,imports,PARTIAL
-route:chef-admin:/auth/login,package:@ridendine/ui,imports,PARTIAL
-app:chef-admin,route:chef-admin:/auth/signup,owns route,PARTIAL
-route:chef-admin:/auth/signup,file:apps/chef-admin/src/app/auth/signup/page.tsx,implemented by,PARTIAL
-route:chef-admin:/auth/signup,package:@ridendine/ui,imports,PARTIAL
-app:chef-admin,route:chef-admin:/dashboard/analytics,owns route,PARTIAL
-route:chef-admin:/dashboard/analytics,file:apps/chef-admin/src/app/dashboard/analytics/page.tsx,implemented by,PARTIAL
-route:chef-admin:/dashboard/analytics,package:@ridendine/ui,imports,PARTIAL
+app:chef-admin,route:chef-admin:/auth/forgot-password,owns route,WIRED
+route:chef-admin:/auth/forgot-password,file:apps/chef-admin/src/app/auth/forgot-password/page.tsx,implemented by,WIRED
+route:chef-admin:/auth/forgot-password,package:@ridendine/auth,imports,WIRED
+route:chef-admin:/auth/forgot-password,package:@ridendine/ui,imports,WIRED
+app:chef-admin,route:chef-admin:/auth/login,owns route,WIRED
+route:chef-admin:/auth/login,file:apps/chef-admin/src/app/auth/login/page.tsx,implemented by,WIRED
+route:chef-admin:/auth/login,package:@ridendine/auth,imports,WIRED
+route:chef-admin:/auth/login,package:@ridendine/ui,imports,WIRED
+app:chef-admin,route:chef-admin:/auth/signup,owns route,WIRED
+route:chef-admin:/auth/signup,file:apps/chef-admin/src/app/auth/signup/page.tsx,implemented by,WIRED
+route:chef-admin:/auth/signup,package:@ridendine/ui,imports,WIRED
+app:chef-admin,route:chef-admin:/dashboard/analytics,owns route,WIRED
+route:chef-admin:/dashboard/analytics,file:apps/chef-admin/src/app/dashboard/analytics/page.tsx,implemented by,WIRED
+route:chef-admin:/dashboard/analytics,table:chef_storefronts,reads/writes table,WIRED
+route:chef-admin:/dashboard/analytics,table:orders,reads/writes table,WIRED
+route:chef-admin:/dashboard/analytics,package:@ridendine/ui,imports,WIRED
 app:chef-admin,route:chef-admin:/dashboard/availability,owns route,WIRED
 route:chef-admin:/dashboard/availability,file:apps/chef-admin/src/app/dashboard/availability/page.tsx,implemented by,WIRED
 app:chef-admin,route:chef-admin:/dashboard/menu,owns route,WIRED
@@ -286,13 +306,13 @@ route:chef-admin:/dashboard/payouts,table:chef_storefronts,reads/writes table,WI
 route:chef-admin:/dashboard/payouts,table:orders,reads/writes table,WIRED
 route:chef-admin:/dashboard/payouts,package:@ridendine/db,imports,WIRED
 route:chef-admin:/dashboard/payouts,package:@ridendine/ui,imports,WIRED
-app:chef-admin,route:chef-admin:/dashboard/reviews,owns route,PARTIAL
-route:chef-admin:/dashboard/reviews,file:apps/chef-admin/src/app/dashboard/reviews/page.tsx,implemented by,PARTIAL
-route:chef-admin:/dashboard/reviews,table:chef_profiles,reads/writes table,PARTIAL
-route:chef-admin:/dashboard/reviews,table:chef_storefronts,reads/writes table,PARTIAL
-route:chef-admin:/dashboard/reviews,table:reviews,reads/writes table,PARTIAL
-route:chef-admin:/dashboard/reviews,package:@ridendine/db,imports,PARTIAL
-route:chef-admin:/dashboard/reviews,package:@ridendine/ui,imports,PARTIAL
+app:chef-admin,route:chef-admin:/dashboard/reviews,owns route,WIRED
+route:chef-admin:/dashboard/reviews,file:apps/chef-admin/src/app/dashboard/reviews/page.tsx,implemented by,WIRED
+route:chef-admin:/dashboard/reviews,table:chef_profiles,reads/writes table,WIRED
+route:chef-admin:/dashboard/reviews,table:chef_storefronts,reads/writes table,WIRED
+route:chef-admin:/dashboard/reviews,table:reviews,reads/writes table,WIRED
+route:chef-admin:/dashboard/reviews,package:@ridendine/db,imports,WIRED
+route:chef-admin:/dashboard/reviews,package:@ridendine/ui,imports,WIRED
 app:chef-admin,route:chef-admin:/dashboard/settings,owns route,WIRED
 route:chef-admin:/dashboard/settings,file:apps/chef-admin/src/app/dashboard/settings/page.tsx,implemented by,WIRED
 route:chef-admin:/dashboard/settings,package:@ridendine/db,imports,WIRED
@@ -312,12 +332,12 @@ app:chef-admin,route:chef-admin:/privacy,owns route,WIRED
 route:chef-admin:/privacy,file:apps/chef-admin/src/app/privacy/page.tsx,implemented by,WIRED
 app:chef-admin,route:chef-admin:/terms,owns route,WIRED
 route:chef-admin:/terms,file:apps/chef-admin/src/app/terms/page.tsx,implemented by,WIRED
-app:driver-app,route:driver-app:/auth/login,owns route,PARTIAL
-route:driver-app:/auth/login,file:apps/driver-app/src/app/auth/login/page.tsx,implemented by,PARTIAL
-route:driver-app:/auth/login,package:@ridendine/ui,imports,PARTIAL
-app:driver-app,route:driver-app:/auth/signup,owns route,PARTIAL
-route:driver-app:/auth/signup,file:apps/driver-app/src/app/auth/signup/page.tsx,implemented by,PARTIAL
-route:driver-app:/auth/signup,package:@ridendine/ui,imports,PARTIAL
+app:driver-app,route:driver-app:/auth/login,owns route,WIRED
+route:driver-app:/auth/login,file:apps/driver-app/src/app/auth/login/page.tsx,implemented by,WIRED
+route:driver-app:/auth/login,package:@ridendine/ui,imports,WIRED
+app:driver-app,route:driver-app:/auth/signup,owns route,WIRED
+route:driver-app:/auth/signup,file:apps/driver-app/src/app/auth/signup/page.tsx,implemented by,WIRED
+route:driver-app:/auth/signup,package:@ridendine/ui,imports,WIRED
 app:driver-app,route:driver-app:/delivery/:id,owns route,WIRED
 route:driver-app:/delivery/:id,file:apps/driver-app/src/app/delivery/[id]/page.tsx,implemented by,WIRED
 route:driver-app:/delivery/:id,table:assignment_attempts,reads/writes table,WIRED
@@ -388,11 +408,11 @@ api:web:/api/checkout,package:@ridendine/utils,imports,WIRED
 api:web:/api/checkout,package:@ridendine/validation,imports,WIRED
 api:web:/api/checkout,external:Stripe,calls external,WIRED
 api:web:/api/checkout,external:Supabase,calls external,WIRED
-app:web,api:web:/api/eta,owns API,PARTIAL
-api:web:/api/eta,file:apps/web/src/app/api/eta/route.ts,implemented by,PARTIAL
-api:web:/api/eta,package:@ridendine/db,imports,PARTIAL
-api:web:/api/eta,package:@ridendine/routing,imports,PARTIAL
-api:web:/api/eta,external:Routing provider,calls external,PARTIAL
+app:web,api:web:/api/eta,owns API,WIRED
+api:web:/api/eta,file:apps/web/src/app/api/eta/route.ts,implemented by,WIRED
+api:web:/api/eta,package:@ridendine/db,imports,WIRED
+api:web:/api/eta,package:@ridendine/routing,imports,WIRED
+api:web:/api/eta,external:Routing provider,calls external,WIRED
 app:web,api:web:/api/favorites,owns API,WIRED
 api:web:/api/favorites,file:apps/web/src/app/api/favorites/route.ts,implemented by,WIRED
 api:web:/api/favorites,table:customers,touches table,WIRED
@@ -401,13 +421,13 @@ api:web:/api/favorites,package:@ridendine/db,imports,WIRED
 api:web:/api/favorites,package:@ridendine/engine/server,imports,WIRED
 api:web:/api/favorites,package:@ridendine/utils,imports,WIRED
 api:web:/api/favorites,external:Supabase,calls external,WIRED
-app:web,api:web:/api/health,owns API,PARTIAL
-api:web:/api/health,file:apps/web/src/app/api/health/route.ts,implemented by,PARTIAL
-api:web:/api/health,table:chef_storefronts,touches table,PARTIAL
-api:web:/api/health,package:@ridendine/db,imports,PARTIAL
-api:web:/api/health,package:@ridendine/utils,imports,PARTIAL
-api:web:/api/health,external:Stripe,calls external,PARTIAL
-api:web:/api/health,external:Supabase,calls external,PARTIAL
+app:web,api:web:/api/health,owns API,WIRED
+api:web:/api/health,file:apps/web/src/app/api/health/route.ts,implemented by,WIRED
+api:web:/api/health,table:chef_storefronts,touches table,WIRED
+api:web:/api/health,package:@ridendine/db,imports,WIRED
+api:web:/api/health,package:@ridendine/utils,imports,WIRED
+api:web:/api/health,external:Stripe,calls external,WIRED
+api:web:/api/health,external:Supabase,calls external,WIRED
 app:web,api:web:/api/loyalty,owns API,WIRED
 api:web:/api/loyalty,file:apps/web/src/app/api/loyalty/route.ts,implemented by,WIRED
 api:web:/api/loyalty,table:loyalty_transactions,touches table,WIRED
@@ -485,19 +505,20 @@ api:web:/api/reviews,package:@ridendine/db,imports,WIRED
 api:web:/api/reviews,package:@ridendine/engine/server,imports,WIRED
 api:web:/api/reviews,package:@ridendine/utils,imports,WIRED
 api:web:/api/reviews,external:Supabase,calls external,WIRED
-app:web,api:web:/api/storefronts/:id/menu,owns API,PARTIAL
-api:web:/api/storefronts/:id/menu,file:apps/web/src/app/api/storefronts/[id]/menu/route.ts,implemented by,PARTIAL
-api:web:/api/storefronts/:id/menu,table:chef_storefronts,touches table,PARTIAL
-api:web:/api/storefronts/:id/menu,table:menu_item_options,touches table,PARTIAL
-api:web:/api/storefronts/:id/menu,table:menu_items,touches table,PARTIAL
-api:web:/api/storefronts/:id/menu,package:@ridendine/db,imports,PARTIAL
-app:web,api:web:/api/storefronts/:id,owns API,PARTIAL
-api:web:/api/storefronts/:id,file:apps/web/src/app/api/storefronts/[id]/route.ts,implemented by,PARTIAL
-api:web:/api/storefronts/:id,table:chef_storefronts,touches table,PARTIAL
-api:web:/api/storefronts/:id,package:@ridendine/db,imports,PARTIAL
-app:web,api:web:/api/storefronts,owns API,PARTIAL
-api:web:/api/storefronts,file:apps/web/src/app/api/storefronts/route.ts,implemented by,PARTIAL
-api:web:/api/storefronts,package:@ridendine/db,imports,PARTIAL
+app:web,api:web:/api/storefronts/:id/menu,owns API,WIRED
+api:web:/api/storefronts/:id/menu,file:apps/web/src/app/api/storefronts/[id]/menu/route.ts,implemented by,WIRED
+api:web:/api/storefronts/:id/menu,table:chef_storefronts,touches table,WIRED
+api:web:/api/storefronts/:id/menu,table:menu_item_options,touches table,WIRED
+api:web:/api/storefronts/:id/menu,table:menu_items,touches table,WIRED
+api:web:/api/storefronts/:id/menu,package:@ridendine/db,imports,WIRED
+app:web,api:web:/api/storefronts/:id,owns API,WIRED
+api:web:/api/storefronts/:id,file:apps/web/src/app/api/storefronts/[id]/route.ts,implemented by,WIRED
+api:web:/api/storefronts/:id,table:chef_storefronts,touches table,WIRED
+api:web:/api/storefronts/:id,package:@ridendine/db,imports,WIRED
+app:web,api:web:/api/storefronts,owns API,WIRED
+api:web:/api/storefronts,file:apps/web/src/app/api/storefronts/route.ts,implemented by,WIRED
+api:web:/api/storefronts,table:chef_storefronts,touches table,WIRED
+api:web:/api/storefronts,package:@ridendine/db,imports,WIRED
 app:web,api:web:/api/support,owns API,WIRED
 api:web:/api/support,file:apps/web/src/app/api/support/route.ts,implemented by,WIRED
 api:web:/api/support,package:@ridendine/db,imports,WIRED
@@ -749,18 +770,18 @@ api:ops-admin:/api/fixtures/reset,table:order_items,touches table,WIRED
 api:ops-admin:/api/fixtures/reset,table:order_status_history,touches table,WIRED
 api:ops-admin:/api/fixtures/reset,table:orders,touches table,WIRED
 api:ops-admin:/api/fixtures/reset,package:@ridendine/db,imports,WIRED
-app:ops-admin,api:ops-admin:/api/health,owns API,PARTIAL
-api:ops-admin:/api/health,file:apps/ops-admin/src/app/api/health/route.ts,implemented by,PARTIAL
-api:ops-admin:/api/health,table:chef_profiles,touches table,PARTIAL
-api:ops-admin:/api/health,table:customers,touches table,PARTIAL
-api:ops-admin:/api/health,table:deliveries,touches table,PARTIAL
-api:ops-admin:/api/health,table:driver_presence,touches table,PARTIAL
-api:ops-admin:/api/health,table:drivers,touches table,PARTIAL
-api:ops-admin:/api/health,table:orders,touches table,PARTIAL
-api:ops-admin:/api/health,package:@ridendine/db,imports,PARTIAL
-api:ops-admin:/api/health,package:@ridendine/utils,imports,PARTIAL
-api:ops-admin:/api/health,external:Stripe,calls external,PARTIAL
-api:ops-admin:/api/health,external:Supabase,calls external,PARTIAL
+app:ops-admin,api:ops-admin:/api/health,owns API,WIRED
+api:ops-admin:/api/health,file:apps/ops-admin/src/app/api/health/route.ts,implemented by,WIRED
+api:ops-admin:/api/health,table:chef_profiles,touches table,WIRED
+api:ops-admin:/api/health,table:customers,touches table,WIRED
+api:ops-admin:/api/health,table:deliveries,touches table,WIRED
+api:ops-admin:/api/health,table:driver_presence,touches table,WIRED
+api:ops-admin:/api/health,table:drivers,touches table,WIRED
+api:ops-admin:/api/health,table:orders,touches table,WIRED
+api:ops-admin:/api/health,package:@ridendine/db,imports,WIRED
+api:ops-admin:/api/health,package:@ridendine/utils,imports,WIRED
+api:ops-admin:/api/health,external:Stripe,calls external,WIRED
+api:ops-admin:/api/health,external:Supabase,calls external,WIRED
 app:ops-admin,api:ops-admin:/api/internal/command-center/change-requests,owns API,WIRED
 api:ops-admin:/api/internal/command-center/change-requests,file:apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts,implemented by,WIRED
 app:ops-admin,api:ops-admin:/api/ops/live-board,owns API,WIRED
@@ -827,13 +848,13 @@ api:chef-admin:/api/auth/signup,package:@ridendine/db,imports,WIRED
 api:chef-admin:/api/auth/signup,package:@ridendine/utils,imports,WIRED
 api:chef-admin:/api/auth/signup,package:@ridendine/validation,imports,WIRED
 api:chef-admin:/api/auth/signup,external:Supabase,calls external,WIRED
-app:chef-admin,api:chef-admin:/api/health,owns API,PARTIAL
-api:chef-admin:/api/health,file:apps/chef-admin/src/app/api/health/route.ts,implemented by,PARTIAL
-api:chef-admin:/api/health,table:chef_profiles,touches table,PARTIAL
-api:chef-admin:/api/health,package:@ridendine/db,imports,PARTIAL
-api:chef-admin:/api/health,package:@ridendine/utils,imports,PARTIAL
-api:chef-admin:/api/health,external:Stripe,calls external,PARTIAL
-api:chef-admin:/api/health,external:Supabase,calls external,PARTIAL
+app:chef-admin,api:chef-admin:/api/health,owns API,WIRED
+api:chef-admin:/api/health,file:apps/chef-admin/src/app/api/health/route.ts,implemented by,WIRED
+api:chef-admin:/api/health,table:chef_profiles,touches table,WIRED
+api:chef-admin:/api/health,package:@ridendine/db,imports,WIRED
+api:chef-admin:/api/health,package:@ridendine/utils,imports,WIRED
+api:chef-admin:/api/health,external:Stripe,calls external,WIRED
+api:chef-admin:/api/health,external:Supabase,calls external,WIRED
 app:chef-admin,api:chef-admin:/api/menu/:id/options/:optionId,owns API,WIRED
 api:chef-admin:/api/menu/:id/options/:optionId,file:apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/route.ts,implemented by,WIRED
 api:chef-admin:/api/menu/:id/options/:optionId,table:menu_item_options,touches table,WIRED
@@ -893,12 +914,12 @@ app:chef-admin,api:chef-admin:/api/storefront/availability,owns API,WIRED
 api:chef-admin:/api/storefront/availability,file:apps/chef-admin/src/app/api/storefront/availability/route.ts,implemented by,WIRED
 api:chef-admin:/api/storefront/availability,table:chef_availability,touches table,WIRED
 api:chef-admin:/api/storefront/availability,package:@ridendine/db,imports,WIRED
-app:chef-admin,api:chef-admin:/api/storefront,owns API,PARTIAL
-api:chef-admin:/api/storefront,file:apps/chef-admin/src/app/api/storefront/route.ts,implemented by,PARTIAL
-api:chef-admin:/api/storefront,table:chef_kitchens,touches table,PARTIAL
-api:chef-admin:/api/storefront,table:chef_storefronts,touches table,PARTIAL
-api:chef-admin:/api/storefront,package:@ridendine/db,imports,PARTIAL
-api:chef-admin:/api/storefront,external:Supabase,calls external,PARTIAL
+app:chef-admin,api:chef-admin:/api/storefront,owns API,WIRED
+api:chef-admin:/api/storefront,file:apps/chef-admin/src/app/api/storefront/route.ts,implemented by,WIRED
+api:chef-admin:/api/storefront,table:chef_kitchens,touches table,WIRED
+api:chef-admin:/api/storefront,table:chef_storefronts,touches table,WIRED
+api:chef-admin:/api/storefront,package:@ridendine/db,imports,WIRED
+api:chef-admin:/api/storefront,external:Supabase,calls external,WIRED
 app:chef-admin,api:chef-admin:/api/upload,owns API,WIRED
 api:chef-admin:/api/upload,file:apps/chef-admin/src/app/api/upload/route.ts,implemented by,WIRED
 api:chef-admin:/api/upload,package:@ridendine/db,imports,WIRED
@@ -954,13 +975,13 @@ app:driver-app,api:driver-app:/api/earnings,owns API,WIRED
 api:driver-app:/api/earnings,file:apps/driver-app/src/app/api/earnings/route.ts,implemented by,WIRED
 api:driver-app:/api/earnings,package:@ridendine/db,imports,WIRED
 api:driver-app:/api/earnings,external:Supabase,calls external,WIRED
-app:driver-app,api:driver-app:/api/health,owns API,PARTIAL
-api:driver-app:/api/health,file:apps/driver-app/src/app/api/health/route.ts,implemented by,PARTIAL
-api:driver-app:/api/health,table:drivers,touches table,PARTIAL
-api:driver-app:/api/health,package:@ridendine/db,imports,PARTIAL
-api:driver-app:/api/health,package:@ridendine/utils,imports,PARTIAL
-api:driver-app:/api/health,external:Stripe,calls external,PARTIAL
-api:driver-app:/api/health,external:Supabase,calls external,PARTIAL
+app:driver-app,api:driver-app:/api/health,owns API,WIRED
+api:driver-app:/api/health,file:apps/driver-app/src/app/api/health/route.ts,implemented by,WIRED
+api:driver-app:/api/health,table:drivers,touches table,WIRED
+api:driver-app:/api/health,package:@ridendine/db,imports,WIRED
+api:driver-app:/api/health,package:@ridendine/utils,imports,WIRED
+api:driver-app:/api/health,external:Stripe,calls external,WIRED
+api:driver-app:/api/health,external:Supabase,calls external,WIRED
 app:driver-app,api:driver-app:/api/location,owns API,WIRED
 api:driver-app:/api/location,file:apps/driver-app/src/app/api/location/route.ts,implemented by,WIRED
 api:driver-app:/api/location,table:deliveries,touches table,WIRED

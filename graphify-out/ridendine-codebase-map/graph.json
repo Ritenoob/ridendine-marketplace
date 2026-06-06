@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-06T18:48:30.812Z",
+  "generatedAt": "2026-06-06T21:59:35.493Z",
   "nodes": [
     {
       "id": "app:web",
@@ -51,14 +51,19 @@
       "id": "route:web:/account/addresses",
       "label": "Customer Web /account/addresses",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/account/addresses/page.tsx"
     },
     {
       "id": "file:apps/web/src/app/account/addresses/page.tsx",
       "label": "apps/web/src/app/account/addresses/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "id": "table:customer_addresses",
+      "label": "customer_addresses",
+      "type": "table"
     },
     {
       "id": "package:@ridendine/auth",
@@ -82,14 +87,24 @@
       "id": "route:web:/account/orders",
       "label": "Customer Web /account/orders",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/account/orders/page.tsx"
     },
     {
       "id": "file:apps/web/src/app/account/orders/page.tsx",
       "label": "apps/web/src/app/account/orders/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "id": "table:order_items",
+      "label": "order_items",
+      "type": "table"
+    },
+    {
+      "id": "table:orders",
+      "label": "orders",
+      "type": "table"
     },
     {
       "id": "route:web:/account",
@@ -108,53 +123,58 @@
       "id": "route:web:/account/settings",
       "label": "Customer Web /account/settings",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/account/settings/page.tsx"
     },
     {
       "id": "file:apps/web/src/app/account/settings/page.tsx",
       "label": "apps/web/src/app/account/settings/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "id": "table:customers",
+      "label": "customers",
+      "type": "table"
     },
     {
       "id": "route:web:/auth/forgot-password",
       "label": "Customer Web /auth/forgot-password",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/auth/forgot-password/page.tsx"
     },
     {
       "id": "file:apps/web/src/app/auth/forgot-password/page.tsx",
       "label": "apps/web/src/app/auth/forgot-password/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:web:/auth/login",
       "label": "Customer Web /auth/login",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/auth/login/page.tsx"
     },
     {
       "id": "file:apps/web/src/app/auth/login/page.tsx",
       "label": "apps/web/src/app/auth/login/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:web:/auth/signup",
       "label": "Customer Web /auth/signup",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/auth/signup/page.tsx"
     },
     {
       "id": "file:apps/web/src/app/auth/signup/page.tsx",
       "label": "apps/web/src/app/auth/signup/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:web:/cart",
@@ -173,14 +193,19 @@
       "id": "route:web:/checkout",
       "label": "Customer Web /checkout",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/checkout/page.tsx"
     },
     {
       "id": "file:apps/web/src/app/checkout/page.tsx",
       "label": "apps/web/src/app/checkout/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "id": "table:carts",
+      "label": "carts",
+      "type": "table"
     },
     {
       "id": "route:web:/chef-resources",
@@ -199,14 +224,14 @@
       "id": "route:web:/chef-signup",
       "label": "Customer Web /chef-signup",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/chef-signup/page.tsx"
     },
     {
       "id": "file:apps/web/src/app/chef-signup/page.tsx",
       "label": "apps/web/src/app/chef-signup/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:web:/chefs/:slug",
@@ -243,14 +268,19 @@
       "id": "route:web:/contact",
       "label": "Customer Web /contact",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/contact/page.tsx"
     },
     {
       "id": "file:apps/web/src/app/contact/page.tsx",
       "label": "apps/web/src/app/contact/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "id": "table:support_tickets",
+      "label": "support_tickets",
+      "type": "table"
     },
     {
       "id": "route:web:/how-it-works",
@@ -305,11 +335,6 @@
       "status": "WIRED"
     },
     {
-      "id": "table:orders",
-      "label": "orders",
-      "type": "table"
-    },
-    {
       "id": "route:web:/",
       "label": "Customer Web /",
       "type": "page-route",
@@ -362,14 +387,14 @@
       "id": "route:ops-admin:/auth/login",
       "label": "Ops Admin /auth/login",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/auth/login/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/auth/login/page.tsx",
       "label": "apps/ops-admin/src/app/auth/login/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:ops-admin:/dashboard/activity",
@@ -403,14 +428,14 @@
       "id": "route:ops-admin:/dashboard/analytics",
       "label": "Ops Admin /dashboard/analytics",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/analytics/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/analytics/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/analytics/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "table:driver_presence",
@@ -426,27 +451,27 @@
       "id": "route:ops-admin:/dashboard/announcements",
       "label": "Ops Admin /dashboard/announcements",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/announcements/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/announcements/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/announcements/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:ops-admin:/dashboard/automation",
       "label": "Ops Admin /dashboard/automation",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/automation/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/automation/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/automation/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:ops-admin:/dashboard/chefs/:id",
@@ -475,14 +500,19 @@
       "id": "route:ops-admin:/dashboard/chefs/approvals",
       "label": "Ops Admin /dashboard/chefs/approvals",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "id": "table:chef_profiles",
+      "label": "chef_profiles",
+      "type": "table"
     },
     {
       "id": "route:ops-admin:/dashboard/chefs",
@@ -511,11 +541,6 @@
       "status": "WIRED"
     },
     {
-      "id": "table:chef_profiles",
-      "label": "chef_profiles",
-      "type": "table"
-    },
-    {
       "id": "route:ops-admin:/dashboard/customers/:id",
       "label": "Ops Admin /dashboard/customers/:id",
       "type": "page-route",
@@ -532,14 +557,14 @@
       "id": "route:ops-admin:/dashboard/customers",
       "label": "Ops Admin /dashboard/customers",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/customers/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/customers/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/customers/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:ops-admin:/dashboard/deliveries/:id",
@@ -558,27 +583,37 @@
       "id": "route:ops-admin:/dashboard/deliveries",
       "label": "Ops Admin /dashboard/deliveries",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/deliveries/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/deliveries/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "id": "table:deliveries",
+      "label": "deliveries",
+      "type": "table"
     },
     {
       "id": "route:ops-admin:/dashboard/dispatch",
       "label": "Ops Admin /dashboard/dispatch",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/dispatch/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/dispatch/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/dispatch/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "id": "table:delivery_offers",
+      "label": "delivery_offers",
+      "type": "table"
     },
     {
       "id": "package:@ridendine/types",
@@ -632,11 +667,6 @@
     {
       "id": "table:order_exceptions",
       "label": "order_exceptions",
-      "type": "table"
-    },
-    {
-      "id": "table:support_tickets",
-      "label": "support_tickets",
       "type": "table"
     },
     {
@@ -860,14 +890,14 @@
       "id": "route:ops-admin:/dashboard/orders",
       "label": "Ops Admin /dashboard/orders",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/orders/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/orders/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/orders/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:ops-admin:/dashboard",
@@ -883,22 +913,22 @@
       "status": "WIRED"
     },
     {
-      "id": "table:deliveries",
-      "label": "deliveries",
-      "type": "table"
-    },
-    {
       "id": "route:ops-admin:/dashboard/promos",
       "label": "Ops Admin /dashboard/promos",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/promos/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/promos/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/promos/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "id": "table:promo_codes",
+      "label": "promo_codes",
+      "type": "table"
     },
     {
       "id": "route:ops-admin:/dashboard/reports",
@@ -930,27 +960,27 @@
       "id": "route:ops-admin:/dashboard/support",
       "label": "Ops Admin /dashboard/support",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/support/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/support/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/support/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:ops-admin:/dashboard/team",
       "label": "Ops Admin /dashboard/team",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/dashboard/team/page.tsx"
     },
     {
       "id": "file:apps/ops-admin/src/app/dashboard/team/page.tsx",
       "label": "apps/ops-admin/src/app/dashboard/team/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:ops-admin:/internal/command-center",
@@ -982,53 +1012,53 @@
       "id": "route:chef-admin:/auth/forgot-password",
       "label": "Chef Admin /auth/forgot-password",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/chef-admin/src/app/auth/forgot-password/page.tsx"
     },
     {
       "id": "file:apps/chef-admin/src/app/auth/forgot-password/page.tsx",
       "label": "apps/chef-admin/src/app/auth/forgot-password/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:chef-admin:/auth/login",
       "label": "Chef Admin /auth/login",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/chef-admin/src/app/auth/login/page.tsx"
     },
     {
       "id": "file:apps/chef-admin/src/app/auth/login/page.tsx",
       "label": "apps/chef-admin/src/app/auth/login/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:chef-admin:/auth/signup",
       "label": "Chef Admin /auth/signup",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/chef-admin/src/app/auth/signup/page.tsx"
     },
     {
       "id": "file:apps/chef-admin/src/app/auth/signup/page.tsx",
       "label": "apps/chef-admin/src/app/auth/signup/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:chef-admin:/dashboard/analytics",
       "label": "Chef Admin /dashboard/analytics",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/chef-admin/src/app/dashboard/analytics/page.tsx"
     },
     {
       "id": "file:apps/chef-admin/src/app/dashboard/analytics/page.tsx",
       "label": "apps/chef-admin/src/app/dashboard/analytics/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:chef-admin:/dashboard/availability",
@@ -1106,11 +1136,6 @@
       "type": "table"
     },
     {
-      "id": "table:customers",
-      "label": "customers",
-      "type": "table"
-    },
-    {
       "id": "route:chef-admin:/dashboard/payouts",
       "label": "Chef Admin /dashboard/payouts",
       "type": "page-route",
@@ -1132,14 +1157,14 @@
       "id": "route:chef-admin:/dashboard/reviews",
       "label": "Chef Admin /dashboard/reviews",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/chef-admin/src/app/dashboard/reviews/page.tsx"
     },
     {
       "id": "file:apps/chef-admin/src/app/dashboard/reviews/page.tsx",
       "label": "apps/chef-admin/src/app/dashboard/reviews/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "table:reviews",
@@ -1228,27 +1253,27 @@
       "id": "route:driver-app:/auth/login",
       "label": "Driver App /auth/login",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/driver-app/src/app/auth/login/page.tsx"
     },
     {
       "id": "file:apps/driver-app/src/app/auth/login/page.tsx",
       "label": "apps/driver-app/src/app/auth/login/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:driver-app:/auth/signup",
       "label": "Driver App /auth/signup",
       "type": "page-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/driver-app/src/app/auth/signup/page.tsx"
     },
     {
       "id": "file:apps/driver-app/src/app/auth/signup/page.tsx",
       "label": "apps/driver-app/src/app/auth/signup/page.tsx",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "route:driver-app:/delivery/:id",
@@ -1374,11 +1399,6 @@
       "status": "WIRED"
     },
     {
-      "id": "table:customer_addresses",
-      "label": "customer_addresses",
-      "type": "table"
-    },
-    {
       "id": "package:@ridendine/engine",
       "label": "@ridendine/engine",
       "type": "package"
@@ -1487,7 +1507,7 @@
       "id": "api:web:/api/eta",
       "label": "Customer Web /api/eta",
       "type": "api-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/api/eta/route.ts",
       "methods": "GET"
     },
@@ -1495,7 +1515,7 @@
       "id": "file:apps/web/src/app/api/eta/route.ts",
       "label": "apps/web/src/app/api/eta/route.ts",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "package:@ridendine/routing",
@@ -1535,7 +1555,7 @@
       "id": "api:web:/api/health",
       "label": "Customer Web /api/health",
       "type": "api-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/api/health/route.ts",
       "methods": "GET"
     },
@@ -1543,7 +1563,7 @@
       "id": "file:apps/web/src/app/api/health/route.ts",
       "label": "apps/web/src/app/api/health/route.ts",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "api:web:/api/loyalty",
@@ -1720,11 +1740,6 @@
       "status": "WIRED"
     },
     {
-      "id": "table:promo_codes",
-      "label": "promo_codes",
-      "type": "table"
-    },
-    {
       "id": "api:web:/api/referrals/apply",
       "label": "Customer Web /api/referrals/apply",
       "type": "api-route",
@@ -1770,7 +1785,7 @@
       "id": "api:web:/api/storefronts/:id/menu",
       "label": "Customer Web /api/storefronts/:id/menu",
       "type": "api-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/api/storefronts/[id]/menu/route.ts",
       "methods": "GET"
     },
@@ -1778,7 +1793,7 @@
       "id": "file:apps/web/src/app/api/storefronts/[id]/menu/route.ts",
       "label": "apps/web/src/app/api/storefronts/[id]/menu/route.ts",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "table:menu_item_options",
@@ -1789,7 +1804,7 @@
       "id": "api:web:/api/storefronts/:id",
       "label": "Customer Web /api/storefronts/:id",
       "type": "api-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/api/storefronts/[id]/route.ts",
       "methods": "GET"
     },
@@ -1797,13 +1812,13 @@
       "id": "file:apps/web/src/app/api/storefronts/[id]/route.ts",
       "label": "apps/web/src/app/api/storefronts/[id]/route.ts",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "api:web:/api/storefronts",
       "label": "Customer Web /api/storefronts",
       "type": "api-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/web/src/app/api/storefronts/route.ts",
       "methods": "GET"
     },
@@ -1811,7 +1826,7 @@
       "id": "file:apps/web/src/app/api/storefronts/route.ts",
       "label": "apps/web/src/app/api/storefronts/route.ts",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "api:web:/api/support",
@@ -2483,15 +2498,10 @@
       "status": "WIRED"
     },
     {
-      "id": "table:order_items",
-      "label": "order_items",
-      "type": "table"
-    },
-    {
       "id": "api:ops-admin:/api/health",
       "label": "Ops Admin /api/health",
       "type": "api-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/ops-admin/src/app/api/health/route.ts",
       "methods": "GET"
     },
@@ -2499,7 +2509,7 @@
       "id": "file:apps/ops-admin/src/app/api/health/route.ts",
       "label": "apps/ops-admin/src/app/api/health/route.ts",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "api:ops-admin:/api/internal/command-center/change-requests",
@@ -2692,7 +2702,7 @@
       "id": "api:chef-admin:/api/health",
       "label": "Chef Admin /api/health",
       "type": "api-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/chef-admin/src/app/api/health/route.ts",
       "methods": "GET"
     },
@@ -2700,7 +2710,7 @@
       "id": "file:apps/chef-admin/src/app/api/health/route.ts",
       "label": "apps/chef-admin/src/app/api/health/route.ts",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "api:chef-admin:/api/menu/:id/options/:optionId",
@@ -2893,7 +2903,7 @@
       "id": "api:chef-admin:/api/storefront",
       "label": "Chef Admin /api/storefront",
       "type": "api-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/chef-admin/src/app/api/storefront/route.ts",
       "methods": "GET,PATCH,POST"
     },
@@ -2901,7 +2911,7 @@
       "id": "file:apps/chef-admin/src/app/api/storefront/route.ts",
       "label": "apps/chef-admin/src/app/api/storefront/route.ts",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "table:chef_kitchens",
@@ -3066,7 +3076,7 @@
       "id": "api:driver-app:/api/health",
       "label": "Driver App /api/health",
       "type": "api-route",
-      "status": "PARTIAL",
+      "status": "WIRED",
       "file": "apps/driver-app/src/app/api/health/route.ts",
       "methods": "GET"
     },
@@ -3074,7 +3084,7 @@
       "id": "file:apps/driver-app/src/app/api/health/route.ts",
       "label": "apps/driver-app/src/app/api/health/route.ts",
       "type": "file",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "id": "api:driver-app:/api/location",
@@ -3184,11 +3194,6 @@
     {
       "id": "table:analytics_events",
       "label": "analytics_events",
-      "type": "table"
-    },
-    {
-      "id": "table:carts",
-      "label": "carts",
       "type": "table"
     },
     {
@@ -3940,25 +3945,31 @@
       "from": "app:web",
       "to": "route:web:/account/addresses",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/account/addresses",
       "to": "file:apps/web/src/app/account/addresses/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:web:/account/addresses",
+      "to": "table:customer_addresses",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:web:/account/addresses",
       "to": "package:@ridendine/auth",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/account/addresses",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
@@ -3988,25 +3999,37 @@
       "from": "app:web",
       "to": "route:web:/account/orders",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/account/orders",
       "to": "file:apps/web/src/app/account/orders/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:web:/account/orders",
+      "to": "table:order_items",
+      "label": "reads/writes table",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:web:/account/orders",
+      "to": "table:orders",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:web:/account/orders",
       "to": "package:@ridendine/auth",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/account/orders",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
@@ -4036,91 +4059,97 @@
       "from": "app:web",
       "to": "route:web:/account/settings",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/account/settings",
       "to": "file:apps/web/src/app/account/settings/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:web:/account/settings",
+      "to": "table:customers",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:web:/account/settings",
       "to": "package:@ridendine/auth",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/account/settings",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
       "to": "route:web:/auth/forgot-password",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/auth/forgot-password",
       "to": "file:apps/web/src/app/auth/forgot-password/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/auth/forgot-password",
       "to": "package:@ridendine/auth",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/auth/forgot-password",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
       "to": "route:web:/auth/login",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/auth/login",
       "to": "file:apps/web/src/app/auth/login/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/auth/login",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
       "to": "route:web:/auth/signup",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/auth/signup",
       "to": "file:apps/web/src/app/auth/signup/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/auth/signup",
       "to": "package:@ridendine/auth",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/auth/signup",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
@@ -4144,19 +4173,31 @@
       "from": "app:web",
       "to": "route:web:/checkout",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/checkout",
       "to": "file:apps/web/src/app/checkout/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:web:/checkout",
+      "to": "table:carts",
+      "label": "reads/writes table",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:web:/checkout",
+      "to": "table:orders",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:web:/checkout",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
@@ -4180,19 +4221,19 @@
       "from": "app:web",
       "to": "route:web:/chef-signup",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/chef-signup",
       "to": "file:apps/web/src/app/chef-signup/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/chef-signup",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
@@ -4228,19 +4269,25 @@
       "from": "app:web",
       "to": "route:web:/contact",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:web:/contact",
       "to": "file:apps/web/src/app/contact/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:web:/contact",
+      "to": "table:support_tickets",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:web:/contact",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
@@ -4378,19 +4425,19 @@
       "from": "app:ops-admin",
       "to": "route:ops-admin:/auth/login",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/auth/login",
       "to": "file:apps/ops-admin/src/app/auth/login/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/auth/login",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
@@ -4438,79 +4485,79 @@
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/analytics",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/analytics",
       "to": "file:apps/ops-admin/src/app/dashboard/analytics/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/analytics",
       "to": "table:driver_presence",
       "label": "reads/writes table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/analytics",
       "to": "table:drivers",
       "label": "reads/writes table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/analytics",
       "to": "table:orders",
       "label": "reads/writes table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/analytics",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/analytics",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/announcements",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/announcements",
       "to": "file:apps/ops-admin/src/app/dashboard/announcements/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/announcements",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/automation",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/automation",
       "to": "file:apps/ops-admin/src/app/dashboard/automation/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/automation",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
@@ -4552,19 +4599,25 @@
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/chefs/approvals",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/chefs/approvals",
       "to": "file:apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/chefs/approvals",
+      "to": "table:chef_profiles",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/chefs/approvals",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
@@ -4648,19 +4701,25 @@
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/customers",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/customers",
       "to": "file:apps/ops-admin/src/app/dashboard/customers/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/customers",
+      "to": "table:customers",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/customers",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
@@ -4690,43 +4749,73 @@
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/deliveries",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/deliveries",
       "to": "file:apps/ops-admin/src/app/dashboard/deliveries/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/deliveries",
+      "to": "table:deliveries",
+      "label": "reads/writes table",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/deliveries",
+      "to": "table:drivers",
+      "label": "reads/writes table",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/deliveries",
+      "to": "table:orders",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/deliveries",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/dispatch",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/dispatch",
       "to": "file:apps/ops-admin/src/app/dashboard/dispatch/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/dispatch",
+      "to": "table:deliveries",
+      "label": "reads/writes table",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/dispatch",
+      "to": "table:delivery_offers",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/dispatch",
       "to": "package:@ridendine/types",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/dispatch",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
@@ -5170,19 +5259,25 @@
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/orders",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/orders",
       "to": "file:apps/ops-admin/src/app/dashboard/orders/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/orders",
+      "to": "table:orders",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/orders",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
@@ -5236,19 +5331,25 @@
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/promos",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/promos",
       "to": "file:apps/ops-admin/src/app/dashboard/promos/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/promos",
+      "to": "table:promo_codes",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/promos",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
@@ -5290,43 +5391,55 @@
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/support",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/support",
       "to": "file:apps/ops-admin/src/app/dashboard/support/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/support",
+      "to": "table:support_tickets",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/support",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/support",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
       "to": "route:ops-admin:/dashboard/team",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/team",
       "to": "file:apps/ops-admin/src/app/dashboard/team/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:ops-admin:/dashboard/team",
+      "to": "table:platform_users",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:ops-admin:/dashboard/team",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
@@ -5356,85 +5469,97 @@
       "from": "app:chef-admin",
       "to": "route:chef-admin:/auth/forgot-password",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/auth/forgot-password",
       "to": "file:apps/chef-admin/src/app/auth/forgot-password/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/auth/forgot-password",
       "to": "package:@ridendine/auth",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/auth/forgot-password",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:chef-admin",
       "to": "route:chef-admin:/auth/login",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/auth/login",
       "to": "file:apps/chef-admin/src/app/auth/login/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/auth/login",
       "to": "package:@ridendine/auth",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/auth/login",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:chef-admin",
       "to": "route:chef-admin:/auth/signup",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/auth/signup",
       "to": "file:apps/chef-admin/src/app/auth/signup/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/auth/signup",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:chef-admin",
       "to": "route:chef-admin:/dashboard/analytics",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/dashboard/analytics",
       "to": "file:apps/chef-admin/src/app/dashboard/analytics/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "route:chef-admin:/dashboard/analytics",
+      "to": "table:chef_storefronts",
+      "label": "reads/writes table",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:chef-admin:/dashboard/analytics",
+      "to": "table:orders",
+      "label": "reads/writes table",
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/dashboard/analytics",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:chef-admin",
@@ -5644,43 +5769,43 @@
       "from": "app:chef-admin",
       "to": "route:chef-admin:/dashboard/reviews",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/dashboard/reviews",
       "to": "file:apps/chef-admin/src/app/dashboard/reviews/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/dashboard/reviews",
       "to": "table:chef_profiles",
       "label": "reads/writes table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/dashboard/reviews",
       "to": "table:chef_storefronts",
       "label": "reads/writes table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/dashboard/reviews",
       "to": "table:reviews",
       "label": "reads/writes table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/dashboard/reviews",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:chef-admin:/dashboard/reviews",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:chef-admin",
@@ -5800,37 +5925,37 @@
       "from": "app:driver-app",
       "to": "route:driver-app:/auth/login",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:driver-app:/auth/login",
       "to": "file:apps/driver-app/src/app/auth/login/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:driver-app:/auth/login",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:driver-app",
       "to": "route:driver-app:/auth/signup",
       "label": "owns route",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:driver-app:/auth/signup",
       "to": "file:apps/driver-app/src/app/auth/signup/page.tsx",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "route:driver-app:/auth/signup",
       "to": "package:@ridendine/ui",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:driver-app",
@@ -6256,31 +6381,31 @@
       "from": "app:web",
       "to": "api:web:/api/eta",
       "label": "owns API",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/eta",
       "to": "file:apps/web/src/app/api/eta/route.ts",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/eta",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/eta",
       "to": "package:@ridendine/routing",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/eta",
       "to": "external:Routing provider",
       "label": "calls external",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
@@ -6334,43 +6459,43 @@
       "from": "app:web",
       "to": "api:web:/api/health",
       "label": "owns API",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/health",
       "to": "file:apps/web/src/app/api/health/route.ts",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/health",
       "to": "table:chef_storefronts",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/health",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/health",
       "to": "package:@ridendine/utils",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/health",
       "to": "external:Stripe",
       "label": "calls external",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/health",
       "to": "external:Supabase",
       "label": "calls external",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
@@ -6838,79 +6963,85 @@
       "from": "app:web",
       "to": "api:web:/api/storefronts/:id/menu",
       "label": "owns API",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/storefronts/:id/menu",
       "to": "file:apps/web/src/app/api/storefronts/[id]/menu/route.ts",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/storefronts/:id/menu",
       "to": "table:chef_storefronts",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/storefronts/:id/menu",
       "to": "table:menu_item_options",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/storefronts/:id/menu",
       "to": "table:menu_items",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/storefronts/:id/menu",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
       "to": "api:web:/api/storefronts/:id",
       "label": "owns API",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/storefronts/:id",
       "to": "file:apps/web/src/app/api/storefronts/[id]/route.ts",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/storefronts/:id",
       "to": "table:chef_storefronts",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/storefronts/:id",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
       "to": "api:web:/api/storefronts",
       "label": "owns API",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/storefronts",
       "to": "file:apps/web/src/app/api/storefronts/route.ts",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
+    },
+    {
+      "from": "api:web:/api/storefronts",
+      "to": "table:chef_storefronts",
+      "label": "touches table",
+      "status": "WIRED"
     },
     {
       "from": "api:web:/api/storefronts",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:web",
@@ -8422,73 +8553,73 @@
       "from": "app:ops-admin",
       "to": "api:ops-admin:/api/health",
       "label": "owns API",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "file:apps/ops-admin/src/app/api/health/route.ts",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "table:chef_profiles",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "table:customers",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "table:deliveries",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "table:driver_presence",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "table:drivers",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "table:orders",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "package:@ridendine/utils",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "external:Stripe",
       "label": "calls external",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:ops-admin:/api/health",
       "to": "external:Supabase",
       "label": "calls external",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:ops-admin",
@@ -8890,43 +9021,43 @@
       "from": "app:chef-admin",
       "to": "api:chef-admin:/api/health",
       "label": "owns API",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/health",
       "to": "file:apps/chef-admin/src/app/api/health/route.ts",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/health",
       "to": "table:chef_profiles",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/health",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/health",
       "to": "package:@ridendine/utils",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/health",
       "to": "external:Stripe",
       "label": "calls external",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/health",
       "to": "external:Supabase",
       "label": "calls external",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:chef-admin",
@@ -9286,37 +9417,37 @@
       "from": "app:chef-admin",
       "to": "api:chef-admin:/api/storefront",
       "label": "owns API",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/storefront",
       "to": "file:apps/chef-admin/src/app/api/storefront/route.ts",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/storefront",
       "to": "table:chef_kitchens",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/storefront",
       "to": "table:chef_storefronts",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/storefront",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:chef-admin:/api/storefront",
       "to": "external:Supabase",
       "label": "calls external",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:chef-admin",
@@ -9652,43 +9783,43 @@
       "from": "app:driver-app",
       "to": "api:driver-app:/api/health",
       "label": "owns API",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:driver-app:/api/health",
       "to": "file:apps/driver-app/src/app/api/health/route.ts",
       "label": "implemented by",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:driver-app:/api/health",
       "to": "table:drivers",
       "label": "touches table",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:driver-app:/api/health",
       "to": "package:@ridendine/db",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:driver-app:/api/health",
       "to": "package:@ridendine/utils",
       "label": "imports",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:driver-app:/api/health",
       "to": "external:Stripe",
       "label": "calls external",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "api:driver-app:/api/health",
       "to": "external:Supabase",
       "label": "calls external",
-      "status": "PARTIAL"
+      "status": "WIRED"
     },
     {
       "from": "app:driver-app",

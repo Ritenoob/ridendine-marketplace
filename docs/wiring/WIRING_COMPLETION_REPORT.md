@@ -4,6 +4,7 @@
 
 - `docs/wiring/ROUTE_INVENTORY.md`
 - `docs/wiring/API_INVENTORY.md`
+- `docs/wiring/WIRING_CONTRACTS.md`
 - `docs/wiring/DATA_ENGINE_MAP.md`
 - `docs/wiring/PAGE_WIRING_MATRIX.md`
 - `docs/wiring/ACTION_MAP.md`

@@ -96,6 +96,20 @@ const checks = [
       });
     },
   },
+  {
+    name: 'wiring docs have no unexplained partial page or API statuses',
+    pass: () => {
+      const routeInventory = generatedDoc('docs/wiring/ROUTE_INVENTORY.md');
+      const pageMatrix = generatedDoc('docs/wiring/PAGE_WIRING_MATRIX.md');
+      const apiInventory = generatedDoc('docs/wiring/API_INVENTORY.md');
+      const missingReport = generatedDoc('docs/wiring/MISSING_WIRING_REPORT.md');
+      return !markdownRowsFor(routeInventory, '| PARTIAL |').length &&
+        !markdownRowsFor(pageMatrix, '| PARTIAL |').length &&
+        !markdownRowsFor(apiInventory, '| PARTIAL |').length &&
+        !missingReport.includes(' is partially wired') &&
+        !missingReport.includes(' is partially detectable');
+    },
+  },
 ];
 
 const failures = checks.filter((check) => !check.pass());

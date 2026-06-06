@@ -13,7 +13,7 @@ flowchart TB
   Page["Driver App<br/>/auth/login"]
   Layout["Layout<br/>apps/driver-app/src/app/layout.tsx"]
   File["Page file<br/>apps/driver-app/src/app/auth/login/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -36,11 +36,11 @@ flowchart TB
 | App | Driver App |
 | Domain | `driver.ridendine.ca` |
 | Route | `/auth/login` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/driver-app/src/app/auth/login/page.tsx](../../../../apps/driver-app/src/app/auth/login/page.tsx) |
 | Layout | [apps/driver-app/src/app/layout.tsx](../../../../apps/driver-app/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public driver login surface wired to app-owned login API |
 
 ### Data And API Wiring
 
@@ -76,7 +76,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -90,7 +90,7 @@ flowchart TB
   Page["Driver App<br/>/auth/signup"]
   Layout["Layout<br/>apps/driver-app/src/app/layout.tsx"]
   File["Page file<br/>apps/driver-app/src/app/auth/signup/page.tsx"]
-  Auth["Auth<br/>Public"]
+  Auth["Auth<br/>Public auth"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -117,11 +117,11 @@ flowchart TB
 | App | Driver App |
 | Domain | `driver.ridendine.ca` |
 | Route | `/auth/signup` |
-| Status | `PARTIAL` |
-| Auth | Public |
+| Status | `WIRED` |
+| Auth | Public auth |
 | Page file | [apps/driver-app/src/app/auth/signup/page.tsx](../../../../apps/driver-app/src/app/auth/signup/page.tsx) |
 | Layout | [apps/driver-app/src/app/layout.tsx](../../../../apps/driver-app/src/app/layout.tsx) |
-| Data source summary | @ridendine/ui |
+| Data source summary | Public driver signup surface wired to driver signup API |
 
 ### Data And API Wiring
 
@@ -159,7 +159,7 @@ flowchart TB
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
