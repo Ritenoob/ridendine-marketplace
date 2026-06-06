@@ -69,12 +69,76 @@ interface OrdersListProps {
 
 const ACCEPT_TIMEOUT_MS = 8 * 60 * 1000; // 8 minutes
 
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  accepted: 'Accepted',
+  preparing: 'Preparing',
+  ready_for_pickup: 'Ready for pickup',
+  rejected: 'Rejected',
+  expired: 'Expired',
+  cancelled: 'Cancelled',
+  delivered: 'Delivered',
+};
+
+const KITCHEN_WORKFLOW: Record<
+  string,
+  { step: string; nextAction: string; focus: string; guidance: string }
+> = {
+  pending: {
+    step: 'Accept or reject',
+    nextAction: 'Accept order',
+    focus: 'Decision',
+    guidance: 'Review the ticket and accept before the countdown expires.',
+  },
+  accepted: {
+    step: 'Prep setup',
+    nextAction: 'Start Preparing',
+    focus: 'Prep',
+    guidance: 'Confirm items, timing, and any special instructions before cooking.',
+  },
+  preparing: {
+    step: 'Kitchen work',
+    nextAction: 'Mark Ready',
+    focus: 'Cook',
+    guidance: 'Finish, package, and mark ready only when the order can be handed to a driver.',
+  },
+  ready_for_pickup: {
+    step: 'Pickup handoff',
+    nextAction: 'Waiting for driver',
+    focus: 'Handoff',
+    guidance: 'Keep the order sealed, staged, and visible for driver pickup.',
+  },
+};
+
 function money(value: number | null | undefined) {
   return `$${Number(value ?? 0).toFixed(2)}`;
 }
 
 function formatStatus(status: string | null | undefined) {
-  return status ? status.replace(/_/g, ' ') : 'not recorded';
+  if (!status) return 'Not recorded';
+  return STATUS_LABELS[status] ?? status.replace(/_/g, ' ');
+}
+
+function getWorkflow(order: Order) {
+  return KITCHEN_WORKFLOW[order.status] ?? {
+    step: formatStatus(order.status),
+    nextAction: 'No kitchen action',
+    focus: 'Review',
+    guidance: 'This order does not need a kitchen state change right now.',
+  };
+}
+
+function getReadyTiming(order: Order) {
+  if (order.actual_ready_at) {
+    return `Marked ready ${new Date(order.actual_ready_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+  }
+  if (order.estimated_ready_at) {
+    const minutes = Math.round((Date.parse(order.estimated_ready_at) - Date.now()) / 60000);
+    if (minutes < -5) return `${Math.abs(minutes)} min late`;
+    if (minutes <= 0) return 'Due now';
+    return `Ready in ${minutes} min`;
+  }
+  return 'Ready time not set';
 }
 
 function CountdownTimer({ createdAt, onExpire }: { createdAt: string; onExpire: () => void }) {
@@ -250,6 +314,17 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
     ? orders
     : orders.filter(o => o.status === filter);
 
+  const workflowMetrics = {
+    decisions: orders.filter((order) => order.status === 'pending').length,
+    inPrep: orders.filter((order) => order.status === 'accepted' || order.status === 'preparing').length,
+    readyForPickup: orders.filter((order) => order.status === 'ready_for_pickup').length,
+    late: orders.filter((order) => {
+      if (!['pending', 'accepted', 'preparing'].includes(order.status)) return false;
+      if (!order.estimated_ready_at) return false;
+      return Date.parse(order.estimated_ready_at) < Date.now();
+    }).length,
+  };
+
   const updateOrderStatus = async (
     orderId: string,
     payload: { action?: string; status?: string; reason?: string; notes?: string }
@@ -334,6 +409,28 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
         <LiveIndicator status={realtimeStatus} />
       </div>
 
+      <section className="mt-4 rounded-lg border border-divider bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-bold text-text">Kitchen workflow</h2>
+            <p className="text-sm text-textMuted">Track decisions, prep, and pickup handoff from one queue.</p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[
+            ['New decisions', workflowMetrics.decisions],
+            ['In prep', workflowMetrics.inPrep],
+            ['Ready for pickup', workflowMetrics.readyForPickup],
+            ['Late tickets', workflowMetrics.late],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-lg border border-divider bg-surfaceMuted p-3">
+              <p className="text-xs font-semibold uppercase text-textMuted">{label}</p>
+              <p className="mt-1 text-2xl font-bold text-text">{value}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div className="mt-3 flex gap-2 flex-wrap">
         {['all', 'pending', 'accepted', 'preparing', 'ready_for_pickup'].map((status) => (
           <Button
@@ -342,7 +439,7 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
             size="sm"
             onClick={() => setFilter(status)}
           >
-            {status === 'all' ? 'All' : status.replace(/_/g, ' ')}
+            {status === 'all' ? 'All' : formatStatus(status)}
           </Button>
         ))}
       </div>
@@ -351,7 +448,7 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
         {filteredOrders.length === 0 ? (
           <Card>
             <p className="py-8 text-center text-sm text-textMuted">
-              No {filter === 'all' ? '' : filter.replace(/_/g, ' ')} orders
+              No {filter === 'all' ? '' : formatStatus(filter).toLowerCase()} orders
             </p>
           </Card>
         ) : (
@@ -370,7 +467,7 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
                         order.status === 'expired' ? 'error' : 'default'
                       }
                     >
-                      {order.status.replace(/_/g, ' ')}
+                      {formatStatus(order.status)}
                     </Badge>
                     {order.status === 'pending' && (
                       <div className="flex items-center gap-1 rounded-full bg-primarySoft px-2 py-1 text-xs">
@@ -382,6 +479,37 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
                       </div>
                     )}
                   </div>
+
+                  {(() => {
+                    const workflow = getWorkflow(order);
+                    return (
+                      <div className="mt-3 rounded-lg border border-primary/20 bg-primarySoft p-3">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-xs font-semibold uppercase text-primary">Kitchen step</p>
+                              <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs font-semibold text-primary">
+                                {workflow.focus}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-base font-bold text-text">{workflow.step}</p>
+                            <p className="mt-1 text-sm text-textMuted">{workflow.guidance}</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm md:min-w-64">
+                            <div className="rounded-lg bg-white/70 p-2">
+                              <p className="text-xs font-semibold uppercase text-textMuted">Next action</p>
+                              <p className="mt-1 font-semibold text-text">{workflow.nextAction}</p>
+                            </div>
+                            <div className="rounded-lg bg-white/70 p-2">
+                              <p className="text-xs font-semibold uppercase text-textMuted">Timing</p>
+                              <p className="mt-1 font-semibold text-text">{getReadyTiming(order)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div className="mt-3 grid gap-3 lg:grid-cols-3">
                     <div className="rounded-lg border border-divider bg-surfaceMuted p-3">
                       <p className="text-xs font-semibold uppercase tracking-wide text-textMuted">Customer</p>

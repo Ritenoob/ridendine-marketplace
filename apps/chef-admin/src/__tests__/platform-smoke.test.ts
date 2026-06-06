@@ -53,6 +53,10 @@ describe('chef-admin smoke wiring', () => {
     expect(src).toContain("action: 'start_preparing'");
     expect(src).toContain("action: 'mark_ready'");
     expect(src).toContain("action: 'reject'");
+    expect(src).toContain('Kitchen workflow');
+    expect(src).toContain('Kitchen step');
+    expect(src).toContain('Next action');
+    expect(src).toContain('Ready for pickup');
     expect(src).toContain('No ');
     expect(src).toContain('orders');
   });
