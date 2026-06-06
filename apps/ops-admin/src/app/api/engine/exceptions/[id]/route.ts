@@ -62,6 +62,7 @@ export async function PATCH(
   }
   const actionMap: Record<string, string> = {
     acknowledge: 'acknowledge_exception',
+    assign: 'assign_exception',
     update_status: 'update_exception_status',
     escalate: 'escalate_exception',
     resolve: 'resolve_exception',

@@ -3,6 +3,7 @@ import { Card, PageHeader, StatusBadge } from '@ridendine/ui';
 import { createAdminClient } from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getOpsActorContext, hasPlatformApiCapability } from '@/lib/engine';
+import { ExceptionActions } from './exception-actions';
 import {
   buildExceptionQueue,
   formatExceptionStatus,
@@ -236,7 +237,7 @@ function RelatedLinks({ item }: { item: ExceptionQueueItem }) {
   );
 }
 
-function ExceptionRow({ item }: { item: ExceptionQueueItem }) {
+function ExceptionRow({ item, canWrite }: { item: ExceptionQueueItem; canWrite: boolean }) {
   return (
     <Card className="border-border bg-surface p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -269,6 +270,13 @@ function ExceptionRow({ item }: { item: ExceptionQueueItem }) {
           </div>
         </div>
       </div>
+
+      <ExceptionActions
+        id={item.id}
+        status={item.status}
+        ownerState={item.ownerState}
+        canWrite={canWrite}
+      />
     </Card>
   );
 }
@@ -364,6 +372,7 @@ export default async function ExceptionsPage({
   const params = await searchParams;
   const activeFilter = getFilter(getSearchParam(params.filter, 'all'));
   const visibleItems = filterItems(data.queue, activeFilter);
+  const canWrite = hasPlatformApiCapability(actor, 'exceptions_write');
 
   return (
     <DashboardLayout>
@@ -404,7 +413,7 @@ export default async function ExceptionsPage({
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <section className="space-y-4">
             {visibleItems.length > 0 ? (
-              visibleItems.map((item) => <ExceptionRow key={item.id} item={item} />)
+              visibleItems.map((item) => <ExceptionRow key={item.id} item={item} canWrite={canWrite} />)
             ) : (
               <Card className="border-border bg-surface px-4 py-10 text-center text-sm text-textMuted">
                 No exceptions match this filter.

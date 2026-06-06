@@ -66,4 +66,27 @@ describe('OperationsCommandGateway', () => {
       actor,
     });
   });
+
+  it('routes assign_exception commands to the support exception engine', async () => {
+    const assignException = vi
+      .fn<[], Promise<OperationResult<{ assigned: boolean }>>>()
+      .mockResolvedValue({ success: true, data: { assigned: true } });
+
+    const gateway = createOperationsCommandGateway({
+      support: {
+        assignException,
+      },
+    });
+
+    const result = await gateway.execute(
+      {
+        action: 'assign_exception',
+        exceptionId: '123e4567-e89b-12d3-a456-426614174099',
+      },
+      actor
+    );
+
+    expect(result.success).toBe(true);
+    expect(assignException).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174099', actor);
+  });
 });

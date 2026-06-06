@@ -443,6 +443,7 @@ export interface Exception {
   linkedPayoutAdjustmentId?: string;
   slaDeadline?: string;
   escalatedAt?: string;
+  assignedTo?: string;
   createdAt: string;
   updatedAt: string;
 }

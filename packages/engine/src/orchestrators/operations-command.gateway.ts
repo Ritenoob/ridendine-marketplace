@@ -233,6 +233,8 @@ export class OperationsCommandGateway {
         );
       case 'acknowledge_exception':
         return this.deps.support.acknowledgeException(command.exceptionId, actor);
+      case 'assign_exception':
+        return this.deps.support.assignException(command.exceptionId, actor);
       case 'update_exception_status':
         return this.deps.support.updateExceptionStatus(command.exceptionId, command.status, command.notes, actor);
       case 'resolve_exception':

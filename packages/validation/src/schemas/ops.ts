@@ -242,6 +242,10 @@ export const exceptionCommandSchema = z.discriminatedUnion('action', [
     exceptionId: uuid,
   }).strict(),
   z.object({
+    action: z.literal('assign_exception'),
+    exceptionId: uuid,
+  }).strict(),
+  z.object({
     action: z.literal('update_exception_status'),
     exceptionId: uuid,
     status: z.string().min(3).max(40),

@@ -168,6 +168,65 @@ export class SupportExceptionEngine {
   }
 
   /**
+   * Assign exception ownership without changing lifecycle status.
+   */
+  async assignException(
+    exceptionId: string,
+    actor: ActorContext
+  ): Promise<OperationResult<Exception>> {
+    const assignedTo = actor.entityId || actor.userId;
+
+    const { data: current, error: currentError } = await this.client
+      .from('order_exceptions')
+      .select('assigned_to, status')
+      .eq('id', exceptionId)
+      .single();
+
+    if (currentError || !current) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Exception not found' },
+      };
+    }
+
+    if (current.status === 'resolved' || current.status === 'closed') {
+      return {
+        success: false,
+        error: { code: 'INVALID_STATUS', message: 'Terminal exceptions cannot be assigned' },
+      };
+    }
+
+    const { data: exception, error } = await this.client
+      .from('order_exceptions')
+      .update({
+        assigned_to: assignedTo,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', exceptionId)
+      .select()
+      .single();
+
+    if (error || !exception) {
+      return {
+        success: false,
+        error: { code: 'UPDATE_FAILED', message: 'Failed to assign exception' },
+      };
+    }
+
+    await this.auditLogger.log({
+      action: 'update',
+      entityType: 'order_exception',
+      entityId: exceptionId,
+      actor,
+      beforeState: { assigned_to: current.assigned_to ?? null },
+      afterState: { assigned_to: assignedTo },
+      reason: 'Ops exception assigned',
+    });
+
+    return { success: true, data: this.mapException(exception) };
+  }
+
+  /**
    * Update exception status
    */
   async updateExceptionStatus(
@@ -681,6 +740,7 @@ export class SupportExceptionEngine {
       linkedPayoutAdjustmentId: row.linked_payout_adjustment_id as string | undefined,
       slaDeadline: row.sla_deadline as string | undefined,
       escalatedAt: row.escalated_at as string | undefined,
+      assignedTo: row.assigned_to as string | undefined,
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
     };
