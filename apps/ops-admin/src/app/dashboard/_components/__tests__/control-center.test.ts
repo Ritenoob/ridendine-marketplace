@@ -14,6 +14,7 @@ describe('control center model', () => {
       'orders',
       'chefs',
       'drivers',
+      'compliance',
       'customers',
       'finance',
       'promos',
@@ -32,8 +33,8 @@ describe('control center model', () => {
   it('summarizes wired areas and action coverage', () => {
     const summary = getControlCenterSummary(CONTROL_CENTER_AREAS);
 
-    expect(summary.totalAreas).toBe(12);
-    expect(summary.wiredAreas).toBe(12);
+    expect(summary.totalAreas).toBe(13);
+    expect(summary.wiredAreas).toBe(13);
     expect(summary.totalActions).toBeGreaterThanOrEqual(30);
     expect(summary.destructiveDeleteAreas).toEqual([]);
   });

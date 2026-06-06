@@ -8,6 +8,11 @@ import {
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { notFound } from 'next/navigation';
 import { DriverGovernanceActions } from './driver-governance-actions';
+import {
+  buildComplianceSubject,
+  type ComplianceDocumentRow,
+} from '../../compliance/compliance-model';
+import { CompliancePanel } from '../../compliance/compliance-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +42,25 @@ async function getDriverPageData(driverId: string) {
   return getOpsDriverDetail(adminClient, driverId);
 }
 
+async function getDriverComplianceSubject(driverId: string, ownerName: string, ownerStatus: string) {
+  const adminClient = createAdminClient() as any;
+  const { data, error } = await adminClient
+    .from('driver_documents')
+    .select('id, document_type, document_url, status, expires_at, notes, reviewed_by, reviewed_at, created_at, updated_at')
+    .eq('driver_id', driverId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return buildComplianceSubject({
+    ownerType: 'driver',
+    ownerId: driverId,
+    ownerName,
+    ownerStatus,
+    documents: (data ?? []) as ComplianceDocumentRow[],
+  });
+}
+
 export default async function DriverDetailPage({
   params,
 }: {
@@ -48,6 +72,13 @@ export default async function DriverDetailPage({
   if (!driver) {
     notFound();
   }
+
+  const driverName = [driver.first_name, driver.last_name].filter(Boolean).join(' ');
+  const complianceSubject = await getDriverComplianceSubject(
+    driver.id,
+    driverName || 'Unknown Driver',
+    driver.status
+  );
 
   return (
     <DashboardLayout>
@@ -260,6 +291,8 @@ export default async function DriverDetailPage({
             )}
           </Card>
         </div>
+
+        <CompliancePanel subject={complianceSubject} />
 
         <Card className="border-border bg-surface p-6">
           <h2 className="mb-4 text-lg font-semibold text-white">

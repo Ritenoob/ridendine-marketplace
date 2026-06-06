@@ -5,6 +5,7 @@ export type ControlCenterAreaKey =
   | 'orders'
   | 'chefs'
   | 'drivers'
+  | 'compliance'
   | 'customers'
   | 'finance'
   | 'promos'
@@ -97,6 +98,17 @@ export const CONTROL_CENTER_AREAS: ControlCenterArea[] = [
     apiRoutes: ['/api/drivers', '/api/drivers/[id]'],
     signals: ['Approval state', 'Presence', 'Active load', 'Location freshness'],
     actions: ['Add driver', 'Approve driver', 'Suspend driver', 'Open deliveries'],
+    destructiveDelete: false,
+    tone: 'warning',
+  },
+  {
+    key: 'compliance',
+    title: 'Compliance',
+    href: '/dashboard/compliance',
+    purpose: 'Review chef and driver document coverage, expiry risk, and onboarding evidence.',
+    apiRoutes: ['/api/chefs', '/api/drivers'],
+    signals: ['Missing documents', 'Pending review', 'Expired documents', 'Expiring soon'],
+    actions: ['Open chef profile', 'Open driver profile', 'Review documents', 'Request renewal'],
     destructiveDelete: false,
     tone: 'warning',
   },

@@ -1,11 +1,16 @@
 import { Card, Badge } from '@ridendine/ui';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
-import { createServerClient, getChefGovernanceDetail } from '@ridendine/db';
+import { createAdminClient, createServerClient, getChefGovernanceDetail } from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { notFound } from 'next/navigation';
 import { ChefGovernanceActions } from './chef-governance-actions';
 import { StorefrontGovernanceActions } from './storefront-governance-actions';
+import {
+  buildComplianceSubject,
+  type ComplianceDocumentRow,
+} from '../../compliance/compliance-model';
+import { CompliancePanel } from '../../compliance/compliance-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,13 +22,31 @@ async function getChefDetails(chefId: string) {
 
 async function getDeliveryZones(storefrontIds: string[]) {
   if (storefrontIds.length === 0) return [];
-  const { createAdminClient } = await import('@ridendine/db');
   const adminClient = createAdminClient() as any;
   const { data } = await adminClient
     .from('chef_delivery_zones')
     .select('id, name, radius_km, delivery_fee, min_order_for_free_delivery, is_active, storefront_id')
     .in('storefront_id', storefrontIds);
   return data || [];
+}
+
+async function getChefComplianceSubject(chefId: string, ownerName: string, ownerStatus: string) {
+  const adminClient = createAdminClient() as any;
+  const { data, error } = await adminClient
+    .from('chef_documents')
+    .select('id, document_type, document_url, status, expires_at, notes, reviewed_by, reviewed_at, created_at, updated_at')
+    .eq('chef_id', chefId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return buildComplianceSubject({
+    ownerType: 'chef',
+    ownerId: chefId,
+    ownerName,
+    ownerStatus,
+    documents: (data ?? []) as ComplianceDocumentRow[],
+  });
 }
 
 const statusColors: Record<string, string> = {
@@ -65,6 +88,7 @@ export default async function ChefDetailPage({ params }: { params: { id: string 
   const storefronts = chef.chef_storefronts as Storefront[] | null;
   const storefrontIds = (storefronts || []).map((s) => s.id);
   const zones = (await getDeliveryZones(storefrontIds)) as DeliveryZone[];
+  const complianceSubject = await getChefComplianceSubject(chef.id, chef.display_name, chef.status);
 
   return (
     <DashboardLayout>
@@ -218,6 +242,8 @@ export default async function ChefDetailPage({ params }: { params: { id: string 
             <p className="text-textMuted">No delivery zones configured</p>
           )}
         </Card>
+
+        <CompliancePanel subject={complianceSubject} />
 
         {/* Actions */}
         <Card className="border-border bg-surface p-6">
