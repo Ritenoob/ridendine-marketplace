@@ -38,6 +38,7 @@
     "ui:docs": "tsx scripts/ui/generate-command-center-docs.ts",
     "ui:command-center": "pnpm ui:registry && pnpm ui:screenshots:sync && pnpm ui:docs",
     "docs:obsidian-architecture": "powershell -ExecutionPolicy Bypass -File scripts/docs/generate-obsidian-architecture.ps1",
+    "docs:api-guard-snapshot": "powershell -ExecutionPolicy Bypass -File scripts/docs/generate-api-guard-snapshot.ps1",
     "docs:wiring": "node scripts/wiring/generate-wiring-docs.cjs && pnpm docs:supabase",
     "docs:supabase": "node scripts/wiring/generate-supabase-diagrams.cjs",
     "test:wiring-fixes": "node scripts/wiring/verify-known-wiring-fixes.cjs",
