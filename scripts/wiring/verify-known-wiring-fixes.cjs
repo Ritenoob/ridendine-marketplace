@@ -193,6 +193,22 @@ const checks = [
         exists('docs/obsidian/codebase-map/High Risk Ops Authorization.md');
     },
   },
+  {
+    name: 'phase 12 high-risk Ops negative authorization contracts validate',
+    pass: () => {
+      const {
+        endpointNegativeContracts,
+        validateNegativeContracts,
+      } = require(path.join(root, 'scripts/audit/high-risk-ops-negative-authz.cjs'));
+      const result = validateNegativeContracts();
+      return endpointNegativeContracts.length >= 33 &&
+        result.failures.length === 0 &&
+        result.passed === endpointNegativeContracts.length &&
+        exists('docs/wiring/HIGH_RISK_OPS_NEGATIVE_AUTHZ.md') &&
+        exists('docs/architecture/codebase-map/wiring/HIGH_RISK_OPS_NEGATIVE_AUTHZ.md') &&
+        exists('docs/obsidian/codebase-map/High Risk Ops Negative Authorization.md');
+    },
+  },
 ];
 
 const failures = checks.filter((check) => !check.pass());
