@@ -177,6 +177,22 @@ const checks = [
         reviewRows.length === 0;
     },
   },
+  {
+    name: 'phase 11 high-risk Ops authorization contracts validate',
+    pass: () => {
+      const {
+        contracts,
+        validateContracts,
+      } = require(path.join(root, 'scripts/audit/high-risk-ops-authz-contracts.cjs'));
+      const result = validateContracts({ root });
+      return contracts.length >= 19 &&
+        result.failures.length === 0 &&
+        result.passed === contracts.length &&
+        exists('docs/wiring/HIGH_RISK_OPS_AUTHZ.md') &&
+        exists('docs/architecture/codebase-map/wiring/HIGH_RISK_OPS_AUTHZ.md') &&
+        exists('docs/obsidian/codebase-map/High Risk Ops Authorization.md');
+    },
+  },
 ];
 
 const failures = checks.filter((check) => !check.pass());
