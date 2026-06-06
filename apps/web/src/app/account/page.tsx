@@ -2,21 +2,27 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { useAuthContext } from '@ridendine/auth';
 import { Header } from '@/components/layout/header';
 import { Button, Card, Avatar } from '@ridendine/ui';
 
 export default function AccountPage() {
   const router = useRouter();
-  const { user, signOut } = useAuthContext();
+  const { user, loading, signOut } = useAuthContext();
 
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
   };
 
-  if (!user) {
-    router.push('/auth/login');
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/auth/login');
+    }
+  }, [loading, router, user]);
+
+  if (loading || !user) {
     return null;
   }
 

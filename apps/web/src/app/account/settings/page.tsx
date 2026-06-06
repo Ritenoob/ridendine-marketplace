@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@ridendine/auth';
@@ -9,7 +9,7 @@ import { Button, Card, Input } from '@ridendine/ui';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user } = useAuthContext();
+  const { user, loading } = useAuthContext();
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -26,8 +26,23 @@ export default function SettingsPage() {
     newChefs: true,
   });
 
-  if (!user) {
-    router.push('/auth/login');
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/auth/login');
+    }
+  }, [loading, router, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    setProfileData({
+      firstName: user.user_metadata?.first_name || '',
+      lastName: user.user_metadata?.last_name || '',
+      email: user.email || '',
+      phone: user.user_metadata?.phone || '',
+    });
+  }, [user]);
+
+  if (loading || !user) {
     return null;
   }
 

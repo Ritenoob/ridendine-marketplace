@@ -2,16 +2,22 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { useAuthContext } from '@ridendine/auth';
 import { Header } from '@/components/layout/header';
 import { Button, Card, EmptyState } from '@ridendine/ui';
 
 export default function FavoritesPage() {
   const router = useRouter();
-  const { user } = useAuthContext();
+  const { user, loading } = useAuthContext();
 
-  if (!user) {
-    router.push('/auth/login');
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/auth/login');
+    }
+  }, [loading, router, user]);
+
+  if (loading || !user) {
     return null;
   }
 
