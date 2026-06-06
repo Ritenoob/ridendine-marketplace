@@ -81,7 +81,11 @@ describe('GET /api/cron/expired-offers', () => {
     (validateEngineProcessorHeaders as jest.Mock).mockReturnValue(true);
     mockProcessExpiredOffers.mockRejectedValue(new Error('dispatch error'));
 
-    await expect(GET(makeRequest({ authorization: 'Bearer dev-cron-secret' }))).rejects.toThrow('dispatch error');
+    const res = await GET(makeRequest({ authorization: 'Bearer dev-cron-secret' }));
+
+    expect(res.status).toBe(500);
+    expect(res.data).toMatchObject({ success: false, error: 'dispatch error' });
+    expect(res.data.runKey).toMatch(/^expired-offers:/);
   });
 });
 

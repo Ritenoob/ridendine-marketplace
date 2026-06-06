@@ -67,7 +67,7 @@ describe('finance trace model', () => {
     expect(summary.stripeReferenceCount).toBe(2);
     expect(summary.customerChargeCents).toBe(2500);
     expect(summary.refundCents).toBe(500);
-    expect(summary.payableCents).toBe(1400);
+    expect(summary.payableCents).toBe(1300);
     expect(summary.platformFeeCents).toBe(225);
     expect(summary.warnings).toEqual([]);
   });

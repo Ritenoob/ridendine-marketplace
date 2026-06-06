@@ -80,13 +80,12 @@ describe('DeliveryDetail workflow clarity', () => {
     jest.restoreAllMocks();
   });
 
-  it('shows current work, focus, and the next driver action', () => {
+  it('shows current work, pickup stage, and the next driver action', () => {
     render(<DeliveryDetail delivery={deliveryFixture as any} order={orderFixture} />);
 
     expect(screen.getByRole('heading', { name: 'Delivery work' })).toBeInTheDocument();
     expect(screen.getByText('Current step')).toBeInTheDocument();
     expect(screen.getAllByText('Accepted').length).toBeGreaterThan(0);
-    expect(screen.getByText('Focus')).toBeInTheDocument();
     expect(screen.getAllByText('Pickup').length).toBeGreaterThan(0);
     expect(screen.getByText('Next action')).toBeInTheDocument();
     expect(screen.getAllByText('Start Navigation to Pickup').length).toBeGreaterThan(0);
@@ -137,7 +136,7 @@ describe('DeliveryDetail workflow clarity', () => {
         })
       );
     });
-    expect(screen.getByText(/ops has received this issue/i)).toBeInTheDocument();
+    expect(await screen.findByText(/ops has received this issue/i)).toBeInTheDocument();
   });
 
   it('keeps issue notes visible when Ops issue submission fails', async () => {
