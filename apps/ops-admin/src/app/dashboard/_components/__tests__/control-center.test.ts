@@ -10,6 +10,7 @@ describe('control center model', () => {
     expect(keys).toEqual([
       'live-ops',
       'engine-health',
+      'exceptions',
       'dispatch',
       'orders',
       'chefs',
@@ -33,8 +34,8 @@ describe('control center model', () => {
   it('summarizes wired areas and action coverage', () => {
     const summary = getControlCenterSummary(CONTROL_CENTER_AREAS);
 
-    expect(summary.totalAreas).toBe(13);
-    expect(summary.wiredAreas).toBe(13);
+    expect(summary.totalAreas).toBe(14);
+    expect(summary.wiredAreas).toBe(14);
     expect(summary.totalActions).toBeGreaterThanOrEqual(30);
     expect(summary.destructiveDeleteAreas).toEqual([]);
   });

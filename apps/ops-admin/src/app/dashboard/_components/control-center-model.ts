@@ -1,6 +1,7 @@
 export type ControlCenterAreaKey =
   | 'live-ops'
   | 'engine-health'
+  | 'exceptions'
   | 'dispatch'
   | 'orders'
   | 'chefs'
@@ -56,6 +57,17 @@ export const CONTROL_CENTER_AREAS: ControlCenterArea[] = [
     actions: ['Toggle maintenance', 'Edit rules', 'Run processor checks'],
     destructiveDelete: false,
     tone: 'warning',
+  },
+  {
+    key: 'exceptions',
+    title: 'Exceptions',
+    href: '/dashboard/exceptions',
+    purpose: 'Review open operational exceptions, owner state, SLA pressure, alerts, and support handoffs.',
+    apiRoutes: ['/api/engine/exceptions', '/api/engine/exceptions/[id]', '/api/engine/dashboard'],
+    signals: ['Open exceptions', 'SLA breach', 'Unassigned', 'Escalated'],
+    actions: ['Open order', 'Open support', 'Review SLA', 'Acknowledge in later slice'],
+    destructiveDelete: false,
+    tone: 'critical',
   },
   {
     key: 'dispatch',
