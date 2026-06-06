@@ -35,6 +35,7 @@
     "smoke:prod": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/smoke/production-smoke.ps1",
     "release:verify": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/release/verify-release.ps1",
     "admin:bootstrap-super": "node scripts/bootstrap-super-admin.mjs",
+    "smoke:prod:contracts": "node scripts/smoke/runtime-contract-smoke.cjs",
     "ui:screenshots": "tsx scripts/ui/generate-ui-screenshots.ts",
     "ui:registry": "tsx scripts/ui/build-page-registry.ts",
     "ui:screenshots:sync": "tsx scripts/ui/sync-ui-screenshots.ts",

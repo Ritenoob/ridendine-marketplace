@@ -9,6 +9,7 @@ const architectureWiringDir = path.join(architectureDir, 'wiring');
 const obsidianDir = path.join(root, 'docs', 'obsidian', 'codebase-map');
 const graphifyDir = path.join(root, 'graphify-out', 'ridendine-codebase-map');
 const { pageContracts, apiContracts } = require('./wiring-contracts.cjs');
+const runtimeSmokeContracts = require('../smoke/runtime-contracts.cjs');
 
 const apps = [
   {
@@ -470,6 +471,69 @@ ${table(['API file', 'Auth intent', 'Request contract', 'Response contract', 'Ta
 `;
 }
 
+function generateRuntimeContractSmoke() {
+  const { apps: runtimeApps, authIntentPages, publicJsonApis, protectedJsonApis } = runtimeSmokeContracts;
+  const authenticatedApis = protectedJsonApis.filter((contract) => contract.authenticated);
+  const pageRows = authIntentPages.map((contract) => [
+    runtimeApps[contract.app].name,
+    `\`${contract.path}\``,
+    contract.sourcePath ? mdLink(contract.sourcePath) : 'None',
+    contract.authIntent,
+    contract.expect,
+    contract.redirectedTo ? `\`${contract.redirectedTo}\`` : 'None',
+    contract.note || '',
+  ]);
+  const publicApiRows = publicJsonApis.map((contract) => [
+    runtimeApps[contract.app].name,
+    `\`${contract.path}\``,
+    contract.allowedStatuses.join(', '),
+    contract.note || '',
+  ]);
+  const protectedApiRows = protectedJsonApis.map((contract) => [
+    runtimeApps[contract.app].name,
+    `\`${contract.path}\``,
+    contract.allowedStatuses.join(', '),
+    contract.authenticated ? 'Yes' : 'No',
+    contract.note || '',
+  ]);
+
+  return `# Runtime Contract Smoke
+
+Generated from \`scripts/smoke/runtime-contracts.cjs\`.
+
+This Phase 9 smoke gate verifies live production behavior that static wiring scans cannot prove. It is read-only except for app-owned login requests used to create smoke sessions for customer, driver, and ops authenticated API checks.
+
+Run from the repo root:
+
+\`\`\`powershell
+$env:RIDENDINE_SMOKE_EMAIL = '<seeded smoke email>'
+$env:RIDENDINE_SMOKE_PASSWORD = '<seeded smoke password>'
+pnpm smoke:prod:contracts -- --require-auth
+\`\`\`
+
+## Coverage Summary
+
+| Contract class | Count | Runtime proof |
+| --- | ---: | --- |
+| Auth-intent pages | ${authIntentPages.length} | Public pages return HTML, protected pages resolve to login guard, legacy redirect shims expose their redirect target. |
+| Public JSON APIs | ${publicJsonApis.length} | Public/health/marketplace-read endpoints return JSON with allowed status codes. |
+| Protected JSON APIs | ${protectedJsonApis.length} | Unauthenticated requests do not return 200. |
+| Authenticated JSON APIs | ${authenticatedApis.length} | App-owned customer, driver, and ops login sessions can read expected JSON APIs. |
+
+## Auth-Intent Page Contracts
+
+${table(['App', 'Route', 'Source file', 'Auth intent', 'Expected runtime proof', 'Redirect target', 'Notes'], pageRows)}
+
+## Public JSON API Contracts
+
+${table(['App', 'API', 'Allowed statuses', 'Notes'], publicApiRows)}
+
+## Protected JSON API Contracts
+
+${table(['App', 'API', 'Unauth allowed statuses', 'Authenticated proof', 'Notes'], protectedApiRows)}
+`;
+}
+
 function generateRouteInventory(routes) {
   return `# Route Inventory
 
@@ -755,6 +819,7 @@ ${table(['User action', 'Component/source file', 'API route', 'Validation schema
 }
 
 function generateMissing(routes, apis) {
+  const runtimePageContractsByFile = new Map(runtimeSmokeContracts.authIntentPages.map((contract) => [contract.sourcePath, contract]));
   const critical = [
     ...routes.filter((r) => r.status === 'MISSING').map((r) => [r.app, r.file, `Route ${r.route} has MISSING status`, 'Add/restore page implementation or remove route if obsolete', 'Phase 1']),
     ...apis.filter((a) => a.methods.includes('UNDETECTED')).map((a) => [a.app, a.file, `API ${a.endpoint} has no detectable HTTP method export`, 'Add explicit GET/POST/PATCH/PUT/DELETE export or remove dead route file', 'Phase 1']),
@@ -763,15 +828,29 @@ function generateMissing(routes, apis) {
     ...routes.filter((r) => r.status === 'PARTIAL').map((r) => [r.app, r.file, `Route ${r.route} is partially wired`, 'Review auth/data/API path and complete missing state surfaces', 'Phase 2']),
     ...apis.filter((a) => a.status === 'PARTIAL').map((a) => [a.app, a.file, `API ${a.endpoint} is partially detectable`, 'Document or strengthen auth/schema/service wiring', 'Phase 2']),
   ];
-  const medium = routes.filter((r) => r.auth === 'Undetected').slice(0, 40).map((r) => [r.app, r.file, `Auth requirement not detectable for ${r.route}`, 'Confirm public/protected intent and document explicitly in code or route docs', 'Phase 3']);
+  const authReviewRoutes = routes.filter((r) => r.auth === 'Undetected').slice(0, 40);
+  const runtimeCoveredAuth = authReviewRoutes.filter((r) => runtimePageContractsByFile.has(r.file)).map((r) => {
+    const contract = runtimePageContractsByFile.get(r.file);
+    return [
+      r.app,
+      r.file,
+      `Runtime contract covers auth intent for ${r.route}`,
+      `${contract.authIntent}; proof: ${contract.expect}${contract.redirectedTo ? ` -> ${contract.redirectedTo}` : ''}`,
+      'Phase 9',
+    ];
+  });
+  const medium = authReviewRoutes
+    .filter((r) => !runtimePageContractsByFile.has(r.file))
+    .map((r) => [r.app, r.file, `Auth requirement not detectable for ${r.route}`, 'Confirm public/protected intent and document explicitly in code or route docs', 'Phase 3']);
   const low = [['All apps', 'packages/ui and app component files', 'Visual/status conventions still vary on older real pages', 'Gradually migrate pages to shared status/loading/error components', 'Phase 4']];
   const section = (title, rows) => `## ${title}\n\n${rows.length ? table(['App', 'File', 'Problem', 'Required fix', 'Suggested phase'], rows.map((r) => [r[0], mdLink(r[1]), r[2], r[3], r[4]])) : 'No issues detected by scanner.'}\n`;
   return `# Missing Wiring Report
 
-Scanner statuses are conservative. Undetectable wiring is marked for review rather than guessed.
+Scanner statuses are conservative. Undetectable wiring is marked for review rather than guessed. Phase 9 runtime contracts move covered auth-intent rows out of unresolved medium review.
 
 ${section('CRITICAL', critical)}
 ${section('HIGH', high)}
+${section('RUNTIME-COVERED AUTH INTENT', runtimeCoveredAuth)}
 ${section('MEDIUM', medium)}
 ${section('LOW', low)}
 `;
@@ -936,6 +1015,7 @@ function generateCompletion(routes, apis, map) {
 - \`docs/wiring/ROUTE_INVENTORY.md\`
 - \`docs/wiring/API_INVENTORY.md\`
 - \`docs/wiring/WIRING_CONTRACTS.md\`
+- \`docs/wiring/RUNTIME_CONTRACT_SMOKE.md\`
 - \`docs/wiring/DATA_ENGINE_MAP.md\`
 - \`docs/wiring/PAGE_WIRING_MATRIX.md\`
 - \`docs/wiring/ACTION_MAP.md\`
@@ -1843,6 +1923,7 @@ Use this folder as the Obsidian entry point for the repo map.
 - [[Order Delivery Flow]]
 - [[Every Page Document]]
 - [[API Wiring]]
+- [[Runtime Contract Smoke]]
 - [[Link Wiring]]
 - [[Database And Engine]]
 - [[Known Gaps]]
@@ -1898,6 +1979,7 @@ flowchart LR
 
   writeTo(obsidianDir, 'API Wiring.md', rebaseMdLinks(generateApiInventory(apis), '../../../').replace(/^# API Inventory/, '# API Wiring'));
   writeTo(obsidianDir, 'Wiring Contracts.md', rebaseMdLinks(generateWiringContracts(), '../../../'));
+  writeTo(obsidianDir, 'Runtime Contract Smoke.md', rebaseMdLinks(generateRuntimeContractSmoke(), '../../../'));
   writeTo(obsidianDir, 'Link Wiring.md', rebaseMdLinks(generateLinkMatrix(linkRows), '../../../').replace(/^# Link Wiring Matrix/, '# Link Wiring'));
   writeTo(obsidianDir, 'Database And Engine.md', rebaseMdLinks(generateDataEngineMap(map), '../../../').replace(/^# Data And Engine Map/, '# Database And Engine'));
   writeTo(obsidianDir, 'Known Gaps.md', rebaseMdLinks(generateMissing(routes, apis), '../../../').replace(/^# Missing Wiring Report/, '# Known Gaps'));
@@ -1922,6 +2004,7 @@ ${apps.map((app) => `- [${app.name}](apps/${app.slug}.md): ${app.domain} — ${a
   writeTo(architectureWiringDir, 'ROUTE_INVENTORY.md', rebaseMdLinks(generateRouteInventory(routes), '../../../../'));
   writeTo(architectureWiringDir, 'API_INVENTORY.md', rebaseMdLinks(generateApiInventory(apis), '../../../../'));
   writeTo(architectureWiringDir, 'WIRING_CONTRACTS.md', rebaseMdLinks(generateWiringContracts(), '../../../../'));
+  writeTo(architectureWiringDir, 'RUNTIME_CONTRACT_SMOKE.md', rebaseMdLinks(generateRuntimeContractSmoke(), '../../../../'));
   writeTo(architectureWiringDir, 'MISSING_WIRING_REPORT.md', rebaseMdLinks(generateMissing(routes, apis), '../../../../'));
 }
 
@@ -1936,6 +2019,7 @@ function main() {
   write('ROUTE_INVENTORY.md', generateRouteInventory(routes));
   write('API_INVENTORY.md', generateApiInventory(apis));
   write('WIRING_CONTRACTS.md', generateWiringContracts());
+  write('RUNTIME_CONTRACT_SMOKE.md', generateRuntimeContractSmoke());
   write('DATA_ENGINE_MAP.md', generateDataEngineMap(map));
   write('PAGE_WIRING_MATRIX.md', generatePageMatrix(routes));
   write('ACTION_MAP.md', generateActionMap(apis));

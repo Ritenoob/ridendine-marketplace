@@ -15,6 +15,7 @@ Use this folder as the Obsidian entry point for the repo map.
 - [[Order Delivery Flow]]
 - [[Every Page Document]]
 - [[API Wiring]]
+- [[Runtime Contract Smoke]]
 - [[Link Wiring]]
 - [[Database And Engine]]
 - [[Known Gaps]]

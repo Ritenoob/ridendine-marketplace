@@ -19,6 +19,19 @@ function markdownRowsFor(text, token) {
   return text.split('\n').filter((line) => line.startsWith('| ') && line.includes(token));
 }
 
+function authIntentReviewFiles() {
+  const missingReport = generatedDoc('docs/wiring/MISSING_WIRING_REPORT.md');
+  return missingReport
+    .split('\n')
+    .filter((line) => line.startsWith('| ') && line.includes('Runtime contract covers auth intent'))
+    .map((line) => {
+      const match = /\]\(\.\.\/\.\.\/([^)]+)\)/.exec(line);
+      return match ? match[1].replace(/\\/g, '/') : null;
+    })
+    .filter(Boolean)
+    .sort();
+}
+
 function walk(relativeDir, acc = []) {
   const absoluteDir = path.join(root, relativeDir);
   if (!fs.existsSync(absoluteDir)) return acc;
@@ -109,6 +122,27 @@ const checks = [
         !missingReport.includes(' is partially wired') &&
         !missingReport.includes(' is partially detectable');
     },
+  },
+  {
+    name: 'phase 9 runtime contracts cover every auth-intent review row',
+    pass: () => {
+      const { authIntentPages, publicJsonApis, protectedJsonApis } = require(path.join(root, 'scripts/smoke/runtime-contracts.cjs'));
+      const reviewFiles = authIntentReviewFiles();
+      const contractFiles = authIntentPages.map((contract) => contract.sourcePath).sort();
+      const missingReport = generatedDoc('docs/wiring/MISSING_WIRING_REPORT.md');
+      return reviewFiles.length === 17 &&
+        JSON.stringify(reviewFiles) === JSON.stringify(contractFiles) &&
+        !missingReport.includes('Auth requirement not detectable') &&
+        publicJsonApis.length >= 7 &&
+        protectedJsonApis.length >= 10;
+    },
+  },
+  {
+    name: 'phase 9 runtime contract docs are generated in all mirrors',
+    pass: () =>
+      exists('docs/wiring/RUNTIME_CONTRACT_SMOKE.md') &&
+      exists('docs/architecture/codebase-map/wiring/RUNTIME_CONTRACT_SMOKE.md') &&
+      exists('docs/obsidian/codebase-map/Runtime Contract Smoke.md'),
   },
 ];
 
