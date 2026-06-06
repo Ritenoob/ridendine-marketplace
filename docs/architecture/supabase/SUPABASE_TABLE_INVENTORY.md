@@ -288,7 +288,7 @@ RLS: enabled
 
 Policies detected: 3
 
-Indexes detected: 5
+Indexes detected: 7
 
 | Column | Type | Flags | References |
 | --- | --- | --- | --- |
@@ -315,11 +315,11 @@ Indexes detected: 5
 
 ## chef_profiles
 
-Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00005_anon_read_policies.sql
+Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00005_anon_read_policies.sql, supabase/migrations/00030_seed_data_user_id_nullable.sql, supabase/migrations/00034_restore_user_id_fks.sql, supabase/migrations/00035_chef_profiles_public_read.sql, supabase/migrations/00038_validate_user_id_fks.sql
 
 RLS: enabled
 
-Policies detected: 6
+Policies detected: 7
 
 Indexes detected: 2
 
@@ -406,7 +406,7 @@ Indexes detected: 1
 
 ## customers
 
-Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00005_anon_read_policies.sql
+Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00005_anon_read_policies.sql, supabase/migrations/00030_seed_data_user_id_nullable.sql, supabase/migrations/00034_restore_user_id_fks.sql, supabase/migrations/00038_validate_user_id_fks.sql
 
 RLS: enabled
 
@@ -569,11 +569,11 @@ Indexes detected: 4
 
 ## driver_documents
 
-Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql
+Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00039_driver_documents_ops_read.sql
 
 RLS: enabled
 
-Policies detected: 1
+Policies detected: 2
 
 Indexes detected: 0
 
@@ -764,7 +764,7 @@ Indexes detected: 0
 
 ## drivers
 
-Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00005_anon_read_policies.sql, supabase/migrations/00010_contract_drift_repair.sql, supabase/migrations/00019_business_engine.sql, supabase/migrations/00021_finance_hardening.sql
+Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00005_anon_read_policies.sql, supabase/migrations/00010_contract_drift_repair.sql, supabase/migrations/00019_business_engine.sql, supabase/migrations/00021_finance_hardening.sql, supabase/migrations/00030_seed_data_user_id_nullable.sql, supabase/migrations/00034_restore_user_id_fks.sql, supabase/migrations/00038_validate_user_id_fks.sql
 
 RLS: enabled
 
@@ -857,7 +857,7 @@ Indexes detected: 2
 
 ## ledger_entries
 
-Source migrations: supabase/migrations/00007_central_engine_tables.sql, supabase/migrations/00019_business_engine.sql, supabase/migrations/00020_ledger_entries_order_optional.sql, supabase/migrations/00025_rls_role_alignment.sql
+Source migrations: supabase/migrations/00007_central_engine_tables.sql, supabase/migrations/00019_business_engine.sql, supabase/migrations/00020_ledger_entries_order_optional.sql, supabase/migrations/00025_rls_role_alignment.sql, supabase/migrations/00031_security_hardening.sql
 
 RLS: enabled
 
@@ -943,11 +943,11 @@ Indexes detected: 1
 
 ## menu_item_availability
 
-Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00003_fix_rls.sql
+Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00031_security_hardening.sql
 
 RLS: enabled
 
-Policies detected: 0
+Policies detected: 2
 
 Indexes detected: 0
 
@@ -964,11 +964,11 @@ Indexes detected: 0
 
 ## menu_item_option_values
 
-Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql
+Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00031_security_hardening.sql
 
 RLS: enabled
 
-Policies detected: 2
+Policies detected: 3
 
 Indexes detected: 0
 
@@ -1207,13 +1207,13 @@ Indexes detected: 1
 
 ## orders
 
-Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00005_anon_read_policies.sql, supabase/migrations/00007_central_engine_tables.sql, supabase/migrations/00019_business_engine.sql
+Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00002_rls_policies.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00005_anon_read_policies.sql, supabase/migrations/00007_central_engine_tables.sql, supabase/migrations/00019_business_engine.sql, supabase/migrations/00031_security_hardening.sql, supabase/migrations/00040_scheduled_orders.sql, supabase/migrations/00041_engine_status_check.sql
 
 RLS: enabled
 
 Policies detected: 9
 
-Indexes detected: 6
+Indexes detected: 7
 
 | Column | Type | Flags | References |
 | --- | --- | --- | --- |
@@ -1250,6 +1250,7 @@ Indexes detected: 6
 | completed_at | TIMESTAMPTZ | - | - |
 | exception_count | INTEGER | default | - |
 | public_stage | TEXT | - | - |
+| scheduled_for | TIMESTAMPTZ | - | - |
 
 ## payout_adjustments
 
@@ -1279,13 +1280,13 @@ Indexes detected: 3
 
 ## payout_runs
 
-Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00003_fix_rls.sql
+Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00032_payout_concurrency_guard.sql
 
 RLS: enabled
 
 Policies detected: 0
 
-Indexes detected: 0
+Indexes detected: 1
 
 | Column | Type | Flags | References |
 | --- | --- | --- | --- |
@@ -1388,9 +1389,27 @@ Indexes detected: 0
 | created_at | TIMESTAMPTZ | required, default | - |
 | updated_at | TIMESTAMPTZ | required, default | - |
 
+## promo_code_usages
+
+Source migrations: supabase/migrations/00043_promo_customer_usage.sql
+
+RLS: enabled
+
+Policies detected: 2
+
+Indexes detected: 2
+
+| Column | Type | Flags | References |
+| --- | --- | --- | --- |
+| id | UUID | PK, default | - |
+| promo_id | UUID | FK, required | promo_codes.id |
+| customer_id | UUID | FK, required | customers.id |
+| order_id | UUID | FK | orders.id |
+| created_at | TIMESTAMPTZ | required, default | - |
+
 ## promo_codes
 
-Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00004_additions.sql, supabase/migrations/00010_contract_drift_repair.sql, supabase/migrations/00011_rls_role_alignment.sql, supabase/migrations/00012_schema_drift_cleanup.sql, supabase/migrations/00025_rls_role_alignment.sql
+Source migrations: supabase/migrations/00001_initial_schema.sql, supabase/migrations/00003_fix_rls.sql, supabase/migrations/00004_additions.sql, supabase/migrations/00010_contract_drift_repair.sql, supabase/migrations/00011_rls_role_alignment.sql, supabase/migrations/00012_schema_drift_cleanup.sql, supabase/migrations/00025_rls_role_alignment.sql, supabase/migrations/00036_drop_promo_alias_columns.sql
 
 RLS: enabled
 
@@ -1414,21 +1433,17 @@ Indexes detected: 3
 | is_active | BOOLEAN | required, default | - |
 | created_at | TIMESTAMPTZ | required, default | - |
 | updated_at | TIMESTAMPTZ | required, default | - |
-| max_uses | INTEGER | - | - |
 | used_count | INTEGER | required, default | - |
-| valid_from | TIMESTAMPTZ | - | - |
-| valid_until | TIMESTAMPTZ | - | - |
-| times_used | INTEGER | required, default | - |
 
 ## push_subscriptions
 
-Source migrations: supabase/migrations/00004_additions.sql
+Source migrations: supabase/migrations/00004_additions.sql, supabase/migrations/00033_push_subscriptions_restore.sql
 
 RLS: enabled
 
-Policies detected: 1
+Policies detected: 5
 
-Indexes detected: 1
+Indexes detected: 2
 
 | Column | Type | Flags | References |
 | --- | --- | --- | --- |
@@ -1438,6 +1453,7 @@ Indexes detected: 1
 | p256dh | TEXT | required | - |
 | auth | TEXT | required | - |
 | created_at | TIMESTAMPTZ | required, default | - |
+| updated_at | TIMESTAMPTZ | required, default | - |
 
 ## referral_codes
 
@@ -1607,7 +1623,7 @@ Indexes detected: 2
 
 ## stripe_events_processed
 
-Source migrations: supabase/migrations/00016_phase3_stripe_idempotency_order_events_promo.sql, supabase/migrations/00021_finance_hardening.sql
+Source migrations: supabase/migrations/00016_phase3_stripe_idempotency_order_events_promo.sql, supabase/migrations/00021_finance_hardening.sql, supabase/migrations/00037_stripe_events_processed_schema_fix.sql
 
 RLS: enabled
 

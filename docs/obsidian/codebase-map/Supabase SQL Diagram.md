@@ -69,6 +69,8 @@ flowchart LR
   ChefAdmin --> table_chef_kitchens
   table_chef_availability["chef_availability"]:::table
   ChefAdmin --> table_chef_availability
+  table_menu_items["menu_items"]:::table
+  ChefAdmin --> table_menu_items
   table_orders["orders"]:::table
   ChefAdmin --> table_orders
   table_order_items["order_items"]:::table
@@ -111,6 +113,8 @@ flowchart LR
   OpsAdmin --> table_payout_runs
   table_stripe_reconciliation["stripe_reconciliation"]:::table
   OpsAdmin --> table_stripe_reconciliation
+  table_support_tickets["support_tickets"]:::table
+  OpsAdmin --> table_support_tickets
   table_audit_logs["audit_logs"]:::table
   OpsAdmin --> table_audit_logs
   SharedPackages["Shared Packages"]:::surface
@@ -207,6 +211,7 @@ erDiagram
     text p256dh
     text auth
     timestamptz created_at
+    timestamptz updated_at
   }
   auth_users ||--o{ chef_profiles : "user_id"
   auth_users ||--o{ customers : "user_id"

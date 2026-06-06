@@ -5,6 +5,11 @@ Generated from `process.env` and uppercase env references in page/API source fil
 | Variable | App | Surface | File | Route/API |
 | --- | --- | --- | --- | --- |
 | CHECKOUT_IDEMPOTENCY_MIGRATION_APPLIED | Customer Web | api | [apps/web/src/app/api/health/route.ts](../../../../apps/web/src/app/api/health/route.ts) | `/api/health` |
+| CRON_SECRET | Ops Admin | api | [apps/ops-admin/src/app/api/engine/health/route.ts](../../../../apps/ops-admin/src/app/api/engine/health/route.ts) | `/api/engine/health` |
+| E2E_FIXTURE_RESET_ENABLED | Chef Admin | api | [apps/chef-admin/src/app/api/auth/signup/route.ts](../../../../apps/chef-admin/src/app/api/auth/signup/route.ts) | `/api/auth/signup` |
+| E2E_FIXTURE_RESET_ENABLED | Driver App | api | [apps/driver-app/src/app/api/auth/signup/route.ts](../../../../apps/driver-app/src/app/api/auth/signup/route.ts) | `/api/auth/signup` |
+| E2E_FIXTURE_RESET_ENABLED | Ops Admin | api | [apps/ops-admin/src/app/api/fixtures/reset/route.ts](../../../../apps/ops-admin/src/app/api/fixtures/reset/route.ts) | `/api/fixtures/reset` |
+| ENGINE_PROCESSOR_TOKEN | Ops Admin | api | [apps/ops-admin/src/app/api/engine/health/route.ts](../../../../apps/ops-admin/src/app/api/engine/health/route.ts) | `/api/engine/health` |
 | ENGINE_PROCESSOR_TOKEN | Ops Admin | page | [apps/ops-admin/src/app/dashboard/integrations/page.tsx](../../../../apps/ops-admin/src/app/dashboard/integrations/page.tsx) | `/dashboard/integrations` |
 | INTERNAL_COMMAND_CENTER_ENABLED | Ops Admin | api | [apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts](../../../../apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts) | `/api/internal/command-center/change-requests` |
 | INTERNAL_COMMAND_CENTER_ENABLED | Ops Admin | page | [apps/ops-admin/src/app/internal/command-center/page.tsx](../../../../apps/ops-admin/src/app/internal/command-center/page.tsx) | `/internal/command-center` |
@@ -20,22 +25,28 @@ Generated from `process.env` and uppercase env references in page/API source fil
 | NEXT_PUBLIC_SUPABASE_ANON_KEY | Chef Admin | api | [apps/chef-admin/src/app/api/health/route.ts](../../../../apps/chef-admin/src/app/api/health/route.ts) | `/api/health` |
 | NEXT_PUBLIC_SUPABASE_ANON_KEY | Customer Web | api | [apps/web/src/app/api/health/route.ts](../../../../apps/web/src/app/api/health/route.ts) | `/api/health` |
 | NEXT_PUBLIC_SUPABASE_ANON_KEY | Driver App | api | [apps/driver-app/src/app/api/health/route.ts](../../../../apps/driver-app/src/app/api/health/route.ts) | `/api/health` |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | Ops Admin | api | [apps/ops-admin/src/app/api/engine/health/route.ts](../../../../apps/ops-admin/src/app/api/engine/health/route.ts) | `/api/engine/health` |
 | NEXT_PUBLIC_SUPABASE_ANON_KEY | Ops Admin | api | [apps/ops-admin/src/app/api/health/route.ts](../../../../apps/ops-admin/src/app/api/health/route.ts) | `/api/health` |
 | NEXT_PUBLIC_SUPABASE_URL | Chef Admin | api | [apps/chef-admin/src/app/api/health/route.ts](../../../../apps/chef-admin/src/app/api/health/route.ts) | `/api/health` |
 | NEXT_PUBLIC_SUPABASE_URL | Customer Web | api | [apps/web/src/app/api/health/route.ts](../../../../apps/web/src/app/api/health/route.ts) | `/api/health` |
 | NEXT_PUBLIC_SUPABASE_URL | Driver App | api | [apps/driver-app/src/app/api/health/route.ts](../../../../apps/driver-app/src/app/api/health/route.ts) | `/api/health` |
+| NEXT_PUBLIC_SUPABASE_URL | Ops Admin | api | [apps/ops-admin/src/app/api/engine/health/route.ts](../../../../apps/ops-admin/src/app/api/engine/health/route.ts) | `/api/engine/health` |
 | NEXT_PUBLIC_SUPABASE_URL | Ops Admin | api | [apps/ops-admin/src/app/api/health/route.ts](../../../../apps/ops-admin/src/app/api/health/route.ts) | `/api/health` |
 | NEXT_PUBLIC_SUPABASE_URL | Ops Admin | page | [apps/ops-admin/src/app/dashboard/integrations/page.tsx](../../../../apps/ops-admin/src/app/dashboard/integrations/page.tsx) | `/dashboard/integrations` |
+| NODE_ENV | Ops Admin | api | [apps/ops-admin/src/app/api/fixtures/reset/route.ts](../../../../apps/ops-admin/src/app/api/fixtures/reset/route.ts) | `/api/fixtures/reset` |
 | NODE_ENV | Ops Admin | api | [apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts](../../../../apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts) | `/api/internal/command-center/change-requests` |
 | NODE_ENV | Ops Admin | page | [apps/ops-admin/src/app/internal/command-center/page.tsx](../../../../apps/ops-admin/src/app/internal/command-center/page.tsx) | `/internal/command-center` |
 | RESEND_API_KEY | Ops Admin | page | [apps/ops-admin/src/app/dashboard/integrations/page.tsx](../../../../apps/ops-admin/src/app/dashboard/integrations/page.tsx) | `/dashboard/integrations` |
 | STRIPE_SECRET_KEY | Customer Web | api | [apps/web/src/app/api/checkout/route.ts](../../../../apps/web/src/app/api/checkout/route.ts) | `/api/checkout` |
 | STRIPE_SECRET_KEY | Customer Web | api | [apps/web/src/app/api/health/route.ts](../../../../apps/web/src/app/api/health/route.ts) | `/api/health` |
+| STRIPE_SECRET_KEY | Ops Admin | api | [apps/ops-admin/src/app/api/engine/health/route.ts](../../../../apps/ops-admin/src/app/api/engine/health/route.ts) | `/api/engine/health` |
 | STRIPE_SECRET_KEY | Ops Admin | page | [apps/ops-admin/src/app/dashboard/integrations/page.tsx](../../../../apps/ops-admin/src/app/dashboard/integrations/page.tsx) | `/dashboard/integrations` |
 | STRIPE_WEBHOOK_SECRET_OPS | Ops Admin | api | [apps/ops-admin/src/app/api/stripe/webhook/route.ts](../../../../apps/ops-admin/src/app/api/stripe/webhook/route.ts) | `/api/stripe/webhook` |
 | STRIPE_WEBHOOK_SECRET | Customer Web | api | [apps/web/src/app/api/health/route.ts](../../../../apps/web/src/app/api/health/route.ts) | `/api/health` |
 | STRIPE_WEBHOOK_SECRET | Customer Web | api | [apps/web/src/app/api/webhooks/stripe/route.ts](../../../../apps/web/src/app/api/webhooks/stripe/route.ts) | `/api/webhooks/stripe` |
+| STRIPE_WEBHOOK_SECRET | Ops Admin | api | [apps/ops-admin/src/app/api/engine/health/route.ts](../../../../apps/ops-admin/src/app/api/engine/health/route.ts) | `/api/engine/health` |
 | STRIPE_WEBHOOK_SECRET | Ops Admin | api | [apps/ops-admin/src/app/api/stripe/webhook/route.ts](../../../../apps/ops-admin/src/app/api/stripe/webhook/route.ts) | `/api/stripe/webhook` |
 | STRIPE_WEBHOOK_SECRET | Ops Admin | page | [apps/ops-admin/src/app/dashboard/integrations/page.tsx](../../../../apps/ops-admin/src/app/dashboard/integrations/page.tsx) | `/dashboard/integrations` |
+| SUPABASE_SERVICE_ROLE_KEY | Ops Admin | api | [apps/ops-admin/src/app/api/engine/health/route.ts](../../../../apps/ops-admin/src/app/api/engine/health/route.ts) | `/api/engine/health` |
 | VERCEL_ENV | Ops Admin | page | [apps/ops-admin/src/app/internal/command-center/page.tsx](../../../../apps/ops-admin/src/app/internal/command-center/page.tsx) | `/internal/command-center` |
 | VERCEL_URL | Ops Admin | page | [apps/ops-admin/src/app/dashboard/health/page.tsx](../../../../apps/ops-admin/src/app/dashboard/health/page.tsx) | `/dashboard/health` |

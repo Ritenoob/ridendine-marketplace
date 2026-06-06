@@ -366,6 +366,11 @@
       "type": "supabase_table"
     },
     {
+      "id": "table:promo_code_usages",
+      "label": "promo_code_usages",
+      "type": "supabase_table"
+    },
+    {
       "id": "rpc:update_updated_at_column",
       "label": "update_updated_at_column",
       "type": "supabase_rpc"
@@ -1057,6 +1062,24 @@
       "status": "mapped"
     },
     {
+      "from": "table:promo_code_usages",
+      "to": "table:customers",
+      "label": "fk:customer_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:promo_code_usages",
+      "to": "table:orders",
+      "label": "fk:order_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:promo_code_usages",
+      "to": "table:promo_codes",
+      "label": "fk:promo_id",
+      "status": "mapped"
+    },
+    {
       "from": "table:push_subscriptions",
       "to": "table:auth.users",
       "label": "fk:user_id",
@@ -1225,6 +1248,12 @@
       "status": "mapped"
     },
     {
+      "from": "app:ops-admin",
+      "to": "table:order_items",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
       "from": "app:packages",
       "to": "table:order_items",
       "label": "uses table",
@@ -1268,6 +1297,24 @@
     },
     {
       "from": "app:chef-admin",
+      "to": "table:menu_item_options",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:menu_item_options",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
+      "to": "table:menu_item_option_values",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:chef-admin",
       "to": "table:customers",
       "label": "uses table",
       "status": "mapped"
@@ -1399,6 +1446,24 @@
       "status": "mapped"
     },
     {
+      "from": "app:chef-admin",
+      "to": "table:menu_items",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:menu_items",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:menu_items",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
       "from": "app:driver-app",
       "to": "table:driver_presence",
       "label": "uses table",
@@ -1431,6 +1496,24 @@
     {
       "from": "app:packages",
       "to": "table:deliveries",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:order_exceptions",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:order_exceptions",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:order_exceptions",
       "label": "uses table",
       "status": "mapped"
     },
@@ -1586,6 +1669,12 @@
     },
     {
       "from": "app:ops-admin",
+      "to": "table:ops_processor_runs",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
       "to": "table:platform_settings",
       "label": "uses table",
       "status": "mapped"
@@ -1598,13 +1687,13 @@
     },
     {
       "from": "app:ops-admin",
-      "to": "table:order_exceptions",
+      "to": "table:payout_runs",
       "label": "uses table",
       "status": "mapped"
     },
     {
       "from": "app:packages",
-      "to": "table:order_exceptions",
+      "to": "table:payout_runs",
       "label": "uses table",
       "status": "mapped"
     },
@@ -1653,6 +1742,24 @@
     {
       "from": "app:packages",
       "to": "table:stripe_events_processed",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:order_status_history",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:web",
+      "to": "table:order_status_history",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:order_status_history",
       "label": "uses table",
       "status": "mapped"
     },
@@ -1724,13 +1831,25 @@
     },
     {
       "from": "app:ops-admin",
-      "to": "table:payout_runs",
+      "to": "table:chef_documents",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:driver_documents",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:support_tickets",
       "label": "uses table",
       "status": "mapped"
     },
     {
       "from": "app:packages",
-      "to": "table:payout_runs",
+      "to": "table:support_tickets",
       "label": "uses table",
       "status": "mapped"
     },
@@ -1743,24 +1862,6 @@
     {
       "from": "app:packages",
       "to": "table:driver_payouts",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:ops-admin",
-      "to": "table:ops_processor_runs",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:web",
-      "to": "table:menu_items",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:packages",
-      "to": "table:menu_items",
       "label": "uses table",
       "status": "mapped"
     },
@@ -1807,18 +1908,6 @@
       "status": "mapped"
     },
     {
-      "from": "app:web",
-      "to": "table:order_status_history",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:packages",
-      "to": "table:order_status_history",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
       "from": "app:packages",
       "to": "table:carts",
       "label": "uses table",
@@ -1844,12 +1933,6 @@
     },
     {
       "from": "app:packages",
-      "to": "table:support_tickets",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:packages",
       "to": "table:admin_notes",
       "label": "uses table",
       "status": "mapped"
@@ -1857,6 +1940,12 @@
     {
       "from": "app:packages",
       "to": "table:delivery_events",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:promo_code_usages",
       "label": "uses table",
       "status": "mapped"
     },
@@ -1875,6 +1964,12 @@
     {
       "from": "app:packages",
       "to": "table:kitchen_queue_entries",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:order_item_modifiers",
       "label": "uses table",
       "status": "mapped"
     },

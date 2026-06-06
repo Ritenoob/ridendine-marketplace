@@ -72,6 +72,7 @@
 "table:loyalty_transactions","loyalty_transactions","supabase_table"
 "table:referral_codes","referral_codes","supabase_table"
 "table:referral_signups","referral_signups","supabase_table"
+"table:promo_code_usages","promo_code_usages","supabase_table"
 "rpc:update_updated_at_column","update_updated_at_column","supabase_rpc"
 "rpc:is_ops_admin","is_ops_admin","supabase_rpc"
 "rpc:get_chef_id","get_chef_id","supabase_rpc"

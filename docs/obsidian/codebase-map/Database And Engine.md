@@ -4,6 +4,7 @@
 
 - `${accountSid}:${authToken}`
 - `IF`
+- `VALIDATE`
 - `admin_notes`
 - `analytics_events`
 - `assignment_attempts`
@@ -122,6 +123,7 @@
 - `platform_accounts`
 - `platform_settings`
 - `platform_users`
+- `promo_code_usages`
 - `promo_codes`
 - `push_subscriptions`
 - `referral_codes`
@@ -166,7 +168,21 @@
 - [supabase/migrations/00026_driver_payout_accounts.sql](../../../supabase/migrations/00026_driver_payout_accounts.sql)
 - [supabase/migrations/00027_loyalty_program.sql](../../../supabase/migrations/00027_loyalty_program.sql)
 - [supabase/migrations/00028_referral_system.sql](../../../supabase/migrations/00028_referral_system.sql)
-- [supabase/migrations/20260501080818_phase_b_security_rls_hardening.sql](../../../supabase/migrations/20260501080818_phase_b_security_rls_hardening.sql)
+- [supabase/migrations/00029_role_grants.sql](../../../supabase/migrations/00029_role_grants.sql)
+- [supabase/migrations/00030_seed_data_user_id_nullable.sql](../../../supabase/migrations/00030_seed_data_user_id_nullable.sql)
+- [supabase/migrations/00031_security_hardening.sql](../../../supabase/migrations/00031_security_hardening.sql)
+- [supabase/migrations/00032_payout_concurrency_guard.sql](../../../supabase/migrations/00032_payout_concurrency_guard.sql)
+- [supabase/migrations/00033_push_subscriptions_restore.sql](../../../supabase/migrations/00033_push_subscriptions_restore.sql)
+- [supabase/migrations/00034_restore_user_id_fks.sql](../../../supabase/migrations/00034_restore_user_id_fks.sql)
+- [supabase/migrations/00035_chef_profiles_public_read.sql](../../../supabase/migrations/00035_chef_profiles_public_read.sql)
+- [supabase/migrations/00036_drop_promo_alias_columns.sql](../../../supabase/migrations/00036_drop_promo_alias_columns.sql)
+- [supabase/migrations/00037_stripe_events_processed_schema_fix.sql](../../../supabase/migrations/00037_stripe_events_processed_schema_fix.sql)
+- [supabase/migrations/00038_validate_user_id_fks.sql](../../../supabase/migrations/00038_validate_user_id_fks.sql)
+- [supabase/migrations/00039_driver_documents_ops_read.sql](../../../supabase/migrations/00039_driver_documents_ops_read.sql)
+- [supabase/migrations/00040_scheduled_orders.sql](../../../supabase/migrations/00040_scheduled_orders.sql)
+- [supabase/migrations/00041_engine_status_check.sql](../../../supabase/migrations/00041_engine_status_check.sql)
+- [supabase/migrations/00042_remove_anon_bypass_policies.sql](../../../supabase/migrations/00042_remove_anon_bypass_policies.sql)
+- [supabase/migrations/00043_promo_customer_usage.sql](../../../supabase/migrations/00043_promo_customer_usage.sql)
 
 ## Core Services And Packages
 
@@ -185,7 +201,8 @@
 | [packages/db/src/repositories/ops.repository.ts](../../../packages/db/src/repositories/ops.repository.ts) | `admin_notes`, `assignment_attempts`, `deliveries`, `delivery_events`, `delivery_tracking_events`, `driver_presence`, `drivers`, `get_ops_dashboard_stats`, `order_exceptions`, `payout_adjustments`, `refund_cases`, `support_tickets` | @ridendine/types, @ridendine/utils |
 | [packages/db/src/repositories/order.repository.ts](../../../packages/db/src/repositories/order.repository.ts) | `order_items`, `orders` | None detected |
 | [packages/db/src/repositories/platform.repository.ts](../../../packages/db/src/repositories/platform.repository.ts) | `platform_settings` | @ridendine/types |
-| [packages/db/src/repositories/promo.repository.ts](../../../packages/db/src/repositories/promo.repository.ts) | `promo_codes` | None detected |
+| [packages/db/src/repositories/promo.repository.test.ts](../../../packages/db/src/repositories/promo.repository.test.ts) | None detected | None detected |
+| [packages/db/src/repositories/promo.repository.ts](../../../packages/db/src/repositories/promo.repository.ts) | `promo_code_usages`, `promo_codes` | None detected |
 | [packages/db/src/repositories/storefront.repository.ts](../../../packages/db/src/repositories/storefront.repository.ts) | `chef_storefronts` | None detected |
 | [packages/db/src/repositories/support.repository.test.ts](../../../packages/db/src/repositories/support.repository.test.ts) | None detected | None detected |
 | [packages/db/src/repositories/support.repository.ts](../../../packages/db/src/repositories/support.repository.ts) | `support_tickets` | None detected |
@@ -193,6 +210,7 @@
 | [packages/engine/src/client-helpers.ts](../../../packages/engine/src/client-helpers.ts) | None detected | @ridendine/db |
 | [packages/engine/src/constants.test.ts](../../../packages/engine/src/constants.test.ts) | None detected | None detected |
 | [packages/engine/src/constants.ts](../../../packages/engine/src/constants.ts) | None detected | None detected |
+| [packages/engine/src/core/audit-logger.test.ts](../../../packages/engine/src/core/audit-logger.test.ts) | None detected | None detected |
 | [packages/engine/src/core/audit-logger.ts](../../../packages/engine/src/core/audit-logger.ts) | `audit_logs`, `ops_override_logs` | @ridendine/types |
 | [packages/engine/src/core/business-rules-engine.test.ts](../../../packages/engine/src/core/business-rules-engine.test.ts) | None detected | None detected |
 | [packages/engine/src/core/business-rules-engine.ts](../../../packages/engine/src/core/business-rules-engine.ts) | `chef_profiles`, `chef_storefronts`, `deliveries`, `driver_presence`, `drivers`, `menu_items`, `order_exceptions`, `orders` | None detected |
@@ -244,13 +262,13 @@
 | [packages/engine/src/orchestrators/ops.engine.ts](../../../packages/engine/src/orchestrators/ops.engine.ts) | `admin_notes`, `deliveries`, `driver_presence`, `orders` | @ridendine/db, @ridendine/types |
 | [packages/engine/src/orchestrators/ops.validation.test.ts](../../../packages/engine/src/orchestrators/ops.validation.test.ts) | None detected | @ridendine/validation |
 | [packages/engine/src/orchestrators/order-creation.service.test.ts](../../../packages/engine/src/orchestrators/order-creation.service.test.ts) | None detected | None detected |
-| [packages/engine/src/orchestrators/order-creation.service.ts](../../../packages/engine/src/orchestrators/order-creation.service.ts) | `chef_profiles`, `chef_storefronts`, `ledger_entries`, `menu_items`, `notifications`, `order_exceptions`, `order_items`, `order_status_history`, `orders` | @ridendine/routing, @ridendine/types |
+| [packages/engine/src/orchestrators/order-creation.service.ts](../../../packages/engine/src/orchestrators/order-creation.service.ts) | `chef_profiles`, `chef_storefronts`, `ledger_entries`, `menu_items`, `notifications`, `order_exceptions`, `order_item_modifiers`, `order_items`, `order_status_history`, `orders` | @ridendine/routing, @ridendine/types |
 | [packages/engine/src/orchestrators/order-state-machine.test.ts](../../../packages/engine/src/orchestrators/order-state-machine.test.ts) | None detected | @ridendine/types |
 | [packages/engine/src/orchestrators/order-state-machine.ts](../../../packages/engine/src/orchestrators/order-state-machine.ts) | None detected | @ridendine/types |
 | [packages/engine/src/orchestrators/payout-engine.test.ts](../../../packages/engine/src/orchestrators/payout-engine.test.ts) | None detected | None detected |
 | [packages/engine/src/orchestrators/payout-engine.ts](../../../packages/engine/src/orchestrators/payout-engine.ts) | `chef_payouts`, `ledger_entries`, `order_exceptions`, `orders` | @ridendine/types |
 | [packages/engine/src/orchestrators/platform-settings.test.ts](../../../packages/engine/src/orchestrators/platform-settings.test.ts) | None detected | @ridendine/db |
-| [packages/engine/src/orchestrators/platform.engine.ts](../../../packages/engine/src/orchestrators/platform.engine.ts) | `customers`, `ledger_entries`, `notifications`, `order_status_history`, `orders`, `storefront_state_changes` | @ridendine/db, @ridendine/types |
+| [packages/engine/src/orchestrators/platform.engine.ts](../../../packages/engine/src/orchestrators/platform.engine.ts) | `chef_kitchens`, `customers`, `ledger_entries`, `notifications`, `order_status_history`, `orders`, `storefront_state_changes` | @ridendine/db, @ridendine/types |
 | [packages/engine/src/orchestrators/repair-validation.test.ts](../../../packages/engine/src/orchestrators/repair-validation.test.ts) | None detected | None detected |
 | [packages/engine/src/orchestrators/risk.engine.test.ts](../../../packages/engine/src/orchestrators/risk.engine.test.ts) | None detected | None detected |
 | [packages/engine/src/orchestrators/risk.engine.ts](../../../packages/engine/src/orchestrators/risk.engine.ts) | None detected | None detected |

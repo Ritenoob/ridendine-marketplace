@@ -51,14 +51,14 @@ route:web:/,Customer Web /,page-route,WIRED,apps/web/src/app/page.tsx,,
 file:apps/web/src/app/page.tsx,apps/web/src/app/page.tsx,file,WIRED,,,
 table:chef_storefronts,chef_storefronts,table,,,,
 table:menu_items,menu_items,table,,,,
-route:web:/privacy,Customer Web /privacy,page-route,PARTIAL,apps/web/src/app/privacy/page.tsx,,
-file:apps/web/src/app/privacy/page.tsx,apps/web/src/app/privacy/page.tsx,file,PARTIAL,,,
-route:web:/terms,Customer Web /terms,page-route,PARTIAL,apps/web/src/app/terms/page.tsx,,
-file:apps/web/src/app/terms/page.tsx,apps/web/src/app/terms/page.tsx,file,PARTIAL,,,
+route:web:/privacy,Customer Web /privacy,page-route,WIRED,apps/web/src/app/privacy/page.tsx,,
+file:apps/web/src/app/privacy/page.tsx,apps/web/src/app/privacy/page.tsx,file,WIRED,,,
+route:web:/terms,Customer Web /terms,page-route,WIRED,apps/web/src/app/terms/page.tsx,,
+file:apps/web/src/app/terms/page.tsx,apps/web/src/app/terms/page.tsx,file,WIRED,,,
 route:ops-admin:/auth/login,Ops Admin /auth/login,page-route,PARTIAL,apps/ops-admin/src/app/auth/login/page.tsx,,
 file:apps/ops-admin/src/app/auth/login/page.tsx,apps/ops-admin/src/app/auth/login/page.tsx,file,PARTIAL,,,
-route:ops-admin:/dashboard/activity,Ops Admin /dashboard/activity,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/activity/page.tsx,,
-file:apps/ops-admin/src/app/dashboard/activity/page.tsx,apps/ops-admin/src/app/dashboard/activity/page.tsx,file,PARTIAL,,,
+route:ops-admin:/dashboard/activity,Ops Admin /dashboard/activity,page-route,WIRED,apps/ops-admin/src/app/dashboard/activity/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/activity/page.tsx,apps/ops-admin/src/app/dashboard/activity/page.tsx,file,WIRED,,,
 table:audit_logs,audit_logs,table,,,,
 table:ops_override_logs,ops_override_logs,table,,,,
 table:platform_users,platform_users,table,,,,
@@ -73,10 +73,14 @@ file:apps/ops-admin/src/app/dashboard/automation/page.tsx,apps/ops-admin/src/app
 route:ops-admin:/dashboard/chefs/:id,Ops Admin /dashboard/chefs/:id,page-route,WIRED,apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx,apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx,file,WIRED,,,
 table:chef_delivery_zones,chef_delivery_zones,table,,,,
+table:chef_documents,chef_documents,table,,,,
 route:ops-admin:/dashboard/chefs/approvals,Ops Admin /dashboard/chefs/approvals,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx,apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx,file,PARTIAL,,,
 route:ops-admin:/dashboard/chefs,Ops Admin /dashboard/chefs,page-route,WIRED,apps/ops-admin/src/app/dashboard/chefs/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/chefs/page.tsx,apps/ops-admin/src/app/dashboard/chefs/page.tsx,file,WIRED,,,
+route:ops-admin:/dashboard/compliance,Ops Admin /dashboard/compliance,page-route,WIRED,apps/ops-admin/src/app/dashboard/compliance/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/compliance/page.tsx,apps/ops-admin/src/app/dashboard/compliance/page.tsx,file,WIRED,,,
+table:chef_profiles,chef_profiles,table,,,,
 route:ops-admin:/dashboard/customers/:id,Ops Admin /dashboard/customers/:id,page-route,WIRED,apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx,apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx,file,WIRED,,,
 route:ops-admin:/dashboard/customers,Ops Admin /dashboard/customers,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/customers/page.tsx,,
@@ -90,43 +94,48 @@ file:apps/ops-admin/src/app/dashboard/dispatch/page.tsx,apps/ops-admin/src/app/d
 package:@ridendine/types,@ridendine/types,package,,,,
 route:ops-admin:/dashboard/drivers/:id,Ops Admin /dashboard/drivers/:id,page-route,WIRED,apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx,file,WIRED,,,
+table:driver_documents,driver_documents,table,,,,
 route:ops-admin:/dashboard/drivers,Ops Admin /dashboard/drivers,page-route,WIRED,apps/ops-admin/src/app/dashboard/drivers/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/drivers/page.tsx,apps/ops-admin/src/app/dashboard/drivers/page.tsx,file,WIRED,,,
-route:ops-admin:/dashboard/finance/accounts/chefs/:id,Ops Admin /dashboard/finance/accounts/chefs/:id,page-route,MISSING,apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx,,
-file:apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx,apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx,file,MISSING,,,
-route:ops-admin:/dashboard/finance/accounts/chefs,Ops Admin /dashboard/finance/accounts/chefs,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx,,
-file:apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx,apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx,file,PARTIAL,,,
+route:ops-admin:/dashboard/exceptions,Ops Admin /dashboard/exceptions,page-route,WIRED,apps/ops-admin/src/app/dashboard/exceptions/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/exceptions/page.tsx,apps/ops-admin/src/app/dashboard/exceptions/page.tsx,file,WIRED,,,
+table:order_exceptions,order_exceptions,table,,,,
+table:support_tickets,support_tickets,table,,,,
+table:system_alerts,system_alerts,table,,,,
+route:ops-admin:/dashboard/finance/accounts/chefs/:id,Ops Admin /dashboard/finance/accounts/chefs/:id,page-route,WIRED,apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx,apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx,file,WIRED,,,
+route:ops-admin:/dashboard/finance/accounts/chefs,Ops Admin /dashboard/finance/accounts/chefs,page-route,WIRED,apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx,apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx,file,WIRED,,,
 table:platform_accounts,platform_accounts,table,,,,
-route:ops-admin:/dashboard/finance/accounts/drivers/:id,Ops Admin /dashboard/finance/accounts/drivers/:id,page-route,MISSING,apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx,,
-file:apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx,apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx,file,MISSING,,,
-route:ops-admin:/dashboard/finance/accounts/drivers,Ops Admin /dashboard/finance/accounts/drivers,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx,,
-file:apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx,apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx,file,PARTIAL,,,
-route:ops-admin:/dashboard/finance/instant-payouts,Ops Admin /dashboard/finance/instant-payouts,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx,,
-file:apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx,apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx,file,PARTIAL,,,
+route:ops-admin:/dashboard/finance/accounts/drivers/:id,Ops Admin /dashboard/finance/accounts/drivers/:id,page-route,WIRED,apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx,apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx,file,WIRED,,,
+route:ops-admin:/dashboard/finance/accounts/drivers,Ops Admin /dashboard/finance/accounts/drivers,page-route,WIRED,apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx,apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx,file,WIRED,,,
+route:ops-admin:/dashboard/finance/instant-payouts,Ops Admin /dashboard/finance/instant-payouts,page-route,WIRED,apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx,apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx,file,WIRED,,,
 table:instant_payout_requests,instant_payout_requests,table,,,,
 route:ops-admin:/dashboard/finance,Ops Admin /dashboard/finance,page-route,WIRED,apps/ops-admin/src/app/dashboard/finance/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/finance/page.tsx,apps/ops-admin/src/app/dashboard/finance/page.tsx,file,WIRED,,,
-route:ops-admin:/dashboard/finance/payouts/:runId,Ops Admin /dashboard/finance/payouts/:runId,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx,,
-file:apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx,apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx,file,PARTIAL,,,
+route:ops-admin:/dashboard/finance/payouts/:runId,Ops Admin /dashboard/finance/payouts/:runId,page-route,WIRED,apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx,apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx,file,WIRED,,,
 table:driver_payouts,driver_payouts,table,,,,
 table:ledger_entries,ledger_entries,table,,,,
 table:payout_runs,payout_runs,table,,,,
-route:ops-admin:/dashboard/finance/payouts,Ops Admin /dashboard/finance/payouts,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx,,
-file:apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx,apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx,file,PARTIAL,,,
-route:ops-admin:/dashboard/finance/reconciliation,Ops Admin /dashboard/finance/reconciliation,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx,,
-file:apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx,apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx,file,PARTIAL,,,
+route:ops-admin:/dashboard/finance/payouts,Ops Admin /dashboard/finance/payouts,page-route,WIRED,apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx,apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx,file,WIRED,,,
+route:ops-admin:/dashboard/finance/reconciliation,Ops Admin /dashboard/finance/reconciliation,page-route,WIRED,apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx,apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx,file,WIRED,,,
 table:stripe_reconciliation,stripe_reconciliation,table,,,,
 route:ops-admin:/dashboard/finance/refunds,Ops Admin /dashboard/finance/refunds,page-route,WIRED,apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx,apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx,file,WIRED,,,
-route:ops-admin:/dashboard/health,Ops Admin /dashboard/health,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/health/page.tsx,,
-file:apps/ops-admin/src/app/dashboard/health/page.tsx,apps/ops-admin/src/app/dashboard/health/page.tsx,file,PARTIAL,,,
+route:ops-admin:/dashboard/health,Ops Admin /dashboard/health,page-route,WIRED,apps/ops-admin/src/app/dashboard/health/page.tsx,,
+file:apps/ops-admin/src/app/dashboard/health/page.tsx,apps/ops-admin/src/app/dashboard/health/page.tsx,file,WIRED,,,
 route:ops-admin:/dashboard/integrations,Ops Admin /dashboard/integrations,page-route,WIRED,apps/ops-admin/src/app/dashboard/integrations/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/integrations/page.tsx,apps/ops-admin/src/app/dashboard/integrations/page.tsx,file,WIRED,,,
 route:ops-admin:/dashboard/map,Ops Admin /dashboard/map,page-route,WIRED,apps/ops-admin/src/app/dashboard/map/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/map/page.tsx,apps/ops-admin/src/app/dashboard/map/page.tsx,file,WIRED,,,
 route:ops-admin:/dashboard/orders/:id,Ops Admin /dashboard/orders/:id,page-route,WIRED,apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx,file,WIRED,,,
-table:order_exceptions,order_exceptions,table,,,,
 route:ops-admin:/dashboard/orders,Ops Admin /dashboard/orders,page-route,PARTIAL,apps/ops-admin/src/app/dashboard/orders/page.tsx,,
 file:apps/ops-admin/src/app/dashboard/orders/page.tsx,apps/ops-admin/src/app/dashboard/orders/page.tsx,file,PARTIAL,,,
 route:ops-admin:/dashboard,Ops Admin /dashboard,page-route,WIRED,apps/ops-admin/src/app/dashboard/page.tsx,,
@@ -158,7 +167,6 @@ route:chef-admin:/dashboard/availability,Chef Admin /dashboard/availability,page
 file:apps/chef-admin/src/app/dashboard/availability/page.tsx,apps/chef-admin/src/app/dashboard/availability/page.tsx,file,WIRED,,,
 route:chef-admin:/dashboard/menu,Chef Admin /dashboard/menu,page-route,WIRED,apps/chef-admin/src/app/dashboard/menu/page.tsx,,
 file:apps/chef-admin/src/app/dashboard/menu/page.tsx,apps/chef-admin/src/app/dashboard/menu/page.tsx,file,WIRED,,,
-table:chef_profiles,chef_profiles,table,,,,
 route:chef-admin:/dashboard/orders/:id,Chef Admin /dashboard/orders/:id,page-route,WIRED,apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx,,
 file:apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx,apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx,file,WIRED,,,
 route:chef-admin:/dashboard/orders,Chef Admin /dashboard/orders,page-route,WIRED,apps/chef-admin/src/app/dashboard/orders/page.tsx,,
@@ -221,12 +229,11 @@ file:apps/web/src/app/api/auth/signup/route.ts,apps/web/src/app/api/auth/signup/
 api:web:/api/cart,Customer Web /api/cart,api-route,WIRED,apps/web/src/app/api/cart/route.ts,,"DELETE,GET,PATCH,POST"
 file:apps/web/src/app/api/cart/route.ts,apps/web/src/app/api/cart/route.ts,file,WIRED,,,
 table:cart_items,cart_items,table,,,,
-api:web:/api/checkout,Customer Web /api/checkout,api-route,PARTIAL,apps/web/src/app/api/checkout/route.ts,,POST
-file:apps/web/src/app/api/checkout/route.ts,apps/web/src/app/api/checkout/route.ts,file,PARTIAL,,,
+api:web:/api/checkout/quote,Customer Web /api/checkout/quote,api-route,WIRED,apps/web/src/app/api/checkout/quote/route.ts,,POST
+file:apps/web/src/app/api/checkout/quote/route.ts,apps/web/src/app/api/checkout/quote/route.ts,file,WIRED,,,
+api:web:/api/checkout,Customer Web /api/checkout,api-route,WIRED,apps/web/src/app/api/checkout/route.ts,,POST
+file:apps/web/src/app/api/checkout/route.ts,apps/web/src/app/api/checkout/route.ts,file,WIRED,,,
 table:checkout_idempotency_keys,checkout_idempotency_keys,table,,,,
-table:chef_kitchens,chef_kitchens,table,,,,
-table:promo_codes,promo_codes,table,,,,
-table:service_areas,service_areas,table,,,,
 external:Stripe,Stripe,external,,,,
 api:web:/api/eta,Customer Web /api/eta,api-route,PARTIAL,apps/web/src/app/api/eta/route.ts,,GET
 file:apps/web/src/app/api/eta/route.ts,apps/web/src/app/api/eta/route.ts,file,PARTIAL,,,
@@ -238,8 +245,8 @@ table:favorites,favorites,table,,,,
 package:@ridendine/engine/server,@ridendine/engine/server,package,,,,
 api:web:/api/health,Customer Web /api/health,api-route,PARTIAL,apps/web/src/app/api/health/route.ts,,GET
 file:apps/web/src/app/api/health/route.ts,apps/web/src/app/api/health/route.ts,file,PARTIAL,,,
-api:web:/api/loyalty,Customer Web /api/loyalty,api-route,PARTIAL,apps/web/src/app/api/loyalty/route.ts,,"GET,POST"
-file:apps/web/src/app/api/loyalty/route.ts,apps/web/src/app/api/loyalty/route.ts,file,PARTIAL,,,
+api:web:/api/loyalty,Customer Web /api/loyalty,api-route,WIRED,apps/web/src/app/api/loyalty/route.ts,,"GET,POST"
+file:apps/web/src/app/api/loyalty/route.ts,apps/web/src/app/api/loyalty/route.ts,file,WIRED,,,
 table:loyalty_transactions,loyalty_transactions,table,,,,
 api:web:/api/notifications,Customer Web /api/notifications,api-route,WIRED,apps/web/src/app/api/notifications/route.ts,,"GET,PATCH,POST"
 file:apps/web/src/app/api/notifications/route.ts,apps/web/src/app/api/notifications/route.ts,file,WIRED,,,
@@ -247,212 +254,242 @@ table:notifications,notifications,table,,,,
 api:web:/api/notifications/subscribe,Customer Web /api/notifications/subscribe,api-route,WIRED,apps/web/src/app/api/notifications/subscribe/route.ts,,"DELETE,POST"
 file:apps/web/src/app/api/notifications/subscribe/route.ts,apps/web/src/app/api/notifications/subscribe/route.ts,file,WIRED,,,
 table:push_subscriptions,push_subscriptions,table,,,,
-api:web:/api/orders/:id/cancel,Customer Web /api/orders/:id/cancel,api-route,PARTIAL,apps/web/src/app/api/orders/[id]/cancel/route.ts,,POST
-file:apps/web/src/app/api/orders/[id]/cancel/route.ts,apps/web/src/app/api/orders/[id]/cancel/route.ts,file,PARTIAL,,,
-api:web:/api/orders/:id,Customer Web /api/orders/:id,api-route,PARTIAL,apps/web/src/app/api/orders/[id]/route.ts,,"GET,PATCH"
-file:apps/web/src/app/api/orders/[id]/route.ts,apps/web/src/app/api/orders/[id]/route.ts,file,PARTIAL,,,
+api:web:/api/orders/:id/cancel,Customer Web /api/orders/:id/cancel,api-route,WIRED,apps/web/src/app/api/orders/[id]/cancel/route.ts,,POST
+file:apps/web/src/app/api/orders/[id]/cancel/route.ts,apps/web/src/app/api/orders/[id]/cancel/route.ts,file,WIRED,,,
+api:web:/api/orders/:id/payment-status,Customer Web /api/orders/:id/payment-status,api-route,WIRED,apps/web/src/app/api/orders/[id]/payment-status/route.ts,,GET
+file:apps/web/src/app/api/orders/[id]/payment-status/route.ts,apps/web/src/app/api/orders/[id]/payment-status/route.ts,file,WIRED,,,
+api:web:/api/orders/:id/reorder,Customer Web /api/orders/:id/reorder,api-route,WIRED,apps/web/src/app/api/orders/[id]/reorder/route.ts,,POST
+file:apps/web/src/app/api/orders/[id]/reorder/route.ts,apps/web/src/app/api/orders/[id]/reorder/route.ts,file,WIRED,,,
+api:web:/api/orders/:id,Customer Web /api/orders/:id,api-route,WIRED,apps/web/src/app/api/orders/[id]/route.ts,,"GET,PATCH"
+file:apps/web/src/app/api/orders/[id]/route.ts,apps/web/src/app/api/orders/[id]/route.ts,file,WIRED,,,
 table:order_status_history,order_status_history,table,,,,
-api:web:/api/orders,Customer Web /api/orders,api-route,PARTIAL,apps/web/src/app/api/orders/route.ts,,GET
-file:apps/web/src/app/api/orders/route.ts,apps/web/src/app/api/orders/route.ts,file,PARTIAL,,,
+api:web:/api/orders,Customer Web /api/orders,api-route,WIRED,apps/web/src/app/api/orders/route.ts,,GET
+file:apps/web/src/app/api/orders/route.ts,apps/web/src/app/api/orders/route.ts,file,WIRED,,,
 api:web:/api/payment-methods,Customer Web /api/payment-methods,api-route,WIRED,apps/web/src/app/api/payment-methods/route.ts,,"DELETE,GET"
 file:apps/web/src/app/api/payment-methods/route.ts,apps/web/src/app/api/payment-methods/route.ts,file,WIRED,,,
 api:web:/api/profile,Customer Web /api/profile,api-route,WIRED,apps/web/src/app/api/profile/route.ts,,"GET,PATCH"
 file:apps/web/src/app/api/profile/route.ts,apps/web/src/app/api/profile/route.ts,file,WIRED,,,
 api:web:/api/promos/validate,Customer Web /api/promos/validate,api-route,WIRED,apps/web/src/app/api/promos/validate/route.ts,,GET
 file:apps/web/src/app/api/promos/validate/route.ts,apps/web/src/app/api/promos/validate/route.ts,file,WIRED,,,
+table:promo_codes,promo_codes,table,,,,
 api:web:/api/referrals/apply,Customer Web /api/referrals/apply,api-route,WIRED,apps/web/src/app/api/referrals/apply/route.ts,,POST
 file:apps/web/src/app/api/referrals/apply/route.ts,apps/web/src/app/api/referrals/apply/route.ts,file,WIRED,,,
-api:web:/api/referrals,Customer Web /api/referrals,api-route,PARTIAL,apps/web/src/app/api/referrals/route.ts,,"GET,POST"
-file:apps/web/src/app/api/referrals/route.ts,apps/web/src/app/api/referrals/route.ts,file,PARTIAL,,,
+api:web:/api/referrals,Customer Web /api/referrals,api-route,WIRED,apps/web/src/app/api/referrals/route.ts,,"GET,POST"
+file:apps/web/src/app/api/referrals/route.ts,apps/web/src/app/api/referrals/route.ts,file,WIRED,,,
 api:web:/api/reviews,Customer Web /api/reviews,api-route,WIRED,apps/web/src/app/api/reviews/route.ts,,"GET,POST"
 file:apps/web/src/app/api/reviews/route.ts,apps/web/src/app/api/reviews/route.ts,file,WIRED,,,
-api:web:/api/support,Customer Web /api/support,api-route,PARTIAL,apps/web/src/app/api/support/route.ts,,"GET,POST"
-file:apps/web/src/app/api/support/route.ts,apps/web/src/app/api/support/route.ts,file,PARTIAL,,,
+api:web:/api/storefronts/:id/menu,Customer Web /api/storefronts/:id/menu,api-route,PARTIAL,apps/web/src/app/api/storefronts/[id]/menu/route.ts,,GET
+file:apps/web/src/app/api/storefronts/[id]/menu/route.ts,apps/web/src/app/api/storefronts/[id]/menu/route.ts,file,PARTIAL,,,
+table:menu_item_options,menu_item_options,table,,,,
+api:web:/api/storefronts/:id,Customer Web /api/storefronts/:id,api-route,PARTIAL,apps/web/src/app/api/storefronts/[id]/route.ts,,GET
+file:apps/web/src/app/api/storefronts/[id]/route.ts,apps/web/src/app/api/storefronts/[id]/route.ts,file,PARTIAL,,,
+api:web:/api/storefronts,Customer Web /api/storefronts,api-route,PARTIAL,apps/web/src/app/api/storefronts/route.ts,,GET
+file:apps/web/src/app/api/storefronts/route.ts,apps/web/src/app/api/storefronts/route.ts,file,PARTIAL,,,
+api:web:/api/support,Customer Web /api/support,api-route,WIRED,apps/web/src/app/api/support/route.ts,,"GET,POST"
+file:apps/web/src/app/api/support/route.ts,apps/web/src/app/api/support/route.ts,file,WIRED,,,
 api:web:/api/support/tickets/:id,Customer Web /api/support/tickets/:id,api-route,WIRED,apps/web/src/app/api/support/tickets/[id]/route.ts,,GET
 file:apps/web/src/app/api/support/tickets/[id]/route.ts,apps/web/src/app/api/support/tickets/[id]/route.ts,file,WIRED,,,
 api:web:/api/support/tickets,Customer Web /api/support/tickets,api-route,WIRED,apps/web/src/app/api/support/tickets/route.ts,,GET
 file:apps/web/src/app/api/support/tickets/route.ts,apps/web/src/app/api/support/tickets/route.ts,file,WIRED,,,
 api:web:/api/upload,Customer Web /api/upload,api-route,WIRED,apps/web/src/app/api/upload/route.ts,,POST
 file:apps/web/src/app/api/upload/route.ts,apps/web/src/app/api/upload/route.ts,file,WIRED,,,
-api:web:/api/webhooks/stripe,Customer Web /api/webhooks/stripe,api-route,PARTIAL,apps/web/src/app/api/webhooks/stripe/route.ts,,POST
-file:apps/web/src/app/api/webhooks/stripe/route.ts,apps/web/src/app/api/webhooks/stripe/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/analytics,Ops Admin /api/analytics,api-route,PARTIAL,apps/ops-admin/src/app/api/analytics/route.ts,,GET
-file:apps/ops-admin/src/app/api/analytics/route.ts,apps/ops-admin/src/app/api/analytics/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/analytics/trends,Ops Admin /api/analytics/trends,api-route,PARTIAL,apps/ops-admin/src/app/api/analytics/trends/route.ts,,GET
-file:apps/ops-admin/src/app/api/analytics/trends/route.ts,apps/ops-admin/src/app/api/analytics/trends/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/announcements,Ops Admin /api/announcements,api-route,PARTIAL,apps/ops-admin/src/app/api/announcements/route.ts,,POST
-file:apps/ops-admin/src/app/api/announcements/route.ts,apps/ops-admin/src/app/api/announcements/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/audit/recent,Ops Admin /api/audit/recent,api-route,PARTIAL,apps/ops-admin/src/app/api/audit/recent/route.ts,,GET
-file:apps/ops-admin/src/app/api/audit/recent/route.ts,apps/ops-admin/src/app/api/audit/recent/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/chefs/:id,Ops Admin /api/chefs/:id,api-route,MISSING,apps/ops-admin/src/app/api/chefs/[id]/route.ts,,PATCH
-file:apps/ops-admin/src/app/api/chefs/[id]/route.ts,apps/ops-admin/src/app/api/chefs/[id]/route.ts,file,MISSING,,,
-api:ops-admin:/api/chefs,Ops Admin /api/chefs,api-route,PARTIAL,apps/ops-admin/src/app/api/chefs/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/chefs/route.ts,apps/ops-admin/src/app/api/chefs/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/cron/expired-offers,Ops Admin /api/cron/expired-offers,api-route,PARTIAL,apps/ops-admin/src/app/api/cron/expired-offers/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/cron/expired-offers/route.ts,apps/ops-admin/src/app/api/cron/expired-offers/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/cron/payouts-chef-preview,Ops Admin /api/cron/payouts-chef-preview,api-route,PARTIAL,apps/ops-admin/src/app/api/cron/payouts-chef-preview/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/cron/payouts-chef-preview/route.ts,apps/ops-admin/src/app/api/cron/payouts-chef-preview/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/cron/payouts-driver-preview,Ops Admin /api/cron/payouts-driver-preview,api-route,PARTIAL,apps/ops-admin/src/app/api/cron/payouts-driver-preview/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/cron/payouts-driver-preview/route.ts,apps/ops-admin/src/app/api/cron/payouts-driver-preview/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/cron/reconciliation-daily,Ops Admin /api/cron/reconciliation-daily,api-route,PARTIAL,apps/ops-admin/src/app/api/cron/reconciliation-daily/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/cron/reconciliation-daily/route.ts,apps/ops-admin/src/app/api/cron/reconciliation-daily/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/cron/sla-tick,Ops Admin /api/cron/sla-tick,api-route,PARTIAL,apps/ops-admin/src/app/api/cron/sla-tick/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/cron/sla-tick/route.ts,apps/ops-admin/src/app/api/cron/sla-tick/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/customers/:id/notify,Ops Admin /api/customers/:id/notify,api-route,PARTIAL,apps/ops-admin/src/app/api/customers/[id]/notify/route.ts,,POST
-file:apps/ops-admin/src/app/api/customers/[id]/notify/route.ts,apps/ops-admin/src/app/api/customers/[id]/notify/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/customers,Ops Admin /api/customers,api-route,PARTIAL,apps/ops-admin/src/app/api/customers/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/customers/route.ts,apps/ops-admin/src/app/api/customers/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/deliveries/:id,Ops Admin /api/deliveries/:id,api-route,MISSING,apps/ops-admin/src/app/api/deliveries/[id]/route.ts,,PATCH
-file:apps/ops-admin/src/app/api/deliveries/[id]/route.ts,apps/ops-admin/src/app/api/deliveries/[id]/route.ts,file,MISSING,,,
-api:ops-admin:/api/deliveries,Ops Admin /api/deliveries,api-route,PARTIAL,apps/ops-admin/src/app/api/deliveries/route.ts,,GET
-file:apps/ops-admin/src/app/api/deliveries/route.ts,apps/ops-admin/src/app/api/deliveries/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/drivers/:id,Ops Admin /api/drivers/:id,api-route,MISSING,apps/ops-admin/src/app/api/drivers/[id]/route.ts,,PATCH
-file:apps/ops-admin/src/app/api/drivers/[id]/route.ts,apps/ops-admin/src/app/api/drivers/[id]/route.ts,file,MISSING,,,
-api:ops-admin:/api/drivers,Ops Admin /api/drivers,api-route,PARTIAL,apps/ops-admin/src/app/api/drivers/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/drivers/route.ts,apps/ops-admin/src/app/api/drivers/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/dashboard,Ops Admin /api/engine/dashboard,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/dashboard/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/dashboard/route.ts,apps/ops-admin/src/app/api/engine/dashboard/route.ts,file,PARTIAL,,,
+api:web:/api/webhooks/stripe,Customer Web /api/webhooks/stripe,api-route,WIRED,apps/web/src/app/api/webhooks/stripe/route.ts,,POST
+file:apps/web/src/app/api/webhooks/stripe/route.ts,apps/web/src/app/api/webhooks/stripe/route.ts,file,WIRED,,,
+api:ops-admin:/api/analytics,Ops Admin /api/analytics,api-route,WIRED,apps/ops-admin/src/app/api/analytics/route.ts,,GET
+file:apps/ops-admin/src/app/api/analytics/route.ts,apps/ops-admin/src/app/api/analytics/route.ts,file,WIRED,,,
+api:ops-admin:/api/analytics/trends,Ops Admin /api/analytics/trends,api-route,WIRED,apps/ops-admin/src/app/api/analytics/trends/route.ts,,GET
+file:apps/ops-admin/src/app/api/analytics/trends/route.ts,apps/ops-admin/src/app/api/analytics/trends/route.ts,file,WIRED,,,
+api:ops-admin:/api/announcements,Ops Admin /api/announcements,api-route,WIRED,apps/ops-admin/src/app/api/announcements/route.ts,,POST
+file:apps/ops-admin/src/app/api/announcements/route.ts,apps/ops-admin/src/app/api/announcements/route.ts,file,WIRED,,,
+api:ops-admin:/api/audit/recent,Ops Admin /api/audit/recent,api-route,WIRED,apps/ops-admin/src/app/api/audit/recent/route.ts,,GET
+file:apps/ops-admin/src/app/api/audit/recent/route.ts,apps/ops-admin/src/app/api/audit/recent/route.ts,file,WIRED,,,
+api:ops-admin:/api/auth/login,Ops Admin /api/auth/login,api-route,WIRED,apps/ops-admin/src/app/api/auth/login/route.ts,,POST
+file:apps/ops-admin/src/app/api/auth/login/route.ts,apps/ops-admin/src/app/api/auth/login/route.ts,file,WIRED,,,
+api:ops-admin:/api/chefs/:id,Ops Admin /api/chefs/:id,api-route,WIRED,apps/ops-admin/src/app/api/chefs/[id]/route.ts,,PATCH
+file:apps/ops-admin/src/app/api/chefs/[id]/route.ts,apps/ops-admin/src/app/api/chefs/[id]/route.ts,file,WIRED,,,
+api:ops-admin:/api/chefs,Ops Admin /api/chefs,api-route,WIRED,apps/ops-admin/src/app/api/chefs/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/chefs/route.ts,apps/ops-admin/src/app/api/chefs/route.ts,file,WIRED,,,
+api:ops-admin:/api/cron/expired-offers,Ops Admin /api/cron/expired-offers,api-route,WIRED,apps/ops-admin/src/app/api/cron/expired-offers/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/cron/expired-offers/route.ts,apps/ops-admin/src/app/api/cron/expired-offers/route.ts,file,WIRED,,,
+api:ops-admin:/api/cron/payouts-chef-preview,Ops Admin /api/cron/payouts-chef-preview,api-route,WIRED,apps/ops-admin/src/app/api/cron/payouts-chef-preview/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/cron/payouts-chef-preview/route.ts,apps/ops-admin/src/app/api/cron/payouts-chef-preview/route.ts,file,WIRED,,,
+api:ops-admin:/api/cron/payouts-driver-preview,Ops Admin /api/cron/payouts-driver-preview,api-route,WIRED,apps/ops-admin/src/app/api/cron/payouts-driver-preview/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/cron/payouts-driver-preview/route.ts,apps/ops-admin/src/app/api/cron/payouts-driver-preview/route.ts,file,WIRED,,,
+api:ops-admin:/api/cron/reconciliation-daily,Ops Admin /api/cron/reconciliation-daily,api-route,WIRED,apps/ops-admin/src/app/api/cron/reconciliation-daily/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/cron/reconciliation-daily/route.ts,apps/ops-admin/src/app/api/cron/reconciliation-daily/route.ts,file,WIRED,,,
+api:ops-admin:/api/cron/sla-tick,Ops Admin /api/cron/sla-tick,api-route,WIRED,apps/ops-admin/src/app/api/cron/sla-tick/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/cron/sla-tick/route.ts,apps/ops-admin/src/app/api/cron/sla-tick/route.ts,file,WIRED,,,
+api:ops-admin:/api/customers/:id/notify,Ops Admin /api/customers/:id/notify,api-route,WIRED,apps/ops-admin/src/app/api/customers/[id]/notify/route.ts,,POST
+file:apps/ops-admin/src/app/api/customers/[id]/notify/route.ts,apps/ops-admin/src/app/api/customers/[id]/notify/route.ts,file,WIRED,,,
+api:ops-admin:/api/customers,Ops Admin /api/customers,api-route,WIRED,apps/ops-admin/src/app/api/customers/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/customers/route.ts,apps/ops-admin/src/app/api/customers/route.ts,file,WIRED,,,
+api:ops-admin:/api/deliveries/:id,Ops Admin /api/deliveries/:id,api-route,WIRED,apps/ops-admin/src/app/api/deliveries/[id]/route.ts,,PATCH
+file:apps/ops-admin/src/app/api/deliveries/[id]/route.ts,apps/ops-admin/src/app/api/deliveries/[id]/route.ts,file,WIRED,,,
+api:ops-admin:/api/deliveries,Ops Admin /api/deliveries,api-route,WIRED,apps/ops-admin/src/app/api/deliveries/route.ts,,GET
+file:apps/ops-admin/src/app/api/deliveries/route.ts,apps/ops-admin/src/app/api/deliveries/route.ts,file,WIRED,,,
+api:ops-admin:/api/drivers/:id,Ops Admin /api/drivers/:id,api-route,WIRED,apps/ops-admin/src/app/api/drivers/[id]/route.ts,,PATCH
+file:apps/ops-admin/src/app/api/drivers/[id]/route.ts,apps/ops-admin/src/app/api/drivers/[id]/route.ts,file,WIRED,,,
+api:ops-admin:/api/drivers,Ops Admin /api/drivers,api-route,WIRED,apps/ops-admin/src/app/api/drivers/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/drivers/route.ts,apps/ops-admin/src/app/api/drivers/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/dashboard,Ops Admin /api/engine/dashboard,api-route,WIRED,apps/ops-admin/src/app/api/engine/dashboard/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/dashboard/route.ts,apps/ops-admin/src/app/api/engine/dashboard/route.ts,file,WIRED,,,
 table:get_ops_dashboard_stats,get_ops_dashboard_stats,table,,,,
-table:system_alerts,system_alerts,table,,,,
-api:ops-admin:/api/engine/dispatch/offer-history,Ops Admin /api/engine/dispatch/offer-history,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/dispatch/offer-history/route.ts,,GET
-file:apps/ops-admin/src/app/api/engine/dispatch/offer-history/route.ts,apps/ops-admin/src/app/api/engine/dispatch/offer-history/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/dispatch,Ops Admin /api/engine/dispatch,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/dispatch/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/dispatch/route.ts,apps/ops-admin/src/app/api/engine/dispatch/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/exceptions/:id,Ops Admin /api/engine/exceptions/:id,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/exceptions/[id]/route.ts,,"GET,PATCH"
-file:apps/ops-admin/src/app/api/engine/exceptions/[id]/route.ts,apps/ops-admin/src/app/api/engine/exceptions/[id]/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/exceptions,Ops Admin /api/engine/exceptions,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/exceptions/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/exceptions/route.ts,apps/ops-admin/src/app/api/engine/exceptions/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/finance,Ops Admin /api/engine/finance,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/finance/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/finance/route.ts,apps/ops-admin/src/app/api/engine/finance/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/health,Ops Admin /api/engine/health,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/health/route.ts,,GET
-file:apps/ops-admin/src/app/api/engine/health/route.ts,apps/ops-admin/src/app/api/engine/health/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/maintenance,Ops Admin /api/engine/maintenance,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/maintenance/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/maintenance/route.ts,apps/ops-admin/src/app/api/engine/maintenance/route.ts,file,PARTIAL,,,
+api:ops-admin:/api/engine/dispatch/offer-history,Ops Admin /api/engine/dispatch/offer-history,api-route,WIRED,apps/ops-admin/src/app/api/engine/dispatch/offer-history/route.ts,,GET
+file:apps/ops-admin/src/app/api/engine/dispatch/offer-history/route.ts,apps/ops-admin/src/app/api/engine/dispatch/offer-history/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/dispatch,Ops Admin /api/engine/dispatch,api-route,WIRED,apps/ops-admin/src/app/api/engine/dispatch/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/dispatch/route.ts,apps/ops-admin/src/app/api/engine/dispatch/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/exceptions/:id,Ops Admin /api/engine/exceptions/:id,api-route,WIRED,apps/ops-admin/src/app/api/engine/exceptions/[id]/route.ts,,"GET,PATCH"
+file:apps/ops-admin/src/app/api/engine/exceptions/[id]/route.ts,apps/ops-admin/src/app/api/engine/exceptions/[id]/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/exceptions,Ops Admin /api/engine/exceptions,api-route,WIRED,apps/ops-admin/src/app/api/engine/exceptions/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/exceptions/route.ts,apps/ops-admin/src/app/api/engine/exceptions/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/finance,Ops Admin /api/engine/finance,api-route,WIRED,apps/ops-admin/src/app/api/engine/finance/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/finance/route.ts,apps/ops-admin/src/app/api/engine/finance/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/health,Ops Admin /api/engine/health,api-route,WIRED,apps/ops-admin/src/app/api/engine/health/route.ts,,GET
+file:apps/ops-admin/src/app/api/engine/health/route.ts,apps/ops-admin/src/app/api/engine/health/route.ts,file,WIRED,,,
+table:ops_processor_runs,ops_processor_runs,table,,,,
+api:ops-admin:/api/engine/maintenance,Ops Admin /api/engine/maintenance,api-route,WIRED,apps/ops-admin/src/app/api/engine/maintenance/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/maintenance/route.ts,apps/ops-admin/src/app/api/engine/maintenance/route.ts,file,WIRED,,,
 table:platform_settings,platform_settings,table,,,,
-api:ops-admin:/api/engine/orders/:id,Ops Admin /api/engine/orders/:id,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/orders/[id]/route.ts,,"GET,PATCH"
-file:apps/ops-admin/src/app/api/engine/orders/[id]/route.ts,apps/ops-admin/src/app/api/engine/orders/[id]/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/payouts/execute,Ops Admin /api/engine/payouts/execute,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/payouts/execute/route.ts,,POST
-file:apps/ops-admin/src/app/api/engine/payouts/execute/route.ts,apps/ops-admin/src/app/api/engine/payouts/execute/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/payouts/instant/:id,Ops Admin /api/engine/payouts/instant/:id,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/payouts/instant/[id]/route.ts,,"DELETE,POST"
-file:apps/ops-admin/src/app/api/engine/payouts/instant/[id]/route.ts,apps/ops-admin/src/app/api/engine/payouts/instant/[id]/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/payouts/instant,Ops Admin /api/engine/payouts/instant,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/payouts/instant/route.ts,,GET
-file:apps/ops-admin/src/app/api/engine/payouts/instant/route.ts,apps/ops-admin/src/app/api/engine/payouts/instant/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/payouts/preview,Ops Admin /api/engine/payouts/preview,api-route,MISSING,apps/ops-admin/src/app/api/engine/payouts/preview/route.ts,,POST
-file:apps/ops-admin/src/app/api/engine/payouts/preview/route.ts,apps/ops-admin/src/app/api/engine/payouts/preview/route.ts,file,MISSING,,,
-api:ops-admin:/api/engine/payouts,Ops Admin /api/engine/payouts,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/payouts/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/payouts/route.ts,apps/ops-admin/src/app/api/engine/payouts/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/processors/expired-offers,Ops Admin /api/engine/processors/expired-offers,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/processors/expired-offers/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/processors/expired-offers/route.ts,apps/ops-admin/src/app/api/engine/processors/expired-offers/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/processors/sla,Ops Admin /api/engine/processors/sla,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/processors/sla/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/processors/sla/route.ts,apps/ops-admin/src/app/api/engine/processors/sla/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/reconciliation,Ops Admin /api/engine/reconciliation,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/reconciliation/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/reconciliation/route.ts,apps/ops-admin/src/app/api/engine/reconciliation/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/refunds,Ops Admin /api/engine/refunds,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/refunds/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/refunds/route.ts,apps/ops-admin/src/app/api/engine/refunds/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/rules,Ops Admin /api/engine/rules,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/rules/route.ts,,"GET,PATCH"
-file:apps/ops-admin/src/app/api/engine/rules/route.ts,apps/ops-admin/src/app/api/engine/rules/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/settings,Ops Admin /api/engine/settings,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/settings/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/engine/settings/route.ts,apps/ops-admin/src/app/api/engine/settings/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/engine/storefronts/:id,Ops Admin /api/engine/storefronts/:id,api-route,PARTIAL,apps/ops-admin/src/app/api/engine/storefronts/[id]/route.ts,,"GET,PATCH"
-file:apps/ops-admin/src/app/api/engine/storefronts/[id]/route.ts,apps/ops-admin/src/app/api/engine/storefronts/[id]/route.ts,file,PARTIAL,,,
+api:ops-admin:/api/engine/orders/:id,Ops Admin /api/engine/orders/:id,api-route,WIRED,apps/ops-admin/src/app/api/engine/orders/[id]/route.ts,,"GET,PATCH"
+file:apps/ops-admin/src/app/api/engine/orders/[id]/route.ts,apps/ops-admin/src/app/api/engine/orders/[id]/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/payouts/execute,Ops Admin /api/engine/payouts/execute,api-route,WIRED,apps/ops-admin/src/app/api/engine/payouts/execute/route.ts,,POST
+file:apps/ops-admin/src/app/api/engine/payouts/execute/route.ts,apps/ops-admin/src/app/api/engine/payouts/execute/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/payouts/instant/:id,Ops Admin /api/engine/payouts/instant/:id,api-route,WIRED,apps/ops-admin/src/app/api/engine/payouts/instant/[id]/route.ts,,"DELETE,POST"
+file:apps/ops-admin/src/app/api/engine/payouts/instant/[id]/route.ts,apps/ops-admin/src/app/api/engine/payouts/instant/[id]/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/payouts/instant,Ops Admin /api/engine/payouts/instant,api-route,WIRED,apps/ops-admin/src/app/api/engine/payouts/instant/route.ts,,GET
+file:apps/ops-admin/src/app/api/engine/payouts/instant/route.ts,apps/ops-admin/src/app/api/engine/payouts/instant/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/payouts/preview,Ops Admin /api/engine/payouts/preview,api-route,WIRED,apps/ops-admin/src/app/api/engine/payouts/preview/route.ts,,POST
+file:apps/ops-admin/src/app/api/engine/payouts/preview/route.ts,apps/ops-admin/src/app/api/engine/payouts/preview/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/payouts,Ops Admin /api/engine/payouts,api-route,WIRED,apps/ops-admin/src/app/api/engine/payouts/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/payouts/route.ts,apps/ops-admin/src/app/api/engine/payouts/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/processors/expired-offers,Ops Admin /api/engine/processors/expired-offers,api-route,WIRED,apps/ops-admin/src/app/api/engine/processors/expired-offers/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/processors/expired-offers/route.ts,apps/ops-admin/src/app/api/engine/processors/expired-offers/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/processors/sla,Ops Admin /api/engine/processors/sla,api-route,WIRED,apps/ops-admin/src/app/api/engine/processors/sla/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/processors/sla/route.ts,apps/ops-admin/src/app/api/engine/processors/sla/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/reconciliation,Ops Admin /api/engine/reconciliation,api-route,WIRED,apps/ops-admin/src/app/api/engine/reconciliation/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/reconciliation/route.ts,apps/ops-admin/src/app/api/engine/reconciliation/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/refunds,Ops Admin /api/engine/refunds,api-route,WIRED,apps/ops-admin/src/app/api/engine/refunds/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/refunds/route.ts,apps/ops-admin/src/app/api/engine/refunds/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/rules,Ops Admin /api/engine/rules,api-route,WIRED,apps/ops-admin/src/app/api/engine/rules/route.ts,,"GET,PATCH"
+file:apps/ops-admin/src/app/api/engine/rules/route.ts,apps/ops-admin/src/app/api/engine/rules/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/settings,Ops Admin /api/engine/settings,api-route,WIRED,apps/ops-admin/src/app/api/engine/settings/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/engine/settings/route.ts,apps/ops-admin/src/app/api/engine/settings/route.ts,file,WIRED,,,
+api:ops-admin:/api/engine/storefronts/:id,Ops Admin /api/engine/storefronts/:id,api-route,WIRED,apps/ops-admin/src/app/api/engine/storefronts/[id]/route.ts,,"GET,PATCH"
+file:apps/ops-admin/src/app/api/engine/storefronts/[id]/route.ts,apps/ops-admin/src/app/api/engine/storefronts/[id]/route.ts,file,WIRED,,,
 table:storefront_state_changes,storefront_state_changes,table,,,,
-api:ops-admin:/api/export,Ops Admin /api/export,api-route,PARTIAL,apps/ops-admin/src/app/api/export/route.ts,,GET
-file:apps/ops-admin/src/app/api/export/route.ts,apps/ops-admin/src/app/api/export/route.ts,file,PARTIAL,,,
+api:ops-admin:/api/export,Ops Admin /api/export,api-route,WIRED,apps/ops-admin/src/app/api/export/route.ts,,GET
+file:apps/ops-admin/src/app/api/export/route.ts,apps/ops-admin/src/app/api/export/route.ts,file,WIRED,,,
 table:stripe_events_processed,stripe_events_processed,table,,,,
+api:ops-admin:/api/fixtures/reset,Ops Admin /api/fixtures/reset,api-route,WIRED,apps/ops-admin/src/app/api/fixtures/reset/route.ts,,POST
+file:apps/ops-admin/src/app/api/fixtures/reset/route.ts,apps/ops-admin/src/app/api/fixtures/reset/route.ts,file,WIRED,,,
+table:order_items,order_items,table,,,,
 api:ops-admin:/api/health,Ops Admin /api/health,api-route,PARTIAL,apps/ops-admin/src/app/api/health/route.ts,,GET
 file:apps/ops-admin/src/app/api/health/route.ts,apps/ops-admin/src/app/api/health/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/internal/command-center/change-requests,Ops Admin /api/internal/command-center/change-requests,api-route,MISSING,apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts,,"GET,PATCH,POST"
-file:apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts,apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts,file,MISSING,,,
-api:ops-admin:/api/ops/live-board,Ops Admin /api/ops/live-board,api-route,PARTIAL,apps/ops-admin/src/app/api/ops/live-board/route.ts,,GET
-file:apps/ops-admin/src/app/api/ops/live-board/route.ts,apps/ops-admin/src/app/api/ops/live-board/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/orders/:id/refund,Ops Admin /api/orders/:id/refund,api-route,PARTIAL,apps/ops-admin/src/app/api/orders/[id]/refund/route.ts,,POST
-file:apps/ops-admin/src/app/api/orders/[id]/refund/route.ts,apps/ops-admin/src/app/api/orders/[id]/refund/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/orders/:id,Ops Admin /api/orders/:id,api-route,PARTIAL,apps/ops-admin/src/app/api/orders/[id]/route.ts,,"GET,PATCH"
-file:apps/ops-admin/src/app/api/orders/[id]/route.ts,apps/ops-admin/src/app/api/orders/[id]/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/orders,Ops Admin /api/orders,api-route,PARTIAL,apps/ops-admin/src/app/api/orders/route.ts,,GET
-file:apps/ops-admin/src/app/api/orders/route.ts,apps/ops-admin/src/app/api/orders/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/promos,Ops Admin /api/promos,api-route,PARTIAL,apps/ops-admin/src/app/api/promos/route.ts,,"DELETE,GET,PATCH,POST"
-file:apps/ops-admin/src/app/api/promos/route.ts,apps/ops-admin/src/app/api/promos/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/stripe/webhook,Ops Admin /api/stripe/webhook,api-route,PARTIAL,apps/ops-admin/src/app/api/stripe/webhook/route.ts,,POST
-file:apps/ops-admin/src/app/api/stripe/webhook/route.ts,apps/ops-admin/src/app/api/stripe/webhook/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/support/:id,Ops Admin /api/support/:id,api-route,PARTIAL,apps/ops-admin/src/app/api/support/[id]/route.ts,,PATCH
-file:apps/ops-admin/src/app/api/support/[id]/route.ts,apps/ops-admin/src/app/api/support/[id]/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/support,Ops Admin /api/support,api-route,PARTIAL,apps/ops-admin/src/app/api/support/route.ts,,"GET,POST"
-file:apps/ops-admin/src/app/api/support/route.ts,apps/ops-admin/src/app/api/support/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/surge,Ops Admin /api/surge,api-route,PARTIAL,apps/ops-admin/src/app/api/surge/route.ts,,"GET,PATCH"
-file:apps/ops-admin/src/app/api/surge/route.ts,apps/ops-admin/src/app/api/surge/route.ts,file,PARTIAL,,,
-api:ops-admin:/api/team,Ops Admin /api/team,api-route,PARTIAL,apps/ops-admin/src/app/api/team/route.ts,,"GET,PATCH,POST"
-file:apps/ops-admin/src/app/api/team/route.ts,apps/ops-admin/src/app/api/team/route.ts,file,PARTIAL,,,
-api:chef-admin:/api/analytics,Chef Admin /api/analytics,api-route,PARTIAL,apps/chef-admin/src/app/api/analytics/route.ts,,GET
-file:apps/chef-admin/src/app/api/analytics/route.ts,apps/chef-admin/src/app/api/analytics/route.ts,file,PARTIAL,,,
-table:order_items,order_items,table,,,,
+api:ops-admin:/api/internal/command-center/change-requests,Ops Admin /api/internal/command-center/change-requests,api-route,WIRED,apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts,,"GET,PATCH,POST"
+file:apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts,apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts,file,WIRED,,,
+api:ops-admin:/api/ops/live-board,Ops Admin /api/ops/live-board,api-route,WIRED,apps/ops-admin/src/app/api/ops/live-board/route.ts,,GET
+file:apps/ops-admin/src/app/api/ops/live-board/route.ts,apps/ops-admin/src/app/api/ops/live-board/route.ts,file,WIRED,,,
+api:ops-admin:/api/orders/:id/refund,Ops Admin /api/orders/:id/refund,api-route,WIRED,apps/ops-admin/src/app/api/orders/[id]/refund/route.ts,,POST
+file:apps/ops-admin/src/app/api/orders/[id]/refund/route.ts,apps/ops-admin/src/app/api/orders/[id]/refund/route.ts,file,WIRED,,,
+api:ops-admin:/api/orders/:id,Ops Admin /api/orders/:id,api-route,WIRED,apps/ops-admin/src/app/api/orders/[id]/route.ts,,"GET,PATCH"
+file:apps/ops-admin/src/app/api/orders/[id]/route.ts,apps/ops-admin/src/app/api/orders/[id]/route.ts,file,WIRED,,,
+api:ops-admin:/api/orders,Ops Admin /api/orders,api-route,WIRED,apps/ops-admin/src/app/api/orders/route.ts,,GET
+file:apps/ops-admin/src/app/api/orders/route.ts,apps/ops-admin/src/app/api/orders/route.ts,file,WIRED,,,
+api:ops-admin:/api/promos,Ops Admin /api/promos,api-route,WIRED,apps/ops-admin/src/app/api/promos/route.ts,,"DELETE,GET,PATCH,POST"
+file:apps/ops-admin/src/app/api/promos/route.ts,apps/ops-admin/src/app/api/promos/route.ts,file,WIRED,,,
+api:ops-admin:/api/stripe/webhook,Ops Admin /api/stripe/webhook,api-route,WIRED,apps/ops-admin/src/app/api/stripe/webhook/route.ts,,POST
+file:apps/ops-admin/src/app/api/stripe/webhook/route.ts,apps/ops-admin/src/app/api/stripe/webhook/route.ts,file,WIRED,,,
+api:ops-admin:/api/support/:id,Ops Admin /api/support/:id,api-route,WIRED,apps/ops-admin/src/app/api/support/[id]/route.ts,,PATCH
+file:apps/ops-admin/src/app/api/support/[id]/route.ts,apps/ops-admin/src/app/api/support/[id]/route.ts,file,WIRED,,,
+api:ops-admin:/api/support,Ops Admin /api/support,api-route,WIRED,apps/ops-admin/src/app/api/support/route.ts,,"GET,POST"
+file:apps/ops-admin/src/app/api/support/route.ts,apps/ops-admin/src/app/api/support/route.ts,file,WIRED,,,
+api:ops-admin:/api/surge,Ops Admin /api/surge,api-route,WIRED,apps/ops-admin/src/app/api/surge/route.ts,,"GET,PATCH"
+file:apps/ops-admin/src/app/api/surge/route.ts,apps/ops-admin/src/app/api/surge/route.ts,file,WIRED,,,
+table:service_areas,service_areas,table,,,,
+api:ops-admin:/api/team,Ops Admin /api/team,api-route,WIRED,apps/ops-admin/src/app/api/team/route.ts,,"GET,PATCH,POST"
+file:apps/ops-admin/src/app/api/team/route.ts,apps/ops-admin/src/app/api/team/route.ts,file,WIRED,,,
+api:chef-admin:/api/analytics,Chef Admin /api/analytics,api-route,WIRED,apps/chef-admin/src/app/api/analytics/route.ts,,GET
+file:apps/chef-admin/src/app/api/analytics/route.ts,apps/chef-admin/src/app/api/analytics/route.ts,file,WIRED,,,
 api:chef-admin:/api/auth/signup,Chef Admin /api/auth/signup,api-route,WIRED,apps/chef-admin/src/app/api/auth/signup/route.ts,,POST
 file:apps/chef-admin/src/app/api/auth/signup/route.ts,apps/chef-admin/src/app/api/auth/signup/route.ts,file,WIRED,,,
 api:chef-admin:/api/health,Chef Admin /api/health,api-route,PARTIAL,apps/chef-admin/src/app/api/health/route.ts,,GET
 file:apps/chef-admin/src/app/api/health/route.ts,apps/chef-admin/src/app/api/health/route.ts,file,PARTIAL,,,
-api:chef-admin:/api/menu/:id,Chef Admin /api/menu/:id,api-route,PARTIAL,apps/chef-admin/src/app/api/menu/[id]/route.ts,,"DELETE,GET,PATCH"
-file:apps/chef-admin/src/app/api/menu/[id]/route.ts,apps/chef-admin/src/app/api/menu/[id]/route.ts,file,PARTIAL,,,
-api:chef-admin:/api/menu/categories,Chef Admin /api/menu/categories,api-route,PARTIAL,apps/chef-admin/src/app/api/menu/categories/route.ts,,"GET,POST"
-file:apps/chef-admin/src/app/api/menu/categories/route.ts,apps/chef-admin/src/app/api/menu/categories/route.ts,file,PARTIAL,,,
-api:chef-admin:/api/menu,Chef Admin /api/menu,api-route,PARTIAL,apps/chef-admin/src/app/api/menu/route.ts,,"GET,POST"
-file:apps/chef-admin/src/app/api/menu/route.ts,apps/chef-admin/src/app/api/menu/route.ts,file,PARTIAL,,,
-api:chef-admin:/api/orders/:id,Chef Admin /api/orders/:id,api-route,PARTIAL,apps/chef-admin/src/app/api/orders/[id]/route.ts,,"GET,PATCH"
-file:apps/chef-admin/src/app/api/orders/[id]/route.ts,apps/chef-admin/src/app/api/orders/[id]/route.ts,file,PARTIAL,,,
-api:chef-admin:/api/orders,Chef Admin /api/orders,api-route,PARTIAL,apps/chef-admin/src/app/api/orders/route.ts,,GET
-file:apps/chef-admin/src/app/api/orders/route.ts,apps/chef-admin/src/app/api/orders/route.ts,file,PARTIAL,,,
-api:chef-admin:/api/payouts/request,Chef Admin /api/payouts/request,api-route,MISSING,apps/chef-admin/src/app/api/payouts/request/route.ts,,POST
-file:apps/chef-admin/src/app/api/payouts/request/route.ts,apps/chef-admin/src/app/api/payouts/request/route.ts,file,MISSING,,,
+api:chef-admin:/api/menu/:id/options/:optionId,Chef Admin /api/menu/:id/options/:optionId,api-route,WIRED,apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/route.ts,,"DELETE,PATCH"
+file:apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/route.ts,apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/route.ts,file,WIRED,,,
+api:chef-admin:/api/menu/:id/options/:optionId/values/:valueId,Chef Admin /api/menu/:id/options/:optionId/values/:valueId,api-route,WIRED,apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/values/[valueId]/route.ts,,"DELETE,PATCH"
+file:apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/values/[valueId]/route.ts,apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/values/[valueId]/route.ts,file,WIRED,,,
+table:menu_item_option_values,menu_item_option_values,table,,,,
+api:chef-admin:/api/menu/:id/options/:optionId/values,Chef Admin /api/menu/:id/options/:optionId/values,api-route,WIRED,apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/values/route.ts,,POST
+file:apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/values/route.ts,apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/values/route.ts,file,WIRED,,,
+api:chef-admin:/api/menu/:id/options,Chef Admin /api/menu/:id/options,api-route,WIRED,apps/chef-admin/src/app/api/menu/[id]/options/route.ts,,"GET,POST"
+file:apps/chef-admin/src/app/api/menu/[id]/options/route.ts,apps/chef-admin/src/app/api/menu/[id]/options/route.ts,file,WIRED,,,
+api:chef-admin:/api/menu/:id,Chef Admin /api/menu/:id,api-route,WIRED,apps/chef-admin/src/app/api/menu/[id]/route.ts,,"DELETE,GET,PATCH"
+file:apps/chef-admin/src/app/api/menu/[id]/route.ts,apps/chef-admin/src/app/api/menu/[id]/route.ts,file,WIRED,,,
+api:chef-admin:/api/menu/categories,Chef Admin /api/menu/categories,api-route,WIRED,apps/chef-admin/src/app/api/menu/categories/route.ts,,"GET,POST"
+file:apps/chef-admin/src/app/api/menu/categories/route.ts,apps/chef-admin/src/app/api/menu/categories/route.ts,file,WIRED,,,
+api:chef-admin:/api/menu,Chef Admin /api/menu,api-route,WIRED,apps/chef-admin/src/app/api/menu/route.ts,,"GET,POST"
+file:apps/chef-admin/src/app/api/menu/route.ts,apps/chef-admin/src/app/api/menu/route.ts,file,WIRED,,,
+api:chef-admin:/api/orders/:id,Chef Admin /api/orders/:id,api-route,WIRED,apps/chef-admin/src/app/api/orders/[id]/route.ts,,"GET,PATCH"
+file:apps/chef-admin/src/app/api/orders/[id]/route.ts,apps/chef-admin/src/app/api/orders/[id]/route.ts,file,WIRED,,,
+api:chef-admin:/api/orders,Chef Admin /api/orders,api-route,WIRED,apps/chef-admin/src/app/api/orders/route.ts,,GET
+file:apps/chef-admin/src/app/api/orders/route.ts,apps/chef-admin/src/app/api/orders/route.ts,file,WIRED,,,
+api:chef-admin:/api/payouts/request,Chef Admin /api/payouts/request,api-route,WIRED,apps/chef-admin/src/app/api/payouts/request/route.ts,,POST
+file:apps/chef-admin/src/app/api/payouts/request/route.ts,apps/chef-admin/src/app/api/payouts/request/route.ts,file,WIRED,,,
 api:chef-admin:/api/payouts/setup,Chef Admin /api/payouts/setup,api-route,WIRED,apps/chef-admin/src/app/api/payouts/setup/route.ts,,POST
 file:apps/chef-admin/src/app/api/payouts/setup/route.ts,apps/chef-admin/src/app/api/payouts/setup/route.ts,file,WIRED,,,
 api:chef-admin:/api/profile,Chef Admin /api/profile,api-route,WIRED,apps/chef-admin/src/app/api/profile/route.ts,,"GET,PATCH"
 file:apps/chef-admin/src/app/api/profile/route.ts,apps/chef-admin/src/app/api/profile/route.ts,file,WIRED,,,
-api:chef-admin:/api/storefront/availability,Chef Admin /api/storefront/availability,api-route,PARTIAL,apps/chef-admin/src/app/api/storefront/availability/route.ts,,"GET,PUT"
-file:apps/chef-admin/src/app/api/storefront/availability/route.ts,apps/chef-admin/src/app/api/storefront/availability/route.ts,file,PARTIAL,,,
+api:chef-admin:/api/storefront/availability,Chef Admin /api/storefront/availability,api-route,WIRED,apps/chef-admin/src/app/api/storefront/availability/route.ts,,"GET,PUT"
+file:apps/chef-admin/src/app/api/storefront/availability/route.ts,apps/chef-admin/src/app/api/storefront/availability/route.ts,file,WIRED,,,
 api:chef-admin:/api/storefront,Chef Admin /api/storefront,api-route,PARTIAL,apps/chef-admin/src/app/api/storefront/route.ts,,"GET,PATCH,POST"
 file:apps/chef-admin/src/app/api/storefront/route.ts,apps/chef-admin/src/app/api/storefront/route.ts,file,PARTIAL,,,
-api:chef-admin:/api/upload,Chef Admin /api/upload,api-route,PARTIAL,apps/chef-admin/src/app/api/upload/route.ts,,POST
-file:apps/chef-admin/src/app/api/upload/route.ts,apps/chef-admin/src/app/api/upload/route.ts,file,PARTIAL,,,
+table:chef_kitchens,chef_kitchens,table,,,,
+api:chef-admin:/api/upload,Chef Admin /api/upload,api-route,WIRED,apps/chef-admin/src/app/api/upload/route.ts,,POST
+file:apps/chef-admin/src/app/api/upload/route.ts,apps/chef-admin/src/app/api/upload/route.ts,file,WIRED,,,
 api:driver-app:/api/auth/login,Driver App /api/auth/login,api-route,WIRED,apps/driver-app/src/app/api/auth/login/route.ts,,POST
 file:apps/driver-app/src/app/api/auth/login/route.ts,apps/driver-app/src/app/api/auth/login/route.ts,file,WIRED,,,
 api:driver-app:/api/auth/logout,Driver App /api/auth/logout,api-route,WIRED,apps/driver-app/src/app/api/auth/logout/route.ts,,POST
 file:apps/driver-app/src/app/api/auth/logout/route.ts,apps/driver-app/src/app/api/auth/logout/route.ts,file,WIRED,,,
 api:driver-app:/api/auth/signup,Driver App /api/auth/signup,api-route,WIRED,apps/driver-app/src/app/api/auth/signup/route.ts,,POST
 file:apps/driver-app/src/app/api/auth/signup/route.ts,apps/driver-app/src/app/api/auth/signup/route.ts,file,WIRED,,,
-api:driver-app:/api/deliveries/:id,Driver App /api/deliveries/:id,api-route,PARTIAL,apps/driver-app/src/app/api/deliveries/[id]/route.ts,,"GET,PATCH"
-file:apps/driver-app/src/app/api/deliveries/[id]/route.ts,apps/driver-app/src/app/api/deliveries/[id]/route.ts,file,PARTIAL,,,
-api:driver-app:/api/deliveries,Driver App /api/deliveries,api-route,PARTIAL,apps/driver-app/src/app/api/deliveries/route.ts,,GET
-file:apps/driver-app/src/app/api/deliveries/route.ts,apps/driver-app/src/app/api/deliveries/route.ts,file,PARTIAL,,,
-api:driver-app:/api/driver/presence,Driver App /api/driver/presence,api-route,PARTIAL,apps/driver-app/src/app/api/driver/presence/route.ts,,"GET,PATCH"
-file:apps/driver-app/src/app/api/driver/presence/route.ts,apps/driver-app/src/app/api/driver/presence/route.ts,file,PARTIAL,,,
-api:driver-app:/api/driver,Driver App /api/driver,api-route,PARTIAL,apps/driver-app/src/app/api/driver/route.ts,,"GET,PATCH"
-file:apps/driver-app/src/app/api/driver/route.ts,apps/driver-app/src/app/api/driver/route.ts,file,PARTIAL,,,
-api:driver-app:/api/earnings,Driver App /api/earnings,api-route,PARTIAL,apps/driver-app/src/app/api/earnings/route.ts,,GET
-file:apps/driver-app/src/app/api/earnings/route.ts,apps/driver-app/src/app/api/earnings/route.ts,file,PARTIAL,,,
+api:driver-app:/api/deliveries/:id/issue,Driver App /api/deliveries/:id/issue,api-route,WIRED,apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts,,POST
+file:apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts,apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts,file,WIRED,,,
+api:driver-app:/api/deliveries/:id/proof,Driver App /api/deliveries/:id/proof,api-route,WIRED,apps/driver-app/src/app/api/deliveries/[id]/proof/route.ts,,POST
+file:apps/driver-app/src/app/api/deliveries/[id]/proof/route.ts,apps/driver-app/src/app/api/deliveries/[id]/proof/route.ts,file,WIRED,,,
+api:driver-app:/api/deliveries/:id,Driver App /api/deliveries/:id,api-route,WIRED,apps/driver-app/src/app/api/deliveries/[id]/route.ts,,"GET,PATCH"
+file:apps/driver-app/src/app/api/deliveries/[id]/route.ts,apps/driver-app/src/app/api/deliveries/[id]/route.ts,file,WIRED,,,
+api:driver-app:/api/deliveries,Driver App /api/deliveries,api-route,WIRED,apps/driver-app/src/app/api/deliveries/route.ts,,GET
+file:apps/driver-app/src/app/api/deliveries/route.ts,apps/driver-app/src/app/api/deliveries/route.ts,file,WIRED,,,
+api:driver-app:/api/driver/presence,Driver App /api/driver/presence,api-route,WIRED,apps/driver-app/src/app/api/driver/presence/route.ts,,"GET,PATCH"
+file:apps/driver-app/src/app/api/driver/presence/route.ts,apps/driver-app/src/app/api/driver/presence/route.ts,file,WIRED,,,
+api:driver-app:/api/driver,Driver App /api/driver,api-route,WIRED,apps/driver-app/src/app/api/driver/route.ts,,"GET,PATCH"
+file:apps/driver-app/src/app/api/driver/route.ts,apps/driver-app/src/app/api/driver/route.ts,file,WIRED,,,
+api:driver-app:/api/earnings,Driver App /api/earnings,api-route,WIRED,apps/driver-app/src/app/api/earnings/route.ts,,GET
+file:apps/driver-app/src/app/api/earnings/route.ts,apps/driver-app/src/app/api/earnings/route.ts,file,WIRED,,,
 api:driver-app:/api/health,Driver App /api/health,api-route,PARTIAL,apps/driver-app/src/app/api/health/route.ts,,GET
 file:apps/driver-app/src/app/api/health/route.ts,apps/driver-app/src/app/api/health/route.ts,file,PARTIAL,,,
-api:driver-app:/api/location,Driver App /api/location,api-route,PARTIAL,apps/driver-app/src/app/api/location/route.ts,,POST
-file:apps/driver-app/src/app/api/location/route.ts,apps/driver-app/src/app/api/location/route.ts,file,PARTIAL,,,
+api:driver-app:/api/location,Driver App /api/location,api-route,WIRED,apps/driver-app/src/app/api/location/route.ts,,POST
+file:apps/driver-app/src/app/api/location/route.ts,apps/driver-app/src/app/api/location/route.ts,file,WIRED,,,
 table:delivery_tracking_events,delivery_tracking_events,table,,,,
 table:driver_locations,driver_locations,table,,,,
-api:driver-app:/api/offers,Driver App /api/offers,api-route,PARTIAL,apps/driver-app/src/app/api/offers/route.ts,,"GET,POST"
-file:apps/driver-app/src/app/api/offers/route.ts,apps/driver-app/src/app/api/offers/route.ts,file,PARTIAL,,,
-api:driver-app:/api/payouts/instant,Driver App /api/payouts/instant,api-route,PARTIAL,apps/driver-app/src/app/api/payouts/instant/route.ts,,POST
-file:apps/driver-app/src/app/api/payouts/instant/route.ts,apps/driver-app/src/app/api/payouts/instant/route.ts,file,PARTIAL,,,
+api:driver-app:/api/offers,Driver App /api/offers,api-route,WIRED,apps/driver-app/src/app/api/offers/route.ts,,"GET,POST"
+file:apps/driver-app/src/app/api/offers/route.ts,apps/driver-app/src/app/api/offers/route.ts,file,WIRED,,,
+api:driver-app:/api/payouts/instant,Driver App /api/payouts/instant,api-route,WIRED,apps/driver-app/src/app/api/payouts/instant/route.ts,,POST
+file:apps/driver-app/src/app/api/payouts/instant/route.ts,apps/driver-app/src/app/api/payouts/instant/route.ts,file,WIRED,,,
 api:driver-app:/api/payouts/setup,Driver App /api/payouts/setup,api-route,WIRED,apps/driver-app/src/app/api/payouts/setup/route.ts,,"GET,POST"
 file:apps/driver-app/src/app/api/payouts/setup/route.ts,apps/driver-app/src/app/api/payouts/setup/route.ts,file,WIRED,,,
 table:driver_payout_accounts,driver_payout_accounts,table,,,,
-api:driver-app:/api/upload,Driver App /api/upload,api-route,PARTIAL,apps/driver-app/src/app/api/upload/route.ts,,POST
-file:apps/driver-app/src/app/api/upload/route.ts,apps/driver-app/src/app/api/upload/route.ts,file,PARTIAL,,,
+api:driver-app:/api/upload,Driver App /api/upload,api-route,WIRED,apps/driver-app/src/app/api/upload/route.ts,,POST
+file:apps/driver-app/src/app/api/upload/route.ts,apps/driver-app/src/app/api/upload/route.ts,file,WIRED,,,
 table:${accountSid}:${authToken},${accountSid}:${authToken},table,,,,
 table:IF,IF,table,,,,
+table:VALIDATE,VALIDATE,table,,,,
 table:admin_notes,admin_notes,table,,,,
 table:analytics_events,analytics_events,table,,,,
 table:carts,carts,table,,,,
-table:chef_documents,chef_documents,table,,,,
 table:delivery_assignments,delivery_assignments,table,,,,
 table:delivery_events,delivery_events,table,,,,
 table:domain_events,domain_events,table,,,,
-table:driver_documents,driver_documents,table,,,,
 table:driver_earnings,driver_earnings,table,,,,
 table:driver_shifts,driver_shifts,table,,,,
 table:driver_vehicles,driver_vehicles,table,,,,
@@ -523,15 +560,13 @@ table:kitchen_queue_entries,kitchen_queue_entries,table,,,,
 table:loyalty_accounts,loyalty_accounts,table,,,,
 table:menu_categories,menu_categories,table,,,,
 table:menu_item_availability,menu_item_availability,table,,,,
-table:menu_item_option_values,menu_item_option_values,table,,,,
-table:menu_item_options,menu_item_options,table,,,,
 table:order_item_modifiers,order_item_modifiers,table,,,,
 table:payout_adjustments,payout_adjustments,table,,,,
+table:promo_code_usages,promo_code_usages,table,,,,
 table:referral_codes,referral_codes,table,,,,
 table:referral_signups,referral_signups,table,,,,
 table:refund_cases,refund_cases,table,,,,
 table:sla_timers,sla_timers,table,,,,
-table:support_tickets,support_tickets,table,,,,
 file:apps/chef-admin/src/app/error.tsx,apps/chef-admin/src/app/error.tsx,file,,,,
 file:apps/chef-admin/src/components/auth/auth-layout.tsx,apps/chef-admin/src/components/auth/auth-layout.tsx,file,,,,
 file:apps/chef-admin/src/components/availability/weekly-availability-form.tsx,apps/chef-admin/src/components/availability/weekly-availability-form.tsx,file,,,,
@@ -584,6 +619,7 @@ file:apps/ops-admin/src/app/dashboard/chefs/[id]/storefront-governance-actions.t
 file:apps/ops-admin/src/app/dashboard/customers/[id]/customer-actions.tsx,apps/ops-admin/src/app/dashboard/customers/[id]/customer-actions.tsx,file,,,,
 file:apps/ops-admin/src/app/dashboard/deliveries/[id]/delivery-actions.tsx,apps/ops-admin/src/app/dashboard/deliveries/[id]/delivery-actions.tsx,file,,,,
 file:apps/ops-admin/src/app/dashboard/drivers/[id]/driver-governance-actions.tsx,apps/ops-admin/src/app/dashboard/drivers/[id]/driver-governance-actions.tsx,file,,,,
+file:apps/ops-admin/src/app/dashboard/exceptions/exception-actions.tsx,apps/ops-admin/src/app/dashboard/exceptions/exception-actions.tsx,file,,,,
 file:apps/ops-admin/src/app/dashboard/finance/finance-actions.tsx,apps/ops-admin/src/app/dashboard/finance/finance-actions.tsx,file,,,,
 file:apps/ops-admin/src/app/dashboard/finance/payout-actions.tsx,apps/ops-admin/src/app/dashboard/finance/payout-actions.tsx,file,,,,
 file:apps/ops-admin/src/app/dashboard/layout.tsx,apps/ops-admin/src/app/dashboard/layout.tsx,file,,,,
@@ -593,5 +629,6 @@ file:apps/ops-admin/src/app/dashboard/settings/settings-form.tsx,apps/ops-admin/
 file:apps/ops-admin/src/app/dashboard/support/support-ticket-actions.tsx,apps/ops-admin/src/app/dashboard/support/support-ticket-actions.tsx,file,,,,
 file:apps/ops-admin/src/app/error.tsx,apps/ops-admin/src/app/error.tsx,file,,,,
 file:apps/ops-admin/src/app/internal/command-center/command-center-client.tsx,apps/ops-admin/src/app/internal/command-center/command-center-client.tsx,file,,,,
+file:apps/ops-admin/src/components/DashboardLayout.tsx,apps/ops-admin/src/components/DashboardLayout.tsx,file,,,,
 file:apps/ops-admin/src/components/ops-alerts.tsx,apps/ops-admin/src/components/ops-alerts.tsx,file,,,,
 file:apps/ops-admin/src/hooks/use-ops-live-feed.ts,apps/ops-admin/src/hooks/use-ops-live-feed.ts,file,,,,

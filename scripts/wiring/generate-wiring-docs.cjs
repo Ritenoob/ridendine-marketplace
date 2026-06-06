@@ -281,14 +281,14 @@ function extractPackages(text) {
 
 function extractMethods(text) {
   const methods = [];
-  const pattern = /export\s+async\s+function\s+(GET|POST|PUT|PATCH|DELETE)/g;
+  const pattern = /export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b|export\s+const\s+(GET|POST|PUT|PATCH|DELETE)\b/g;
   let match;
-  while ((match = pattern.exec(text))) methods.push(match[1]);
+  while ((match = pattern.exec(text))) methods.push(match[1] || match[2]);
   return unique(methods);
 }
 
 function detectAuth(text, route) {
-  if (/auth\.getUser|requireAdmin|requireOps|requireChef|requireDriver|createServerClient\(cookie|cookies\(\)|isApprovedDriver|redirect\('\/auth\/login/.test(text)) return 'Detected';
+  if (/auth\.getUser|getUser\(|requireAdmin|requireOps|requireChef|requireDriver|createServerClient\(cookie|cookies\(\)|isApprovedDriver|redirect\('\/auth\/login|getOpsActorContext|getChefActorContext|getChefBasicContext|getDriverActorContext|getCustomerActorContext|getCurrentCustomer|guardPlatformApi|finalizeOpsActor|hasRequiredRole|validateEngineProcessorHeaders|CRON_SECRET|ENGINE_PROCESSOR_TOKEN|verifyStripeWebhook|webhooks\.constructEvent|constructEvent/.test(text)) return 'Detected';
   if (route.startsWith('/auth') || route === '/' || route.startsWith('/about') || route.startsWith('/terms') || route.startsWith('/privacy')) return 'Public';
   return 'Undetected';
 }

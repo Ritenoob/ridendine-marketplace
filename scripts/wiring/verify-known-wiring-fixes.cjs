@@ -11,6 +11,14 @@ function exists(relativePath) {
   return fs.existsSync(path.join(root, relativePath));
 }
 
+function generatedDoc(relativePath) {
+  return exists(relativePath) ? read(relativePath) : '';
+}
+
+function markdownRowsFor(text, token) {
+  return text.split('\n').filter((line) => line.startsWith('| ') && line.includes(token));
+}
+
 function walk(relativeDir, acc = []) {
   const absoluteDir = path.join(root, relativeDir);
   if (!fs.existsSync(absoluteDir)) return acc;
@@ -58,6 +66,34 @@ const checks = [
       const source = read('apps/chef-admin/src/app/dashboard/page.tsx');
       return !source.includes('href={`/chefs/${storefront.slug}`}') &&
         source.includes('https://ridendine.ca/chefs/${storefront.slug}');
+    },
+  },
+  {
+    name: 'wiring docs classify finance account detail pages as implemented',
+    pass: () => {
+      const routeInventory = generatedDoc('docs/wiring/ROUTE_INVENTORY.md');
+      const chefRows = markdownRowsFor(routeInventory, '`/dashboard/finance/accounts/chefs/:id`');
+      const driverRows = markdownRowsFor(routeInventory, '`/dashboard/finance/accounts/drivers/:id`');
+      return chefRows.length === 1 &&
+        driverRows.length === 1 &&
+        chefRows[0].endsWith('| WIRED |') &&
+        driverRows[0].endsWith('| WIRED |');
+    },
+  },
+  {
+    name: 'wiring docs do not mark known guarded API routes missing',
+    pass: () => {
+      const apiInventory = generatedDoc('docs/wiring/API_INVENTORY.md');
+      const knownGuardedRoutes = [
+        '`/api/deliveries/:id`',
+        '`/api/engine/payouts/preview`',
+        '`/api/internal/command-center/change-requests`',
+        '`/api/payouts/request`',
+      ];
+      return knownGuardedRoutes.every((route) => {
+        const routeRows = markdownRowsFor(apiInventory, route);
+        return routeRows.length > 0 && routeRows.every((line) => !line.endsWith('| MISSING |'));
+      });
     },
   },
 ];

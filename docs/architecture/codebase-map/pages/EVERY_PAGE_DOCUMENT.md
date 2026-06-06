@@ -50,16 +50,17 @@ flowchart TB
 | Customer Web | `/order-confirmation/:orderId` | WIRED | [apps/web/src/app/order-confirmation/[orderId]/page.tsx](../../../../apps/web/src/app/order-confirmation/[orderId]/page.tsx) |
 | Customer Web | `/orders/:id/confirmation` | WIRED | [apps/web/src/app/orders/[id]/confirmation/page.tsx](../../../../apps/web/src/app/orders/[id]/confirmation/page.tsx) |
 | Customer Web | `/` | WIRED | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) |
-| Customer Web | `/privacy` | PARTIAL | [apps/web/src/app/privacy/page.tsx](../../../../apps/web/src/app/privacy/page.tsx) |
-| Customer Web | `/terms` | PARTIAL | [apps/web/src/app/terms/page.tsx](../../../../apps/web/src/app/terms/page.tsx) |
+| Customer Web | `/privacy` | WIRED | [apps/web/src/app/privacy/page.tsx](../../../../apps/web/src/app/privacy/page.tsx) |
+| Customer Web | `/terms` | WIRED | [apps/web/src/app/terms/page.tsx](../../../../apps/web/src/app/terms/page.tsx) |
 | Ops Admin | `/auth/login` | PARTIAL | [apps/ops-admin/src/app/auth/login/page.tsx](../../../../apps/ops-admin/src/app/auth/login/page.tsx) |
-| Ops Admin | `/dashboard/activity` | PARTIAL | [apps/ops-admin/src/app/dashboard/activity/page.tsx](../../../../apps/ops-admin/src/app/dashboard/activity/page.tsx) |
+| Ops Admin | `/dashboard/activity` | WIRED | [apps/ops-admin/src/app/dashboard/activity/page.tsx](../../../../apps/ops-admin/src/app/dashboard/activity/page.tsx) |
 | Ops Admin | `/dashboard/analytics` | PARTIAL | [apps/ops-admin/src/app/dashboard/analytics/page.tsx](../../../../apps/ops-admin/src/app/dashboard/analytics/page.tsx) |
 | Ops Admin | `/dashboard/announcements` | PARTIAL | [apps/ops-admin/src/app/dashboard/announcements/page.tsx](../../../../apps/ops-admin/src/app/dashboard/announcements/page.tsx) |
 | Ops Admin | `/dashboard/automation` | PARTIAL | [apps/ops-admin/src/app/dashboard/automation/page.tsx](../../../../apps/ops-admin/src/app/dashboard/automation/page.tsx) |
 | Ops Admin | `/dashboard/chefs/:id` | WIRED | [apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx) |
 | Ops Admin | `/dashboard/chefs/approvals` | PARTIAL | [apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx](../../../../apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx) |
 | Ops Admin | `/dashboard/chefs` | WIRED | [apps/ops-admin/src/app/dashboard/chefs/page.tsx](../../../../apps/ops-admin/src/app/dashboard/chefs/page.tsx) |
+| Ops Admin | `/dashboard/compliance` | WIRED | [apps/ops-admin/src/app/dashboard/compliance/page.tsx](../../../../apps/ops-admin/src/app/dashboard/compliance/page.tsx) |
 | Ops Admin | `/dashboard/customers/:id` | WIRED | [apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx) |
 | Ops Admin | `/dashboard/customers` | PARTIAL | [apps/ops-admin/src/app/dashboard/customers/page.tsx](../../../../apps/ops-admin/src/app/dashboard/customers/page.tsx) |
 | Ops Admin | `/dashboard/deliveries/:id` | WIRED | [apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx) |
@@ -67,17 +68,18 @@ flowchart TB
 | Ops Admin | `/dashboard/dispatch` | PARTIAL | [apps/ops-admin/src/app/dashboard/dispatch/page.tsx](../../../../apps/ops-admin/src/app/dashboard/dispatch/page.tsx) |
 | Ops Admin | `/dashboard/drivers/:id` | WIRED | [apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx) |
 | Ops Admin | `/dashboard/drivers` | WIRED | [apps/ops-admin/src/app/dashboard/drivers/page.tsx](../../../../apps/ops-admin/src/app/dashboard/drivers/page.tsx) |
-| Ops Admin | `/dashboard/finance/accounts/chefs/:id` | MISSING | [apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx) |
-| Ops Admin | `/dashboard/finance/accounts/chefs` | PARTIAL | [apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx) |
-| Ops Admin | `/dashboard/finance/accounts/drivers/:id` | MISSING | [apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx) |
-| Ops Admin | `/dashboard/finance/accounts/drivers` | PARTIAL | [apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx) |
-| Ops Admin | `/dashboard/finance/instant-payouts` | PARTIAL | [apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx) |
+| Ops Admin | `/dashboard/exceptions` | WIRED | [apps/ops-admin/src/app/dashboard/exceptions/page.tsx](../../../../apps/ops-admin/src/app/dashboard/exceptions/page.tsx) |
+| Ops Admin | `/dashboard/finance/accounts/chefs/:id` | WIRED | [apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx) |
+| Ops Admin | `/dashboard/finance/accounts/chefs` | WIRED | [apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx) |
+| Ops Admin | `/dashboard/finance/accounts/drivers/:id` | WIRED | [apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx) |
+| Ops Admin | `/dashboard/finance/accounts/drivers` | WIRED | [apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx) |
+| Ops Admin | `/dashboard/finance/instant-payouts` | WIRED | [apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx) |
 | Ops Admin | `/dashboard/finance` | WIRED | [apps/ops-admin/src/app/dashboard/finance/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/page.tsx) |
-| Ops Admin | `/dashboard/finance/payouts/:runId` | PARTIAL | [apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx) |
-| Ops Admin | `/dashboard/finance/payouts` | PARTIAL | [apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx) |
-| Ops Admin | `/dashboard/finance/reconciliation` | PARTIAL | [apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx) |
+| Ops Admin | `/dashboard/finance/payouts/:runId` | WIRED | [apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx) |
+| Ops Admin | `/dashboard/finance/payouts` | WIRED | [apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx) |
+| Ops Admin | `/dashboard/finance/reconciliation` | WIRED | [apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx) |
 | Ops Admin | `/dashboard/finance/refunds` | WIRED | [apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx) |
-| Ops Admin | `/dashboard/health` | PARTIAL | [apps/ops-admin/src/app/dashboard/health/page.tsx](../../../../apps/ops-admin/src/app/dashboard/health/page.tsx) |
+| Ops Admin | `/dashboard/health` | WIRED | [apps/ops-admin/src/app/dashboard/health/page.tsx](../../../../apps/ops-admin/src/app/dashboard/health/page.tsx) |
 | Ops Admin | `/dashboard/integrations` | WIRED | [apps/ops-admin/src/app/dashboard/integrations/page.tsx](../../../../apps/ops-admin/src/app/dashboard/integrations/page.tsx) |
 | Ops Admin | `/dashboard/map` | WIRED | [apps/ops-admin/src/app/dashboard/map/page.tsx](../../../../apps/ops-admin/src/app/dashboard/map/page.tsx) |
 | Ops Admin | `/dashboard/orders/:id` | WIRED | [apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx) |
@@ -135,8 +137,10 @@ flowchart TB
   Page --> Auth
   Component0["Component/import<br/>@/components/layout/header"]
   Page --> Component0
-  Component1["Component/import<br/>Card"]
+  Component1["Component/import<br/>Button"]
   Page --> Component1
+  Component2["Component/import<br/>Card"]
+  Page --> Component2
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -164,7 +168,7 @@ flowchart TB
 | DB tables/RPCs | None detected |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/ui |
-| Components/imports | `@/components/layout/header`, `Card` |
+| Components/imports | `@/components/layout/header`, `Button`, `Card` |
 | Environment vars | None detected |
 
 ### Navigation And Links
@@ -183,7 +187,6 @@ No outgoing API/fetch calls detected.
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
 | Customer Web | [apps/web/src/app/not-found.tsx](../../../../apps/web/src/app/not-found.tsx) | href | `/about` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/about` | WORKING |
 | Customer Web | [apps/web/src/components/layout/header.tsx](../../../../apps/web/src/components/layout/header.tsx) | href | `/about` | WORKING |
 
 ### Review Notes
@@ -216,6 +219,10 @@ flowchart TB
   Page --> Component1
   Component2["Component/import<br/>Card"]
   Page --> Component2
+  Component3["Component/import<br/>Input"]
+  Page --> Component3
+  Component4["Component/import<br/>Select"]
+  Page --> Component4
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -244,7 +251,7 @@ flowchart TB
 | DB tables/RPCs | None detected |
 | Fetch/API calls | `/api/addresses` (DELETE, GET, PATCH, POST)<br>`/api/addresses?id=${id}` (DELETE, GET, PATCH, POST) |
 | Shared packages | @ridendine/auth, @ridendine/ui |
-| Components/imports | `@/components/layout/header`, `Button`, `Card` |
+| Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input`, `Select` |
 | Environment vars | None detected |
 
 ### Navigation And Links
@@ -425,9 +432,7 @@ flowchart TB
 
 ### Incoming References
 
-| Source app | Source file | Kind | Target | Status |
-| --- | --- | --- | --- | --- |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/account/orders` | WORKING |
+No incoming static references detected.
 
 ### Review Notes
 
@@ -532,14 +537,12 @@ flowchart TB
   Page --> Api0
   Component0["Component/import<br/>@/components/layout/header"]
   Page --> Component0
-  Component1["Component/import<br/>@/components/profile/saved-cards"]
+  Component1["Component/import<br/>Button"]
   Page --> Component1
-  Component2["Component/import<br/>Button"]
+  Component2["Component/import<br/>Card"]
   Page --> Component2
-  Component3["Component/import<br/>Card"]
+  Component3["Component/import<br/>Input"]
   Page --> Component3
-  Component4["Component/import<br/>Input"]
-  Page --> Component4
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -568,7 +571,7 @@ flowchart TB
 | DB tables/RPCs | None detected |
 | Fetch/API calls | `/api/profile` (GET, PATCH) |
 | Shared packages | @ridendine/auth, @ridendine/ui |
-| Components/imports | `@/components/layout/header`, `@/components/profile/saved-cards`, `Button`, `Card`, `Input` |
+| Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input` |
 | Environment vars | None detected |
 
 ### Navigation And Links
@@ -749,6 +752,7 @@ flowchart TB
 | Customer Web | [apps/web/src/app/chef-signup/page.tsx](../../../../apps/web/src/app/chef-signup/page.tsx) | href | `/auth/login` | WORKING |
 | Customer Web | [apps/web/src/app/orders/[id]/confirmation/page.tsx](../../../../apps/web/src/app/orders/[id]/confirmation/page.tsx) | redirect | `/auth/login` | WORKING |
 | Customer Web | [apps/web/src/components/layout/header.tsx](../../../../apps/web/src/components/layout/header.tsx) | href | `/auth/login` | WORKING |
+| Customer Web | [apps/web/src/contexts/cart-context.tsx](../../../../apps/web/src/contexts/cart-context.tsx) | window.location | `/auth/login?redirect=${redirect}` | WORKING |
 
 ### Review Notes
 
@@ -1161,7 +1165,6 @@ No outgoing API/fetch calls detected.
 | --- | --- | --- | --- | --- |
 | Customer Web | [apps/web/src/app/about/page.tsx](../../../../apps/web/src/app/about/page.tsx) | href | `/chef-signup` | WORKING |
 | Customer Web | [apps/web/src/app/chef-resources/page.tsx](../../../../apps/web/src/app/chef-resources/page.tsx) | href | `/chef-signup` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/chef-signup` | WORKING |
 | Customer Web | [apps/web/src/components/home/featured-chefs.tsx](../../../../apps/web/src/components/home/featured-chefs.tsx) | href | `/chef-signup` | WORKING |
 
 ### Review Notes
@@ -1351,6 +1354,8 @@ flowchart TB
   Page --> Component2
   Component3["Component/import<br/>Input"]
   Page --> Component3
+  Component4["Component/import<br/>Textarea"]
+  Page --> Component4
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -1379,7 +1384,7 @@ flowchart TB
 | DB tables/RPCs | None detected |
 | Fetch/API calls | `/api/support` (GET, POST) |
 | Shared packages | @ridendine/ui |
-| Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input` |
+| Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input`, `Textarea` |
 | Environment vars | None detected |
 
 ### Navigation And Links
@@ -1398,7 +1403,6 @@ No outgoing page-navigation links detected.
 | --- | --- | --- | --- | --- |
 | Customer Web | [apps/web/src/app/chef-resources/page.tsx](../../../../apps/web/src/app/chef-resources/page.tsx) | href | `/contact` | WORKING |
 | Customer Web | [apps/web/src/app/not-found.tsx](../../../../apps/web/src/app/not-found.tsx) | href | `/contact` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/contact` | WORKING |
 
 ### Review Notes
 
@@ -1422,8 +1426,10 @@ flowchart TB
   Page --> Auth
   Component0["Component/import<br/>@/components/layout/header"]
   Page --> Component0
-  Component1["Component/import<br/>Card"]
+  Component1["Component/import<br/>Button"]
   Page --> Component1
+  Component2["Component/import<br/>Card"]
+  Page --> Component2
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -1451,7 +1457,7 @@ flowchart TB
 | DB tables/RPCs | None detected |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/ui |
-| Components/imports | `@/components/layout/header`, `Card` |
+| Components/imports | `@/components/layout/header`, `Button`, `Card` |
 | Environment vars | None detected |
 
 ### Navigation And Links
@@ -1470,7 +1476,6 @@ No outgoing API/fetch calls detected.
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
 | Customer Web | [apps/web/src/app/not-found.tsx](../../../../apps/web/src/app/not-found.tsx) | href | `/how-it-works` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/how-it-works` | WORKING |
 | Customer Web | [apps/web/src/components/layout/header.tsx](../../../../apps/web/src/components/layout/header.tsx) | href | `/how-it-works` | WORKING |
 
 ### Review Notes
@@ -1707,6 +1712,10 @@ flowchart TB
   Page --> Component2
   Component3["Component/import<br/>Button"]
   Page --> Component3
+  Component4["Component/import<br/>Card"]
+  Page --> Component4
+  Component5["Component/import<br/>Logo"]
+  Page --> Component5
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -1735,23 +1744,16 @@ flowchart TB
 | DB tables/RPCs | `chef_storefronts`, `menu_items` |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/db, @ridendine/ui |
-| Components/imports | `@/components/home/featured-chefs`, `@/components/home/scroll-reveal-section`, `@/components/layout/header`, `Button` |
+| Components/imports | `@/components/home/featured-chefs`, `@/components/home/scroll-reveal-section`, `@/components/layout/header`, `Button`, `Card`, `Logo` |
 | Environment vars | None detected |
 
 ### Navigation And Links
 
 | Status | Kind | Target | Resolved app | Resolved file | Notes |
 | --- | --- | --- | --- | --- | --- |
-| WORKING | href | `/about` | Customer Web | [apps/web/src/app/about/page.tsx](../../../../apps/web/src/app/about/page.tsx) | href resolves to page /about |
-| WORKING | href | `/account/orders` | Customer Web | [apps/web/src/app/account/orders/page.tsx](../../../../apps/web/src/app/account/orders/page.tsx) | href resolves to page /account/orders |
 | WORKING | href | `/auth/signup?role=chef` | Customer Web | [apps/web/src/app/auth/signup/page.tsx](../../../../apps/web/src/app/auth/signup/page.tsx) | href resolves to page /auth/signup |
 | WORKING | href | `/chef-resources` | Customer Web | [apps/web/src/app/chef-resources/page.tsx](../../../../apps/web/src/app/chef-resources/page.tsx) | href resolves to page /chef-resources |
-| WORKING | href | `/chef-signup` | Customer Web | [apps/web/src/app/chef-signup/page.tsx](../../../../apps/web/src/app/chef-signup/page.tsx) | href resolves to page /chef-signup |
 | WORKING | href | `/chefs` | Customer Web | [apps/web/src/app/chefs/page.tsx](../../../../apps/web/src/app/chefs/page.tsx) | href resolves to page /chefs |
-| WORKING | href | `/contact` | Customer Web | [apps/web/src/app/contact/page.tsx](../../../../apps/web/src/app/contact/page.tsx) | href resolves to page /contact |
-| WORKING | href | `/how-it-works` | Customer Web | [apps/web/src/app/how-it-works/page.tsx](../../../../apps/web/src/app/how-it-works/page.tsx) | href resolves to page /how-it-works |
-| WORKING | href | `/privacy` | Customer Web | [apps/web/src/app/privacy/page.tsx](../../../../apps/web/src/app/privacy/page.tsx) | href resolves to page /privacy |
-| WORKING | href | `/terms` | Customer Web | [apps/web/src/app/terms/page.tsx](../../../../apps/web/src/app/terms/page.tsx) | href resolves to page /terms |
 
 ### API Calls From This Page
 
@@ -1806,7 +1808,7 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/privacy` |
-| Status | `PARTIAL` |
+| Status | `WIRED` |
 | Auth | Public |
 | Page file | [apps/web/src/app/privacy/page.tsx](../../../../apps/web/src/app/privacy/page.tsx) |
 | Layout | [apps/web/src/app/layout.tsx](../../../../apps/web/src/app/layout.tsx) |
@@ -1839,12 +1841,11 @@ No outgoing API/fetch calls detected.
 | Chef Admin | [apps/chef-admin/src/app/privacy/page.tsx](../../../../apps/chef-admin/src/app/privacy/page.tsx) | href | `https://ridendine.ca/privacy` | WORKING |
 | Customer Web | [apps/web/src/app/account/settings/page.tsx](../../../../apps/web/src/app/account/settings/page.tsx) | href | `/privacy` | WORKING |
 | Customer Web | [apps/web/src/app/auth/signup/page.tsx](../../../../apps/web/src/app/auth/signup/page.tsx) | href | `/privacy` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/privacy` | WORKING |
 | Driver App | [apps/driver-app/src/app/privacy/page.tsx](../../../../apps/driver-app/src/app/privacy/page.tsx) | href | `https://ridendine.ca/privacy` | WORKING |
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -1878,7 +1879,7 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/terms` |
-| Status | `PARTIAL` |
+| Status | `WIRED` |
 | Auth | Public |
 | Page file | [apps/web/src/app/terms/page.tsx](../../../../apps/web/src/app/terms/page.tsx) |
 | Layout | [apps/web/src/app/layout.tsx](../../../../apps/web/src/app/layout.tsx) |
@@ -1911,12 +1912,11 @@ No outgoing API/fetch calls detected.
 | Chef Admin | [apps/chef-admin/src/app/terms/page.tsx](../../../../apps/chef-admin/src/app/terms/page.tsx) | href | `https://ridendine.ca/terms` | WORKING |
 | Customer Web | [apps/web/src/app/account/settings/page.tsx](../../../../apps/web/src/app/account/settings/page.tsx) | href | `/terms` | WORKING |
 | Customer Web | [apps/web/src/app/auth/signup/page.tsx](../../../../apps/web/src/app/auth/signup/page.tsx) | href | `/terms` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/terms` | WORKING |
 | Driver App | [apps/driver-app/src/app/terms/page.tsx](../../../../apps/driver-app/src/app/terms/page.tsx) | href | `https://ridendine.ca/terms` | WORKING |
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -1934,6 +1934,8 @@ flowchart TB
   Page --> Layout
   Page --> File
   Page --> Auth
+  Api0["API/fetch<br/>/api/auth/login"]
+  Page --> Api0
   Component0["Component/import<br/>Button"]
   Page --> Component0
   Component1["Component/import<br/>Card"]
@@ -1945,6 +1947,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Api0 api
 ```
 
 ### Actual Page Information
@@ -1958,15 +1961,15 @@ flowchart TB
 | Auth | Public |
 | Page file | [apps/ops-admin/src/app/auth/login/page.tsx](../../../../apps/ops-admin/src/app/auth/login/page.tsx) |
 | Layout | [apps/ops-admin/src/app/layout.tsx](../../../../apps/ops-admin/src/app/layout.tsx) |
-| Data source summary | @ridendine/db, @ridendine/ui |
+| Data source summary | @ridendine/ui |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
 | DB tables/RPCs | None detected |
-| Fetch/API calls | None detected |
-| Shared packages | @ridendine/db, @ridendine/ui |
+| Fetch/API calls | `/api/auth/login` (POST) |
+| Shared packages | @ridendine/ui |
 | Components/imports | `Button`, `Card`, `Input` |
 | Environment vars | None detected |
 
@@ -1976,13 +1979,16 @@ No outgoing page-navigation links detected.
 
 ### API Calls From This Page
 
-No outgoing API/fetch calls detected.
+| Status | Kind | Target | Resolved app | Resolved file | Notes |
+| --- | --- | --- | --- | --- | --- |
+| WORKING | fetch | `/api/auth/login` | Ops Admin | [apps/ops-admin/src/app/api/auth/login/route.ts](../../../../apps/ops-admin/src/app/api/auth/login/route.ts) | fetch resolves to API /api/auth/login |
 
 ### Incoming References
 
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) | redirect | `/auth/login?redirect=/dashboard` | WORKING |
+| Ops Admin | [apps/ops-admin/src/components/DashboardLayout.tsx](../../../../apps/ops-admin/src/components/DashboardLayout.tsx) | router.push | `/auth/login` | WORKING |
 
 ### Review Notes
 
@@ -2000,7 +2006,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/activity"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/activity/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -2031,8 +2037,8 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/activity` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/activity/page.tsx](../../../../apps/ops-admin/src/app/dashboard/activity/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | table:audit_logs, table:ops_override_logs, table:platform_users, @ridendine/db, @ridendine/ui |
@@ -2061,7 +2067,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -2304,6 +2310,8 @@ flowchart TB
   Page --> Auth
   Table0["DB table/RPC<br/>chef_delivery_zones"]
   Page --> Table0
+  Table1["DB table/RPC<br/>chef_documents"]
+  Page --> Table1
   Component0["Component/import<br/>@/components/DashboardLayout"]
   Page --> Component0
   Component1["Component/import<br/>Badge"]
@@ -2315,7 +2323,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
-  class Table0 data
+  class Table0,Table1 data
 ```
 
 ### Actual Page Information
@@ -2329,13 +2337,13 @@ flowchart TB
 | Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | table:chef_delivery_zones, @ridendine/db, @ridendine/ui |
+| Data source summary | table:chef_delivery_zones, table:chef_documents, @ridendine/db, @ridendine/ui |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | `chef_delivery_zones` |
+| DB tables/RPCs | `chef_delivery_zones`, `chef_documents` |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/db, @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `Badge`, `Card` |
@@ -2355,6 +2363,7 @@ No outgoing API/fetch calls detected.
 
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
+| Ops Admin | [apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx](../../../../apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx) | href | `/dashboard/chefs/${chef.id}` | WORKING_DYNAMIC |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/chefs/page.tsx](../../../../apps/ops-admin/src/app/dashboard/chefs/page.tsx) | href | `/dashboard/chefs/${row.id}` | WORKING_DYNAMIC |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx) | href | `/dashboard/chefs/${order.storefront.chef?.id ??` | WORKING_DYNAMIC |
 
@@ -2378,7 +2387,7 @@ flowchart TB
   Page --> Layout
   Page --> File
   Page --> Auth
-  Api0["API/fetch<br/>/api/chefs?status=pending"]
+  Api0["API/fetch<br/>/api/chefs"]
   Page --> Api0
   Api1["API/fetch<br/>/api/chefs/${id}"]
   Page --> Api1
@@ -2414,20 +2423,23 @@ flowchart TB
 | Type | Details |
 | --- | --- |
 | DB tables/RPCs | None detected |
-| Fetch/API calls | `/api/chefs?status=pending` (GET, POST)<br>`/api/chefs/${id}` (PATCH) |
+| Fetch/API calls | `/api/chefs` (GET, POST)<br>`/api/chefs/${id}` (PATCH) |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `Badge`, `Card` |
 | Environment vars | None detected |
 
 ### Navigation And Links
 
-No outgoing page-navigation links detected.
+| Status | Kind | Target | Resolved app | Resolved file | Notes |
+| --- | --- | --- | --- | --- | --- |
+| WORKING | href | `/dashboard/chefs` | Ops Admin | [apps/ops-admin/src/app/dashboard/chefs/page.tsx](../../../../apps/ops-admin/src/app/dashboard/chefs/page.tsx) | href resolves to page /dashboard/chefs |
+| WORKING_DYNAMIC | href | `/dashboard/chefs/${chef.id}` | Ops Admin | [apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx) | href resolves to page /dashboard/chefs/:id |
 
 ### API Calls From This Page
 
 | Status | Kind | Target | Resolved app | Resolved file | Notes |
 | --- | --- | --- | --- | --- | --- |
-| WORKING | fetch | `/api/chefs?status=pending` | Ops Admin | [apps/ops-admin/src/app/api/chefs/route.ts](../../../../apps/ops-admin/src/app/api/chefs/route.ts) | fetch resolves to API /api/chefs |
+| WORKING | fetch | `/api/chefs` | Ops Admin | [apps/ops-admin/src/app/api/chefs/route.ts](../../../../apps/ops-admin/src/app/api/chefs/route.ts) | fetch resolves to API /api/chefs |
 | WORKING_DYNAMIC | fetch | `/api/chefs/${id}` | Ops Admin | [apps/ops-admin/src/app/api/chefs/[id]/route.ts](../../../../apps/ops-admin/src/app/api/chefs/[id]/route.ts) | fetch resolves to API /api/chefs/:id |
 
 ### Incoming References
@@ -2516,7 +2528,83 @@ flowchart TB
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx) | href | `/dashboard/chefs` | WORKING |
+| Ops Admin | [apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx](../../../../apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx) | href | `/dashboard/chefs` | WORKING |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/page.tsx](../../../../apps/ops-admin/src/app/dashboard/page.tsx) | href | `/dashboard/chefs` | WORKING |
+
+### Review Notes
+
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
+
+
+---
+
+## Ops Admin: `/dashboard/compliance`
+
+### Page Diagram
+
+```mermaid
+flowchart TB
+  Page["Ops Admin<br/>/dashboard/compliance"]
+  Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
+  File["Page file<br/>apps/ops-admin/src/app/dashboard/compliance/page.tsx"]
+  Auth["Auth<br/>Detected"]
+  Page --> Layout
+  Page --> File
+  Page --> Auth
+  Table0["DB table/RPC<br/>chef_profiles"]
+  Page --> Table0
+  Table1["DB table/RPC<br/>drivers"]
+  Page --> Table1
+  Component0["Component/import<br/>@/components/DashboardLayout"]
+  Page --> Component0
+  Component1["Component/import<br/>Card"]
+  Page --> Component1
+  Component2["Component/import<br/>PageHeader"]
+  Page --> Component2
+  Component3["Component/import<br/>StatusBadge"]
+  Page --> Component3
+  classDef page fill:#111827,stroke:#111827,color:#ffffff
+  classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
+  classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
+  class Page page
+  class Table0,Table1 data
+```
+
+### Actual Page Information
+
+| Field | Value |
+| --- | --- |
+| App | Ops Admin |
+| Domain | `ops.ridendine.ca` |
+| Route | `/dashboard/compliance` |
+| Status | `WIRED` |
+| Auth | Detected |
+| Page file | [apps/ops-admin/src/app/dashboard/compliance/page.tsx](../../../../apps/ops-admin/src/app/dashboard/compliance/page.tsx) |
+| Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
+| Data source summary | table:chef_profiles, table:drivers, @ridendine/db, @ridendine/ui |
+
+### Data And API Wiring
+
+| Type | Details |
+| --- | --- |
+| DB tables/RPCs | `chef_profiles`, `drivers` |
+| Fetch/API calls | None detected |
+| Shared packages | @ridendine/db, @ridendine/ui |
+| Components/imports | `@/components/DashboardLayout`, `Card`, `PageHeader`, `StatusBadge` |
+| Environment vars | None detected |
+
+### Navigation And Links
+
+No outgoing page-navigation links detected.
+
+### API Calls From This Page
+
+No outgoing API/fetch calls detected.
+
+### Incoming References
+
+No incoming static references detected.
 
 ### Review Notes
 
@@ -2935,6 +3023,8 @@ flowchart TB
   Page --> Layout
   Page --> File
   Page --> Auth
+  Table0["DB table/RPC<br/>driver_documents"]
+  Page --> Table0
   Component0["Component/import<br/>@/components/DashboardLayout"]
   Page --> Component0
   Component1["Component/import<br/>Badge"]
@@ -2946,6 +3036,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Table0 data
 ```
 
 ### Actual Page Information
@@ -2959,13 +3050,13 @@ flowchart TB
 | Auth | Undetected |
 | Page file | [apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
-| Data source summary | @ridendine/db, @ridendine/ui |
+| Data source summary | table:driver_documents, @ridendine/db, @ridendine/ui |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | None detected |
+| DB tables/RPCs | `driver_documents` |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/db, @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `Badge`, `Card` |
@@ -3082,6 +3173,88 @@ flowchart TB
 
 ---
 
+## Ops Admin: `/dashboard/exceptions`
+
+### Page Diagram
+
+```mermaid
+flowchart TB
+  Page["Ops Admin<br/>/dashboard/exceptions"]
+  Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
+  File["Page file<br/>apps/ops-admin/src/app/dashboard/exceptions/page.tsx"]
+  Auth["Auth<br/>Detected"]
+  Page --> Layout
+  Page --> File
+  Page --> Auth
+  Table0["DB table/RPC<br/>order_exceptions"]
+  Page --> Table0
+  Table1["DB table/RPC<br/>support_tickets"]
+  Page --> Table1
+  Table2["DB table/RPC<br/>system_alerts"]
+  Page --> Table2
+  Component0["Component/import<br/>@/components/DashboardLayout"]
+  Page --> Component0
+  Component1["Component/import<br/>Card"]
+  Page --> Component1
+  Component2["Component/import<br/>PageHeader"]
+  Page --> Component2
+  Component3["Component/import<br/>StatusBadge"]
+  Page --> Component3
+  classDef page fill:#111827,stroke:#111827,color:#ffffff
+  classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
+  classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
+  classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
+  class Page page
+  class Table0,Table1,Table2 data
+```
+
+### Actual Page Information
+
+| Field | Value |
+| --- | --- |
+| App | Ops Admin |
+| Domain | `ops.ridendine.ca` |
+| Route | `/dashboard/exceptions` |
+| Status | `WIRED` |
+| Auth | Detected |
+| Page file | [apps/ops-admin/src/app/dashboard/exceptions/page.tsx](../../../../apps/ops-admin/src/app/dashboard/exceptions/page.tsx) |
+| Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
+| Data source summary | table:order_exceptions, table:support_tickets, table:system_alerts, @ridendine/db, @ridendine/ui |
+
+### Data And API Wiring
+
+| Type | Details |
+| --- | --- |
+| DB tables/RPCs | `order_exceptions`, `support_tickets`, `system_alerts` |
+| Fetch/API calls | None detected |
+| Shared packages | @ridendine/db, @ridendine/ui |
+| Components/imports | `@/components/DashboardLayout`, `Card`, `PageHeader`, `StatusBadge` |
+| Environment vars | None detected |
+
+### Navigation And Links
+
+| Status | Kind | Target | Resolved app | Resolved file | Notes |
+| --- | --- | --- | --- | --- | --- |
+| WORKING | href | `/dashboard/exceptions?filter=${filter.key}` | Ops Admin | [apps/ops-admin/src/app/dashboard/exceptions/page.tsx](../../../../apps/ops-admin/src/app/dashboard/exceptions/page.tsx) | href resolves to page /dashboard/exceptions |
+| WORKING | href | `/dashboard/support` | Ops Admin | [apps/ops-admin/src/app/dashboard/support/page.tsx](../../../../apps/ops-admin/src/app/dashboard/support/page.tsx) | href resolves to page /dashboard/support |
+
+### API Calls From This Page
+
+No outgoing API/fetch calls detected.
+
+### Incoming References
+
+| Source app | Source file | Kind | Target | Status |
+| --- | --- | --- | --- | --- |
+| Ops Admin | [apps/ops-admin/src/app/dashboard/exceptions/page.tsx](../../../../apps/ops-admin/src/app/dashboard/exceptions/page.tsx) | href | `/dashboard/exceptions?filter=${filter.key}` | WORKING |
+
+### Review Notes
+
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
+
+
+---
+
 ## Ops Admin: `/dashboard/finance/accounts/chefs/:id`
 
 ### Page Diagram
@@ -3091,7 +3264,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/finance/accounts/chefs/:id"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3109,8 +3282,8 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/finance/accounts/chefs/:id` |
-| Status | `MISSING` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | Static/client component/undetected |
@@ -3141,7 +3314,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is MISSING; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -3155,7 +3328,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/finance/accounts/chefs"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3184,8 +3357,8 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/finance/accounts/chefs` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | table:chef_storefronts, table:platform_accounts, @ridendine/db, @ridendine/ui |
@@ -3216,7 +3389,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -3230,7 +3403,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/finance/accounts/drivers/:id"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3248,8 +3421,8 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/finance/accounts/drivers/:id` |
-| Status | `MISSING` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | Static/client component/undetected |
@@ -3280,7 +3453,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is MISSING; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -3294,7 +3467,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/finance/accounts/drivers"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3323,8 +3496,8 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/finance/accounts/drivers` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | table:drivers, table:platform_accounts, @ridendine/db, @ridendine/ui |
@@ -3355,7 +3528,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -3369,7 +3542,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/finance/instant-payouts"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3396,8 +3569,8 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/finance/instant-payouts` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | table:instant_payout_requests, @ridendine/db, @ridendine/ui |
@@ -3426,7 +3599,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -3440,7 +3613,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/finance"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/finance/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3474,7 +3647,7 @@ flowchart TB
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/finance` |
 | Status | `WIRED` |
-| Auth | Undetected |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/finance/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | @ridendine/ui |
@@ -3523,7 +3696,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/finance/payouts/:runId"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3554,8 +3727,8 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/finance/payouts/:runId` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | table:driver_payouts, table:ledger_entries, table:payout_runs, @ridendine/db, @ridendine/ui |
@@ -3588,7 +3761,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -3602,7 +3775,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/finance/payouts"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3631,8 +3804,8 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/finance/payouts` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | table:payout_runs, @ridendine/db, @ridendine/ui |
@@ -3665,7 +3838,7 @@ No outgoing API/fetch calls detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -3679,7 +3852,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/finance/reconciliation"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3708,8 +3881,8 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/finance/reconciliation` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | table:stripe_reconciliation, @ridendine/db, @ridendine/ui |
@@ -3738,7 +3911,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -3752,7 +3925,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/finance/refunds"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3779,7 +3952,7 @@ flowchart TB
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/finance/refunds` |
 | Status | `WIRED` |
-| Auth | Undetected |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx](../../../../apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | @ridendine/ui |
@@ -3822,25 +3995,29 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/health"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/health/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
-  Api0["API/fetch<br/>${baseUrl}/api/health"]
+  Api0["API/fetch<br/>${baseUrl}/api/engine/health"]
   Page --> Api0
+  Api1["API/fetch<br/>${baseUrl}/api/health"]
+  Page --> Api1
   Component0["Component/import<br/>@/components/DashboardLayout"]
   Page --> Component0
   Component1["Component/import<br/>Card"]
   Page --> Component1
-  Gap0["UNKNOWN_DYNAMIC<br/>${baseUrl}/api/health"]
+  Gap0["UNKNOWN_DYNAMIC<br/>${baseUrl}/api/engine/health"]
   Page -. review .-> Gap0
+  Gap1["UNKNOWN_DYNAMIC<br/>${baseUrl}/api/health"]
+  Page -. review .-> Gap1
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
-  class Api0 api
-  class Gap0 warn
+  class Api0,Api1 api
+  class Gap0,Gap1 warn
 ```
 
 ### Actual Page Information
@@ -3850,8 +4027,8 @@ flowchart TB
 | App | Ops Admin |
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/health` |
-| Status | `PARTIAL` |
-| Auth | Undetected |
+| Status | `WIRED` |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/health/page.tsx](../../../../apps/ops-admin/src/app/dashboard/health/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | @ridendine/ui |
@@ -3861,7 +4038,7 @@ flowchart TB
 | Type | Details |
 | --- | --- |
 | DB tables/RPCs | None detected |
-| Fetch/API calls | `${baseUrl}/api/health` |
+| Fetch/API calls | `${baseUrl}/api/engine/health`<br>`${baseUrl}/api/health` |
 | Shared packages | @ridendine/ui |
 | Components/imports | `@/components/DashboardLayout`, `Card` |
 | Environment vars | `NEXT_PUBLIC_APP_URL`, `VERCEL_URL` |
@@ -3874,6 +4051,7 @@ No outgoing page-navigation links detected.
 
 | Status | Kind | Target | Resolved app | Resolved file | Notes |
 | --- | --- | --- | --- | --- | --- |
+| UNKNOWN_DYNAMIC | fetch | `${baseUrl}/api/engine/health` | Ops Admin |  | Not an internal route path |
 | UNKNOWN_DYNAMIC | fetch | `${baseUrl}/api/health` | Ops Admin |  | Not an internal route path |
 
 ### Incoming References
@@ -3882,8 +4060,7 @@ No incoming static references detected.
 
 ### Review Notes
 
-- Dynamic/unproven references: `${baseUrl}/api/health`.
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Dynamic/unproven references: `${baseUrl}/api/engine/health`, `${baseUrl}/api/health`.
 
 
 ---
@@ -3897,7 +4074,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/integrations"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/integrations/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -3922,7 +4099,7 @@ flowchart TB
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/integrations` |
 | Status | `WIRED` |
-| Auth | Undetected |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/integrations/page.tsx](../../../../apps/ops-admin/src/app/dashboard/integrations/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | @ridendine/ui |
@@ -4033,7 +4210,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/orders/:id"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -4061,7 +4238,7 @@ flowchart TB
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/orders/:id` |
 | Status | `WIRED` |
-| Auth | Undetected |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | table:order_exceptions, @ridendine/db, @ridendine/ui |
@@ -4267,6 +4444,7 @@ No outgoing API/fetch calls detected.
 | --- | --- | --- | --- | --- |
 | Ops Admin | [apps/ops-admin/src/app/error.tsx](../../../../apps/ops-admin/src/app/error.tsx) | href | `/dashboard` | WORKING |
 | Ops Admin | [apps/ops-admin/src/app/page.tsx](../../../../apps/ops-admin/src/app/page.tsx) | redirect | `/dashboard` | WORKING |
+| Ops Admin | [apps/ops-admin/src/components/DashboardLayout.tsx](../../../../apps/ops-admin/src/components/DashboardLayout.tsx) | href | `/dashboard` | WORKING |
 
 ### Review Notes
 
@@ -4429,7 +4607,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/settings"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/settings/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -4454,7 +4632,7 @@ flowchart TB
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/settings` |
 | Status | `WIRED` |
-| Auth | Undetected |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/settings/page.tsx](../../../../apps/ops-admin/src/app/dashboard/settings/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | @ridendine/ui |
@@ -4500,7 +4678,7 @@ flowchart TB
   Page["Ops Admin<br/>/dashboard/support"]
   Layout["Layout<br/>apps/ops-admin/src/app/dashboard/layout.tsx"]
   File["Page file<br/>apps/ops-admin/src/app/dashboard/support/page.tsx"]
-  Auth["Auth<br/>Undetected"]
+  Auth["Auth<br/>Detected"]
   Page --> Layout
   Page --> File
   Page --> Auth
@@ -4525,7 +4703,7 @@ flowchart TB
 | Domain | `ops.ridendine.ca` |
 | Route | `/dashboard/support` |
 | Status | `PARTIAL` |
-| Auth | Undetected |
+| Auth | Detected |
 | Page file | [apps/ops-admin/src/app/dashboard/support/page.tsx](../../../../apps/ops-admin/src/app/dashboard/support/page.tsx) |
 | Layout | [apps/ops-admin/src/app/dashboard/layout.tsx](../../../../apps/ops-admin/src/app/dashboard/layout.tsx) |
 | Data source summary | @ridendine/db, @ridendine/ui |
@@ -4557,6 +4735,7 @@ No outgoing API/fetch calls detected.
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx](../../../../apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx) | href | `/dashboard/support` | WORKING |
+| Ops Admin | [apps/ops-admin/src/app/dashboard/exceptions/page.tsx](../../../../apps/ops-admin/src/app/dashboard/exceptions/page.tsx) | href | `/dashboard/support` | WORKING |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/support/page.tsx](../../../../apps/ops-admin/src/app/dashboard/support/page.tsx) | href | `/dashboard/support?status=${statusFilter}&search=${encodeURIComponent(search)}&page=${Math.max(1, safePage - 1)}` | WORKING |
 | Ops Admin | [apps/ops-admin/src/app/dashboard/support/page.tsx](../../../../apps/ops-admin/src/app/dashboard/support/page.tsx) | href | `/dashboard/support?status=${statusFilter}&search=${encodeURIComponent(search)}&page=${Math.min(totalPages, safePage + 1)}` | WORKING |
 | Ops Admin | [apps/ops-admin/src/components/ops-alerts.tsx](../../../../apps/ops-admin/src/components/ops-alerts.tsx) | href | `/dashboard/support` | WORKING |
@@ -5421,6 +5600,8 @@ No outgoing API/fetch calls detected.
 | --- | --- | --- | --- | --- |
 | Chef Admin | [apps/chef-admin/src/app/error.tsx](../../../../apps/chef-admin/src/app/error.tsx) | href | `/dashboard` | WORKING |
 | Chef Admin | [apps/chef-admin/src/app/page.tsx](../../../../apps/chef-admin/src/app/page.tsx) | redirect | `/dashboard` | WORKING |
+| Chef Admin | [apps/chef-admin/src/components/layout/header.tsx](../../../../apps/chef-admin/src/components/layout/header.tsx) | href | `/dashboard` | WORKING |
+| Chef Admin | [apps/chef-admin/src/components/layout/sidebar.tsx](../../../../apps/chef-admin/src/components/layout/sidebar.tsx) | href | `/dashboard` | WORKING |
 
 ### Review Notes
 
@@ -6076,6 +6257,8 @@ flowchart TB
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
 | Driver App | [apps/driver-app/src/app/auth/signup/page.tsx](../../../../apps/driver-app/src/app/auth/signup/page.tsx) | href | `/auth/login` | WORKING |
+| Driver App | [apps/driver-app/src/app/auth/signup/page.tsx](../../../../apps/driver-app/src/app/auth/signup/page.tsx) | router.push | `/auth/login?signup=success` | WORKING |
+| Driver App | [apps/driver-app/src/app/components/DriverDashboard.tsx](../../../../apps/driver-app/src/app/components/DriverDashboard.tsx) | router.push | `/auth/login` | WORKING |
 | Driver App | [apps/driver-app/src/app/delivery/[id]/page.tsx](../../../../apps/driver-app/src/app/delivery/[id]/page.tsx) | redirect | `/auth/login` | WORKING |
 | Driver App | [apps/driver-app/src/app/page.tsx](../../../../apps/driver-app/src/app/page.tsx) | redirect | `/auth/login` | WORKING |
 
@@ -6142,7 +6325,9 @@ flowchart TB
 
 | Status | Kind | Target | Resolved app | Resolved file | Notes |
 | --- | --- | --- | --- | --- | --- |
+| WORKING | router.push | `/` | Driver App | [apps/driver-app/src/app/page.tsx](../../../../apps/driver-app/src/app/page.tsx) | router.push resolves to page / |
 | WORKING | href | `/auth/login` | Driver App | [apps/driver-app/src/app/auth/login/page.tsx](../../../../apps/driver-app/src/app/auth/login/page.tsx) | href resolves to page /auth/login |
+| WORKING | router.push | `/auth/login?signup=success` | Driver App | [apps/driver-app/src/app/auth/login/page.tsx](../../../../apps/driver-app/src/app/auth/login/page.tsx) | router.push resolves to page /auth/login |
 | WORKING | href | `/privacy` | Driver App | [apps/driver-app/src/app/privacy/page.tsx](../../../../apps/driver-app/src/app/privacy/page.tsx) | href resolves to page /privacy |
 | WORKING | href | `/terms` | Driver App | [apps/driver-app/src/app/terms/page.tsx](../../../../apps/driver-app/src/app/terms/page.tsx) | href resolves to page /terms |
 
@@ -6430,6 +6615,7 @@ No outgoing API/fetch calls detected.
 
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
+| Driver App | [apps/driver-app/src/app/auth/signup/page.tsx](../../../../apps/driver-app/src/app/auth/signup/page.tsx) | router.push | `/` | WORKING |
 | Driver App | [apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx](../../../../apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx) | router.push | `/` | WORKING |
 | Driver App | [apps/driver-app/src/app/error.tsx](../../../../apps/driver-app/src/app/error.tsx) | href | `/` | WORKING |
 | Driver App | [apps/driver-app/src/app/profile/components/ProfileView.tsx](../../../../apps/driver-app/src/app/profile/components/ProfileView.tsx) | router.push | `/` | WORKING |

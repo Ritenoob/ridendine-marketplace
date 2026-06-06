@@ -19,8 +19,10 @@ flowchart TB
   Page --> Auth
   Component0["Component/import<br/>@/components/layout/header"]
   Page --> Component0
-  Component1["Component/import<br/>Card"]
+  Component1["Component/import<br/>Button"]
   Page --> Component1
+  Component2["Component/import<br/>Card"]
+  Page --> Component2
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -48,7 +50,7 @@ flowchart TB
 | DB tables/RPCs | None detected |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/ui |
-| Components/imports | `@/components/layout/header`, `Card` |
+| Components/imports | `@/components/layout/header`, `Button`, `Card` |
 | Environment vars | None detected |
 
 ### Navigation And Links
@@ -67,7 +69,6 @@ No outgoing API/fetch calls detected.
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
 | Customer Web | [apps/web/src/app/not-found.tsx](../../../../apps/web/src/app/not-found.tsx) | href | `/about` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/about` | WORKING |
 | Customer Web | [apps/web/src/components/layout/header.tsx](../../../../apps/web/src/components/layout/header.tsx) | href | `/about` | WORKING |
 
 ### Review Notes
@@ -100,6 +101,10 @@ flowchart TB
   Page --> Component1
   Component2["Component/import<br/>Card"]
   Page --> Component2
+  Component3["Component/import<br/>Input"]
+  Page --> Component3
+  Component4["Component/import<br/>Select"]
+  Page --> Component4
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -128,7 +133,7 @@ flowchart TB
 | DB tables/RPCs | None detected |
 | Fetch/API calls | `/api/addresses` (DELETE, GET, PATCH, POST)<br>`/api/addresses?id=${id}` (DELETE, GET, PATCH, POST) |
 | Shared packages | @ridendine/auth, @ridendine/ui |
-| Components/imports | `@/components/layout/header`, `Button`, `Card` |
+| Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input`, `Select` |
 | Environment vars | None detected |
 
 ### Navigation And Links
@@ -309,9 +314,7 @@ flowchart TB
 
 ### Incoming References
 
-| Source app | Source file | Kind | Target | Status |
-| --- | --- | --- | --- | --- |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/account/orders` | WORKING |
+No incoming static references detected.
 
 ### Review Notes
 
@@ -416,14 +419,12 @@ flowchart TB
   Page --> Api0
   Component0["Component/import<br/>@/components/layout/header"]
   Page --> Component0
-  Component1["Component/import<br/>@/components/profile/saved-cards"]
+  Component1["Component/import<br/>Button"]
   Page --> Component1
-  Component2["Component/import<br/>Button"]
+  Component2["Component/import<br/>Card"]
   Page --> Component2
-  Component3["Component/import<br/>Card"]
+  Component3["Component/import<br/>Input"]
   Page --> Component3
-  Component4["Component/import<br/>Input"]
-  Page --> Component4
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -452,7 +453,7 @@ flowchart TB
 | DB tables/RPCs | None detected |
 | Fetch/API calls | `/api/profile` (GET, PATCH) |
 | Shared packages | @ridendine/auth, @ridendine/ui |
-| Components/imports | `@/components/layout/header`, `@/components/profile/saved-cards`, `Button`, `Card`, `Input` |
+| Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input` |
 | Environment vars | None detected |
 
 ### Navigation And Links
@@ -633,6 +634,7 @@ flowchart TB
 | Customer Web | [apps/web/src/app/chef-signup/page.tsx](../../../../apps/web/src/app/chef-signup/page.tsx) | href | `/auth/login` | WORKING |
 | Customer Web | [apps/web/src/app/orders/[id]/confirmation/page.tsx](../../../../apps/web/src/app/orders/[id]/confirmation/page.tsx) | redirect | `/auth/login` | WORKING |
 | Customer Web | [apps/web/src/components/layout/header.tsx](../../../../apps/web/src/components/layout/header.tsx) | href | `/auth/login` | WORKING |
+| Customer Web | [apps/web/src/contexts/cart-context.tsx](../../../../apps/web/src/contexts/cart-context.tsx) | window.location | `/auth/login?redirect=${redirect}` | WORKING |
 
 ### Review Notes
 
@@ -1045,7 +1047,6 @@ No outgoing API/fetch calls detected.
 | --- | --- | --- | --- | --- |
 | Customer Web | [apps/web/src/app/about/page.tsx](../../../../apps/web/src/app/about/page.tsx) | href | `/chef-signup` | WORKING |
 | Customer Web | [apps/web/src/app/chef-resources/page.tsx](../../../../apps/web/src/app/chef-resources/page.tsx) | href | `/chef-signup` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/chef-signup` | WORKING |
 | Customer Web | [apps/web/src/components/home/featured-chefs.tsx](../../../../apps/web/src/components/home/featured-chefs.tsx) | href | `/chef-signup` | WORKING |
 
 ### Review Notes
@@ -1235,6 +1236,8 @@ flowchart TB
   Page --> Component2
   Component3["Component/import<br/>Input"]
   Page --> Component3
+  Component4["Component/import<br/>Textarea"]
+  Page --> Component4
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -1263,7 +1266,7 @@ flowchart TB
 | DB tables/RPCs | None detected |
 | Fetch/API calls | `/api/support` (GET, POST) |
 | Shared packages | @ridendine/ui |
-| Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input` |
+| Components/imports | `@/components/layout/header`, `Button`, `Card`, `Input`, `Textarea` |
 | Environment vars | None detected |
 
 ### Navigation And Links
@@ -1282,7 +1285,6 @@ No outgoing page-navigation links detected.
 | --- | --- | --- | --- | --- |
 | Customer Web | [apps/web/src/app/chef-resources/page.tsx](../../../../apps/web/src/app/chef-resources/page.tsx) | href | `/contact` | WORKING |
 | Customer Web | [apps/web/src/app/not-found.tsx](../../../../apps/web/src/app/not-found.tsx) | href | `/contact` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/contact` | WORKING |
 
 ### Review Notes
 
@@ -1306,8 +1308,10 @@ flowchart TB
   Page --> Auth
   Component0["Component/import<br/>@/components/layout/header"]
   Page --> Component0
-  Component1["Component/import<br/>Card"]
+  Component1["Component/import<br/>Button"]
   Page --> Component1
+  Component2["Component/import<br/>Card"]
+  Page --> Component2
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -1335,7 +1339,7 @@ flowchart TB
 | DB tables/RPCs | None detected |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/ui |
-| Components/imports | `@/components/layout/header`, `Card` |
+| Components/imports | `@/components/layout/header`, `Button`, `Card` |
 | Environment vars | None detected |
 
 ### Navigation And Links
@@ -1354,7 +1358,6 @@ No outgoing API/fetch calls detected.
 | Source app | Source file | Kind | Target | Status |
 | --- | --- | --- | --- | --- |
 | Customer Web | [apps/web/src/app/not-found.tsx](../../../../apps/web/src/app/not-found.tsx) | href | `/how-it-works` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/how-it-works` | WORKING |
 | Customer Web | [apps/web/src/components/layout/header.tsx](../../../../apps/web/src/components/layout/header.tsx) | href | `/how-it-works` | WORKING |
 
 ### Review Notes
@@ -1591,6 +1594,10 @@ flowchart TB
   Page --> Component2
   Component3["Component/import<br/>Button"]
   Page --> Component3
+  Component4["Component/import<br/>Card"]
+  Page --> Component4
+  Component5["Component/import<br/>Logo"]
+  Page --> Component5
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
@@ -1619,23 +1626,16 @@ flowchart TB
 | DB tables/RPCs | `chef_storefronts`, `menu_items` |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/db, @ridendine/ui |
-| Components/imports | `@/components/home/featured-chefs`, `@/components/home/scroll-reveal-section`, `@/components/layout/header`, `Button` |
+| Components/imports | `@/components/home/featured-chefs`, `@/components/home/scroll-reveal-section`, `@/components/layout/header`, `Button`, `Card`, `Logo` |
 | Environment vars | None detected |
 
 ### Navigation And Links
 
 | Status | Kind | Target | Resolved app | Resolved file | Notes |
 | --- | --- | --- | --- | --- | --- |
-| WORKING | href | `/about` | Customer Web | [apps/web/src/app/about/page.tsx](../../../../apps/web/src/app/about/page.tsx) | href resolves to page /about |
-| WORKING | href | `/account/orders` | Customer Web | [apps/web/src/app/account/orders/page.tsx](../../../../apps/web/src/app/account/orders/page.tsx) | href resolves to page /account/orders |
 | WORKING | href | `/auth/signup?role=chef` | Customer Web | [apps/web/src/app/auth/signup/page.tsx](../../../../apps/web/src/app/auth/signup/page.tsx) | href resolves to page /auth/signup |
 | WORKING | href | `/chef-resources` | Customer Web | [apps/web/src/app/chef-resources/page.tsx](../../../../apps/web/src/app/chef-resources/page.tsx) | href resolves to page /chef-resources |
-| WORKING | href | `/chef-signup` | Customer Web | [apps/web/src/app/chef-signup/page.tsx](../../../../apps/web/src/app/chef-signup/page.tsx) | href resolves to page /chef-signup |
 | WORKING | href | `/chefs` | Customer Web | [apps/web/src/app/chefs/page.tsx](../../../../apps/web/src/app/chefs/page.tsx) | href resolves to page /chefs |
-| WORKING | href | `/contact` | Customer Web | [apps/web/src/app/contact/page.tsx](../../../../apps/web/src/app/contact/page.tsx) | href resolves to page /contact |
-| WORKING | href | `/how-it-works` | Customer Web | [apps/web/src/app/how-it-works/page.tsx](../../../../apps/web/src/app/how-it-works/page.tsx) | href resolves to page /how-it-works |
-| WORKING | href | `/privacy` | Customer Web | [apps/web/src/app/privacy/page.tsx](../../../../apps/web/src/app/privacy/page.tsx) | href resolves to page /privacy |
-| WORKING | href | `/terms` | Customer Web | [apps/web/src/app/terms/page.tsx](../../../../apps/web/src/app/terms/page.tsx) | href resolves to page /terms |
 
 ### API Calls From This Page
 
@@ -1690,7 +1690,7 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/privacy` |
-| Status | `PARTIAL` |
+| Status | `WIRED` |
 | Auth | Public |
 | Page file | [apps/web/src/app/privacy/page.tsx](../../../../apps/web/src/app/privacy/page.tsx) |
 | Layout | [apps/web/src/app/layout.tsx](../../../../apps/web/src/app/layout.tsx) |
@@ -1723,12 +1723,11 @@ No outgoing API/fetch calls detected.
 | Chef Admin | [apps/chef-admin/src/app/privacy/page.tsx](../../../../apps/chef-admin/src/app/privacy/page.tsx) | href | `https://ridendine.ca/privacy` | WORKING |
 | Customer Web | [apps/web/src/app/account/settings/page.tsx](../../../../apps/web/src/app/account/settings/page.tsx) | href | `/privacy` | WORKING |
 | Customer Web | [apps/web/src/app/auth/signup/page.tsx](../../../../apps/web/src/app/auth/signup/page.tsx) | href | `/privacy` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/privacy` | WORKING |
 | Driver App | [apps/driver-app/src/app/privacy/page.tsx](../../../../apps/driver-app/src/app/privacy/page.tsx) | href | `https://ridendine.ca/privacy` | WORKING |
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.
 
 
 ---
@@ -1762,7 +1761,7 @@ flowchart TB
 | App | Customer Web |
 | Domain | `ridendine.ca` |
 | Route | `/terms` |
-| Status | `PARTIAL` |
+| Status | `WIRED` |
 | Auth | Public |
 | Page file | [apps/web/src/app/terms/page.tsx](../../../../apps/web/src/app/terms/page.tsx) |
 | Layout | [apps/web/src/app/layout.tsx](../../../../apps/web/src/app/layout.tsx) |
@@ -1795,9 +1794,8 @@ No outgoing API/fetch calls detected.
 | Chef Admin | [apps/chef-admin/src/app/terms/page.tsx](../../../../apps/chef-admin/src/app/terms/page.tsx) | href | `https://ridendine.ca/terms` | WORKING |
 | Customer Web | [apps/web/src/app/account/settings/page.tsx](../../../../apps/web/src/app/account/settings/page.tsx) | href | `/terms` | WORKING |
 | Customer Web | [apps/web/src/app/auth/signup/page.tsx](../../../../apps/web/src/app/auth/signup/page.tsx) | href | `/terms` | WORKING |
-| Customer Web | [apps/web/src/app/page.tsx](../../../../apps/web/src/app/page.tsx) | href | `/terms` | WORKING |
 | Driver App | [apps/driver-app/src/app/terms/page.tsx](../../../../apps/driver-app/src/app/terms/page.tsx) | href | `https://ridendine.ca/terms` | WORKING |
 
 ### Review Notes
 
-- Page status is PARTIAL; review auth/data/API metadata and runtime behavior.
+- Static wiring scan did not flag this page, but runtime auth, DB data, and external services still need smoke/e2e proof.

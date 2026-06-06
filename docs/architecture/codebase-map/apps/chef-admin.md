@@ -12,8 +12,8 @@
 ## Status Summary
 
 - Page routes: 17 total, 12 WIRED, 5 PARTIAL, 0 MISSING.
-- API route files: 14 total, 3 WIRED, 10 PARTIAL.
-- Internal link/API references: 42 total, 0 BROKEN, 0 UNKNOWN_DYNAMIC.
+- API route files: 18 total, 16 WIRED, 2 PARTIAL.
+- Internal link/API references: 44 total, 0 BROKEN, 0 UNKNOWN_DYNAMIC.
 
 ## Standalone App Diagram
 
@@ -25,7 +25,7 @@ flowchart TB
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   App["Chef Admin<br/>chef.ridendine.ca"]:::app
   Pages["17 pages"]:::api
-  APIs["14 API route files"]:::api
+  APIs["18 API route files"]:::api
   Shared["Shared packages"]:::data
   DB["Supabase tables/RPCs"]:::data
   External["Stripe / routing / notifications where detected"]:::warn
@@ -62,20 +62,24 @@ flowchart TB
 
 | Status | Endpoint | Methods | File | Auth | Tables | Packages | External |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| PARTIAL | `/api/analytics` | GET | [apps/chef-admin/src/app/api/analytics/route.ts](../../../../apps/chef-admin/src/app/api/analytics/route.ts) | Undetected | `order_items`, `orders`, `reviews` | @ridendine/db | None detected |
+| WIRED | `/api/analytics` | GET | [apps/chef-admin/src/app/api/analytics/route.ts](../../../../apps/chef-admin/src/app/api/analytics/route.ts) | Detected | `order_items`, `orders`, `reviews` | @ridendine/db | None detected |
 | WIRED | `/api/auth/signup` | POST | [apps/chef-admin/src/app/api/auth/signup/route.ts](../../../../apps/chef-admin/src/app/api/auth/signup/route.ts) | Detected | None detected | @ridendine/db, @ridendine/utils, @ridendine/validation | Supabase |
 | PARTIAL | `/api/health` | GET | [apps/chef-admin/src/app/api/health/route.ts](../../../../apps/chef-admin/src/app/api/health/route.ts) | Undetected | `chef_profiles` | @ridendine/db, @ridendine/utils | Stripe, Supabase |
-| PARTIAL | `/api/menu/:id` | DELETE, GET, PATCH | [apps/chef-admin/src/app/api/menu/[id]/route.ts](../../../../apps/chef-admin/src/app/api/menu/[id]/route.ts) | Undetected | None detected | @ridendine/db | Supabase |
-| PARTIAL | `/api/menu/categories` | GET, POST | [apps/chef-admin/src/app/api/menu/categories/route.ts](../../../../apps/chef-admin/src/app/api/menu/categories/route.ts) | Undetected | None detected | @ridendine/db | Supabase |
-| PARTIAL | `/api/menu` | GET, POST | [apps/chef-admin/src/app/api/menu/route.ts](../../../../apps/chef-admin/src/app/api/menu/route.ts) | Undetected | None detected | @ridendine/db | Supabase |
-| PARTIAL | `/api/orders/:id` | GET, PATCH | [apps/chef-admin/src/app/api/orders/[id]/route.ts](../../../../apps/chef-admin/src/app/api/orders/[id]/route.ts) | Undetected | `orders` | @ridendine/db, @ridendine/types, @ridendine/utils | None detected |
-| PARTIAL | `/api/orders` | GET | [apps/chef-admin/src/app/api/orders/route.ts](../../../../apps/chef-admin/src/app/api/orders/route.ts) | Undetected | `customer_addresses`, `customers`, `orders` | @ridendine/db | None detected |
-| MISSING | `/api/payouts/request` | POST | [apps/chef-admin/src/app/api/payouts/request/route.ts](../../../../apps/chef-admin/src/app/api/payouts/request/route.ts) | Undetected | None detected | None detected | None detected |
+| WIRED | `/api/menu/:id/options/:optionId` | DELETE, PATCH | [apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/route.ts](../../../../apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/route.ts) | Detected | `menu_item_options` | @ridendine/validation | None detected |
+| WIRED | `/api/menu/:id/options/:optionId/values/:valueId` | DELETE, PATCH | [apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/values/[valueId]/route.ts](../../../../apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/values/[valueId]/route.ts) | Detected | `menu_item_option_values` | @ridendine/validation | None detected |
+| WIRED | `/api/menu/:id/options/:optionId/values` | POST | [apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/values/route.ts](../../../../apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/values/route.ts) | Detected | `menu_item_option_values` | @ridendine/validation | None detected |
+| WIRED | `/api/menu/:id/options` | GET, POST | [apps/chef-admin/src/app/api/menu/[id]/options/route.ts](../../../../apps/chef-admin/src/app/api/menu/[id]/options/route.ts) | Detected | `menu_item_option_values`, `menu_item_options` | @ridendine/validation | None detected |
+| WIRED | `/api/menu/:id` | DELETE, GET, PATCH | [apps/chef-admin/src/app/api/menu/[id]/route.ts](../../../../apps/chef-admin/src/app/api/menu/[id]/route.ts) | Detected | None detected | @ridendine/db | Supabase |
+| WIRED | `/api/menu/categories` | GET, POST | [apps/chef-admin/src/app/api/menu/categories/route.ts](../../../../apps/chef-admin/src/app/api/menu/categories/route.ts) | Detected | None detected | @ridendine/db | Supabase |
+| WIRED | `/api/menu` | GET, POST | [apps/chef-admin/src/app/api/menu/route.ts](../../../../apps/chef-admin/src/app/api/menu/route.ts) | Detected | None detected | @ridendine/db | Supabase |
+| WIRED | `/api/orders/:id` | GET, PATCH | [apps/chef-admin/src/app/api/orders/[id]/route.ts](../../../../apps/chef-admin/src/app/api/orders/[id]/route.ts) | Detected | `orders` | @ridendine/db, @ridendine/types, @ridendine/utils | None detected |
+| WIRED | `/api/orders` | GET | [apps/chef-admin/src/app/api/orders/route.ts](../../../../apps/chef-admin/src/app/api/orders/route.ts) | Detected | `customer_addresses`, `customers`, `orders` | @ridendine/db | None detected |
+| WIRED | `/api/payouts/request` | POST | [apps/chef-admin/src/app/api/payouts/request/route.ts](../../../../apps/chef-admin/src/app/api/payouts/request/route.ts) | Detected | None detected | None detected | None detected |
 | WIRED | `/api/payouts/setup` | POST | [apps/chef-admin/src/app/api/payouts/setup/route.ts](../../../../apps/chef-admin/src/app/api/payouts/setup/route.ts) | Detected | `chef_payout_accounts`, `chef_profiles` | @ridendine/db, @ridendine/engine | Stripe, Supabase |
 | WIRED | `/api/profile` | GET, PATCH | [apps/chef-admin/src/app/api/profile/route.ts](../../../../apps/chef-admin/src/app/api/profile/route.ts) | Detected | None detected | @ridendine/db | Supabase |
-| PARTIAL | `/api/storefront/availability` | GET, PUT | [apps/chef-admin/src/app/api/storefront/availability/route.ts](../../../../apps/chef-admin/src/app/api/storefront/availability/route.ts) | Undetected | `chef_availability` | @ridendine/db | None detected |
-| PARTIAL | `/api/storefront` | GET, PATCH, POST | [apps/chef-admin/src/app/api/storefront/route.ts](../../../../apps/chef-admin/src/app/api/storefront/route.ts) | Undetected | `chef_kitchens`, `chef_storefronts` | @ridendine/db | Supabase |
-| PARTIAL | `/api/upload` | POST | [apps/chef-admin/src/app/api/upload/route.ts](../../../../apps/chef-admin/src/app/api/upload/route.ts) | Undetected | None detected | @ridendine/db, @ridendine/utils | Supabase |
+| WIRED | `/api/storefront/availability` | GET, PUT | [apps/chef-admin/src/app/api/storefront/availability/route.ts](../../../../apps/chef-admin/src/app/api/storefront/availability/route.ts) | Detected | `chef_availability` | @ridendine/db | None detected |
+| PARTIAL | `/api/storefront` | GET, PATCH, POST | [apps/chef-admin/src/app/api/storefront/route.ts](../../../../apps/chef-admin/src/app/api/storefront/route.ts) | Detected | `chef_kitchens`, `chef_storefronts` | @ridendine/db | Supabase |
+| WIRED | `/api/upload` | POST | [apps/chef-admin/src/app/api/upload/route.ts](../../../../apps/chef-admin/src/app/api/upload/route.ts) | Detected | None detected | @ridendine/db, @ridendine/utils | Supabase |
 
 ## Broken Or Unproven Links
 
