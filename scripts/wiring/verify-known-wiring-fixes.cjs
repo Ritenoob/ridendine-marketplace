@@ -209,6 +209,35 @@ const checks = [
         exists('docs/obsidian/codebase-map/High Risk Ops Negative Authorization.md');
     },
   },
+  {
+    name: 'phase 13 Sean super-admin fixture contracts validate',
+    pass: () => {
+      const {
+        fixtureContracts,
+        validateFixtureContracts,
+      } = require(path.join(root, 'scripts/audit/sean-super-admin-fixture.cjs'));
+      const result = validateFixtureContracts({ root });
+      return fixtureContracts.length >= 10 &&
+        result.failures.length === 0 &&
+        result.passed === fixtureContracts.length &&
+        exists('docs/wiring/SEAN_SUPER_ADMIN_FIXTURE.md') &&
+        exists('docs/architecture/codebase-map/wiring/SEAN_SUPER_ADMIN_FIXTURE.md') &&
+        exists('docs/obsidian/codebase-map/Sean Super Admin Fixture.md');
+    },
+  },
+  {
+    name: 'phase 13 live role fixture smoke contracts are generated',
+    pass: () => {
+      const {
+        liveRoleFixtureContracts,
+      } = require(path.join(root, 'scripts/smoke/live-role-fixture-smoke.cjs'));
+      return liveRoleFixtureContracts.length >= 20 &&
+        liveRoleFixtureContracts.every((contract) => contract.method === 'GET' && contract.liveSafe === true) &&
+        exists('docs/wiring/LIVE_ROLE_FIXTURE_SMOKE.md') &&
+        exists('docs/architecture/codebase-map/wiring/LIVE_ROLE_FIXTURE_SMOKE.md') &&
+        exists('docs/obsidian/codebase-map/Live Role Fixture Smoke.md');
+    },
+  },
 ];
 
 const failures = checks.filter((check) => !check.pass());

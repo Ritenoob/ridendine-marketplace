@@ -1,4 +1,4 @@
-import { ActorRole } from '@ridendine/types';
+import { ActorRole, PLATFORM_CAPABILITIES } from '@ridendine/types';
 import { hasPlatformApiCapability } from '@ridendine/engine/server';
 
 function actor(role: (typeof ActorRole)[keyof typeof ActorRole]) {
@@ -56,5 +56,11 @@ describe('ops-admin platform API wiring (Phase 10)', () => {
 
   it('denies support_agent from order_override', () => {
     expect(hasPlatformApiCapability(actor(ActorRole.SUPPORT_AGENT), 'order_override')).toBe(false);
+  });
+
+  it('allows super_admin for every platform API capability', () => {
+    for (const capability of PLATFORM_CAPABILITIES) {
+      expect(hasPlatformApiCapability(actor(ActorRole.SUPER_ADMIN), capability)).toBe(true);
+    }
   });
 });
