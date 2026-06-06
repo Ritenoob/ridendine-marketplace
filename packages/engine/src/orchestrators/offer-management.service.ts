@@ -26,11 +26,10 @@ interface DeliveryRow {
   dropoff_address: string;
   pickup_lat: number;
   pickup_lng: number;
-  estimated_distance_km?: number | null;
+  distance_km?: number | null;
   delivery_fee: number;
   driver_payout: number;
   assignment_attempts_count: number;
-  estimated_duration_minutes?: number | null;
 }
 
 interface ServiceSettings {
@@ -207,7 +206,7 @@ export class OfferManagementService {
       expiresAt: expiresAt.toISOString(),
       pickupAddress: typedDelivery.pickup_address,
       dropoffAddress: typedDelivery.dropoff_address,
-      estimatedDistanceKm: typedDelivery.estimated_distance_km ?? null,
+      estimatedDistanceKm: typedDelivery.distance_km ?? null,
       estimatedPayout: typedDelivery.driver_payout,
       estimatedMinutes: etaMinutes,
     };

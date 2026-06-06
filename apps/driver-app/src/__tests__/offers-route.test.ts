@@ -2,9 +2,11 @@
  * @jest-environment node
  */
 import { NextRequest } from 'next/server';
-import { POST } from '../app/api/offers/route';
+import { GET, POST } from '../app/api/offers/route';
 
 const respondToOffer = jest.fn();
+const mockFrom = jest.fn();
+let lastOfferSelect = '';
 
 jest.mock('@/lib/engine', () => ({
   getDriverActorContext: jest.fn().mockResolvedValue({
@@ -19,6 +21,40 @@ jest.mock('@/lib/engine', () => ({
   successResponse: (data: unknown, status = 200) =>
     new Response(JSON.stringify({ success: true, data }), { status }),
 }));
+
+jest.mock('@ridendine/db', () => ({
+  createAdminClient: jest.fn(() => ({
+    from: mockFrom,
+  })),
+}));
+
+describe('GET /api/offers', () => {
+  beforeEach(() => {
+    lastOfferSelect = '';
+    mockFrom.mockReset();
+  });
+
+  it('queries pending offers using the deployed deliveries schema', async () => {
+    const order = jest.fn().mockResolvedValue({ data: [], error: null });
+    const gt = jest.fn().mockReturnValue({ order });
+    const eqResponse = { eq: jest.fn().mockReturnValue({ gt }) };
+    const select = jest.fn((columns: string) => {
+      lastOfferSelect = columns;
+      return { eq: jest.fn().mockReturnValue(eqResponse) };
+    });
+    mockFrom.mockReturnValue({ select });
+
+    const res = await GET();
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(mockFrom).toHaveBeenCalledWith('assignment_attempts');
+    expect(lastOfferSelect).toContain('distance_km');
+    expect(lastOfferSelect).not.toContain('estimated_distance_km');
+    expect(lastOfferSelect).not.toContain('estimated_duration_minutes');
+  });
+});
 
 describe('POST /api/offers', () => {
   beforeEach(() => {

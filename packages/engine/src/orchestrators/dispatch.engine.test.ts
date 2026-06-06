@@ -167,7 +167,7 @@ describe('OfferManagementService dispatch chain (Phase 3)', () => {
       pickup_address: '1 Chef St',
       dropoff_address: '9 Cust Rd',
       assignment_attempts_count: 0,
-      estimated_distance_km: 3,
+      distance_km: 3,
       driver_payout: 8.5,
       delivery_fee: 9.99,
     };

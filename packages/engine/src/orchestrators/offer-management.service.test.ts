@@ -97,11 +97,10 @@ function makeDelivery(overrides: Record<string, unknown> = {}) {
     dropoff_address: '200 Oak Ave',
     pickup_lat: 43.26,
     pickup_lng: -79.87,
-    estimated_distance_km: 3,
+    distance_km: 3,
     delivery_fee: 5.00,
     driver_payout: 4.00,
     assignment_attempts_count: 0,
-    estimated_duration_minutes: 15,
     ...overrides,
   };
 }

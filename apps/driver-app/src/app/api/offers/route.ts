@@ -40,8 +40,8 @@ export async function GET() {
           dropoff_address,
           dropoff_lat,
           dropoff_lng,
-          estimated_distance_km,
-          estimated_duration_minutes,
+          distance_km,
+          route_to_dropoff_seconds,
           driver_payout,
           orders!inner (
             order_number,

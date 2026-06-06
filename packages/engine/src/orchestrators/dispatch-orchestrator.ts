@@ -33,8 +33,7 @@ interface DeliveryData {
   dropoff_address: string;
   dropoff_lat: number;
   dropoff_lng: number;
-  estimated_distance_km?: number;
-  estimated_duration_minutes?: number;
+  distance_km?: number;
   delivery_fee: number;
   driver_payout: number;
   assignment_attempts_count: number;
@@ -125,8 +124,8 @@ export class DispatchOrchestrator {
         dropoff_address: `${dropoff.address_line1}, ${dropoff.city}, ${dropoff.state} ${dropoff.postal_code}`,
         dropoff_lat: dropoff.lat,
         dropoff_lng: dropoff.lng,
-        estimated_distance_km: distance,
-        estimated_duration_minutes: estimatedMinutes,
+        distance_km: distance,
+        estimated_dropoff_at: new Date(Date.now() + estimatedMinutes * 60 * 1000).toISOString(),
         delivery_fee: order.delivery_fee,
         driver_payout: driverPayout,
         assignment_attempts_count: 0,

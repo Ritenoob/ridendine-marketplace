@@ -483,20 +483,23 @@ export class DeliveryEngine {
     const updateData: Record<string, unknown> = { status, updated_at: now };
 
     if (status === 'picked_up') {
-      updateData.actual_pickup_time = now;
+      updateData.actual_pickup_at = now;
       if (metadata?.proofUrl) updateData.pickup_proof_url = metadata.proofUrl;
       if (this.sla) {
         await this.sla.startTimer({
           type: 'driver_delivery' as SLAType,
           entityType: 'delivery',
           entityId: deliveryId,
-          customDurationMinutes: (delivery.estimated_duration_minutes as number | undefined) || 30,
+          customDurationMinutes:
+            typeof delivery.route_to_dropoff_seconds === 'number'
+              ? Math.max(1, Math.ceil(delivery.route_to_dropoff_seconds / 60))
+              : 30,
         });
       }
     }
 
     if (status === 'delivered') {
-      updateData.actual_dropoff_time = now;
+      updateData.actual_dropoff_at = now;
       if (metadata?.proofUrl) updateData.dropoff_proof_url = metadata.proofUrl;
       if (this.sla) {
         await this.sla.completeTimer('delivery', deliveryId, 'driver_delivery' as SLAType);
