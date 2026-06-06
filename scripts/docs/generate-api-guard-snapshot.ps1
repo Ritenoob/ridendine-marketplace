@@ -27,6 +27,13 @@ $intentionalPublicRoutes = @(
   '/api/health'
 )
 
+$intentionalPublicReadRoutes = @(
+  '/api/eta',
+  '/api/storefronts',
+  '/api/storefronts/[id]',
+  '/api/storefronts/[id]/menu'
+)
+
 $guardSignals = @(
   [pscustomobject]@{ Label = 'Ops context'; Pattern = 'getOpsActorContext' },
   [pscustomobject]@{ Label = 'Capability guard'; Pattern = 'guardPlatformApi' },
@@ -92,7 +99,7 @@ function Get-CapabilitiesUsed {
 function Get-Status {
   param([string]$Route, [string[]]$Methods, [string[]]$Signals)
   $hasStateful = @($Methods | Where-Object { $statefulMethods.Contains($_) }).Count -gt 0
-  if ($intentionalPublicRoutes.Contains($Route)) { return 'Intentional public' }
+  if ($intentionalPublicRoutes.Contains($Route) -or $intentionalPublicReadRoutes.Contains($Route)) { return 'Intentional public' }
   if ($Signals.Count -gt 0) { return 'Protected or special' }
   if ($hasStateful) { return 'Review state-changing' }
   return 'Review read-only'
@@ -239,7 +246,7 @@ $matrixRows
 ## Interpretation
 
 - `Protected or special` means the source contains at least one recognized guard, actor context, processor token, Stripe signature, Supabase session, or environment gate signal.
-- `Intentional public` means the route is an auth or health endpoint allowlisted by route path.
+- `Intentional public` means the route is an auth, health, or documented marketplace-read endpoint allowlisted by route path.
 - `Review state-changing` means the route exports `POST`, `PUT`, `PATCH`, or `DELETE` and no recognized guard signal was found.
 - `Review read-only` means the route appears GET-only or method detection was inconclusive and no recognized guard signal was found.
 - This generated snapshot is a visibility tool. The curated security decision record remains [[09 - API Guard Audit Matrix]].

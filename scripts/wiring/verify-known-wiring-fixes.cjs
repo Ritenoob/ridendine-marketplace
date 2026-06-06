@@ -15,6 +15,16 @@ function generatedDoc(relativePath) {
   return exists(relativePath) ? read(relativePath) : '';
 }
 
+function obsidianVaultRoot() {
+  return process.env.RIDENDINE_OBSIDIAN_VAULT ||
+    'C:/RIDENDINE/Ridendine_Business_Bible_Obsidian_Vault/Ridendine_Business_Bible_Obsidian_Vault';
+}
+
+function obsidianDoc(relativePath) {
+  const absolutePath = path.join(obsidianVaultRoot(), relativePath);
+  return fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath, 'utf8') : '';
+}
+
 function markdownRowsFor(text, token) {
   return text.split('\n').filter((line) => line.startsWith('| ') && line.includes(token));
 }
@@ -143,6 +153,29 @@ const checks = [
       exists('docs/wiring/RUNTIME_CONTRACT_SMOKE.md') &&
       exists('docs/architecture/codebase-map/wiring/RUNTIME_CONTRACT_SMOKE.md') &&
       exists('docs/obsidian/codebase-map/Runtime Contract Smoke.md'),
+  },
+  {
+    name: 'phase 10 public read APIs are guard-classified as intentional public',
+    pass: () => {
+      const snapshot = obsidianDoc('06 - Product and Technology/App Architecture/16 - Generated API Guard Snapshot.md');
+      const publicReadRoutes = [
+        '/api/eta',
+        '/api/storefronts',
+        '/api/storefronts/[id]',
+        '/api/storefronts/[id]/menu',
+      ];
+      const fullMatrixRows = publicReadRoutes.map((route) => markdownRowsFor(snapshot, `\`${route}\``))
+        .flat()
+        .filter((line) => line.includes('| Customer marketplace |'));
+      const reviewRows = publicReadRoutes.map((route) => markdownRowsFor(snapshot, `\`${route}\``))
+        .flat()
+        .filter((line) => line.includes('| Review read-only |'));
+      return snapshot.includes('Api --> ReadOnly["Review read-only<br/>0"]') &&
+        publicReadRoutes.every((route) =>
+          fullMatrixRows.some((line) => line.includes(`\`${route}\``) && line.includes('| Intentional public |'))
+        ) &&
+        reviewRows.length === 0;
+    },
   },
 ];
 
