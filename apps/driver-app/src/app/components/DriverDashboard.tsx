@@ -36,6 +36,21 @@ const NAV_ITEMS = [
   },
 ];
 
+const DELIVERY_STATUS_LABELS: Record<string, string> = {
+  assigned: 'Assigned',
+  accepted: 'Accepted',
+  en_route_to_pickup: 'En route to pickup',
+  arrived_at_pickup: 'At restaurant',
+  picked_up: 'Picked up',
+  en_route_to_dropoff: 'En route to customer',
+  arrived_at_dropoff: 'At customer',
+};
+
+function formatDeliveryStatus(status?: string | null) {
+  if (!status) return 'In progress';
+  return DELIVERY_STATUS_LABELS[status] ?? status.replace(/_/g, ' ');
+}
+
 export default function DriverDashboard({ driver, activeDeliveries }: DriverDashboardProps) {
   const router = useRouter();
   const { signOut } = useAuthContext();
@@ -236,7 +251,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold text-text">Active Delivery</h2>
               <span className="rounded-full bg-[#fff0e8] px-3 py-1 text-xs font-semibold text-primary">
-                In Progress
+                {formatDeliveryStatus(currentDelivery.status)}
               </span>
             </div>
 
@@ -275,7 +290,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
 
             <Link href={`/delivery/${currentDelivery.id}`} className="mt-4 block">
               <button className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-white hover:bg-primaryHover">
-                View Delivery Details →
+                Open Delivery Workflow
               </button>
             </Link>
           </div>
@@ -296,7 +311,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
             </div>
             <h3 className="text-lg font-bold text-text">No active deliveries</h3>
             <p className="mt-2 text-sm text-textMuted">
-              New delivery offers will appear here when available
+              Go online when you are ready to receive offers. Keep this app open while you wait.
             </p>
           </div>
         </div>
@@ -313,7 +328,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
             </div>
             <h3 className="text-lg font-bold text-text">You&apos;re Online!</h3>
             <p className="mt-2 text-sm text-textMuted">
-              Waiting for delivery requests from RideNDine chefs...
+              You are in the offer queue. Keep this app open; new offers will appear here with a countdown.
             </p>
           </div>
         </div>
@@ -330,7 +345,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
             </div>
             <h3 className="text-lg font-bold text-text">You&apos;re Offline</h3>
             <p className="mt-2 text-sm text-textMuted">
-              Tap &quot;Go Online&quot; to start receiving delivery requests
+              Go online when you are ready to receive offers. Keep this app open while you wait.
             </p>
             <button
               data-testid="driver-online-toggle"

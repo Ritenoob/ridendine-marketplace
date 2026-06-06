@@ -74,11 +74,11 @@ describe('DriverDashboard — no active deliveries empty state', () => {
     expect(screen.getByText('No active deliveries')).toBeInTheDocument();
   });
 
-  it('renders subtitle pointing to delivery offers', () => {
+  it('renders subtitle pointing to the offer queue', () => {
     render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[]} />);
     expect(
-      screen.getByText(/new delivery offers will appear here/i)
-    ).toBeInTheDocument();
+      screen.getAllByText(/go online when you are ready to receive offers/i).length
+    ).toBeGreaterThan(0);
   });
 
   it('does NOT render "No active deliveries" when a delivery is present', () => {
@@ -92,5 +92,30 @@ describe('DriverDashboard — no active deliveries empty state', () => {
     };
     render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[delivery as any]} />);
     expect(screen.queryByText('No active deliveries')).not.toBeInTheDocument();
+  });
+
+  it('labels the active delivery workflow entry point', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { presence: { status: 'online' } } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, data: { today: { count: 1, earnings: 8.5 } } }),
+      });
+    const delivery = {
+      id: 'del-1',
+      pickup_address: '1 King St W',
+      dropoff_address: '100 Queen St E',
+      distance_km: 3.2,
+      driver_payout: '8.50',
+      status: 'en_route_to_pickup' as const,
+    };
+
+    render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[delivery as any]} />);
+
+    expect(await screen.findByText('En route to pickup')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /open delivery workflow/i })).toBeInTheDocument();
   });
 });

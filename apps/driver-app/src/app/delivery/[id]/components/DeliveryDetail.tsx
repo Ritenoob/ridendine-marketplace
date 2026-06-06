@@ -1,13 +1,73 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Button } from '@ridendine/ui';
 import type { Delivery } from '@ridendine/db';
 import { useLocationTracker } from '@/hooks/use-location-tracker';
 import { RouteMap } from '@/components/map/route-map';
 
-type DeliveryStatus = 'accepted' | 'en_route_to_pickup' | 'arrived_at_pickup' | 'picked_up' | 'en_route_to_dropoff' | 'arrived_at_dropoff';
+type DeliveryStatus = 'assigned' | 'accepted' | 'en_route_to_pickup' | 'arrived_at_pickup' | 'picked_up' | 'en_route_to_dropoff' | 'arrived_at_dropoff';
+
+type DeliveryIssueType =
+  | 'chef_delay'
+  | 'customer_unavailable'
+  | 'damaged_package'
+  | 'unsafe_route'
+  | 'driver_emergency'
+  | 'wrong_address'
+  | 'unable_to_complete';
+
+const ISSUE_OPTIONS: Array<{ value: DeliveryIssueType; label: string }> = [
+  { value: 'chef_delay', label: 'Chef delay' },
+  { value: 'customer_unavailable', label: 'Customer unavailable' },
+  { value: 'damaged_package', label: 'Damaged package' },
+  { value: 'unsafe_route', label: 'Unsafe route' },
+  { value: 'driver_emergency', label: 'Driver emergency' },
+  { value: 'wrong_address', label: 'Wrong address' },
+  { value: 'unable_to_complete', label: 'Unable to complete' },
+];
+
+const WORK_STEPS: Record<
+  DeliveryStatus,
+  { label: string; focus: 'Pickup' | 'Dropoff'; guidance: string }
+> = {
+  assigned: {
+    label: 'Assigned',
+    focus: 'Pickup',
+    guidance: 'Head to the restaurant and keep the order visible in this app.',
+  },
+  accepted: {
+    label: 'Accepted',
+    focus: 'Pickup',
+    guidance: 'Head to the restaurant and keep the order visible in this app.',
+  },
+  en_route_to_pickup: {
+    label: 'En route to pickup',
+    focus: 'Pickup',
+    guidance: 'Follow the route to the restaurant, then mark arrival when you are there.',
+  },
+  arrived_at_pickup: {
+    label: 'At restaurant',
+    focus: 'Pickup',
+    guidance: 'Confirm the order with the chef and take pickup proof before leaving.',
+  },
+  picked_up: {
+    label: 'Picked up',
+    focus: 'Dropoff',
+    guidance: 'Start customer navigation and keep the package secure.',
+  },
+  en_route_to_dropoff: {
+    label: 'En route to customer',
+    focus: 'Dropoff',
+    guidance: 'Follow the route to the customer and watch for delivery instructions.',
+  },
+  arrived_at_dropoff: {
+    label: 'At customer',
+    focus: 'Dropoff',
+    guidance: 'Capture proof of delivery, collect the optional signature, and complete the delivery.',
+  },
+};
 
 interface DeliveryDetailProps {
   delivery: Delivery;
@@ -36,6 +96,12 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
   const [signature, setSignature] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showIssuePanel, setShowIssuePanel] = useState(false);
+  const [issueType, setIssueType] = useState<DeliveryIssueType>('chef_delay');
+  const [issueNotes, setIssueNotes] = useState('');
+  const [isSubmittingIssue, setIsSubmittingIssue] = useState(false);
+  const [issueError, setIssueError] = useState<string | null>(null);
+  const [issueSuccess, setIssueSuccess] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pickupFileInputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +120,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
   const getStatusSteps = () => {
     const steps = [
+      { id: 'assigned', label: 'Assigned' },
       { id: 'accepted', label: 'Accepted' },
       { id: 'en_route_to_pickup', label: 'En Route to Pickup' },
       { id: 'arrived_at_pickup', label: 'At Restaurant' },
@@ -71,6 +138,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
   const getNextAction = (): { label: string; nextStatus: DeliveryStatus } | null => {
     const actions: Record<DeliveryStatus, { label: string; nextStatus: DeliveryStatus } | null> = {
+      assigned: { label: 'Start Navigation to Pickup', nextStatus: 'en_route_to_pickup' },
       accepted: { label: 'Start Navigation to Pickup', nextStatus: 'en_route_to_pickup' },
       en_route_to_pickup: { label: 'Arrived at Restaurant', nextStatus: 'arrived_at_pickup' },
       arrived_at_pickup: { label: 'Confirm Pickup', nextStatus: 'picked_up' },
@@ -104,6 +172,41 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
       }, 500);
     } else {
       window.open(url, '_blank');
+    }
+  };
+
+  const handleIssueSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedNotes = issueNotes.trim();
+    if (!trimmedNotes) {
+      setIssueError('Add a short note so Ops knows what is happening.');
+      return;
+    }
+
+    setIsSubmittingIssue(true);
+    setIssueError(null);
+    setIssueSuccess(null);
+
+    try {
+      const response = await fetch(`/api/deliveries/${delivery.id}/issue`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ issueType, notes: trimmedNotes }),
+      });
+      const json = await response.json().catch(() => ({}));
+
+      if (!response.ok || json.success === false) {
+        throw new Error(json.error || 'Unable to send this issue right now.');
+      }
+
+      setIssueSuccess(
+        'Ops has received this issue. Keep working if it is safe, or wait for Ops if this blocks the delivery.'
+      );
+      setIssueNotes('');
+    } catch (error) {
+      setIssueError(error instanceof Error ? error.message : 'Unable to send this issue right now.');
+    } finally {
+      setIsSubmittingIssue(false);
     }
   };
 
@@ -345,6 +448,8 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
   const steps = getStatusSteps();
   const action = getNextAction();
+  const workStep = WORK_STEPS[status];
+  const isPickupWork = status.includes('pickup') || status === 'accepted' || status === 'assigned';
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -393,14 +498,110 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
         </p>
       </div>
 
+      {/* Delivery Work Panel */}
+      <div className="p-4">
+        <Card className="border border-divider bg-white p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Delivery work</h2>
+              <p className="mt-1 text-[14px] leading-relaxed text-[#6b7280]">{workStep.guidance}</p>
+            </div>
+            <span className="rounded-full bg-infoSoft px-3 py-1 text-[12px] font-semibold text-info">
+              {workStep.focus}
+            </span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-lg bg-surfaceMuted p-3">
+              <p className="text-[12px] font-medium uppercase text-[#6b7280]">Current step</p>
+              <p className="mt-1 text-[15px] font-semibold text-[#1a1a1a]">{workStep.label}</p>
+            </div>
+            <div className="rounded-lg bg-surfaceMuted p-3">
+              <p className="text-[12px] font-medium uppercase text-[#6b7280]">Next action</p>
+              <p className="mt-1 text-[15px] font-semibold text-[#1a1a1a]">
+                {status === 'arrived_at_dropoff' ? 'Complete Delivery' : action?.label ?? 'No action needed'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="mt-4 w-full rounded-lg border border-danger/30 px-4 py-3 text-[14px] font-semibold text-danger transition-colors hover:bg-dangerSoft"
+            onClick={() => {
+              setShowIssuePanel((current) => !current);
+              setIssueError(null);
+              setIssueSuccess(null);
+            }}
+          >
+            {showIssuePanel ? 'Close issue report' : 'Report issue to Ops'}
+          </button>
+        </Card>
+      </div>
+
+      {showIssuePanel && (
+        <div className="px-4 pb-4">
+          <Card className="border border-danger/20 bg-white p-4 shadow-sm">
+            <h3 className="text-[16px] font-semibold text-[#1a1a1a]">Send issue to Ops</h3>
+            <form className="mt-4 space-y-4" onSubmit={handleIssueSubmit}>
+              <label className="block">
+                <span className="text-[13px] font-medium text-[#374151]">Issue type</span>
+                <select
+                  aria-label="Issue type"
+                  value={issueType}
+                  onChange={(event) => setIssueType(event.target.value as DeliveryIssueType)}
+                  className="mt-1 w-full rounded-lg border border-divider bg-white px-3 py-2 text-[14px] text-[#1a1a1a]"
+                >
+                  {ISSUE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="text-[13px] font-medium text-[#374151]">Issue notes</span>
+                <textarea
+                  aria-label="Issue notes"
+                  value={issueNotes}
+                  onChange={(event) => setIssueNotes(event.target.value)}
+                  rows={4}
+                  maxLength={1000}
+                  className="mt-1 w-full resize-none rounded-lg border border-divider px-3 py-2 text-[14px] text-[#1a1a1a]"
+                  placeholder="Example: Chef needs another 20 minutes."
+                />
+              </label>
+
+              {issueError && (
+                <p className="rounded-lg bg-dangerSoft p-3 text-[13px] font-medium text-danger">
+                  {issueError}
+                </p>
+              )}
+              {issueSuccess && (
+                <p className="rounded-lg bg-successSoft p-3 text-[13px] font-medium text-success">
+                  {issueSuccess}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isSubmittingIssue}
+                className="w-full rounded-lg bg-danger py-3 text-[14px] font-semibold text-white hover:opacity-90 disabled:opacity-60"
+              >
+                {isSubmittingIssue ? 'Sending...' : 'Send issue to Ops'}
+              </Button>
+            </form>
+          </Card>
+        </div>
+      )}
+
       {/* Navigation Button */}
       <div className="p-4">
         <Button
           variant="outline"
           className="w-full rounded-lg border-info text-info hover:bg-infoSoft"
           onClick={() => {
-            const isPickup = status.includes('pickup') || status === 'accepted';
-            if (isPickup) {
+            if (isPickupWork) {
               openNavigation(delivery.pickup_address, delivery.pickup_lat, delivery.pickup_lng);
             } else {
               openNavigation(delivery.dropoff_address, delivery.dropoff_lat, delivery.dropoff_lng);
@@ -431,7 +632,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
       {/* Destination Card */}
       <div className="p-4 pt-0">
         <Card className="border-0 shadow-sm">
-          {status.includes('pickup') || status === 'accepted' ? (
+          {isPickupWork ? (
             <>
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-[#22c55e]" />
