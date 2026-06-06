@@ -1,6 +1,6 @@
 # Live Role Fixture Smoke
 
-Generated: 2026-06-06T23:48:49.166Z
+Generated: 2026-06-06T23:51:53.725Z
 
 This generated smoke matrix proves the seeded full-access test account can log into app-owned Customer, Driver, and Ops auth flows and exercise read-only live JSON probes. Chef admin uses client-side Supabase auth, so Phase 13 covers Chef through the seed/bootstrap fixture audit rather than an app-owned login route.
 

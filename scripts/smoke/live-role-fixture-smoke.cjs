@@ -299,6 +299,7 @@ function parseArgs(argv) {
   const parsed = {
     requireAuth: false,
     json: false,
+    writeDocs: false,
     timeoutMs: 45_000,
   };
 
@@ -306,6 +307,7 @@ function parseArgs(argv) {
     const arg = argv[i];
     if (arg === '--require-auth') parsed.requireAuth = true;
     else if (arg === '--json') parsed.json = true;
+    else if (arg === '--write-docs') parsed.writeDocs = true;
     else if (arg === '--timeout-ms') {
       parsed.timeoutMs = Number(argv[i + 1]);
       i += 1;
@@ -338,7 +340,7 @@ if (require.main === module) {
   const args = parseArgs(process.argv.slice(2));
   runLiveRoleFixtureSmoke(args)
     .then((summary) => {
-      writeDocs(summary);
+      if (args.writeDocs) writeDocs(summary);
       if (args.json) console.log(JSON.stringify(summary, null, 2));
       else printTextSummary(summary);
       if (!summary.ok) process.exitCode = 1;
@@ -353,6 +355,7 @@ module.exports = {
   checkLiveJsonProbe,
   generateMarkdown,
   liveRoleFixtureContracts,
+  parseArgs,
   runLiveRoleFixtureSmoke,
   writeDocs,
 };

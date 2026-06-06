@@ -110,3 +110,9 @@ test('declares only live-safe GET probes', () => {
   assert.equal(liveRoleFixtureContracts.every((contract) => contract.method === 'GET'), true);
   assert.equal(liveRoleFixtureContracts.every((contract) => contract.liveSafe === true), true);
 });
+
+test('writes generated docs only when explicitly requested', () => {
+  const { parseArgs } = require('./live-role-fixture-smoke.cjs');
+  assert.equal(parseArgs(['--require-auth']).writeDocs, false);
+  assert.equal(parseArgs(['--require-auth', '--write-docs']).writeDocs, true);
+});
