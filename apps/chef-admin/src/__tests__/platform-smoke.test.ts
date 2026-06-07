@@ -25,6 +25,12 @@ describe('chef-admin smoke wiring', () => {
     expect(src).toContain("loginRoute: '/auth/login'");
   });
 
+  it('login form posts to the chef auth API instead of browser-only auth', () => {
+    const src = read('app/auth/login/page.tsx');
+    expect(src).toContain("fetch('/api/auth/login'");
+    expect(src).not.toContain('useAuth');
+  });
+
   it('critical dashboard pages exist', () => {
     const dashboardOrders = read('app/dashboard/orders/page.tsx');
     const dashboardMenu = read('app/dashboard/menu/page.tsx');

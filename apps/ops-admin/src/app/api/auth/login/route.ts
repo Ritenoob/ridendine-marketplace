@@ -1,8 +1,21 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient, createAdminClient } from '@ridendine/db';
+import {
+  evaluateRateLimit,
+  RATE_LIMIT_POLICIES,
+  rateLimitPolicyResponse,
+} from '@ridendine/utils';
 
 export async function POST(request: Request) {
+  const limit = await evaluateRateLimit({
+    request,
+    policy: RATE_LIMIT_POLICIES.auth,
+    namespace: 'ops-auth-login',
+    routeKey: 'POST:/api/auth/login',
+  });
+  if (!limit.allowed) return rateLimitPolicyResponse(limit);
+
   try {
     const body = await request.json();
     const email = typeof body.email === 'string' ? body.email.trim() : '';

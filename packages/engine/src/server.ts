@@ -51,7 +51,18 @@ export async function getCustomerActorContext(): Promise<{ actor: ActorContext; 
 
 // -- Chef context --
 
-export async function getChefActorContext(): Promise<{ actor: ActorContext; chefId: string; storefrontId: string } | null> {
+export type GetChefActorOptions = {
+  /**
+   * When true (default), only `approved` chefs receive privileged context.
+   * Onboarding flows should use getChefBasicContext instead.
+   */
+  requireApproved?: boolean;
+};
+
+export async function getChefActorContext(
+  options?: GetChefActorOptions
+): Promise<{ actor: ActorContext; chefId: string; storefrontId: string } | null> {
+  const requireApproved = options?.requireApproved !== false;
   const cookieStore = await cookies();
   const supabase = createServerClient(cookieStore);
   const { data: { user } } = await supabase.auth.getUser();
@@ -64,6 +75,7 @@ export async function getChefActorContext(): Promise<{ actor: ActorContext; chef
     .eq('user_id', user.id)
     .single();
   if (!chefProfile) return null;
+  if (requireApproved && chefProfile.status !== 'approved') return null;
 
   const { data: storefront } = await adminClient
     .from('chef_storefronts')
@@ -109,7 +121,18 @@ export async function getChefBasicContext(): Promise<{ userId: string; chefId: s
 
 // -- Driver context --
 
-export async function getDriverActorContext(): Promise<{ actor: ActorContext; driverId: string } | null> {
+export type GetDriverActorOptions = {
+  /**
+   * When true (default), only `approved` drivers receive dispatch context.
+   * Profile/onboarding routes can pass false while the driver is still pending.
+   */
+  requireApproved?: boolean;
+};
+
+export async function getDriverActorContext(
+  options?: GetDriverActorOptions
+): Promise<{ actor: ActorContext; driverId: string } | null> {
+  const requireApproved = options?.requireApproved !== false;
   const cookieStore = await cookies();
   const supabase = createServerClient(cookieStore);
   const { data: { user } } = await supabase.auth.getUser();
@@ -121,7 +144,8 @@ export async function getDriverActorContext(): Promise<{ actor: ActorContext; dr
     .select('id, status')
     .eq('user_id', user.id)
     .single();
-  if (!driver || driver.status !== 'approved') return null;
+  if (!driver) return null;
+  if (requireApproved && driver.status !== 'approved') return null;
 
   return {
     actor: { userId: user.id, role: 'driver', entityId: driver.id },

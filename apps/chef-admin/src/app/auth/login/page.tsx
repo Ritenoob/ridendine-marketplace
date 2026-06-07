@@ -3,24 +3,42 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@ridendine/auth';
 import { Button, Input } from '@ridendine/ui';
 import { AuthLayout } from '../../../components/auth/auth-layout';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signIn, loading, error } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await signIn(email, password);
-    if (result.success) {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to sign in');
+      }
+
       const redirect = searchParams.get('redirect');
       router.push(redirect || '/dashboard');
+      router.refresh();
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : 'Failed to sign in');
+    } finally {
+      setLoading(false);
     }
   };
 
