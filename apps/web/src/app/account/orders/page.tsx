@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@ridendine/auth';
 import { Header } from '@/components/layout/header';
-import { orderConfirmationPath } from '@/lib/customer-ordering';
+import { buildCustomerOrderWorkflow } from '@/lib/orders/customer-order-workflow';
 import { Card, Badge, Button, NoOrdersEmpty, Spinner } from '@ridendine/ui';
 
 interface OrderItem {
@@ -116,18 +116,6 @@ export default function OrdersPage() {
     router.push(`/checkout?storefrontId=${order.storefront.id}`);
   }, [router]);
 
-  const statusVariant = (status: string): 'success' | 'warning' | 'info' | 'default' | 'error' => {
-    const variants: Record<string, 'success' | 'warning' | 'info' | 'default' | 'error'> = {
-      delivered: 'success',
-      completed: 'success',
-      preparing: 'info',
-      accepted: 'info',
-      pending: 'warning',
-      cancelled: 'error',
-    };
-    return variants[status] || 'default';
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -173,56 +161,73 @@ export default function OrdersPage() {
           </Card>
         ) : (
           <div className="mt-8 space-y-4">
-            {orders.map((order) => (
-              <Card key={order.id}>
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-text">
-                        #{order.order_number}
-                      </span>
-                      <Badge variant={statusVariant(order.status)}>
-                        {order.status.replace(/_/g, ' ')}
-                      </Badge>
-                    </div>
-                    <p className="mt-1 text-sm text-textMuted">
-                      {formatDate(order.created_at)}
-                    </p>
-                    {order.storefront && (
-                      <Link
-                        href={`/chefs/${order.storefront.slug}`}
-                        className="mt-1 text-sm text-primary transition-colors hover:underline"
-                      >
-                        {order.storefront.name}
-                      </Link>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold text-text">
-                      ${Number(order.total).toFixed(2)}
-                    </span>
-                    <Link href={orderConfirmationPath(order.id)}>
-                      <Button variant="secondary" size="sm">
-                        View Details
-                      </Button>
-                    </Link>
-                    {['delivered', 'completed'].includes(order.status) &&
-                      order.items &&
-                      order.items.length > 0 && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          disabled={reorderingId === order.id}
-                          loading={reorderingId === order.id}
-                          onClick={() => void handleReorder(order)}
+            {orders.map((order) => {
+              const workflow = buildCustomerOrderWorkflow({
+                id: order.id,
+                orderNumber: order.order_number,
+                status: order.status,
+                itemCount: order.items?.length ?? 0,
+              });
+
+              return (
+                <Card key={order.id}>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-text">
+                          #{order.order_number}
+                        </span>
+                        <Badge variant={workflow.statusTone}>
+                          {workflow.statusLabel}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-sm text-textMuted">
+                        {formatDate(order.created_at)}
+                      </p>
+                      <p className="mt-2 text-sm text-text">
+                        {workflow.nextStepLabel}
+                      </p>
+                      {order.storefront && (
+                        <Link
+                          href={`/chefs/${order.storefront.slug}`}
+                          className="mt-1 inline-flex text-sm text-primary transition-colors hover:underline"
                         >
-                          {reorderingId === order.id ? 'Adding…' : 'Reorder'}
-                        </Button>
+                          {order.storefront.name}
+                        </Link>
                       )}
+                    </div>
+                    <div className="flex flex-col gap-3 sm:items-end">
+                      <span className="font-semibold text-text">
+                        ${Number(order.total).toFixed(2)}
+                      </span>
+                      <div className="flex flex-wrap gap-2 sm:justify-end">
+                        <Link href={workflow.detailHref}>
+                          <Button variant="secondary" size="sm">
+                            {workflow.primaryActionLabel}
+                          </Button>
+                        </Link>
+                        <Link href={workflow.supportHref}>
+                          <Button variant="outline" size="sm">
+                            Contact support
+                          </Button>
+                        </Link>
+                        {workflow.canReorder && (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            disabled={reorderingId === order.id}
+                            loading={reorderingId === order.id}
+                            onClick={() => void handleReorder(order)}
+                          >
+                            {reorderingId === order.id ? 'Adding...' : 'Reorder'}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>

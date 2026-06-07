@@ -718,6 +718,8 @@ Expected:
 
 **Recommended first slice:** Customer account/order workflow clarity.
 
+**Status:** Complete on 2026-06-07. Added a product spec, introduced a tested customer-order workflow presenter, and updated `/account/orders` to show customer-safe status labels, next-step copy, canonical detail links, support handoff URLs with order context, and reorder availability from the model. No payment capture, refund, payout, driver assignment, checkout pricing, or order lifecycle mutation behavior changed.
+
 **Files:**
 - Read: `apps/web/src/app/account/page.tsx`
 - Read: `apps/web/src/app/account/orders/page.tsx`
@@ -727,7 +729,7 @@ Expected:
 - Modify only after design review: customer UI and focused tests
 - Update: `C:\RIDENDINE\Ridendine_Business_Bible_Obsidian_Vault\Ridendine_Business_Bible_Obsidian_Vault\06 - Product and Technology\App Architecture\15 - Phased Improvement Execution Plan.md`
 
-- [ ] **Step 1: Write a product spec before code**
+- [x] **Step 1: Write a product spec before code**
 
 Create:
 
@@ -743,7 +745,7 @@ Spec must define:
 - Customer support handoff from order context.
 - No changes to payment capture, refunds, payouts, or driver assignment.
 
-- [ ] **Step 2: Write focused UI/model tests**
+- [x] **Step 2: Write focused UI/model tests**
 
 Add tests under the customer app for any new model functions before editing UI.
 
@@ -752,7 +754,7 @@ Expected:
 - Tests fail before implementation.
 - Tests verify status labels, next action labels, and support handoff copy.
 
-- [ ] **Step 3: Implement one customer workflow surface**
+- [x] **Step 3: Implement one customer workflow surface**
 
 Recommended first UI target:
 
@@ -762,7 +764,7 @@ apps/web/src/app/account/orders/page.tsx
 
 Keep the slice limited to display clarity and navigation. Do not mutate order lifecycle in this thread.
 
-- [ ] **Step 4: Verify customer slice**
+- [x] **Step 4: Verify customer slice**
 
 Run:
 
@@ -779,7 +781,7 @@ Expected:
 - Customer tests, typecheck, and build pass.
 - Runtime contracts still pass.
 
-- [ ] **Step 5: Commit and push Thread 6**
+- [x] **Step 5: Commit and push Thread 6**
 
 Run:
 
