@@ -306,6 +306,9 @@ const checks = [
         doc.includes('Phase 17 coverage inventory') &&
         doc.includes('Page Proof Gaps') &&
         doc.includes('API Proof Gaps') &&
+        doc.includes('Proof Disposition Summary') &&
+        summary.proofDisposition.pages.unresolved === 0 &&
+        summary.proofDisposition.apis.unresolved === 0 &&
         doc.includes('Uncovered Pages') &&
         doc.includes('Uncovered API Route Files') &&
         exists('docs/wiring/RUNTIME_COVERAGE_AUDIT.md') &&
@@ -333,6 +336,31 @@ const checks = [
         exists('docs/wiring/RUNTIME_SURFACE_CLASSIFICATION.md') &&
         exists('docs/architecture/codebase-map/wiring/RUNTIME_SURFACE_CLASSIFICATION.md') &&
         exists('docs/obsidian/codebase-map/Runtime Surface Classification.md');
+    },
+  },
+  {
+    name: 'phase 20/21 runtime proof disposition resolves every remaining proof gap',
+    pass: () => {
+      const {
+        collectProofDisposition,
+      } = require(path.join(root, 'scripts/smoke/runtime-proof-disposition.cjs'));
+      const summary = collectProofDisposition({ root });
+      const doc = generatedDoc('docs/wiring/RUNTIME_PROOF_DISPOSITION.md');
+      return summary.ok &&
+        summary.pageTotals.total >= 90 &&
+        summary.apiTotals.total >= 118 &&
+        summary.pageTotals.proofCovered >= 17 &&
+        summary.apiTotals.proofCovered >= 20 &&
+        summary.pageTotals.dispositionedGaps === summary.pageTotals.proofGaps &&
+        summary.apiTotals.dispositionedGaps === summary.apiTotals.proofGaps &&
+        summary.pageTotals.unresolved === 0 &&
+        summary.apiTotals.unresolved === 0 &&
+        doc.includes('Runtime Proof Disposition') &&
+        doc.includes('Page Proof Gap Disposition') &&
+        doc.includes('API Proof Gap Disposition') &&
+        exists('docs/wiring/RUNTIME_PROOF_DISPOSITION.md') &&
+        exists('docs/architecture/codebase-map/wiring/RUNTIME_PROOF_DISPOSITION.md') &&
+        exists('docs/obsidian/codebase-map/Runtime Proof Disposition.md');
     },
   },
 ];

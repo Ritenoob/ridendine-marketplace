@@ -1,6 +1,6 @@
 # Runtime Surface Classification
 
-Generated: 2026-06-07T18:40:37.644Z
+Generated: 2026-06-07T19:06:58.428Z
 
 This Phase 18/19 classification inventory records the intended auth, guard, method, mutation-risk, and smoke-bucket treatment for every discovered app page and route handler. It is structural coverage, not a claim that every dynamic or mutating route is safe to exercise against production.
 

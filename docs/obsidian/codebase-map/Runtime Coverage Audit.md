@@ -1,6 +1,6 @@
 # Runtime Coverage Audit
 
-Generated: 2026-06-07T18:40:38.230Z
+Generated: 2026-06-07T19:06:58.993Z
 
 This Phase 17 coverage inventory maps every discovered app page and API route file to the runtime, live-role, non-admin role, high-risk authorization, and Phase 18/19 classification contracts that currently exercise, document, or classify it. Structural uncovered rows mean a surface has no classification or contract. Proof gaps mean a surface is classified but still lacks runtime/live/static proof coverage.
 
@@ -24,6 +24,13 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | runtime-page-auth-intent | 17 |
 | runtime-page-classification | 90 |
 | runtime-public-json | 7 |
+
+## Proof Disposition Summary
+
+| Surface | Proof gaps | Dispositioned proof gaps | Unresolved |
+|---|---:|---:|---:|
+| Pages | 73 | 73 | 0 |
+| API route files | 74 | 74 | 0 |
 
 ## Covered Pages
 

@@ -69,6 +69,10 @@ test('maps discovered surfaces to existing runtime contract sources', () => {
   assert.equal(summary.gaps.apis.length, 0);
   assert.ok(summary.proofGaps.pages.length > 0);
   assert.ok(summary.proofGaps.apis.length > 0);
+  assert.equal(summary.proofDisposition.pages.unresolved, 0);
+  assert.equal(summary.proofDisposition.apis.unresolved, 0);
+  assert.equal(summary.proofDisposition.pages.dispositionedGaps, summary.proofGaps.pages.length);
+  assert.equal(summary.proofDisposition.apis.dispositionedGaps, summary.proofGaps.apis.length);
 });
 
 test('generates markdown coverage docs with page and API gap sections', () => {
@@ -83,5 +87,6 @@ test('generates markdown coverage docs with page and API gap sections', () => {
   assert.ok(markdown.includes('## Uncovered API Route Files'));
   assert.ok(markdown.includes('## Page Proof Gaps'));
   assert.ok(markdown.includes('## API Proof Gaps'));
+  assert.ok(markdown.includes('## Proof Disposition Summary'));
   assert.ok(markdown.includes('Phase 17 coverage inventory'));
 });

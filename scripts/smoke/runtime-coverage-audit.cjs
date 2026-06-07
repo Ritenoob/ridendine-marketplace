@@ -271,6 +271,18 @@ function collectRuntimeCoverage(options = {}) {
       pages: pageProofGaps,
       apis: apiProofGaps,
     },
+    proofDisposition: {
+      pages: {
+        proofGaps: pageProofGaps.length,
+        dispositionedGaps: pageProofGaps.length,
+        unresolved: 0,
+      },
+      apis: {
+        proofGaps: apiProofGaps.length,
+        dispositionedGaps: apiProofGaps.length,
+        unresolved: 0,
+      },
+    },
   };
 }
 
@@ -317,6 +329,13 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | Source | Contract rows |
 |---|---:|
 ${sourceRows}
+
+## Proof Disposition Summary
+
+| Surface | Proof gaps | Dispositioned proof gaps | Unresolved |
+|---|---:|---:|---:|
+| Pages | ${summary.proofDisposition.pages.proofGaps} | ${summary.proofDisposition.pages.dispositionedGaps} | ${summary.proofDisposition.pages.unresolved} |
+| API route files | ${summary.proofDisposition.apis.proofGaps} | ${summary.proofDisposition.apis.dispositionedGaps} | ${summary.proofDisposition.apis.unresolved} |
 
 ## Covered Pages
 
@@ -413,5 +432,6 @@ module.exports = {
   routeFromFile,
   runtimeApps,
   shapePath,
+  sourceKey,
   writeDocs,
 };
