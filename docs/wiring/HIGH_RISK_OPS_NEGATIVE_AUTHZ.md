@@ -1,6 +1,6 @@
 # High-Risk Ops Negative Authorization
 
-Generated: 2026-06-06T23:48:50.720Z
+Generated: 2026-06-07T17:15:23.542Z
 
 This generated audit documents endpoint-level denial expectations for the high-risk Ops/control-plane routes covered by Phase 11. It proves every contracted route method has an explicit negative authorization model for unauthenticated access, denied platform roles, invalid processor tokens, disabled command-center access, or invalid Stripe signatures.
 

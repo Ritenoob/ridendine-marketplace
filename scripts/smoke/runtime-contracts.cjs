@@ -10,8 +10,8 @@ const apps = {
     name: 'Chef Admin',
     baseUrlEnv: 'RIDENDINE_CHEF_URL',
     defaultBaseUrl: 'https://chef.ridendine.ca',
-    loginPath: null,
-    appOwnedLogin: false,
+    loginPath: '/api/auth/login',
+    appOwnedLogin: true,
   },
   driver: {
     name: 'Driver App',
@@ -133,7 +133,16 @@ const protectedJsonApis = [
   apiContract('ops', '/api/drivers', 'protected', { authenticated: true }),
   apiContract('ops', '/api/chefs', 'protected', { authenticated: true }),
   apiContract('chef', '/api/storefront', 'protected', {
-    note: 'Chef app uses client-side Supabase auth, so Phase 9 only proves unauthenticated rejection.',
+    authenticated: true,
+    note: 'Chef app-owned auth smoke proves approved chef access to storefront JSON.',
+  }),
+  apiContract('chef', '/api/profile', 'protected', {
+    authenticated: true,
+    note: 'Chef app-owned auth smoke proves approved chef profile access.',
+  }),
+  apiContract('chef', '/api/orders', 'protected', {
+    authenticated: true,
+    note: 'Chef app-owned auth smoke proves approved chef order queue access.',
   }),
 ];
 

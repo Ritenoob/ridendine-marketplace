@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-06T23:18:48.125Z",
+  "generatedAt": "2026-06-07T17:07:29.176Z",
   "nodes": [
     {
       "id": "app:web",
@@ -2681,6 +2681,20 @@
     {
       "id": "file:apps/chef-admin/src/app/api/analytics/route.ts",
       "label": "apps/chef-admin/src/app/api/analytics/route.ts",
+      "type": "file",
+      "status": "WIRED"
+    },
+    {
+      "id": "api:chef-admin:/api/auth/login",
+      "label": "Chef Admin /api/auth/login",
+      "type": "api-route",
+      "status": "WIRED",
+      "file": "apps/chef-admin/src/app/api/auth/login/route.ts",
+      "methods": "POST"
+    },
+    {
+      "id": "file:apps/chef-admin/src/app/api/auth/login/route.ts",
+      "label": "apps/chef-admin/src/app/api/auth/login/route.ts",
       "type": "file",
       "status": "WIRED"
     },
@@ -5503,12 +5517,6 @@
     },
     {
       "from": "route:chef-admin:/auth/login",
-      "to": "package:@ridendine/auth",
-      "label": "imports",
-      "status": "WIRED"
-    },
-    {
-      "from": "route:chef-admin:/auth/login",
       "to": "package:@ridendine/ui",
       "label": "imports",
       "status": "WIRED"
@@ -7399,6 +7407,12 @@
     },
     {
       "from": "api:ops-admin:/api/auth/login",
+      "to": "package:@ridendine/utils",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:ops-admin:/api/auth/login",
       "to": "external:Supabase",
       "label": "calls external",
       "status": "WIRED"
@@ -8983,6 +8997,42 @@
     },
     {
       "from": "app:chef-admin",
+      "to": "api:chef-admin:/api/auth/login",
+      "label": "owns API",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:chef-admin:/api/auth/login",
+      "to": "file:apps/chef-admin/src/app/api/auth/login/route.ts",
+      "label": "implemented by",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:chef-admin:/api/auth/login",
+      "to": "package:@ridendine/db",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:chef-admin:/api/auth/login",
+      "to": "package:@ridendine/utils",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:chef-admin:/api/auth/login",
+      "to": "package:@ridendine/validation",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:chef-admin:/api/auth/login",
+      "to": "external:Supabase",
+      "label": "calls external",
+      "status": "WIRED"
+    },
+    {
+      "from": "app:chef-admin",
       "to": "api:chef-admin:/api/auth/signup",
       "label": "owns API",
       "status": "WIRED"
@@ -10017,6 +10067,12 @@
       "from": "file:apps/chef-admin/src/app/auth/forgot-password/page.tsx",
       "to": "file:apps/chef-admin/src/app/auth/login/page.tsx",
       "label": "href: /auth/login",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/chef-admin/src/app/auth/login/page.tsx",
+      "to": "file:apps/chef-admin/src/app/api/auth/login/route.ts",
+      "label": "fetch: /api/auth/login",
       "status": "WORKING"
     },
     {

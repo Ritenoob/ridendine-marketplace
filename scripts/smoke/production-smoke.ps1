@@ -14,6 +14,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $UserAgent = 'RidenDine-Production-Smoke/phase-7'
 $Failures = New-Object System.Collections.Generic.List[string]
+$SupportsSkipHttpErrorCheck = (Get-Command Invoke-WebRequest).Parameters.ContainsKey('SkipHttpErrorCheck')
 
 function Trim-BaseUrl {
   param([string]$Url)
@@ -25,6 +26,21 @@ function Get-BodySample {
   if ([string]::IsNullOrEmpty($Content)) { return '' }
   $clean = $Content -replace '\s+', ' '
   return $clean.Substring(0, [Math]::Min(180, $clean.Length))
+}
+
+function Invoke-WebRequestCompat {
+  param([hashtable]$Parameters)
+
+  $requestParameters = @{}
+  foreach ($key in $Parameters.Keys) {
+    $requestParameters[$key] = $Parameters[$key]
+  }
+
+  if ($SupportsSkipHttpErrorCheck) {
+    $requestParameters.SkipHttpErrorCheck = $true
+  }
+
+  return Invoke-WebRequest @requestParameters
 }
 
 function Invoke-SmokeRequest {
@@ -50,7 +66,6 @@ function Invoke-SmokeRequest {
     Method = $Method
     Headers = $requestHeaders
     MaximumRedirection = 5
-    SkipHttpErrorCheck = $true
     TimeoutSec = $TimeoutSec
   }
 
@@ -58,7 +73,7 @@ function Invoke-SmokeRequest {
   if ($Body -ne $null) { $parameters.Body = $Body }
   if ($ContentType) { $parameters.ContentType = $ContentType }
 
-  $response = Invoke-WebRequest @parameters
+  $response = Invoke-WebRequestCompat -Parameters $parameters
   $status = [int]$response.StatusCode
   $contentTypeHeader = [string]$response.Headers['Content-Type']
   $content = [string]$response.Content
@@ -106,9 +121,21 @@ function Test-StaticAssets {
     $assetResponse = $null
 
     try {
-      $assetResponse = Invoke-WebRequest -Uri $assetUrl -Method Head -Headers @{ 'User-Agent' = $UserAgent } -MaximumRedirection 3 -SkipHttpErrorCheck -TimeoutSec $TimeoutSec
+      $assetResponse = Invoke-WebRequestCompat -Parameters @{
+        Uri = $assetUrl
+        Method = 'Head'
+        Headers = @{ 'User-Agent' = $UserAgent }
+        MaximumRedirection = 3
+        TimeoutSec = $TimeoutSec
+      }
       if ([int]$assetResponse.StatusCode -ne 200) {
-        $assetResponse = Invoke-WebRequest -Uri $assetUrl -Method Get -Headers @{ 'User-Agent' = $UserAgent } -MaximumRedirection 3 -SkipHttpErrorCheck -TimeoutSec $TimeoutSec
+        $assetResponse = Invoke-WebRequestCompat -Parameters @{
+          Uri = $assetUrl
+          Method = 'Get'
+          Headers = @{ 'User-Agent' = $UserAgent }
+          MaximumRedirection = 3
+          TimeoutSec = $TimeoutSec
+        }
       }
     } catch {
       $Failures.Add("$Name asset request failed: $assetUrl")
@@ -240,11 +267,10 @@ if ($SkipAuth) {
   Write-Host 'Authenticated checks'
   $authResults = @()
   $authResults += Invoke-AppLoginSmoke -App 'Customer' -BaseUrl $CustomerBaseUrl -Routes @('/account', '/account/favorites', '/account/settings', '/api/profile', '/api/orders', '/api/loyalty')
+  $authResults += Invoke-AppLoginSmoke -App 'Chef' -BaseUrl $ChefBaseUrl -Routes @('/dashboard', '/api/profile', '/api/storefront', '/api/orders')
   $authResults += Invoke-AppLoginSmoke -App 'Driver' -BaseUrl $DriverBaseUrl -Routes @('/', '/api/driver', '/api/deliveries', '/api/offers', '/api/earnings')
   $authResults += Invoke-AppLoginSmoke -App 'Ops' -BaseUrl $OpsBaseUrl -Routes @('/dashboard', '/api/engine/health', '/api/ops/live-board', '/api/orders', '/api/drivers', '/api/chefs')
   $authResults | Format-Table App, Route, Status, ContentType, LooksLikeLogin, Length -AutoSize
-
-  Write-Host 'Chef authenticated smoke note: chef-admin uses client-side Supabase login and has no app-owned POST /api/auth/login route.'
 }
 
 if ($Failures.Count -gt 0) {

@@ -57,7 +57,7 @@ The smoke checks:
 - Public page HTML for customer, chef, driver, and ops.
 - Referenced `/_next/static` assets from those pages.
 - `/api/health` on all four production domains.
-- Authenticated customer, driver, and ops routes when credentials are supplied.
+- Authenticated customer, chef, driver, and ops routes when credentials are supplied.
 
 Set credentials through environment variables, never in committed files:
 
@@ -67,7 +67,7 @@ $env:RIDENDINE_SMOKE_PASSWORD = '<seeded smoke password>'
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/smoke/production-smoke.ps1 -RequireAuth
 ```
 
-Chef admin currently uses client-side Supabase login through `@ridendine/auth` and does not expose the same app-owned `POST /api/auth/login` route as customer, driver, and ops. The smoke verifies chef production deployment, login page, static assets, health API, and runtime logs; browser-based authenticated chef workflow checks remain a separate manual or Playwright item.
+Chef admin now exposes the same app-owned `POST /api/auth/login` pattern as customer, driver, and ops. The runtime contract and live role-fixture smoke gates can create a Chef session with the seeded full-access account and read safe Chef JSON surfaces.
 
 ## Post-Push Verification
 

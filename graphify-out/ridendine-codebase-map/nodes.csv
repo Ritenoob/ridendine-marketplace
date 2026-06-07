@@ -412,6 +412,8 @@ api:ops-admin:/api/team,Ops Admin /api/team,api-route,WIRED,apps/ops-admin/src/a
 file:apps/ops-admin/src/app/api/team/route.ts,apps/ops-admin/src/app/api/team/route.ts,file,WIRED,,,
 api:chef-admin:/api/analytics,Chef Admin /api/analytics,api-route,WIRED,apps/chef-admin/src/app/api/analytics/route.ts,,GET
 file:apps/chef-admin/src/app/api/analytics/route.ts,apps/chef-admin/src/app/api/analytics/route.ts,file,WIRED,,,
+api:chef-admin:/api/auth/login,Chef Admin /api/auth/login,api-route,WIRED,apps/chef-admin/src/app/api/auth/login/route.ts,,POST
+file:apps/chef-admin/src/app/api/auth/login/route.ts,apps/chef-admin/src/app/api/auth/login/route.ts,file,WIRED,,,
 api:chef-admin:/api/auth/signup,Chef Admin /api/auth/signup,api-route,WIRED,apps/chef-admin/src/app/api/auth/signup/route.ts,,POST
 file:apps/chef-admin/src/app/api/auth/signup/route.ts,apps/chef-admin/src/app/api/auth/signup/route.ts,file,WIRED,,,
 api:chef-admin:/api/health,Chef Admin /api/health,api-route,WIRED,apps/chef-admin/src/app/api/health/route.ts,,GET

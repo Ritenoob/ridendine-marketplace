@@ -4,6 +4,7 @@ This is the client/server caller view of API wiring. The API inventory is the pr
 
 | Status | Caller app | Caller file | Target API | Resolved API file | Notes |
 | --- | --- | --- | --- | --- | --- |
+| WORKING | Chef Admin | [apps/chef-admin/src/app/auth/login/page.tsx](../../../apps/chef-admin/src/app/auth/login/page.tsx) | `/api/auth/login` | [apps/chef-admin/src/app/api/auth/login/route.ts](../../../apps/chef-admin/src/app/api/auth/login/route.ts) | fetch resolves to API /api/auth/login |
 | WORKING | Chef Admin | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../apps/chef-admin/src/app/auth/signup/page.tsx) | `/api/auth/signup` | [apps/chef-admin/src/app/api/auth/signup/route.ts](../../../apps/chef-admin/src/app/api/auth/signup/route.ts) | fetch resolves to API /api/auth/signup |
 | WORKING | Chef Admin | [apps/chef-admin/src/app/dashboard/analytics/page.tsx](../../../apps/chef-admin/src/app/dashboard/analytics/page.tsx) | `/api/analytics?period=${p}` | [apps/chef-admin/src/app/api/analytics/route.ts](../../../apps/chef-admin/src/app/api/analytics/route.ts) | fetch resolves to API /api/analytics |
 | WORKING | Chef Admin | [apps/chef-admin/src/app/dashboard/payouts/page.tsx](../../../apps/chef-admin/src/app/dashboard/payouts/page.tsx) | `/api/payouts/request` | [apps/chef-admin/src/app/api/payouts/request/route.ts](../../../apps/chef-admin/src/app/api/payouts/request/route.ts) | fetch resolves to API /api/payouts/request |

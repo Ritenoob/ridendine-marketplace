@@ -87,6 +87,8 @@ flowchart TB
   Page --> Layout
   Page --> File
   Page --> Auth
+  Api0["API/fetch<br/>/api/auth/login"]
+  Page --> Api0
   Component0["Component/import<br/>Button"]
   Page --> Component0
   Component1["Component/import<br/>Input"]
@@ -96,6 +98,7 @@ flowchart TB
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
+  class Api0 api
 ```
 
 ### Actual Page Information
@@ -109,15 +112,15 @@ flowchart TB
 | Auth | Public auth |
 | Page file | [apps/chef-admin/src/app/auth/login/page.tsx](../../../../apps/chef-admin/src/app/auth/login/page.tsx) |
 | Layout | [apps/chef-admin/src/app/auth/layout.tsx](../../../../apps/chef-admin/src/app/auth/layout.tsx) |
-| Data source summary | Public chef login surface using client-side Supabase auth |
+| Data source summary | Public chef login surface wired to app-owned login API |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
 | DB tables/RPCs | None detected |
-| Fetch/API calls | None detected |
-| Shared packages | @ridendine/auth, @ridendine/ui |
+| Fetch/API calls | `/api/auth/login` (POST) |
+| Shared packages | @ridendine/ui |
 | Components/imports | `Button`, `Input` |
 | Environment vars | None detected |
 
@@ -130,7 +133,9 @@ flowchart TB
 
 ### API Calls From This Page
 
-No outgoing API/fetch calls detected.
+| Status | Kind | Target | Resolved app | Resolved file | Notes |
+| --- | --- | --- | --- | --- | --- |
+| WORKING | fetch | `/api/auth/login` | Chef Admin | [apps/chef-admin/src/app/api/auth/login/route.ts](../../../../apps/chef-admin/src/app/api/auth/login/route.ts) | fetch resolves to API /api/auth/login |
 
 ### Incoming References
 

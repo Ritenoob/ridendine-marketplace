@@ -231,11 +231,32 @@ const checks = [
       const {
         liveRoleFixtureContracts,
       } = require(path.join(root, 'scripts/smoke/live-role-fixture-smoke.cjs'));
-      return liveRoleFixtureContracts.length >= 20 &&
+      return liveRoleFixtureContracts.length >= 23 &&
+        liveRoleFixtureContracts.some((contract) => contract.app === 'chef') &&
         liveRoleFixtureContracts.every((contract) => contract.method === 'GET' && contract.liveSafe === true) &&
         exists('docs/wiring/LIVE_ROLE_FIXTURE_SMOKE.md') &&
         exists('docs/architecture/codebase-map/wiring/LIVE_ROLE_FIXTURE_SMOKE.md') &&
         exists('docs/obsidian/codebase-map/Live Role Fixture Smoke.md');
+    },
+  },
+  {
+    name: 'phase 15 non-admin role fixture smoke contracts are generated',
+    pass: () => {
+      const {
+        nonAdminRoleFixtures,
+        nonAdminRoleProbeContracts,
+        validateContracts,
+      } = require(path.join(root, 'scripts/smoke/non-admin-role-fixture-smoke.cjs'));
+      const result = validateContracts();
+      return nonAdminRoleFixtures.length >= 3 &&
+        nonAdminRoleProbeContracts.length >= 12 &&
+        result.failures.length === 0 &&
+        nonAdminRoleProbeContracts.every((contract) => contract.method === 'GET' && contract.liveSafe === true) &&
+        nonAdminRoleProbeContracts.some((contract) => contract.expectedStatus === 200) &&
+        nonAdminRoleProbeContracts.some((contract) => contract.expectedStatus === 403) &&
+        exists('docs/wiring/NON_ADMIN_ROLE_FIXTURE_SMOKE.md') &&
+        exists('docs/architecture/codebase-map/wiring/NON_ADMIN_ROLE_FIXTURE_SMOKE.md') &&
+        exists('docs/obsidian/codebase-map/Non Admin Role Fixture Smoke.md');
     },
   },
 ];

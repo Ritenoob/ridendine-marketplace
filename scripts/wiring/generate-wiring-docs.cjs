@@ -501,7 +501,7 @@ function generateRuntimeContractSmoke() {
 
 Generated from \`scripts/smoke/runtime-contracts.cjs\`.
 
-This Phase 9 smoke gate verifies live production behavior that static wiring scans cannot prove. It is read-only except for app-owned login requests used to create smoke sessions for customer, driver, and ops authenticated API checks.
+This Phase 9 smoke gate verifies live production behavior that static wiring scans cannot prove. It is read-only except for app-owned login requests used to create smoke sessions for customer, chef, driver, and ops authenticated API checks.
 
 Run from the repo root:
 
@@ -518,7 +518,7 @@ pnpm smoke:prod:contracts -- --require-auth
 | Auth-intent pages | ${authIntentPages.length} | Public pages return HTML, protected pages resolve to login guard, legacy redirect shims expose their redirect target. |
 | Public JSON APIs | ${publicJsonApis.length} | Public/health/marketplace-read endpoints return JSON with allowed status codes. |
 | Protected JSON APIs | ${protectedJsonApis.length} | Unauthenticated requests do not return 200. |
-| Authenticated JSON APIs | ${authenticatedApis.length} | App-owned customer, driver, and ops login sessions can read expected JSON APIs. |
+| Authenticated JSON APIs | ${authenticatedApis.length} | App-owned customer, chef, driver, and ops login sessions can read expected JSON APIs. |
 
 ## Auth-Intent Page Contracts
 

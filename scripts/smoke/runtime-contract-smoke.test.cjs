@@ -143,3 +143,20 @@ test('runtime smoke honors require-auth for authenticated contracts', async () =
   assert.equal(result.ok, false);
   assert.ok(result.failures.some((failure) => failure.includes('credentials are required')));
 });
+
+test('chef admin participates in app-owned authenticated runtime contracts', () => {
+  const { apps, protectedJsonApis } = require('./runtime-contracts.cjs');
+  assert.equal(apps.chef.appOwnedLogin, true);
+  assert.equal(apps.chef.loginPath, '/api/auth/login');
+
+  const authenticatedChefApis = protectedJsonApis
+    .filter((contract) => contract.app === 'chef' && contract.authenticated)
+    .map((contract) => contract.path)
+    .sort();
+
+  assert.deepEqual(authenticatedChefApis, [
+    '/api/orders',
+    '/api/profile',
+    '/api/storefront',
+  ]);
+});

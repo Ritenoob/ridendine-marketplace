@@ -262,7 +262,6 @@ route:chef-admin:/auth/forgot-password,package:@ridendine/auth,imports,WIRED
 route:chef-admin:/auth/forgot-password,package:@ridendine/ui,imports,WIRED
 app:chef-admin,route:chef-admin:/auth/login,owns route,WIRED
 route:chef-admin:/auth/login,file:apps/chef-admin/src/app/auth/login/page.tsx,implemented by,WIRED
-route:chef-admin:/auth/login,package:@ridendine/auth,imports,WIRED
 route:chef-admin:/auth/login,package:@ridendine/ui,imports,WIRED
 app:chef-admin,route:chef-admin:/auth/signup,owns route,WIRED
 route:chef-admin:/auth/signup,file:apps/chef-admin/src/app/auth/signup/page.tsx,implemented by,WIRED
@@ -578,6 +577,7 @@ app:ops-admin,api:ops-admin:/api/auth/login,owns API,WIRED
 api:ops-admin:/api/auth/login,file:apps/ops-admin/src/app/api/auth/login/route.ts,implemented by,WIRED
 api:ops-admin:/api/auth/login,table:platform_users,touches table,WIRED
 api:ops-admin:/api/auth/login,package:@ridendine/db,imports,WIRED
+api:ops-admin:/api/auth/login,package:@ridendine/utils,imports,WIRED
 api:ops-admin:/api/auth/login,external:Supabase,calls external,WIRED
 app:ops-admin,api:ops-admin:/api/chefs/:id,owns API,WIRED
 api:ops-admin:/api/chefs/:id,file:apps/ops-admin/src/app/api/chefs/[id]/route.ts,implemented by,WIRED
@@ -842,6 +842,12 @@ api:chef-admin:/api/analytics,table:order_items,touches table,WIRED
 api:chef-admin:/api/analytics,table:orders,touches table,WIRED
 api:chef-admin:/api/analytics,table:reviews,touches table,WIRED
 api:chef-admin:/api/analytics,package:@ridendine/db,imports,WIRED
+app:chef-admin,api:chef-admin:/api/auth/login,owns API,WIRED
+api:chef-admin:/api/auth/login,file:apps/chef-admin/src/app/api/auth/login/route.ts,implemented by,WIRED
+api:chef-admin:/api/auth/login,package:@ridendine/db,imports,WIRED
+api:chef-admin:/api/auth/login,package:@ridendine/utils,imports,WIRED
+api:chef-admin:/api/auth/login,package:@ridendine/validation,imports,WIRED
+api:chef-admin:/api/auth/login,external:Supabase,calls external,WIRED
 app:chef-admin,api:chef-admin:/api/auth/signup,owns API,WIRED
 api:chef-admin:/api/auth/signup,file:apps/chef-admin/src/app/api/auth/signup/route.ts,implemented by,WIRED
 api:chef-admin:/api/auth/signup,package:@ridendine/db,imports,WIRED
@@ -1015,6 +1021,7 @@ api:driver-app:/api/upload,file:apps/driver-app/src/app/api/upload/route.ts,impl
 api:driver-app:/api/upload,package:@ridendine/db,imports,WIRED
 api:driver-app:/api/upload,package:@ridendine/utils,imports,WIRED
 file:apps/chef-admin/src/app/auth/forgot-password/page.tsx,file:apps/chef-admin/src/app/auth/login/page.tsx,href: /auth/login,WORKING
+file:apps/chef-admin/src/app/auth/login/page.tsx,file:apps/chef-admin/src/app/api/auth/login/route.ts,fetch: /api/auth/login,WORKING
 file:apps/chef-admin/src/app/auth/login/page.tsx,file:apps/chef-admin/src/app/auth/forgot-password/page.tsx,href: /auth/forgot-password,WORKING
 file:apps/chef-admin/src/app/auth/login/page.tsx,file:apps/chef-admin/src/app/auth/signup/page.tsx,href: /auth/signup,WORKING
 file:apps/chef-admin/src/app/auth/signup/page.tsx,file:apps/chef-admin/src/app/api/auth/signup/route.ts,fetch: /api/auth/signup,WORKING

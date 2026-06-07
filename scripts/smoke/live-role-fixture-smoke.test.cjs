@@ -41,6 +41,7 @@ test('logs into app-owned apps and sends cookies to read-only probes', async () 
     credentials: { email: 'sean@example.test', password: 'secret-password' },
     contracts: [
       { app: 'customer', path: '/api/profile', method: 'GET', expect: 'json', appSurface: 'Customer marketplace', liveSafe: true },
+      { app: 'chef', path: '/api/storefront', method: 'GET', expect: 'json', appSurface: 'Chef admin', liveSafe: true },
       { app: 'driver', path: '/api/driver', method: 'GET', expect: 'json', appSurface: 'Driver app', liveSafe: true },
       { app: 'ops', path: '/api/engine/finance', method: 'GET', expect: 'json', appSurface: 'Ops admin', liveSafe: true },
     ],
@@ -63,9 +64,9 @@ test('logs into app-owned apps and sends cookies to read-only probes', async () 
   });
 
   assert.equal(summary.ok, true);
-  assert.equal(summary.sessions.length, 3);
-  assert.equal(summary.results.length, 3);
-  assert.ok(calls.filter((call) => String(call.url).endsWith('/api/auth/login')).length === 3);
+  assert.equal(summary.sessions.length, 4);
+  assert.equal(summary.results.length, 4);
+  assert.ok(calls.filter((call) => String(call.url).endsWith('/api/auth/login')).length === 4);
   assert.ok(
     calls
       .filter((call) => !String(call.url).endsWith('/api/auth/login'))
@@ -109,6 +110,20 @@ test('declares only live-safe GET probes', () => {
   assert.ok(liveRoleFixtureContracts.length >= 15);
   assert.equal(liveRoleFixtureContracts.every((contract) => contract.method === 'GET'), true);
   assert.equal(liveRoleFixtureContracts.every((contract) => contract.liveSafe === true), true);
+});
+
+test('includes chef admin read-only probes now that chef uses app-owned auth', () => {
+  const { liveRoleFixtureContracts } = require('./live-role-fixture-smoke.cjs');
+  const chefPaths = liveRoleFixtureContracts
+    .filter((contract) => contract.app === 'chef')
+    .map((contract) => contract.path)
+    .sort();
+
+  assert.deepEqual(chefPaths, [
+    '/api/orders',
+    '/api/profile',
+    '/api/storefront',
+  ]);
 });
 
 test('writes generated docs only when explicitly requested', () => {

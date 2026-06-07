@@ -1,15 +1,15 @@
 # Live Role Fixture Smoke
 
-Generated: 2026-06-06T23:51:53.725Z
+Generated: 2026-06-07T17:15:56.325Z
 
-This generated smoke matrix proves the seeded full-access test account can log into app-owned Customer, Driver, and Ops auth flows and exercise read-only live JSON probes. Chef admin uses client-side Supabase auth, so Phase 13 covers Chef through the seed/bootstrap fixture audit rather than an app-owned login route.
+This generated smoke matrix proves the seeded full-access test account can log into app-owned Customer, Chef, Driver, and Ops auth flows and exercise read-only live JSON probes. All probes after login are live-safe GET requests.
 
 ## Summary
 
 | Metric | Count |
 |---|---:|
-| Live-safe GET contracts | 24 |
-| Passed live probes | 24 |
+| Live-safe GET contracts | 27 |
+| Passed live probes | 27 |
 | Failed checks | 0 |
 
 ## Probe Matrix
@@ -19,6 +19,9 @@ This generated smoke matrix proves the seeded full-access test account can log i
 | PASS | Customer marketplace | `GET` | `/api/profile` | customer_profile | 200 | Read-only live fixture probe |
 | PASS | Customer marketplace | `GET` | `/api/orders` | customer_orders | 200 | Read-only live fixture probe |
 | PASS | Customer marketplace | `GET` | `/api/loyalty` | customer_loyalty | 200 | Read-only live fixture probe |
+| PASS | Chef admin | `GET` | `/api/profile` | chef_profile | 200 | Read-only live fixture probe |
+| PASS | Chef admin | `GET` | `/api/storefront` | chef_storefront | 200 | Read-only live fixture probe |
+| PASS | Chef admin | `GET` | `/api/orders` | chef_orders | 200 | Read-only live fixture probe |
 | PASS | Driver app | `GET` | `/api/driver` | driver_profile | 200 | Read-only live fixture probe |
 | PASS | Driver app | `GET` | `/api/deliveries` | driver_deliveries | 200 | Read-only live fixture probe |
 | PASS | Driver app | `GET` | `/api/offers` | driver_offers | 200 | Read-only live fixture probe |

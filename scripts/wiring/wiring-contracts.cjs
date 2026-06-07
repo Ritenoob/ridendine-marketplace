@@ -142,8 +142,8 @@ const pageContracts = {
   ),
   'apps/chef-admin/src/app/auth/login/page.tsx': page(
     'Public auth',
-    'Public chef login surface using client-side Supabase auth',
-    { packages: ['@ridendine/auth'] }
+    'Public chef login surface wired to app-owned login API',
+    { apis: ['/api/auth/login'] }
   ),
   'apps/chef-admin/src/app/auth/signup/page.tsx': page(
     'Public auth',

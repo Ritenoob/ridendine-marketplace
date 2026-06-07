@@ -49,11 +49,11 @@
 
 ## APIs Discovered
 
-118 API route files discovered.
+119 API route files discovered.
 
 - Customer Web: 31
 - Ops Admin: 53
-- Chef Admin: 18
+- Chef Admin: 19
 - Driver App: 16
 
 ## Packages Discovered
@@ -72,7 +72,7 @@
 ## Database / Engine Sources
 
 - Migration files: 43
-- Data/engine/type/validation/routing source files scanned: 255
+- Data/engine/type/validation/routing source files scanned: 256
 - Tables/RPC identifiers detected: 135
 
 ## Missing Connections

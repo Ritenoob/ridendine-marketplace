@@ -135,7 +135,7 @@ Use fake `fetch` responses to prove the runner:
 
 ```js
 // fails when credentials are required and absent
-// logs into customer, driver, and ops app-owned login routes
+// logs into customer, chef, driver, and ops app-owned login routes
 // uses cookies for authenticated GET checks
 // marks only read-only GET probes as live-safe
 // fails on 403 for the super_admin Ops probes

@@ -2,7 +2,7 @@
 
 Generated from `scripts/smoke/runtime-contracts.cjs`.
 
-This Phase 9 smoke gate verifies live production behavior that static wiring scans cannot prove. It is read-only except for app-owned login requests used to create smoke sessions for customer, driver, and ops authenticated API checks.
+This Phase 9 smoke gate verifies live production behavior that static wiring scans cannot prove. It is read-only except for app-owned login requests used to create smoke sessions for customer, chef, driver, and ops authenticated API checks.
 
 Run from the repo root:
 
@@ -18,8 +18,8 @@ pnpm smoke:prod:contracts -- --require-auth
 | --- | ---: | --- |
 | Auth-intent pages | 17 | Public pages return HTML, protected pages resolve to login guard, legacy redirect shims expose their redirect target. |
 | Public JSON APIs | 7 | Public/health/marketplace-read endpoints return JSON with allowed status codes. |
-| Protected JSON APIs | 13 | Unauthenticated requests do not return 200. |
-| Authenticated JSON APIs | 12 | App-owned customer, driver, and ops login sessions can read expected JSON APIs. |
+| Protected JSON APIs | 15 | Unauthenticated requests do not return 200. |
+| Authenticated JSON APIs | 15 | App-owned customer, chef, driver, and ops login sessions can read expected JSON APIs. |
 
 ## Auth-Intent Page Contracts
 
@@ -71,4 +71,6 @@ pnpm smoke:prod:contracts -- --require-auth
 | Ops Admin | `/api/orders` | 401, 403, 404, 405, 307, 308 | Yes |  |
 | Ops Admin | `/api/drivers` | 401, 403, 404, 405, 307, 308 | Yes |  |
 | Ops Admin | `/api/chefs` | 401, 403, 404, 405, 307, 308 | Yes |  |
-| Chef Admin | `/api/storefront` | 401, 403, 404, 405, 307, 308 | No | Chef app uses client-side Supabase auth, so Phase 9 only proves unauthenticated rejection. |
+| Chef Admin | `/api/storefront` | 401, 403, 404, 405, 307, 308 | Yes | Chef app-owned auth smoke proves approved chef access to storefront JSON. |
+| Chef Admin | `/api/profile` | 401, 403, 404, 405, 307, 308 | Yes | Chef app-owned auth smoke proves approved chef profile access. |
+| Chef Admin | `/api/orders` | 401, 403, 404, 405, 307, 308 | Yes | Chef app-owned auth smoke proves approved chef order queue access. |

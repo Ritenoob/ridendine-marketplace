@@ -12,8 +12,8 @@
 ## Status Summary
 
 - Page routes: 17 total, 17 WIRED, 0 PARTIAL, 0 MISSING.
-- API route files: 18 total, 18 WIRED, 0 PARTIAL.
-- Internal link/API references: 44 total, 0 BROKEN, 0 UNKNOWN_DYNAMIC.
+- API route files: 19 total, 19 WIRED, 0 PARTIAL.
+- Internal link/API references: 45 total, 0 BROKEN, 0 UNKNOWN_DYNAMIC.
 
 ## Standalone App Diagram
 
@@ -25,7 +25,7 @@ flowchart TB
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   App["Chef Admin<br/>chef.ridendine.ca"]:::app
   Pages["17 pages"]:::api
-  APIs["18 API route files"]:::api
+  APIs["19 API route files"]:::api
   Shared["Shared packages"]:::data
   DB["Supabase tables/RPCs"]:::data
   External["Stripe / routing / notifications where detected"]:::warn
@@ -41,7 +41,7 @@ flowchart TB
 | Status | Route | Page file | Layout | Auth | Tables | APIs called | Components |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | WIRED | `/auth/forgot-password` | [apps/chef-admin/src/app/auth/forgot-password/page.tsx](../../../apps/chef-admin/src/app/auth/forgot-password/page.tsx) | [apps/chef-admin/src/app/auth/layout.tsx](../../../apps/chef-admin/src/app/auth/layout.tsx) | Public auth | None detected | None detected | `Button`, `Input` |
-| WIRED | `/auth/login` | [apps/chef-admin/src/app/auth/login/page.tsx](../../../apps/chef-admin/src/app/auth/login/page.tsx) | [apps/chef-admin/src/app/auth/layout.tsx](../../../apps/chef-admin/src/app/auth/layout.tsx) | Public auth | None detected | None detected | `Button`, `Input` |
+| WIRED | `/auth/login` | [apps/chef-admin/src/app/auth/login/page.tsx](../../../apps/chef-admin/src/app/auth/login/page.tsx) | [apps/chef-admin/src/app/auth/layout.tsx](../../../apps/chef-admin/src/app/auth/layout.tsx) | Public auth | None detected | `/api/auth/login` | `Button`, `Input` |
 | WIRED | `/auth/signup` | [apps/chef-admin/src/app/auth/signup/page.tsx](../../../apps/chef-admin/src/app/auth/signup/page.tsx) | [apps/chef-admin/src/app/auth/layout.tsx](../../../apps/chef-admin/src/app/auth/layout.tsx) | Public auth | None detected | `/api/auth/signup` | `Button`, `Input`, `PasswordStrength` |
 | WIRED | `/dashboard/analytics` | [apps/chef-admin/src/app/dashboard/analytics/page.tsx](../../../apps/chef-admin/src/app/dashboard/analytics/page.tsx) | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../apps/chef-admin/src/app/dashboard/layout.tsx) | Chef protected | `chef_storefronts`, `orders` | `/api/analytics?period=${p}` | `Card` |
 | WIRED | `/dashboard/availability` | [apps/chef-admin/src/app/dashboard/availability/page.tsx](../../../apps/chef-admin/src/app/dashboard/availability/page.tsx) | [apps/chef-admin/src/app/dashboard/layout.tsx](../../../apps/chef-admin/src/app/dashboard/layout.tsx) | Undetected | None detected | None detected | `@/components/availability/weekly-availability-form` |
@@ -63,6 +63,7 @@ flowchart TB
 | Status | Endpoint | Methods | File | Auth | Tables | Packages | External |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | WIRED | `/api/analytics` | GET | [apps/chef-admin/src/app/api/analytics/route.ts](../../../apps/chef-admin/src/app/api/analytics/route.ts) | Detected | `order_items`, `orders`, `reviews` | @ridendine/db | None detected |
+| WIRED | `/api/auth/login` | POST | [apps/chef-admin/src/app/api/auth/login/route.ts](../../../apps/chef-admin/src/app/api/auth/login/route.ts) | Detected | None detected | @ridendine/db, @ridendine/utils, @ridendine/validation | Supabase |
 | WIRED | `/api/auth/signup` | POST | [apps/chef-admin/src/app/api/auth/signup/route.ts](../../../apps/chef-admin/src/app/api/auth/signup/route.ts) | Detected | None detected | @ridendine/db, @ridendine/utils, @ridendine/validation | Supabase |
 | WIRED | `/api/health` | GET | [apps/chef-admin/src/app/api/health/route.ts](../../../apps/chef-admin/src/app/api/health/route.ts) | Public health check | `chef_profiles` | @ridendine/db, @ridendine/utils | Stripe, Supabase |
 | WIRED | `/api/menu/:id/options/:optionId` | DELETE, PATCH | [apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/route.ts](../../../apps/chef-admin/src/app/api/menu/[id]/options/[optionId]/route.ts) | Detected | `menu_item_options` | @ridendine/validation | None detected |

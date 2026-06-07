@@ -53,6 +53,8 @@ jobs:
         run: pnpm --filter @ridendine/chef-admin test
       - name: Test (driver-app)
         run: pnpm --filter @ridendine/driver-app test
+      - name: Test wiring and smoke contracts
+        run: pnpm test:wiring-fixes
       - name: Build
         run: pnpm build
 

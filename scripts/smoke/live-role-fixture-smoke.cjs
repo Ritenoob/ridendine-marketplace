@@ -12,7 +12,7 @@ const {
   createAppSession,
 } = require('./runtime-contract-smoke.cjs');
 
-const USER_AGENT = 'RidenDine-Live-Role-Fixture-Smoke/phase-13';
+const USER_AGENT = 'RidenDine-Live-Role-Fixture-Smoke/phase-14';
 
 function liveProbe(app, path, appSurface, capability, note = '') {
   return {
@@ -31,6 +31,10 @@ const liveRoleFixtureContracts = [
   liveProbe('customer', '/api/profile', 'Customer marketplace', 'customer_profile'),
   liveProbe('customer', '/api/orders', 'Customer marketplace', 'customer_orders'),
   liveProbe('customer', '/api/loyalty', 'Customer marketplace', 'customer_loyalty'),
+
+  liveProbe('chef', '/api/profile', 'Chef admin', 'chef_profile'),
+  liveProbe('chef', '/api/storefront', 'Chef admin', 'chef_storefront'),
+  liveProbe('chef', '/api/orders', 'Chef admin', 'chef_orders'),
 
   liveProbe('driver', '/api/driver', 'Driver app', 'driver_profile'),
   liveProbe('driver', '/api/deliveries', 'Driver app', 'driver_deliveries'),
@@ -255,7 +259,7 @@ function generateMarkdown(summary) {
 
 Generated: ${generatedAt}
 
-This generated smoke matrix proves the seeded full-access test account can log into app-owned Customer, Driver, and Ops auth flows and exercise read-only live JSON probes. Chef admin uses client-side Supabase auth, so Phase 13 covers Chef through the seed/bootstrap fixture audit rather than an app-owned login route.
+This generated smoke matrix proves the seeded full-access test account can log into app-owned Customer, Chef, Driver, and Ops auth flows and exercise read-only live JSON probes. All probes after login are live-safe GET requests.
 
 ## Summary
 
