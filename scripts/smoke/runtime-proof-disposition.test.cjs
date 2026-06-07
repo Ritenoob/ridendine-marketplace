@@ -9,17 +9,19 @@ test('dispositions every remaining page proof gap', () => {
   const summary = collectProofDisposition({ root: repoRoot });
 
   assert.equal(summary.pageTotals.total, 90);
-  assert.equal(summary.pageTotals.proofCovered, 17);
-  assert.equal(summary.pageTotals.dispositionedGaps, 73);
+  assert.equal(summary.pageTotals.proofCovered, 80);
+  assert.equal(summary.pageTotals.dispositionedGaps, 10);
   assert.equal(summary.pageTotals.unresolved, 0);
 
   const chefLogin = summary.pages.find((page) => page.app === 'chef' && page.route === '/auth/login');
-  assert.equal(chefLogin.proofCovered, false);
-  assert.equal(chefLogin.proofDisposition.nextProofAction, 'public-page-smoke');
+  assert.equal(chefLogin.proofCovered, true);
+  assert.equal(chefLogin.proofDisposition.nextProofAction, 'already-covered');
+  assert.equal(chefLogin.proofDisposition.recommendedProofAction, 'public-page-smoke');
 
   const opsDashboard = summary.pages.find((page) => page.app === 'ops' && page.route === '/dashboard');
-  assert.equal(opsDashboard.proofCovered, false);
-  assert.equal(opsDashboard.proofDisposition.nextProofAction, 'login-guard-page-smoke');
+  assert.equal(opsDashboard.proofCovered, true);
+  assert.equal(opsDashboard.proofDisposition.nextProofAction, 'already-covered');
+  assert.equal(opsDashboard.proofDisposition.recommendedProofAction, 'login-guard-page-smoke');
 
   const opsCustomerDetail = summary.pages.find((page) => page.app === 'ops' && page.route === '/dashboard/customers/[id]');
   assert.equal(opsCustomerDetail.proofDisposition.nextProofAction, 'already-covered');
@@ -57,9 +59,8 @@ test('generates markdown proof disposition docs with zero unresolved gaps', () =
   const markdown = generateMarkdown(collectProofDisposition({ root: repoRoot }));
 
   assert.ok(markdown.includes('# Runtime Proof Disposition'));
-  assert.ok(markdown.includes('| Pages | 90 | 17 | 73 | 73 | 0 |'));
+  assert.ok(markdown.includes('| Pages | 90 | 80 | 10 | 10 | 0 |'));
   assert.ok(markdown.includes('| API route handlers | 120 | 46 | 74 | 74 | 0 |'));
   assert.ok(markdown.includes('## Page Proof Gap Disposition'));
   assert.ok(markdown.includes('## API Proof Gap Disposition'));
 });
-

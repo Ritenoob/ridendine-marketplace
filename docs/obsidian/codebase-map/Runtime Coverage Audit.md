@@ -1,6 +1,6 @@
 # Runtime Coverage Audit
 
-Generated: 2026-06-07T19:06:58.993Z
+Generated: 2026-06-07T20:59:52.837Z
 
 This Phase 17 coverage inventory maps every discovered app page and API route file to the runtime, live-role, non-admin role, high-risk authorization, and Phase 18/19 classification contracts that currently exercise, document, or classify it. Structural uncovered rows mean a surface has no classification or contract. Proof gaps mean a surface is classified but still lacks runtime/live/static proof coverage.
 
@@ -8,7 +8,7 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 
 | Surface | Total discovered | Structurally covered | Structural gaps | Proof covered | Proof gaps |
 |---|---:|---:|---:|---:|---:|
-| Pages | 90 | 90 | 0 | 17 | 73 |
+| Pages | 90 | 90 | 0 | 80 | 10 |
 | API route files | 120 | 120 | 0 | 46 | 74 |
 
 ## Contract Source Counts
@@ -23,109 +23,110 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | runtime-authenticated-json | 15 |
 | runtime-page-auth-intent | 17 |
 | runtime-page-classification | 90 |
+| runtime-proof-action-page | 76 |
 | runtime-public-json | 7 |
 
 ## Proof Disposition Summary
 
 | Surface | Proof gaps | Dispositioned proof gaps | Unresolved |
 |---|---:|---:|---:|
-| Pages | 73 | 73 | 0 |
+| Pages | 10 | 10 | 0 |
 | API route files | 74 | 74 | 0 |
 
 ## Covered Pages
 
 | App | Route | File | Contract sources |
 |---|---|---|---|
-| Chef Admin | `/` | `apps/chef-admin/src/app/page.tsx` | runtime-page-classification |
-| Chef Admin | `/auth/forgot-password` | `apps/chef-admin/src/app/auth/forgot-password/page.tsx` | runtime-page-classification |
-| Chef Admin | `/auth/login` | `apps/chef-admin/src/app/auth/login/page.tsx` | runtime-page-classification |
-| Chef Admin | `/auth/signup` | `apps/chef-admin/src/app/auth/signup/page.tsx` | runtime-page-classification |
-| Chef Admin | `/dashboard` | `apps/chef-admin/src/app/dashboard/page.tsx` | runtime-page-classification |
-| Chef Admin | `/dashboard/analytics` | `apps/chef-admin/src/app/dashboard/analytics/page.tsx` | runtime-page-classification |
-| Chef Admin | `/dashboard/availability` | `apps/chef-admin/src/app/dashboard/availability/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Chef Admin | `/dashboard/menu` | `apps/chef-admin/src/app/dashboard/menu/page.tsx` | runtime-page-classification |
-| Chef Admin | `/dashboard/orders` | `apps/chef-admin/src/app/dashboard/orders/page.tsx` | runtime-page-classification |
+| Chef Admin | `/` | `apps/chef-admin/src/app/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/auth/forgot-password` | `apps/chef-admin/src/app/auth/forgot-password/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/auth/login` | `apps/chef-admin/src/app/auth/login/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/auth/signup` | `apps/chef-admin/src/app/auth/signup/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/dashboard` | `apps/chef-admin/src/app/dashboard/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/dashboard/analytics` | `apps/chef-admin/src/app/dashboard/analytics/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/dashboard/availability` | `apps/chef-admin/src/app/dashboard/availability/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/dashboard/menu` | `apps/chef-admin/src/app/dashboard/menu/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/dashboard/orders` | `apps/chef-admin/src/app/dashboard/orders/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Chef Admin | `/dashboard/orders/[id]` | `apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx` | runtime-page-classification |
-| Chef Admin | `/dashboard/payouts` | `apps/chef-admin/src/app/dashboard/payouts/page.tsx` | runtime-page-classification |
-| Chef Admin | `/dashboard/reviews` | `apps/chef-admin/src/app/dashboard/reviews/page.tsx` | runtime-page-classification |
-| Chef Admin | `/dashboard/settings` | `apps/chef-admin/src/app/dashboard/settings/page.tsx` | runtime-page-classification |
-| Chef Admin | `/dashboard/storefront` | `apps/chef-admin/src/app/dashboard/storefront/page.tsx` | runtime-page-classification |
-| Chef Admin | `/dashboard/storefront/setup` | `apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx` | runtime-page-classification |
-| Chef Admin | `/privacy` | `apps/chef-admin/src/app/privacy/page.tsx` | runtime-page-classification |
-| Chef Admin | `/terms` | `apps/chef-admin/src/app/terms/page.tsx` | runtime-page-classification |
-| Customer Web | `/` | `apps/web/src/app/page.tsx` | runtime-page-classification |
-| Customer Web | `/about` | `apps/web/src/app/about/page.tsx` | runtime-page-classification |
-| Customer Web | `/account` | `apps/web/src/app/account/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Customer Web | `/account/addresses` | `apps/web/src/app/account/addresses/page.tsx` | runtime-page-classification |
-| Customer Web | `/account/favorites` | `apps/web/src/app/account/favorites/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Customer Web | `/account/orders` | `apps/web/src/app/account/orders/page.tsx` | runtime-page-classification |
-| Customer Web | `/account/settings` | `apps/web/src/app/account/settings/page.tsx` | runtime-page-classification |
-| Customer Web | `/auth/forgot-password` | `apps/web/src/app/auth/forgot-password/page.tsx` | runtime-page-classification |
-| Customer Web | `/auth/login` | `apps/web/src/app/auth/login/page.tsx` | runtime-page-classification |
-| Customer Web | `/auth/signup` | `apps/web/src/app/auth/signup/page.tsx` | runtime-page-classification |
-| Customer Web | `/cart` | `apps/web/src/app/cart/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
+| Chef Admin | `/dashboard/payouts` | `apps/chef-admin/src/app/dashboard/payouts/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/dashboard/reviews` | `apps/chef-admin/src/app/dashboard/reviews/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/dashboard/settings` | `apps/chef-admin/src/app/dashboard/settings/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/dashboard/storefront` | `apps/chef-admin/src/app/dashboard/storefront/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/dashboard/storefront/setup` | `apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/privacy` | `apps/chef-admin/src/app/privacy/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Chef Admin | `/terms` | `apps/chef-admin/src/app/terms/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/` | `apps/web/src/app/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/about` | `apps/web/src/app/about/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/account` | `apps/web/src/app/account/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/account/addresses` | `apps/web/src/app/account/addresses/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/account/favorites` | `apps/web/src/app/account/favorites/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/account/orders` | `apps/web/src/app/account/orders/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/account/settings` | `apps/web/src/app/account/settings/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/auth/forgot-password` | `apps/web/src/app/auth/forgot-password/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/auth/login` | `apps/web/src/app/auth/login/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/auth/signup` | `apps/web/src/app/auth/signup/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/cart` | `apps/web/src/app/cart/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 | Customer Web | `/checkout` | `apps/web/src/app/checkout/page.tsx` | runtime-page-classification |
-| Customer Web | `/chef-resources` | `apps/web/src/app/chef-resources/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Customer Web | `/chef-signup` | `apps/web/src/app/chef-signup/page.tsx` | runtime-page-classification |
-| Customer Web | `/chefs` | `apps/web/src/app/chefs/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
+| Customer Web | `/chef-resources` | `apps/web/src/app/chef-resources/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/chef-signup` | `apps/web/src/app/chef-signup/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/chefs` | `apps/web/src/app/chefs/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 | Customer Web | `/chefs/[slug]` | `apps/web/src/app/chefs/[slug]/page.tsx` | runtime-page-classification |
-| Customer Web | `/contact` | `apps/web/src/app/contact/page.tsx` | runtime-page-classification |
-| Customer Web | `/how-it-works` | `apps/web/src/app/how-it-works/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Customer Web | `/maintenance` | `apps/web/src/app/maintenance/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
+| Customer Web | `/contact` | `apps/web/src/app/contact/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/how-it-works` | `apps/web/src/app/how-it-works/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/maintenance` | `apps/web/src/app/maintenance/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 | Customer Web | `/order-confirmation/[orderId]` | `apps/web/src/app/order-confirmation/[orderId]/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
 | Customer Web | `/orders/[id]/confirmation` | `apps/web/src/app/orders/[id]/confirmation/page.tsx` | runtime-page-classification |
-| Customer Web | `/privacy` | `apps/web/src/app/privacy/page.tsx` | runtime-page-classification |
-| Customer Web | `/terms` | `apps/web/src/app/terms/page.tsx` | runtime-page-classification |
-| Driver App | `/` | `apps/driver-app/src/app/page.tsx` | runtime-page-classification |
-| Driver App | `/auth/login` | `apps/driver-app/src/app/auth/login/page.tsx` | runtime-page-classification |
-| Driver App | `/auth/signup` | `apps/driver-app/src/app/auth/signup/page.tsx` | runtime-page-classification |
+| Customer Web | `/privacy` | `apps/web/src/app/privacy/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Customer Web | `/terms` | `apps/web/src/app/terms/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Driver App | `/` | `apps/driver-app/src/app/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Driver App | `/auth/login` | `apps/driver-app/src/app/auth/login/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Driver App | `/auth/signup` | `apps/driver-app/src/app/auth/signup/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Driver App | `/delivery/[id]` | `apps/driver-app/src/app/delivery/[id]/page.tsx` | runtime-page-classification |
-| Driver App | `/earnings` | `apps/driver-app/src/app/earnings/page.tsx` | runtime-page-classification |
-| Driver App | `/history` | `apps/driver-app/src/app/history/page.tsx` | runtime-page-classification |
-| Driver App | `/privacy` | `apps/driver-app/src/app/privacy/page.tsx` | runtime-page-classification |
-| Driver App | `/profile` | `apps/driver-app/src/app/profile/page.tsx` | runtime-page-classification |
-| Driver App | `/settings` | `apps/driver-app/src/app/settings/page.tsx` | runtime-page-classification |
-| Driver App | `/terms` | `apps/driver-app/src/app/terms/page.tsx` | runtime-page-classification |
-| Ops Admin | `/` | `apps/ops-admin/src/app/page.tsx` | runtime-page-classification |
-| Ops Admin | `/auth/login` | `apps/ops-admin/src/app/auth/login/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard` | `apps/ops-admin/src/app/dashboard/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/activity` | `apps/ops-admin/src/app/dashboard/activity/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/analytics` | `apps/ops-admin/src/app/dashboard/analytics/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/announcements` | `apps/ops-admin/src/app/dashboard/announcements/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/automation` | `apps/ops-admin/src/app/dashboard/automation/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/chefs` | `apps/ops-admin/src/app/dashboard/chefs/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
+| Driver App | `/earnings` | `apps/driver-app/src/app/earnings/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Driver App | `/history` | `apps/driver-app/src/app/history/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Driver App | `/privacy` | `apps/driver-app/src/app/privacy/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Driver App | `/profile` | `apps/driver-app/src/app/profile/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Driver App | `/settings` | `apps/driver-app/src/app/settings/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Driver App | `/terms` | `apps/driver-app/src/app/terms/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/` | `apps/ops-admin/src/app/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/auth/login` | `apps/ops-admin/src/app/auth/login/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard` | `apps/ops-admin/src/app/dashboard/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/activity` | `apps/ops-admin/src/app/dashboard/activity/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/analytics` | `apps/ops-admin/src/app/dashboard/analytics/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/announcements` | `apps/ops-admin/src/app/dashboard/announcements/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/automation` | `apps/ops-admin/src/app/dashboard/automation/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/chefs` | `apps/ops-admin/src/app/dashboard/chefs/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/chefs/[id]` | `apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/chefs/approvals` | `apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/compliance` | `apps/ops-admin/src/app/dashboard/compliance/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/customers` | `apps/ops-admin/src/app/dashboard/customers/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/chefs/approvals` | `apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/compliance` | `apps/ops-admin/src/app/dashboard/compliance/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/customers` | `apps/ops-admin/src/app/dashboard/customers/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/customers/[id]` | `apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Ops Admin | `/dashboard/deliveries` | `apps/ops-admin/src/app/dashboard/deliveries/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/deliveries` | `apps/ops-admin/src/app/dashboard/deliveries/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/deliveries/[id]` | `apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Ops Admin | `/dashboard/dispatch` | `apps/ops-admin/src/app/dashboard/dispatch/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/drivers` | `apps/ops-admin/src/app/dashboard/drivers/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
+| Ops Admin | `/dashboard/dispatch` | `apps/ops-admin/src/app/dashboard/dispatch/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/drivers` | `apps/ops-admin/src/app/dashboard/drivers/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/drivers/[id]` | `apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Ops Admin | `/dashboard/exceptions` | `apps/ops-admin/src/app/dashboard/exceptions/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/finance` | `apps/ops-admin/src/app/dashboard/finance/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/finance/accounts/chefs` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/exceptions` | `apps/ops-admin/src/app/dashboard/exceptions/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/finance` | `apps/ops-admin/src/app/dashboard/finance/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/finance/accounts/chefs` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/finance/accounts/chefs/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/finance/accounts/drivers` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/finance/accounts/drivers` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/finance/accounts/drivers/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/finance/instant-payouts` | `apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/finance/payouts` | `apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/finance/instant-payouts` | `apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/finance/payouts` | `apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/finance/payouts/[runId]` | `apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/finance/reconciliation` | `apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/finance/refunds` | `apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/health` | `apps/ops-admin/src/app/dashboard/health/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/integrations` | `apps/ops-admin/src/app/dashboard/integrations/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/map` | `apps/ops-admin/src/app/dashboard/map/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Ops Admin | `/dashboard/orders` | `apps/ops-admin/src/app/dashboard/orders/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/finance/reconciliation` | `apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/finance/refunds` | `apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/health` | `apps/ops-admin/src/app/dashboard/health/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/integrations` | `apps/ops-admin/src/app/dashboard/integrations/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/map` | `apps/ops-admin/src/app/dashboard/map/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/orders` | `apps/ops-admin/src/app/dashboard/orders/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/orders/[id]` | `apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/promos` | `apps/ops-admin/src/app/dashboard/promos/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/reports` | `apps/ops-admin/src/app/dashboard/reports/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Ops Admin | `/dashboard/settings` | `apps/ops-admin/src/app/dashboard/settings/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/support` | `apps/ops-admin/src/app/dashboard/support/page.tsx` | runtime-page-classification |
-| Ops Admin | `/dashboard/team` | `apps/ops-admin/src/app/dashboard/team/page.tsx` | runtime-page-classification |
-| Ops Admin | `/internal/command-center` | `apps/ops-admin/src/app/internal/command-center/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
+| Ops Admin | `/dashboard/promos` | `apps/ops-admin/src/app/dashboard/promos/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/reports` | `apps/ops-admin/src/app/dashboard/reports/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/settings` | `apps/ops-admin/src/app/dashboard/settings/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/support` | `apps/ops-admin/src/app/dashboard/support/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/dashboard/team` | `apps/ops-admin/src/app/dashboard/team/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Ops Admin | `/internal/command-center` | `apps/ops-admin/src/app/internal/command-center/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 
 ## Uncovered Pages
 
@@ -137,79 +138,16 @@ None found.
 
 | App | Route | File | Proof sources |
 |---|---|---|---|
-| Chef Admin | `/` | `apps/chef-admin/src/app/page.tsx` | - |
-| Chef Admin | `/auth/forgot-password` | `apps/chef-admin/src/app/auth/forgot-password/page.tsx` | - |
-| Chef Admin | `/auth/login` | `apps/chef-admin/src/app/auth/login/page.tsx` | - |
-| Chef Admin | `/auth/signup` | `apps/chef-admin/src/app/auth/signup/page.tsx` | - |
-| Chef Admin | `/dashboard` | `apps/chef-admin/src/app/dashboard/page.tsx` | - |
-| Chef Admin | `/dashboard/analytics` | `apps/chef-admin/src/app/dashboard/analytics/page.tsx` | - |
-| Chef Admin | `/dashboard/menu` | `apps/chef-admin/src/app/dashboard/menu/page.tsx` | - |
-| Chef Admin | `/dashboard/orders` | `apps/chef-admin/src/app/dashboard/orders/page.tsx` | - |
 | Chef Admin | `/dashboard/orders/[id]` | `apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx` | - |
-| Chef Admin | `/dashboard/payouts` | `apps/chef-admin/src/app/dashboard/payouts/page.tsx` | - |
-| Chef Admin | `/dashboard/reviews` | `apps/chef-admin/src/app/dashboard/reviews/page.tsx` | - |
-| Chef Admin | `/dashboard/settings` | `apps/chef-admin/src/app/dashboard/settings/page.tsx` | - |
-| Chef Admin | `/dashboard/storefront` | `apps/chef-admin/src/app/dashboard/storefront/page.tsx` | - |
-| Chef Admin | `/dashboard/storefront/setup` | `apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx` | - |
-| Chef Admin | `/privacy` | `apps/chef-admin/src/app/privacy/page.tsx` | - |
-| Chef Admin | `/terms` | `apps/chef-admin/src/app/terms/page.tsx` | - |
-| Customer Web | `/` | `apps/web/src/app/page.tsx` | - |
-| Customer Web | `/about` | `apps/web/src/app/about/page.tsx` | - |
-| Customer Web | `/account/addresses` | `apps/web/src/app/account/addresses/page.tsx` | - |
-| Customer Web | `/account/orders` | `apps/web/src/app/account/orders/page.tsx` | - |
-| Customer Web | `/account/settings` | `apps/web/src/app/account/settings/page.tsx` | - |
-| Customer Web | `/auth/forgot-password` | `apps/web/src/app/auth/forgot-password/page.tsx` | - |
-| Customer Web | `/auth/login` | `apps/web/src/app/auth/login/page.tsx` | - |
-| Customer Web | `/auth/signup` | `apps/web/src/app/auth/signup/page.tsx` | - |
 | Customer Web | `/checkout` | `apps/web/src/app/checkout/page.tsx` | - |
-| Customer Web | `/chef-signup` | `apps/web/src/app/chef-signup/page.tsx` | - |
 | Customer Web | `/chefs/[slug]` | `apps/web/src/app/chefs/[slug]/page.tsx` | - |
-| Customer Web | `/contact` | `apps/web/src/app/contact/page.tsx` | - |
 | Customer Web | `/orders/[id]/confirmation` | `apps/web/src/app/orders/[id]/confirmation/page.tsx` | - |
-| Customer Web | `/privacy` | `apps/web/src/app/privacy/page.tsx` | - |
-| Customer Web | `/terms` | `apps/web/src/app/terms/page.tsx` | - |
-| Driver App | `/` | `apps/driver-app/src/app/page.tsx` | - |
-| Driver App | `/auth/login` | `apps/driver-app/src/app/auth/login/page.tsx` | - |
-| Driver App | `/auth/signup` | `apps/driver-app/src/app/auth/signup/page.tsx` | - |
 | Driver App | `/delivery/[id]` | `apps/driver-app/src/app/delivery/[id]/page.tsx` | - |
-| Driver App | `/earnings` | `apps/driver-app/src/app/earnings/page.tsx` | - |
-| Driver App | `/history` | `apps/driver-app/src/app/history/page.tsx` | - |
-| Driver App | `/privacy` | `apps/driver-app/src/app/privacy/page.tsx` | - |
-| Driver App | `/profile` | `apps/driver-app/src/app/profile/page.tsx` | - |
-| Driver App | `/settings` | `apps/driver-app/src/app/settings/page.tsx` | - |
-| Driver App | `/terms` | `apps/driver-app/src/app/terms/page.tsx` | - |
-| Ops Admin | `/` | `apps/ops-admin/src/app/page.tsx` | - |
-| Ops Admin | `/auth/login` | `apps/ops-admin/src/app/auth/login/page.tsx` | - |
-| Ops Admin | `/dashboard` | `apps/ops-admin/src/app/dashboard/page.tsx` | - |
-| Ops Admin | `/dashboard/activity` | `apps/ops-admin/src/app/dashboard/activity/page.tsx` | - |
-| Ops Admin | `/dashboard/analytics` | `apps/ops-admin/src/app/dashboard/analytics/page.tsx` | - |
-| Ops Admin | `/dashboard/announcements` | `apps/ops-admin/src/app/dashboard/announcements/page.tsx` | - |
-| Ops Admin | `/dashboard/automation` | `apps/ops-admin/src/app/dashboard/automation/page.tsx` | - |
 | Ops Admin | `/dashboard/chefs/[id]` | `apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx` | - |
-| Ops Admin | `/dashboard/chefs/approvals` | `apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx` | - |
-| Ops Admin | `/dashboard/compliance` | `apps/ops-admin/src/app/dashboard/compliance/page.tsx` | - |
-| Ops Admin | `/dashboard/customers` | `apps/ops-admin/src/app/dashboard/customers/page.tsx` | - |
-| Ops Admin | `/dashboard/deliveries` | `apps/ops-admin/src/app/dashboard/deliveries/page.tsx` | - |
-| Ops Admin | `/dashboard/dispatch` | `apps/ops-admin/src/app/dashboard/dispatch/page.tsx` | - |
-| Ops Admin | `/dashboard/exceptions` | `apps/ops-admin/src/app/dashboard/exceptions/page.tsx` | - |
-| Ops Admin | `/dashboard/finance` | `apps/ops-admin/src/app/dashboard/finance/page.tsx` | - |
-| Ops Admin | `/dashboard/finance/accounts/chefs` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx` | - |
 | Ops Admin | `/dashboard/finance/accounts/chefs/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx` | - |
-| Ops Admin | `/dashboard/finance/accounts/drivers` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx` | - |
 | Ops Admin | `/dashboard/finance/accounts/drivers/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx` | - |
-| Ops Admin | `/dashboard/finance/instant-payouts` | `apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx` | - |
-| Ops Admin | `/dashboard/finance/payouts` | `apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx` | - |
 | Ops Admin | `/dashboard/finance/payouts/[runId]` | `apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx` | - |
-| Ops Admin | `/dashboard/finance/reconciliation` | `apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx` | - |
-| Ops Admin | `/dashboard/finance/refunds` | `apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx` | - |
-| Ops Admin | `/dashboard/health` | `apps/ops-admin/src/app/dashboard/health/page.tsx` | - |
-| Ops Admin | `/dashboard/integrations` | `apps/ops-admin/src/app/dashboard/integrations/page.tsx` | - |
-| Ops Admin | `/dashboard/orders` | `apps/ops-admin/src/app/dashboard/orders/page.tsx` | - |
 | Ops Admin | `/dashboard/orders/[id]` | `apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx` | - |
-| Ops Admin | `/dashboard/promos` | `apps/ops-admin/src/app/dashboard/promos/page.tsx` | - |
-| Ops Admin | `/dashboard/settings` | `apps/ops-admin/src/app/dashboard/settings/page.tsx` | - |
-| Ops Admin | `/dashboard/support` | `apps/ops-admin/src/app/dashboard/support/page.tsx` | - |
-| Ops Admin | `/dashboard/team` | `apps/ops-admin/src/app/dashboard/team/page.tsx` | - |
 
 ## Covered API Route Files
 

@@ -186,6 +186,8 @@ function collectContractSources(options = {}) {
   });
   for (const page of classification.pages) {
     addPageSource(page.file, 'runtime-page-classification');
+    const proofActionSource = staticPageProofActionSource(page);
+    if (proofActionSource) addPageSource(page.file, proofActionSource);
   }
   for (const api of classification.apis) {
     addApiSource(api.app, api.endpoint, 'runtime-api-classification');
@@ -200,6 +202,18 @@ function sortedSources(sourceSet) {
 
 function proofSources(sources) {
   return sources.filter((source) => !source.endsWith('-classification'));
+}
+
+function hasDynamicSegment(routeOrEndpoint) {
+  return /\[[^\]]+\]/.test(String(routeOrEndpoint || ''));
+}
+
+function staticPageProofActionSource(page) {
+  const authIntent = page.classification?.authIntent || '';
+  if (hasDynamicSegment(page.route)) return null;
+  if (authIntent === 'public' || authIntent === 'public-auth-entry') return 'runtime-proof-action-page';
+  if (authIntent === 'protected' || authIntent === 'protected-redirect') return 'runtime-proof-action-page';
+  return null;
 }
 
 function collectRuntimeCoverage(options = {}) {

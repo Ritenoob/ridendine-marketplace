@@ -347,6 +347,8 @@ Expected:
 
 **Risk:** Low because this thread uses public pages and unauthenticated protected-page guard checks.
 
+**Status:** Complete on 2026-06-07. `smoke:proof-actions` passed for `public-page-smoke` and `login-guard-page-smoke` with 76 executed page checks, 0 failures, and 2 dynamic public pages deferred to Thread 5 sample fixtures. Runtime page proof coverage now reports 80/90 covered with 10 remaining page proof gaps.
+
 **Files:**
 - Read: `scripts/smoke/runtime-proof-disposition.cjs`
 - Read: `scripts/smoke/runtime-contract-smoke.cjs`
@@ -355,7 +357,7 @@ Expected:
 - Create: `docs/wiring/RUNTIME_PROOF_ACTION_SMOKE.md`
 - Modify: `package.json`
 
-- [ ] **Step 1: Write failing selection tests**
+- [x] **Step 1: Write failing selection tests**
 
 Create `scripts/smoke/runtime-proof-action-smoke.test.cjs` with tests for:
 
@@ -402,7 +404,7 @@ Run:
 
 Expected before implementation: fails because the script does not exist.
 
-- [ ] **Step 2: Implement page-bucket proof action script**
+- [x] **Step 2: Implement page-bucket proof action script**
 
 Create `scripts/smoke/runtime-proof-action-smoke.cjs` that:
 
@@ -426,7 +428,7 @@ Expected:
 - Protected pages resolve to login guard or redirect.
 - No authenticated or mutating API calls are made.
 
-- [ ] **Step 3: Add script wiring**
+- [x] **Step 3: Add script wiring**
 
 Modify `package.json`:
 
@@ -436,7 +438,7 @@ Modify `package.json`:
 
 Append `scripts/smoke/runtime-proof-action-smoke.test.cjs` to `test:wiring-fixes`.
 
-- [ ] **Step 4: Run and document Thread 3**
+- [x] **Step 4: Run and document Thread 3**
 
 Run:
 
@@ -454,7 +456,7 @@ Expected:
 - Proof disposition docs show fewer page proof gaps.
 - Full wiring gate passes.
 
-- [ ] **Step 5: Commit and push Thread 3**
+- [x] **Step 5: Commit and push Thread 3**
 
 Run:
 

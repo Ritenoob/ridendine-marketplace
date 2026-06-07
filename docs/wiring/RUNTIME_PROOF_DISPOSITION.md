@@ -1,6 +1,6 @@
 # Runtime Proof Disposition
 
-Generated: 2026-06-07T19:07:00.474Z
+Generated: 2026-06-07T21:00:00.716Z
 
 This Phase 20/21 proof disposition audit assigns every remaining runtime proof gap to an explicit next proof action. It does not make new production calls or mutate data; it converts the remaining proof gaps into actionable buckets for future safe smoke, negative authorization, sample-data, or contract-only work.
 
@@ -8,86 +8,23 @@ This Phase 20/21 proof disposition audit assigns every remaining runtime proof g
 
 | Surface | Total discovered | Proof covered | Proof gaps | Dispositioned proof gaps | Unresolved |
 |---|---:|---:|---:|---:|---:|
-| Pages | 90 | 17 | 73 | 73 | 0 |
+| Pages | 90 | 80 | 10 | 10 | 0 |
 | API route handlers | 120 | 46 | 74 | 74 | 0 |
 
 ## Page Proof Gap Disposition
 
 | App | Route | File | Auth intent | Next proof action | Recommended proof action |
 |---|---|---|---|---|---|
-| Chef Admin | `/` | `apps/chef-admin/src/app/page.tsx` | protected-redirect | login-guard-page-smoke | login-guard-page-smoke |
-| Chef Admin | `/auth/forgot-password` | `apps/chef-admin/src/app/auth/forgot-password/page.tsx` | public-auth-entry | public-page-smoke | public-page-smoke |
-| Chef Admin | `/auth/login` | `apps/chef-admin/src/app/auth/login/page.tsx` | public-auth-entry | public-page-smoke | public-page-smoke |
-| Chef Admin | `/auth/signup` | `apps/chef-admin/src/app/auth/signup/page.tsx` | public-auth-entry | public-page-smoke | public-page-smoke |
-| Chef Admin | `/dashboard` | `apps/chef-admin/src/app/dashboard/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Chef Admin | `/dashboard/analytics` | `apps/chef-admin/src/app/dashboard/analytics/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Chef Admin | `/dashboard/menu` | `apps/chef-admin/src/app/dashboard/menu/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Chef Admin | `/dashboard/orders` | `apps/chef-admin/src/app/dashboard/orders/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
 | Chef Admin | `/dashboard/orders/[id]` | `apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx` | protected | sampled-login-guard-page-smoke | sampled-login-guard-page-smoke |
-| Chef Admin | `/dashboard/payouts` | `apps/chef-admin/src/app/dashboard/payouts/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Chef Admin | `/dashboard/reviews` | `apps/chef-admin/src/app/dashboard/reviews/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Chef Admin | `/dashboard/settings` | `apps/chef-admin/src/app/dashboard/settings/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Chef Admin | `/dashboard/storefront` | `apps/chef-admin/src/app/dashboard/storefront/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Chef Admin | `/dashboard/storefront/setup` | `apps/chef-admin/src/app/dashboard/storefront/setup/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Chef Admin | `/privacy` | `apps/chef-admin/src/app/privacy/page.tsx` | public | public-page-smoke | public-page-smoke |
-| Chef Admin | `/terms` | `apps/chef-admin/src/app/terms/page.tsx` | public | public-page-smoke | public-page-smoke |
-| Customer Web | `/` | `apps/web/src/app/page.tsx` | public | public-page-smoke | public-page-smoke |
-| Customer Web | `/about` | `apps/web/src/app/about/page.tsx` | public | public-page-smoke | public-page-smoke |
-| Customer Web | `/account/addresses` | `apps/web/src/app/account/addresses/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Customer Web | `/account/orders` | `apps/web/src/app/account/orders/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Customer Web | `/account/settings` | `apps/web/src/app/account/settings/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Customer Web | `/auth/forgot-password` | `apps/web/src/app/auth/forgot-password/page.tsx` | public-auth-entry | public-page-smoke | public-page-smoke |
-| Customer Web | `/auth/login` | `apps/web/src/app/auth/login/page.tsx` | public-auth-entry | public-page-smoke | public-page-smoke |
-| Customer Web | `/auth/signup` | `apps/web/src/app/auth/signup/page.tsx` | public-auth-entry | public-page-smoke | public-page-smoke |
 | Customer Web | `/checkout` | `apps/web/src/app/checkout/page.tsx` | mixed-auth-dependent | public-shell-and-auth-action-smoke | public-shell-and-auth-action-smoke |
-| Customer Web | `/chef-signup` | `apps/web/src/app/chef-signup/page.tsx` | public | public-page-smoke | public-page-smoke |
 | Customer Web | `/chefs/[slug]` | `apps/web/src/app/chefs/[slug]/page.tsx` | public | public-page-smoke | public-page-smoke |
-| Customer Web | `/contact` | `apps/web/src/app/contact/page.tsx` | public | public-page-smoke | public-page-smoke |
 | Customer Web | `/orders/[id]/confirmation` | `apps/web/src/app/orders/[id]/confirmation/page.tsx` | protected | sampled-login-guard-page-smoke | sampled-login-guard-page-smoke |
-| Customer Web | `/privacy` | `apps/web/src/app/privacy/page.tsx` | public | public-page-smoke | public-page-smoke |
-| Customer Web | `/terms` | `apps/web/src/app/terms/page.tsx` | public | public-page-smoke | public-page-smoke |
-| Driver App | `/` | `apps/driver-app/src/app/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Driver App | `/auth/login` | `apps/driver-app/src/app/auth/login/page.tsx` | public-auth-entry | public-page-smoke | public-page-smoke |
-| Driver App | `/auth/signup` | `apps/driver-app/src/app/auth/signup/page.tsx` | public-auth-entry | public-page-smoke | public-page-smoke |
 | Driver App | `/delivery/[id]` | `apps/driver-app/src/app/delivery/[id]/page.tsx` | protected | sampled-login-guard-page-smoke | sampled-login-guard-page-smoke |
-| Driver App | `/earnings` | `apps/driver-app/src/app/earnings/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Driver App | `/history` | `apps/driver-app/src/app/history/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Driver App | `/privacy` | `apps/driver-app/src/app/privacy/page.tsx` | public | public-page-smoke | public-page-smoke |
-| Driver App | `/profile` | `apps/driver-app/src/app/profile/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Driver App | `/settings` | `apps/driver-app/src/app/settings/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Driver App | `/terms` | `apps/driver-app/src/app/terms/page.tsx` | public | public-page-smoke | public-page-smoke |
-| Ops Admin | `/` | `apps/ops-admin/src/app/page.tsx` | protected-redirect | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/auth/login` | `apps/ops-admin/src/app/auth/login/page.tsx` | public-auth-entry | public-page-smoke | public-page-smoke |
-| Ops Admin | `/dashboard` | `apps/ops-admin/src/app/dashboard/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/activity` | `apps/ops-admin/src/app/dashboard/activity/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/analytics` | `apps/ops-admin/src/app/dashboard/analytics/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/announcements` | `apps/ops-admin/src/app/dashboard/announcements/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/automation` | `apps/ops-admin/src/app/dashboard/automation/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
 | Ops Admin | `/dashboard/chefs/[id]` | `apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx` | protected | sampled-login-guard-page-smoke | sampled-login-guard-page-smoke |
-| Ops Admin | `/dashboard/chefs/approvals` | `apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/compliance` | `apps/ops-admin/src/app/dashboard/compliance/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/customers` | `apps/ops-admin/src/app/dashboard/customers/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/deliveries` | `apps/ops-admin/src/app/dashboard/deliveries/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/dispatch` | `apps/ops-admin/src/app/dashboard/dispatch/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/exceptions` | `apps/ops-admin/src/app/dashboard/exceptions/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/finance` | `apps/ops-admin/src/app/dashboard/finance/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/finance/accounts/chefs` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
 | Ops Admin | `/dashboard/finance/accounts/chefs/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx` | protected | sampled-login-guard-page-smoke | sampled-login-guard-page-smoke |
-| Ops Admin | `/dashboard/finance/accounts/drivers` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
 | Ops Admin | `/dashboard/finance/accounts/drivers/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx` | protected | sampled-login-guard-page-smoke | sampled-login-guard-page-smoke |
-| Ops Admin | `/dashboard/finance/instant-payouts` | `apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/finance/payouts` | `apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
 | Ops Admin | `/dashboard/finance/payouts/[runId]` | `apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx` | protected | sampled-login-guard-page-smoke | sampled-login-guard-page-smoke |
-| Ops Admin | `/dashboard/finance/reconciliation` | `apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/finance/refunds` | `apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/health` | `apps/ops-admin/src/app/dashboard/health/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/integrations` | `apps/ops-admin/src/app/dashboard/integrations/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/orders` | `apps/ops-admin/src/app/dashboard/orders/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
 | Ops Admin | `/dashboard/orders/[id]` | `apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx` | protected | sampled-login-guard-page-smoke | sampled-login-guard-page-smoke |
-| Ops Admin | `/dashboard/promos` | `apps/ops-admin/src/app/dashboard/promos/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/settings` | `apps/ops-admin/src/app/dashboard/settings/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/support` | `apps/ops-admin/src/app/dashboard/support/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
-| Ops Admin | `/dashboard/team` | `apps/ops-admin/src/app/dashboard/team/page.tsx` | protected | login-guard-page-smoke | login-guard-page-smoke |
 
 ## API Proof Gap Disposition
 
