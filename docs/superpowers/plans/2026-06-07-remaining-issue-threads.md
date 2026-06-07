@@ -91,6 +91,8 @@ Expected:
 
 **Risk:** Low application risk, but blocked until non-admin credentials exist.
 
+**Status:** Complete on 2026-06-07. Smoke-role accounts were created through the guarded Ops team API, live credential readiness passed, and 15/15 live allow/deny probes passed. Generated proof docs were updated without printing credential values.
+
 **Files:**
 - Read: `scripts/smoke/non-admin-role-fixture-smoke.cjs`
 - Read: `scripts/smoke/non-admin-role-fixture-smoke.test.cjs`
@@ -98,7 +100,7 @@ Expected:
 - Modify after successful live proof: `docs/architecture/codebase-map/wiring/NON_ADMIN_ROLE_FIXTURE_SMOKE.md`
 - Modify after successful live proof: `docs/obsidian/codebase-map/Non Admin Role Fixture Smoke.md`
 
-- [ ] **Step 1: Confirm the role contracts are still valid**
+- [x] **Step 1: Confirm the role contracts are still valid**
 
 Run:
 
@@ -112,7 +114,7 @@ Expected:
 - Contracts-only non-admin role fixture exits `0`.
 - `test:wiring-fixes` exits `0`.
 
-- [ ] **Step 2: Configure non-admin credentials**
+- [x] **Step 2: Configure non-admin credentials**
 
 Required environment variables:
 
@@ -127,7 +129,7 @@ $env:RIDENDINE_OPS_AGENT_PASSWORD
 
 Use real test-role accounts only. Do not reuse the seeded full-admin account for this thread.
 
-- [ ] **Step 3: Run credential readiness preflight**
+- [x] **Step 3: Run credential readiness preflight**
 
 Run:
 
@@ -141,7 +143,7 @@ Expected:
 - Prints which role credential slots are configured.
 - Does not print passwords or secret values.
 
-- [ ] **Step 4: Run live non-admin role proof**
+- [x] **Step 4: Run live non-admin role proof**
 
 Run:
 
@@ -156,7 +158,7 @@ Expected:
 - Ops-agent allow/deny probes pass.
 - Generated docs update with live proof evidence.
 
-- [ ] **Step 5: Commit and push Thread 1**
+- [x] **Step 5: Commit and push Thread 1**
 
 Run:
 

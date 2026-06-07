@@ -8,7 +8,7 @@ This note points to the master plan for the remaining post-closure issue threads
 
 ## Planned Threads
 
-1. Non-admin Ops live role proof.
+1. Non-admin Ops live role proof. Complete 2026-06-07: 15/15 live allow/deny probes passed.
 2. Ops CSV export/audit proof.
 3. Public and login-guard page proof buckets.
 4. Authenticated JSON and negative/special API proof buckets.
