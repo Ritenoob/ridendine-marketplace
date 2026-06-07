@@ -1,6 +1,6 @@
 # Runtime Coverage Audit
 
-Generated: 2026-06-07T21:15:46.249Z
+Generated: 2026-06-07T21:43:13.958Z
 
 This Phase 17 coverage inventory maps every discovered app page and API route file to the runtime, live-role, non-admin role, high-risk authorization, and Phase 18/19 classification contracts that currently exercise, document, or classify it. Structural uncovered rows mean a surface has no classification or contract. Proof gaps mean a surface is classified but still lacks runtime/live/static proof coverage.
 
@@ -8,8 +8,8 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 
 | Surface | Total discovered | Structurally covered | Structural gaps | Proof covered | Proof gaps |
 |---|---:|---:|---:|---:|---:|
-| Pages | 90 | 90 | 0 | 80 | 10 |
-| API route files | 120 | 120 | 0 | 116 | 4 |
+| Pages | 90 | 90 | 0 | 89 | 1 |
+| API route files | 120 | 120 | 0 | 120 | 0 |
 
 ## Contract Source Counts
 
@@ -27,13 +27,14 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | runtime-proof-action-api | 115 |
 | runtime-proof-action-page | 76 |
 | runtime-public-json | 7 |
+| runtime-sample-fixture | 17 |
 
 ## Proof Disposition Summary
 
 | Surface | Proof gaps | Dispositioned proof gaps | Unresolved |
 |---|---:|---:|---:|
-| Pages | 10 | 10 | 0 |
-| API route files | 4 | 4 | 0 |
+| Pages | 1 | 1 | 0 |
+| API route files | 0 | 0 | 0 |
 
 ## Covered Pages
 
@@ -48,7 +49,7 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | Chef Admin | `/dashboard/availability` | `apps/chef-admin/src/app/dashboard/availability/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 | Chef Admin | `/dashboard/menu` | `apps/chef-admin/src/app/dashboard/menu/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Chef Admin | `/dashboard/orders` | `apps/chef-admin/src/app/dashboard/orders/page.tsx` | runtime-page-classification, runtime-proof-action-page |
-| Chef Admin | `/dashboard/orders/[id]` | `apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx` | runtime-page-classification |
+| Chef Admin | `/dashboard/orders/[id]` | `apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx` | runtime-page-classification, runtime-sample-fixture |
 | Chef Admin | `/dashboard/payouts` | `apps/chef-admin/src/app/dashboard/payouts/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Chef Admin | `/dashboard/reviews` | `apps/chef-admin/src/app/dashboard/reviews/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Chef Admin | `/dashboard/settings` | `apps/chef-admin/src/app/dashboard/settings/page.tsx` | runtime-page-classification, runtime-proof-action-page |
@@ -71,18 +72,18 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | Customer Web | `/chef-resources` | `apps/web/src/app/chef-resources/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 | Customer Web | `/chef-signup` | `apps/web/src/app/chef-signup/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Customer Web | `/chefs` | `apps/web/src/app/chefs/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
-| Customer Web | `/chefs/[slug]` | `apps/web/src/app/chefs/[slug]/page.tsx` | runtime-page-classification |
+| Customer Web | `/chefs/[slug]` | `apps/web/src/app/chefs/[slug]/page.tsx` | runtime-page-classification, runtime-sample-fixture |
 | Customer Web | `/contact` | `apps/web/src/app/contact/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Customer Web | `/how-it-works` | `apps/web/src/app/how-it-works/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 | Customer Web | `/maintenance` | `apps/web/src/app/maintenance/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
-| Customer Web | `/order-confirmation/[orderId]` | `apps/web/src/app/order-confirmation/[orderId]/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
-| Customer Web | `/orders/[id]/confirmation` | `apps/web/src/app/orders/[id]/confirmation/page.tsx` | runtime-page-classification |
+| Customer Web | `/order-confirmation/[orderId]` | `apps/web/src/app/order-confirmation/[orderId]/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-sample-fixture |
+| Customer Web | `/orders/[id]/confirmation` | `apps/web/src/app/orders/[id]/confirmation/page.tsx` | runtime-page-classification, runtime-sample-fixture |
 | Customer Web | `/privacy` | `apps/web/src/app/privacy/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Customer Web | `/terms` | `apps/web/src/app/terms/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Driver App | `/` | `apps/driver-app/src/app/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Driver App | `/auth/login` | `apps/driver-app/src/app/auth/login/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Driver App | `/auth/signup` | `apps/driver-app/src/app/auth/signup/page.tsx` | runtime-page-classification, runtime-proof-action-page |
-| Driver App | `/delivery/[id]` | `apps/driver-app/src/app/delivery/[id]/page.tsx` | runtime-page-classification |
+| Driver App | `/delivery/[id]` | `apps/driver-app/src/app/delivery/[id]/page.tsx` | runtime-page-classification, runtime-sample-fixture |
 | Driver App | `/earnings` | `apps/driver-app/src/app/earnings/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Driver App | `/history` | `apps/driver-app/src/app/history/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Driver App | `/privacy` | `apps/driver-app/src/app/privacy/page.tsx` | runtime-page-classification, runtime-proof-action-page |
@@ -97,32 +98,32 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | Ops Admin | `/dashboard/announcements` | `apps/ops-admin/src/app/dashboard/announcements/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/automation` | `apps/ops-admin/src/app/dashboard/automation/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/chefs` | `apps/ops-admin/src/app/dashboard/chefs/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
-| Ops Admin | `/dashboard/chefs/[id]` | `apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/chefs/[id]` | `apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx` | runtime-page-classification, runtime-sample-fixture |
 | Ops Admin | `/dashboard/chefs/approvals` | `apps/ops-admin/src/app/dashboard/chefs/approvals/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/compliance` | `apps/ops-admin/src/app/dashboard/compliance/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/customers` | `apps/ops-admin/src/app/dashboard/customers/page.tsx` | runtime-page-classification, runtime-proof-action-page |
-| Ops Admin | `/dashboard/customers/[id]` | `apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
+| Ops Admin | `/dashboard/customers/[id]` | `apps/ops-admin/src/app/dashboard/customers/[id]/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-sample-fixture |
 | Ops Admin | `/dashboard/deliveries` | `apps/ops-admin/src/app/dashboard/deliveries/page.tsx` | runtime-page-classification, runtime-proof-action-page |
-| Ops Admin | `/dashboard/deliveries/[id]` | `apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
+| Ops Admin | `/dashboard/deliveries/[id]` | `apps/ops-admin/src/app/dashboard/deliveries/[id]/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-sample-fixture |
 | Ops Admin | `/dashboard/dispatch` | `apps/ops-admin/src/app/dashboard/dispatch/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/drivers` | `apps/ops-admin/src/app/dashboard/drivers/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
-| Ops Admin | `/dashboard/drivers/[id]` | `apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx` | runtime-page-auth-intent, runtime-page-classification |
+| Ops Admin | `/dashboard/drivers/[id]` | `apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-sample-fixture |
 | Ops Admin | `/dashboard/exceptions` | `apps/ops-admin/src/app/dashboard/exceptions/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/finance` | `apps/ops-admin/src/app/dashboard/finance/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/finance/accounts/chefs` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/page.tsx` | runtime-page-classification, runtime-proof-action-page |
-| Ops Admin | `/dashboard/finance/accounts/chefs/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/finance/accounts/chefs/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx` | runtime-page-classification, runtime-sample-fixture |
 | Ops Admin | `/dashboard/finance/accounts/drivers` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/page.tsx` | runtime-page-classification, runtime-proof-action-page |
-| Ops Admin | `/dashboard/finance/accounts/drivers/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/finance/accounts/drivers/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx` | runtime-page-classification, runtime-sample-fixture |
 | Ops Admin | `/dashboard/finance/instant-payouts` | `apps/ops-admin/src/app/dashboard/finance/instant-payouts/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/finance/payouts` | `apps/ops-admin/src/app/dashboard/finance/payouts/page.tsx` | runtime-page-classification, runtime-proof-action-page |
-| Ops Admin | `/dashboard/finance/payouts/[runId]` | `apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/finance/payouts/[runId]` | `apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx` | runtime-page-classification, runtime-sample-fixture |
 | Ops Admin | `/dashboard/finance/reconciliation` | `apps/ops-admin/src/app/dashboard/finance/reconciliation/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/finance/refunds` | `apps/ops-admin/src/app/dashboard/finance/refunds/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/health` | `apps/ops-admin/src/app/dashboard/health/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/integrations` | `apps/ops-admin/src/app/dashboard/integrations/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/map` | `apps/ops-admin/src/app/dashboard/map/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/orders` | `apps/ops-admin/src/app/dashboard/orders/page.tsx` | runtime-page-classification, runtime-proof-action-page |
-| Ops Admin | `/dashboard/orders/[id]` | `apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx` | runtime-page-classification |
+| Ops Admin | `/dashboard/orders/[id]` | `apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx` | runtime-page-classification, runtime-sample-fixture |
 | Ops Admin | `/dashboard/promos` | `apps/ops-admin/src/app/dashboard/promos/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/reports` | `apps/ops-admin/src/app/dashboard/reports/page.tsx` | runtime-page-auth-intent, runtime-page-classification, runtime-proof-action-page |
 | Ops Admin | `/dashboard/settings` | `apps/ops-admin/src/app/dashboard/settings/page.tsx` | runtime-page-classification, runtime-proof-action-page |
@@ -140,16 +141,7 @@ None found.
 
 | App | Route | File | Proof sources |
 |---|---|---|---|
-| Chef Admin | `/dashboard/orders/[id]` | `apps/chef-admin/src/app/dashboard/orders/[id]/page.tsx` | - |
 | Customer Web | `/checkout` | `apps/web/src/app/checkout/page.tsx` | - |
-| Customer Web | `/chefs/[slug]` | `apps/web/src/app/chefs/[slug]/page.tsx` | - |
-| Customer Web | `/orders/[id]/confirmation` | `apps/web/src/app/orders/[id]/confirmation/page.tsx` | - |
-| Driver App | `/delivery/[id]` | `apps/driver-app/src/app/delivery/[id]/page.tsx` | - |
-| Ops Admin | `/dashboard/chefs/[id]` | `apps/ops-admin/src/app/dashboard/chefs/[id]/page.tsx` | - |
-| Ops Admin | `/dashboard/finance/accounts/chefs/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/chefs/[id]/page.tsx` | - |
-| Ops Admin | `/dashboard/finance/accounts/drivers/[id]` | `apps/ops-admin/src/app/dashboard/finance/accounts/drivers/[id]/page.tsx` | - |
-| Ops Admin | `/dashboard/finance/payouts/[runId]` | `apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx` | - |
-| Ops Admin | `/dashboard/orders/[id]` | `apps/ops-admin/src/app/dashboard/orders/[id]/page.tsx` | - |
 
 ## Covered API Route Files
 
@@ -189,7 +181,7 @@ None found.
 | Customer Web | `/api/orders` | `apps/web/src/app/api/orders/route.ts` | live-role-fixture, runtime-api-classification, runtime-authenticated-json, runtime-proof-action-api |
 | Customer Web | `/api/orders/[id]` | `apps/web/src/app/api/orders/[id]/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Customer Web | `/api/orders/[id]/cancel` | `apps/web/src/app/api/orders/[id]/cancel/route.ts` | runtime-api-classification, runtime-proof-action-api |
-| Customer Web | `/api/orders/[id]/payment-status` | `apps/web/src/app/api/orders/[id]/payment-status/route.ts` | runtime-api-classification |
+| Customer Web | `/api/orders/[id]/payment-status` | `apps/web/src/app/api/orders/[id]/payment-status/route.ts` | runtime-api-classification, runtime-sample-fixture |
 | Customer Web | `/api/orders/[id]/reorder` | `apps/web/src/app/api/orders/[id]/reorder/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Customer Web | `/api/payment-methods` | `apps/web/src/app/api/payment-methods/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Customer Web | `/api/profile` | `apps/web/src/app/api/profile/route.ts` | live-role-fixture, runtime-api-classification, runtime-authenticated-json, runtime-proof-action-api |
@@ -198,11 +190,11 @@ None found.
 | Customer Web | `/api/referrals/apply` | `apps/web/src/app/api/referrals/apply/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Customer Web | `/api/reviews` | `apps/web/src/app/api/reviews/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Customer Web | `/api/storefronts` | `apps/web/src/app/api/storefronts/route.ts` | runtime-api-classification, runtime-proof-action-api, runtime-public-json |
-| Customer Web | `/api/storefronts/[id]` | `apps/web/src/app/api/storefronts/[id]/route.ts` | runtime-api-classification |
-| Customer Web | `/api/storefronts/[id]/menu` | `apps/web/src/app/api/storefronts/[id]/menu/route.ts` | runtime-api-classification |
+| Customer Web | `/api/storefronts/[id]` | `apps/web/src/app/api/storefronts/[id]/route.ts` | runtime-api-classification, runtime-sample-fixture |
+| Customer Web | `/api/storefronts/[id]/menu` | `apps/web/src/app/api/storefronts/[id]/menu/route.ts` | runtime-api-classification, runtime-sample-fixture |
 | Customer Web | `/api/support` | `apps/web/src/app/api/support/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Customer Web | `/api/support/tickets` | `apps/web/src/app/api/support/tickets/route.ts` | runtime-api-classification, runtime-proof-action-api |
-| Customer Web | `/api/support/tickets/[id]` | `apps/web/src/app/api/support/tickets/[id]/route.ts` | runtime-api-classification |
+| Customer Web | `/api/support/tickets/[id]` | `apps/web/src/app/api/support/tickets/[id]/route.ts` | runtime-api-classification, runtime-sample-fixture |
 | Customer Web | `/api/upload` | `apps/web/src/app/api/upload/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Customer Web | `/api/webhooks/stripe` | `apps/web/src/app/api/webhooks/stripe/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Driver App | `/api/auth/login` | `apps/driver-app/src/app/api/auth/login/route.ts` | runtime-api-classification, runtime-proof-action-api |
@@ -286,7 +278,4 @@ None found.
 
 | App | Endpoint | File | Proof sources |
 |---|---|---|---|
-| Customer Web | `/api/orders/[id]/payment-status` | `apps/web/src/app/api/orders/[id]/payment-status/route.ts` | - |
-| Customer Web | `/api/storefronts/[id]` | `apps/web/src/app/api/storefronts/[id]/route.ts` | - |
-| Customer Web | `/api/storefronts/[id]/menu` | `apps/web/src/app/api/storefronts/[id]/menu/route.ts` | - |
-| Customer Web | `/api/support/tickets/[id]` | `apps/web/src/app/api/support/tickets/[id]/route.ts` | - |
+None found.

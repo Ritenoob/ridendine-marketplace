@@ -12,7 +12,7 @@ This note points to the master plan for the remaining post-closure issue threads
 2. Ops CSV export/audit proof. Complete 2026-06-07: live `orders` CSV export returned 200 text/csv and created audit row `159e0041-59a6-475a-9bf1-69f17febef59`.
 3. Public and login-guard page proof buckets. Complete 2026-06-07: `smoke:proof-actions` passed 76 static page checks, deferred 2 dynamic public pages to sample fixtures, and raised page proof coverage to 80/90.
 4. Authenticated JSON and negative/special API proof buckets. Complete 2026-06-07: proof actions passed 195 executed checks with 0 failures and raised API proof coverage to 116/120.
-5. Dynamic sample-data fixtures.
+5. Dynamic sample-data fixtures. Complete 2026-06-07: live discovery resolved dynamic route samples, created/reused one controlled customer support-ticket fixture, sampled proof actions passed, page proof coverage increased to 89/90, and API proof coverage increased to 120/120.
 6. Customer product roadmap slice.
 
 ## Execution Rules

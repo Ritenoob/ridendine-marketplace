@@ -586,6 +586,8 @@ Expected:
 
 **Risk:** Medium-high. This thread must not create uncontrolled production data. Prefer read-only discovery or fixture-controlled rows.
 
+**Status:** Complete on 2026-06-07. Runtime sample discovery resolved live chef, storefront, driver, delivery, order, and support-ticket samples; one controlled customer support-ticket fixture was created or reused for proof. Sampled page/API proof actions passed with `--require-samples`, raising page proof coverage to 89/90 and API proof coverage to 120/120. The remaining page proof gap is the customer `/checkout` product-workflow shell, which stays assigned to Thread 6.
+
 **Files:**
 - Create: `scripts/smoke/runtime-sample-fixtures.cjs`
 - Create: `scripts/smoke/runtime-sample-fixtures.test.cjs`
@@ -593,7 +595,7 @@ Expected:
 - Modify: `scripts/smoke/runtime-proof-action-smoke.cjs`
 - Modify: `package.json`
 
-- [ ] **Step 1: Write fixture resolution tests**
+- [x] **Step 1: Write fixture resolution tests**
 
 Create `scripts/smoke/runtime-sample-fixtures.test.cjs` with tests for:
 
@@ -629,7 +631,7 @@ Run:
 
 Expected before implementation: fails because `runtime-sample-fixtures.cjs` does not exist.
 
-- [ ] **Step 2: Implement sample fixture resolver**
+- [x] **Step 2: Implement sample fixture resolver**
 
 Create `scripts/smoke/runtime-sample-fixtures.cjs` with:
 
@@ -662,7 +664,7 @@ Expected:
 - Resolved samples never print secrets.
 - Sample docs list IDs by type and route usage.
 
-- [ ] **Step 3: Integrate samples into proof actions**
+- [x] **Step 3: Integrate samples into proof actions**
 
 Modify `runtime-proof-action-smoke.cjs` so sampled buckets require fixture values:
 
@@ -675,7 +677,7 @@ Expected:
 - The command exits non-zero if required sample values are missing.
 - The command runs dynamic page/API probes only when sample values exist.
 
-- [ ] **Step 4: Run fixture and sampled proof gates**
+- [x] **Step 4: Run fixture and sampled proof gates**
 
 Run:
 
@@ -692,7 +694,7 @@ Expected:
 - Sampled proof coverage increases.
 - Missing fixtures are visible in `docs/wiring/RUNTIME_SAMPLE_FIXTURES.md`.
 
-- [ ] **Step 5: Commit and push Thread 5**
+- [x] **Step 5: Commit and push Thread 5**
 
 Run:
 

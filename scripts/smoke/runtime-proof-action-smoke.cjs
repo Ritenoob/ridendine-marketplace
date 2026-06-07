@@ -16,6 +16,10 @@ const {
   protectedJsonApis,
   publicJsonApis,
 } = require('./runtime-contracts.cjs');
+const {
+  applySampleValues,
+  resolveRuntimeSamples,
+} = require('./runtime-sample-fixtures.cjs');
 
 const PAGE_BUCKETS = new Set([
   'public-page-smoke',
@@ -59,6 +63,41 @@ function sampledPath(route) {
     const name = segment.slice(1, -1).replace(/^\.\.\./, '') || 'id';
     return `phase-proof-${name.toLowerCase()}`;
   });
+}
+
+function sampleValuesForAction(action, samples = {}) {
+  const target = action.route || action.endpoint || action.path || '';
+  const values = {};
+
+  if (target.includes('[slug]')) values.slug = samples.chefSlug;
+  if (target.includes('[orderId]')) values.orderId = samples.orderId;
+  if (target.includes('[runId]')) values.runId = samples.payoutRunId || 'phase-proof-payout-run';
+
+  if (target.includes('[id]')) {
+    if (target.includes('storefronts/[id]')) values.id = samples.storefrontId;
+    else if (target.includes('support/tickets/[id]')) values.id = samples.supportTicketId;
+    else if (target.includes('orders/[id]')) values.id = samples.orderId;
+    else if (target.includes('delivery/[id]') || target.includes('deliveries/[id]')) values.id = samples.deliveryId;
+    else if (target.includes('drivers/[id]') || target.includes('accounts/drivers/[id]')) values.id = samples.driverId;
+    else if (target.includes('chefs/[id]') || target.includes('accounts/chefs/[id]')) values.id = samples.chefId;
+    else values.id = samples.id;
+  }
+
+  return Object.fromEntries(Object.entries(values).filter(([, value]) => Boolean(value)));
+}
+
+function applySamplesToAction(action, samples = {}) {
+  if (!hasDynamicSegment(action.route || action.endpoint)) return action;
+  const target = action.route || action.endpoint;
+  const values = sampleValuesForAction(action, samples);
+  const resolved = applySampleValues(target, values);
+  const sampleResolved = !hasDynamicSegment(resolved);
+  return {
+    ...action,
+    runtimePath: sampleResolved ? resolved : action.runtimePath,
+    sampleResolved,
+    sampleValues: values,
+  };
 }
 
 function normalizeRuntimePath(value) {
@@ -172,22 +211,29 @@ function apiContractForAction(action) {
     authIntent: action.bucket === 'public-json-smoke' ? 'public' : 'protected',
     expect: 'json',
     allowedStatuses: action.bucket === 'public-json-smoke' ? [200, 400] : [200],
-    authenticated: action.bucket === 'authenticated-json-smoke',
+    authenticated: action.bucket === 'authenticated-json-smoke' || action.bucket === 'sampled-authenticated-json-smoke',
   };
+}
+
+function requiresSampleResolution(action) {
+  if (!hasDynamicSegment(action.route || action.endpoint)) return false;
+  if (action.kind === 'api') return LIVE_JSON_BUCKETS.has(action.bucket);
+  if (action.kind === 'page') return action.bucket === 'public-page-smoke';
+  return false;
 }
 
 function shouldSkipAction(action) {
   if (action.kind === 'api' && action.endpoint === '/api/export') {
     return 'CSV export endpoint is covered by smoke:ops-export-audit, not JSON proof actions';
   }
-  if (action.kind === 'api' && LIVE_JSON_BUCKETS.has(action.bucket) && hasDynamicSegment(action.endpoint)) {
+  if (action.kind === 'api' && LIVE_JSON_BUCKETS.has(action.bucket) && hasDynamicSegment(action.endpoint) && !action.sampleResolved) {
     return 'dynamic API requires Thread 5 sample fixture before live proof';
   }
-  if (action.bucket === 'sampled-authenticated-json-smoke') {
+  if (action.bucket === 'sampled-authenticated-json-smoke' && !action.sampleResolved) {
     return 'dynamic API requires Thread 5 sample fixture before live proof';
   }
   if (action.bucket === 'sampled-login-guard-page-smoke') return null;
-  if (hasDynamicSegment(action.route)) {
+  if (hasDynamicSegment(action.route) && !action.sampleResolved) {
     return 'dynamic page requires Thread 5 sample fixture before live proof';
   }
   return null;
@@ -249,7 +295,10 @@ async function checkProofAction(action, options = {}) {
     };
   }
 
-  if (action.kind === 'api' && action.bucket === 'authenticated-json-smoke') {
+  if (
+    action.kind === 'api' &&
+    (action.bucket === 'authenticated-json-smoke' || action.bucket === 'sampled-authenticated-json-smoke')
+  ) {
     const session = options.sessions?.get(action.app);
     if (!session || !session.authenticated) {
       return {
@@ -321,11 +370,47 @@ function credentialsFromEnv(env = process.env) {
 }
 
 async function runRuntimeProofActionSmoke(options = {}) {
-  const selected = selectProofActions(options);
+  let selected = selectProofActions(options);
   const results = [];
   const skipped = [];
   const sessions = new Map();
-  const authActions = selected.filter((action) => action.bucket === 'authenticated-json-smoke');
+  const dynamicActions = selected.filter((action) => hasDynamicSegment(action.route || action.endpoint));
+  let sampleSummary = null;
+
+  if (options.requireSamples || options.discoverSamples) {
+    sampleSummary = await resolveRuntimeSamples({
+      env: options.env || process.env,
+      credentials: options.credentials || credentialsFromEnv(options.env || process.env),
+      discoverLive: true,
+      createSupportTicket: Boolean(options.allowCreateSupportTicket),
+      timeoutMs: options.timeoutMs || 45_000,
+    });
+    selected = selected.map((action) => applySamplesToAction(action, sampleSummary.samples));
+
+    if (options.requireSamples) {
+      const unresolved = selected.filter((action) => requiresSampleResolution(action) && !action.sampleResolved);
+      if (unresolved.length) {
+        const failures = unresolved.map((action) => `${action.bucket} ${action.app} ${action.route || action.endpoint}: required sample fixture missing`);
+        return {
+          ok: false,
+          generatedAt: new Date().toISOString(),
+          buckets: options.buckets && options.buckets.length ? options.buckets : DEFAULT_BUCKETS,
+          selected: selected.length,
+          results,
+          skipped,
+          sampleSummary,
+          totals: { ok: false, passed: 0, failed: failures.length, skipped: skipped.length, failures },
+          failures,
+        };
+      }
+    }
+  } else if (dynamicActions.length) {
+    selected = selected.map((action) => applySamplesToAction(action, {}));
+  }
+
+  const authActions = selected.filter((action) =>
+    action.bucket === 'authenticated-json-smoke' || action.bucket === 'sampled-authenticated-json-smoke'
+  );
 
   if (authActions.length) {
     const credentials = options.credentials || credentialsFromEnv(options.env || process.env);
@@ -390,6 +475,7 @@ async function runRuntimeProofActionSmoke(options = {}) {
     selected: selected.length,
     results,
     skipped,
+    sampleSummary,
     totals,
     failures: totals.failures,
   };
@@ -483,6 +569,9 @@ function parseArgs(argv) {
     writeDocs: false,
     timeoutMs: 45_000,
     requireAuth: false,
+    requireSamples: false,
+    discoverSamples: false,
+    allowCreateSupportTicket: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -495,6 +584,9 @@ function parseArgs(argv) {
     else if (arg === '--json') parsed.json = true;
     else if (arg === '--write-docs') parsed.writeDocs = true;
     else if (arg === '--require-auth') parsed.requireAuth = true;
+    else if (arg === '--require-samples') parsed.requireSamples = true;
+    else if (arg === '--discover-samples') parsed.discoverSamples = true;
+    else if (arg === '--allow-create-support-ticket') parsed.allowCreateSupportTicket = true;
     else if (arg === '--timeout-ms') {
       parsed.timeoutMs = Number(argv[i + 1]);
       i += 1;

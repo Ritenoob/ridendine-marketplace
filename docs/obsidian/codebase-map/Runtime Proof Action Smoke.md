@@ -1,6 +1,6 @@
 # Runtime Proof Action Smoke
 
-Generated: 2026-06-07T21:16:56.793Z
+Generated: 2026-06-07T21:43:04.400Z
 
 This smoke proof executes selected proof-disposition buckets against production runtime surfaces. Thread 3 covers public page loads and unauthenticated protected-page login guards only; authenticated APIs, negative authorization, and dynamic sample fixtures remain separate threads.
 
@@ -8,18 +8,20 @@ This smoke proof executes selected proof-disposition buckets against production 
 
 | Metric | Count |
 |---|---:|
-| Selected actions | 196 |
-| Executed checks | 195 |
-| Passed checks | 195 |
+| Selected actions | 209 |
+| Executed checks | 212 |
+| Passed checks | 212 |
 | Failed checks | 0 |
-| Skipped checks | 5 |
+| Skipped checks | 1 |
 
 ## Buckets
 
 - `public-page-smoke`
 - `login-guard-page-smoke`
+- `sampled-login-guard-page-smoke`
 - `public-json-smoke`
 - `authenticated-json-smoke`
+- `sampled-authenticated-json-smoke`
 - `negative-authz-contract`
 - `authenticated-read-and-negative-write-contract`
 - `auth-entry-contract`
@@ -46,6 +48,7 @@ This smoke proof executes selected proof-disposition buckets against production 
 | PASS | login-guard-page-smoke | chef | `/dashboard/availability` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | chef | `/dashboard/menu` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | chef | `/dashboard/orders` | 200 | protected page resolved to login guard |
+| PASS | sampled-login-guard-page-smoke | chef | `/dashboard/orders/ce7d45c3-8745-4a88-9a36-7434d6e71d1f` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | chef | `/dashboard/payouts` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | chef | `/dashboard/reviews` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | chef | `/dashboard/settings` | 200 | protected page resolved to login guard |
@@ -67,14 +70,18 @@ This smoke proof executes selected proof-disposition buckets against production 
 | PASS | public-page-smoke | customer | `/chef-resources` | 200 | public HTML page loaded |
 | PASS | public-page-smoke | customer | `/chef-signup` | 200 | public HTML page loaded |
 | PASS | public-page-smoke | customer | `/chefs` | 200 | public HTML page loaded |
+| PASS | public-page-smoke | customer | `/chefs/hoang-gia-pho` | 200 | public HTML page loaded |
 | PASS | public-page-smoke | customer | `/contact` | 200 | public HTML page loaded |
 | PASS | public-page-smoke | customer | `/how-it-works` | 200 | public HTML page loaded |
 | PASS | public-page-smoke | customer | `/maintenance` | 200 | public HTML page loaded |
+| PASS | public-page-smoke | customer | `/order-confirmation/ce7d45c3-8745-4a88-9a36-7434d6e71d1f` | 200 | public HTML page loaded |
+| PASS | sampled-login-guard-page-smoke | customer | `/orders/ce7d45c3-8745-4a88-9a36-7434d6e71d1f/confirmation` | 200 | protected page resolved to login guard |
 | PASS | public-page-smoke | customer | `/privacy` | 200 | public HTML page loaded |
 | PASS | public-page-smoke | customer | `/terms` | 200 | public HTML page loaded |
 | PASS | login-guard-page-smoke | driver | `/` | 200 | protected page resolved to login guard |
 | PASS | public-page-smoke | driver | `/auth/login` | 200 | public HTML page loaded |
 | PASS | public-page-smoke | driver | `/auth/signup` | 200 | public HTML page loaded |
+| PASS | sampled-login-guard-page-smoke | driver | `/delivery/e3ecf842-8e8e-4d78-8d71-46b2df93e9e9` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | driver | `/earnings` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | driver | `/history` | 200 | protected page resolved to login guard |
 | PASS | public-page-smoke | driver | `/privacy` | 200 | public HTML page loaded |
@@ -89,24 +96,32 @@ This smoke proof executes selected proof-disposition buckets against production 
 | PASS | login-guard-page-smoke | ops | `/dashboard/announcements` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/automation` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/chefs` | 200 | protected page resolved to login guard |
+| PASS | sampled-login-guard-page-smoke | ops | `/dashboard/chefs/b2b2b2b2-0002-0002-0002-b2b2b2b2b2b2` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/chefs/approvals` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/compliance` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/customers` | 200 | protected page resolved to login guard |
+| PASS | sampled-login-guard-page-smoke | ops | `/dashboard/customers/phase-proof-id` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/deliveries` | 200 | protected page resolved to login guard |
+| PASS | sampled-login-guard-page-smoke | ops | `/dashboard/deliveries/e3ecf842-8e8e-4d78-8d71-46b2df93e9e9` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/dispatch` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/drivers` | 200 | protected page resolved to login guard |
+| PASS | sampled-login-guard-page-smoke | ops | `/dashboard/drivers/8083f95d-8505-45a4-8cbc-2a276b85e634` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/exceptions` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/finance` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/finance/accounts/chefs` | 200 | protected page resolved to login guard |
+| PASS | sampled-login-guard-page-smoke | ops | `/dashboard/finance/accounts/chefs/b2b2b2b2-0002-0002-0002-b2b2b2b2b2b2` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/finance/accounts/drivers` | 200 | protected page resolved to login guard |
+| PASS | sampled-login-guard-page-smoke | ops | `/dashboard/finance/accounts/drivers/8083f95d-8505-45a4-8cbc-2a276b85e634` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/finance/instant-payouts` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/finance/payouts` | 200 | protected page resolved to login guard |
+| PASS | sampled-login-guard-page-smoke | ops | `/dashboard/finance/payouts/phase-proof-payout-run` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/finance/reconciliation` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/finance/refunds` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/health` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/integrations` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/map` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/orders` | 200 | protected page resolved to login guard |
+| PASS | sampled-login-guard-page-smoke | ops | `/dashboard/orders/ce7d45c3-8745-4a88-9a36-7434d6e71d1f` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/promos` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/reports` | 200 | protected page resolved to login guard |
 | PASS | login-guard-page-smoke | ops | `/dashboard/settings` | 200 | protected page resolved to login guard |
@@ -147,6 +162,7 @@ This smoke proof executes selected proof-disposition buckets against production 
 | PASS | authenticated-json-smoke | customer | `/api/orders` | 200 | authenticated JSON API returned 200 JSON |
 | PASS | authenticated-read-and-negative-write-contract | customer | `/api/orders/[id]` | 0 | mixed read/write route recorded as contract-only; no mutating write was attempted |
 | PASS | negative-authz-contract | customer | `/api/orders/[id]/cancel` | 0 | negative authorization contract recorded; no successful mutating call was made |
+| PASS | sampled-authenticated-json-smoke | customer | `/api/orders/ce7d45c3-8745-4a88-9a36-7434d6e71d1f/payment-status` | 200 | authenticated JSON API returned 200 JSON |
 | PASS | negative-authz-contract | customer | `/api/orders/[id]/reorder` | 0 | negative authorization contract recorded; no successful mutating call was made |
 | PASS | authenticated-read-and-negative-write-contract | customer | `/api/payment-methods` | 0 | mixed read/write route recorded as contract-only; no mutating write was attempted |
 | PASS | authenticated-read-and-negative-write-contract | customer | `/api/profile` | 0 | mixed read/write route recorded as contract-only; no mutating write was attempted |
@@ -155,8 +171,11 @@ This smoke proof executes selected proof-disposition buckets against production 
 | PASS | negative-authz-contract | customer | `/api/referrals/apply` | 0 | negative authorization contract recorded; no successful mutating call was made |
 | PASS | authenticated-read-and-negative-write-contract | customer | `/api/reviews` | 0 | mixed read/write route recorded as contract-only; no mutating write was attempted |
 | PASS | public-json-smoke | customer | `/api/storefronts?limit=1` | 200 | public JSON API returned expected response |
+| PASS | public-json-smoke | customer | `/api/storefronts/b2b2b2b2-0002-0002-0021-b2b2b2b2b2b2` | 200 | public JSON API returned expected response |
+| PASS | public-json-smoke | customer | `/api/storefronts/b2b2b2b2-0002-0002-0021-b2b2b2b2b2b2/menu` | 200 | public JSON API returned expected response |
 | PASS | authenticated-read-and-negative-write-contract | customer | `/api/support` | 0 | mixed read/write route recorded as contract-only; no mutating write was attempted |
 | PASS | authenticated-json-smoke | customer | `/api/support/tickets` | 200 | authenticated JSON API returned 200 JSON |
+| PASS | sampled-authenticated-json-smoke | customer | `/api/support/tickets/0ad92de7-3c2b-4ffa-a99e-a55051965bd7` | 200 | authenticated JSON API returned 200 JSON |
 | PASS | negative-authz-contract | customer | `/api/upload` | 0 | negative authorization contract recorded; no successful mutating call was made |
 | PASS | signature-contract | customer | `/api/webhooks/stripe` | 0 | signature-guarded route recorded with invalid/missing signature denial contract |
 | PASS | auth-entry-contract | driver | `/api/auth/login` | 0 | auth entry route recorded as contract-only; no signup/login mutation was attempted |
@@ -233,10 +252,6 @@ This smoke proof executes selected proof-disposition buckets against production 
 
 | Status | Bucket | App | Route | Reason |
 |---|---|---|---|---|
-| SKIP | public-page-smoke | customer | `/chefs/[slug]` | dynamic page requires Thread 5 sample fixture before live proof |
-| SKIP | public-page-smoke | customer | `/order-confirmation/[orderId]` | dynamic page requires Thread 5 sample fixture before live proof |
-| SKIP | public-json-smoke | customer | `/api/storefronts/[id]` | dynamic API requires Thread 5 sample fixture before live proof |
-| SKIP | public-json-smoke | customer | `/api/storefronts/[id]/menu` | dynamic API requires Thread 5 sample fixture before live proof |
 | SKIP | authenticated-json-smoke | ops | `/api/export` | CSV export endpoint is covered by smoke:ops-export-audit, not JSON proof actions |
 
 ## Failures

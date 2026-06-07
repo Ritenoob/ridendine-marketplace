@@ -297,12 +297,13 @@ const checks = [
         summary.totals.apis.total >= 118 &&
         summary.totals.pages.covered === summary.totals.pages.total &&
         summary.totals.apis.covered === summary.totals.apis.total &&
-        summary.totals.pages.proofCovered >= 17 &&
-        summary.totals.apis.proofCovered >= 20 &&
+        summary.totals.pages.proofCovered >= 89 &&
+        summary.totals.apis.proofCovered >= 120 &&
         summary.gaps.pages.length === 0 &&
         summary.gaps.apis.length === 0 &&
-        summary.proofGaps.pages.length > 0 &&
-        summary.proofGaps.apis.length > 0 &&
+        summary.proofGaps.pages.length === 1 &&
+        summary.proofGaps.pages[0].route === '/checkout' &&
+        summary.proofGaps.apis.length === 0 &&
         doc.includes('Phase 17 coverage inventory') &&
         doc.includes('Page Proof Gaps') &&
         doc.includes('API Proof Gaps') &&

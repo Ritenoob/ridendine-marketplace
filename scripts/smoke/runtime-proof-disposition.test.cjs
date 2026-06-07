@@ -9,8 +9,8 @@ test('dispositions every remaining page proof gap', () => {
   const summary = collectProofDisposition({ root: repoRoot });
 
   assert.equal(summary.pageTotals.total, 90);
-  assert.equal(summary.pageTotals.proofCovered, 80);
-  assert.equal(summary.pageTotals.dispositionedGaps, 10);
+  assert.equal(summary.pageTotals.proofCovered, 89);
+  assert.equal(summary.pageTotals.dispositionedGaps, 1);
   assert.equal(summary.pageTotals.unresolved, 0);
 
   const chefLogin = summary.pages.find((page) => page.app === 'chef' && page.route === '/auth/login');
@@ -26,6 +26,10 @@ test('dispositions every remaining page proof gap', () => {
   const opsCustomerDetail = summary.pages.find((page) => page.app === 'ops' && page.route === '/dashboard/customers/[id]');
   assert.equal(opsCustomerDetail.proofDisposition.nextProofAction, 'already-covered');
   assert.equal(opsCustomerDetail.proofDisposition.recommendedProofAction, 'sampled-login-guard-page-smoke');
+
+  const checkout = summary.pages.find((page) => page.app === 'customer' && page.route === '/checkout');
+  assert.equal(checkout.proofCovered, false);
+  assert.equal(checkout.proofDisposition.nextProofAction, 'public-shell-and-auth-action-smoke');
 });
 
 test('dispositions every remaining API proof gap', () => {
@@ -33,8 +37,8 @@ test('dispositions every remaining API proof gap', () => {
   const summary = collectProofDisposition({ root: repoRoot });
 
   assert.equal(summary.apiTotals.total, 120);
-  assert.equal(summary.apiTotals.proofCovered, 116);
-  assert.equal(summary.apiTotals.dispositionedGaps, 4);
+  assert.equal(summary.apiTotals.proofCovered, 120);
+  assert.equal(summary.apiTotals.dispositionedGaps, 0);
   assert.equal(summary.apiTotals.unresolved, 0);
 
   const customerLogin = summary.apis.find((api) => api.app === 'customer' && api.endpoint === '/api/auth/login');
@@ -53,8 +57,9 @@ test('dispositions every remaining API proof gap', () => {
   assert.equal(checkout.proofDisposition.recommendedProofAction, 'negative-authz-contract');
 
   const ticketDetail = summary.apis.find((api) => api.app === 'customer' && api.endpoint === '/api/support/tickets/[id]');
-  assert.equal(ticketDetail.proofCovered, false);
-  assert.equal(ticketDetail.proofDisposition.nextProofAction, 'sampled-authenticated-json-smoke');
+  assert.equal(ticketDetail.proofCovered, true);
+  assert.equal(ticketDetail.proofDisposition.nextProofAction, 'already-covered');
+  assert.equal(ticketDetail.proofDisposition.recommendedProofAction, 'sampled-authenticated-json-smoke');
 });
 
 test('generates markdown proof disposition docs with zero unresolved gaps', () => {
@@ -65,8 +70,8 @@ test('generates markdown proof disposition docs with zero unresolved gaps', () =
   const markdown = generateMarkdown(collectProofDisposition({ root: repoRoot }));
 
   assert.ok(markdown.includes('# Runtime Proof Disposition'));
-  assert.ok(markdown.includes('| Pages | 90 | 80 | 10 | 10 | 0 |'));
-  assert.ok(markdown.includes('| API route handlers | 120 | 116 | 4 | 4 | 0 |'));
+  assert.ok(markdown.includes('| Pages | 90 | 89 | 1 | 1 | 0 |'));
+  assert.ok(markdown.includes('| API route handlers | 120 | 120 | 0 | 0 | 0 |'));
   assert.ok(markdown.includes('## Page Proof Gap Disposition'));
   assert.ok(markdown.includes('## API Proof Gap Disposition'));
 });

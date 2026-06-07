@@ -65,10 +65,20 @@ test('maps discovered surfaces to existing runtime contract sources', () => {
   assert.ok(opsFinance.coverageSources.includes('runtime-api-classification'));
   assert.ok(opsFinance.proofSources.includes('live-role-fixture'));
 
+  const customerCheckout = summary.coverage.pages.find((page) => page.app === 'customer' && page.route === '/checkout');
+  assert.equal(customerCheckout.proofCovered, false);
+
+  const supportTicket = summary.coverage.apis.find(
+    (api) => api.app === 'customer' && api.endpoint === '/api/support/tickets/[id]'
+  );
+  assert.ok(supportTicket.coverageSources.includes('runtime-sample-fixture'));
+  assert.ok(supportTicket.proofSources.includes('runtime-sample-fixture'));
+
   assert.equal(summary.gaps.pages.length, 0);
   assert.equal(summary.gaps.apis.length, 0);
-  assert.ok(summary.proofGaps.pages.length > 0);
-  assert.ok(summary.proofGaps.apis.length > 0);
+  assert.equal(summary.proofGaps.pages.length, 1);
+  assert.equal(summary.proofGaps.pages[0].route, '/checkout');
+  assert.equal(summary.proofGaps.apis.length, 0);
   assert.equal(summary.proofDisposition.pages.unresolved, 0);
   assert.equal(summary.proofDisposition.apis.unresolved, 0);
   assert.equal(summary.proofDisposition.pages.dispositionedGaps, summary.proofGaps.pages.length);

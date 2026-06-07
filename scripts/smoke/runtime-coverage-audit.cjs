@@ -186,7 +186,7 @@ function collectContractSources(options = {}) {
   });
   for (const page of classification.pages) {
     addPageSource(page.file, 'runtime-page-classification');
-    const proofActionSource = staticPageProofActionSource(page);
+    const proofActionSource = staticPageProofActionSource(page) || sampledPageProofActionSource(page);
     if (proofActionSource) addPageSource(page.file, proofActionSource);
   }
   for (const api of classification.apis) {
@@ -218,6 +218,14 @@ function staticPageProofActionSource(page) {
   return null;
 }
 
+function sampledPageProofActionSource(page) {
+  const authIntent = page.classification?.authIntent || '';
+  if (!hasDynamicSegment(page.route)) return null;
+  if (authIntent === 'public') return 'runtime-sample-fixture';
+  if (authIntent === 'protected' || authIntent === 'protected-redirect') return 'runtime-sample-fixture';
+  return null;
+}
+
 function apiProofActionSource(api) {
   const classification = api.classification || {};
   const guardIntent = classification.guardIntent || '';
@@ -226,7 +234,7 @@ function apiProofActionSource(api) {
   if (api.app === 'ops' && api.endpoint === '/api/export') return 'ops-export-audit-smoke';
 
   if (guardIntent === 'public-read') {
-    return hasDynamicSegment(api.endpoint) ? null : 'runtime-proof-action-api';
+    return hasDynamicSegment(api.endpoint) ? 'runtime-sample-fixture' : 'runtime-proof-action-api';
   }
   if (guardIntent === 'public-auth-entry') return 'runtime-proof-action-api';
   if (
@@ -239,7 +247,7 @@ function apiProofActionSource(api) {
     return 'runtime-proof-action-api';
   }
   if (guardIntent === 'protected-session') {
-    if (hasDynamicSegment(api.endpoint) && mutationClass === 'read-only') return null;
+    if (hasDynamicSegment(api.endpoint) && mutationClass === 'read-only') return 'runtime-sample-fixture';
     return 'runtime-proof-action-api';
   }
 

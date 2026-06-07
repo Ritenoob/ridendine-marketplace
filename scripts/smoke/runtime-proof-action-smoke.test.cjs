@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 
 const {
+  runRuntimeProofActionSmoke,
   selectProofActions,
   summarizeProofActionResults,
 } = require('./runtime-proof-action-smoke.cjs');
@@ -72,4 +73,26 @@ test('selectProofActions picks contract-only API buckets', () => {
     '/api/stripe/webhook',
     '/api/internal/command-center/change-requests',
   ]);
+});
+
+test('require-samples does not block dynamic contract-only API buckets', async () => {
+  const summary = await runRuntimeProofActionSmoke({
+    disposition: {
+      pages: [],
+      apis: [
+        {
+          app: 'chef',
+          endpoint: '/api/menu/[id]',
+          proofDisposition: { nextProofAction: 'authenticated-read-and-negative-write-contract' },
+        },
+      ],
+    },
+    buckets: ['authenticated-read-and-negative-write-contract'],
+    env: {},
+    requireSamples: true,
+  });
+
+  assert.equal(summary.ok, true);
+  assert.equal(summary.results.length, 1);
+  assert.equal(summary.results[0].bucket, 'authenticated-read-and-negative-write-contract');
 });

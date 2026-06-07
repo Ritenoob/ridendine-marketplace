@@ -47,6 +47,24 @@ test('protected page contract accepts login redirect or login surface', async ()
   assert.equal(result.ok, true);
 });
 
+test('protected page contract accepts Next auth-login redirect payload', async () => {
+  const { checkPageContract } = require('./runtime-contract-smoke.cjs');
+  const contract = { app: 'customer', path: '/orders/sample/confirmation', authIntent: 'protected', expect: 'login-guard' };
+  const result = await checkPageContract(contract, {
+    baseUrl: 'https://ridendine.ca',
+    fetchImpl: async () =>
+      responseWithUrl(
+        '<!DOCTYPE html><meta id="__next-page-redirect" http-equiv="refresh" content="1;url=/auth/login"><template data-dgst="NEXT_REDIRECT;replace;/auth/login;307;"></template>',
+        {
+          headers: { 'content-type': 'text/html; charset=utf-8' },
+          url: 'https://ridendine.ca/orders/sample/confirmation',
+        }
+      ),
+  });
+
+  assert.equal(result.ok, true);
+});
+
 test('legacy redirect page contract accepts Next redirect payload', async () => {
   const { checkPageContract } = require('./runtime-contract-smoke.cjs');
   const contract = {

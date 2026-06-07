@@ -52,7 +52,7 @@ function looksLikeLogin(response, body) {
   const finalUrl = response.url || '';
   if (/\/auth\/login/i.test(finalUrl)) return true;
   if (!isHtml(response, body)) return false;
-  return /sign in|log in|password|\/api\/auth\/login/i.test(body);
+  return /sign in|log in|password|\/auth\/login|\/api\/auth\/login/i.test(body);
 }
 
 function matchesRedirectTarget(response, body, target) {
