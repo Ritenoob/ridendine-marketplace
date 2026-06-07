@@ -6,6 +6,7 @@ import { ActorRole } from '@ridendine/types';
 import type { ActorContext, PlatformCapability } from '@ridendine/types';
 import { guardPlatformApi } from '@ridendine/engine/server';
 import { validateEngineProcessorHeaders } from '../../../../packages/utils/src/processor-auth';
+import * as negativeAuthzAudit from '../../../../scripts/audit/high-risk-ops-negative-authz.cjs';
 
 type EndpointNegativeContract = {
   route: string;
@@ -22,10 +23,10 @@ type EndpointNegativeContract = {
 const {
   endpointNegativeContracts,
   validateNegativeContracts,
-}: {
+} = negativeAuthzAudit as {
   endpointNegativeContracts: EndpointNegativeContract[];
   validateNegativeContracts: () => { failures: unknown[] };
-} = require('../../../../scripts/audit/high-risk-ops-negative-authz.cjs');
+};
 
 function actor(role: string): ActorContext {
   return { userId: `phase-12-${role}`, role: role as ActorContext['role'], entityId: 'e1' };

@@ -26,7 +26,6 @@ interface SystemAlertRow {
   created_at: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function playAlertBeep(_severity: string) {
   // Sound disabled per user preference
 }
