@@ -9,7 +9,7 @@ This note points to the master plan for the remaining post-closure issue threads
 ## Planned Threads
 
 1. Non-admin Ops live role proof. Complete 2026-06-07: 15/15 live allow/deny probes passed.
-2. Ops CSV export/audit proof.
+2. Ops CSV export/audit proof. Complete 2026-06-07: live `orders` CSV export returned 200 text/csv and created audit row `159e0041-59a6-475a-9bf1-69f17febef59`.
 3. Public and login-guard page proof buckets.
 4. Authenticated JSON and negative/special API proof buckets.
 5. Dynamic sample-data fixtures.

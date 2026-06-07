@@ -180,6 +180,8 @@ Expected:
 
 **Risk:** Medium because successful export writes audit-log data. Run this separately from read-only live smoke.
 
+**Status:** Complete on 2026-06-07. Added `smoke:ops-export-audit`, registered its helper tests in `test:wiring-fixes`, generated proof docs, and verified a live Ops `orders` CSV export wrote audit entry `159e0041-59a6-475a-9bf1-69f17febef59`.
+
 **Files:**
 - Read: `apps/ops-admin/src/app/api/export/route.ts`
 - Read: `apps/ops-admin/src/app/api/audit/recent/route.ts`
@@ -189,7 +191,7 @@ Expected:
 - Modify: `package.json`
 - Modify: `docs/wiring/RUNTIME_PROOF_DISPOSITION.md` only through the existing generator if the proof model changes
 
-- [ ] **Step 1: Write the failing test for CSV export proof helpers**
+- [x] **Step 1: Write the failing test for CSV export proof helpers**
 
 Create `scripts/smoke/ops-export-audit-smoke.test.cjs` with tests for:
 
@@ -245,7 +247,7 @@ Run:
 
 Expected before implementation: fails because `scripts/smoke/ops-export-audit-smoke.cjs` does not exist.
 
-- [ ] **Step 2: Implement the CSV export proof script**
+- [x] **Step 2: Implement the CSV export proof script**
 
 Create `scripts/smoke/ops-export-audit-smoke.cjs` with these exported functions:
 
@@ -268,7 +270,7 @@ Runtime behavior:
 - Audit check: `GET /api/audit/recent?limit=20` must include an item with `action === 'export'` and `entity_type === 'export'`.
 - Failure behavior: exit non-zero if export is not CSV, if login fails, or if the audit row cannot be found.
 
-- [ ] **Step 3: Add package script and wiring test inclusion**
+- [x] **Step 3: Add package script and wiring test inclusion**
 
 Modify `package.json`:
 
@@ -287,7 +289,7 @@ Expected:
 - `pnpm smoke:ops-export-audit -- --help` is not required.
 - `pnpm test:wiring-fixes` runs the new unit tests.
 
-- [ ] **Step 4: Run local proof tests**
+- [x] **Step 4: Run local proof tests**
 
 Run:
 
@@ -301,7 +303,7 @@ Expected:
 - New tests pass.
 - Full wiring gate passes.
 
-- [ ] **Step 5: Run live CSV export/audit proof**
+- [x] **Step 5: Run live CSV export/audit proof**
 
 Set:
 
@@ -323,7 +325,7 @@ Expected:
 - Recent audit endpoint returns an `export` audit row.
 - `docs/wiring/OPS_EXPORT_AUDIT_SMOKE.md` records the proof.
 
-- [ ] **Step 6: Commit and push Thread 2**
+- [x] **Step 6: Commit and push Thread 2**
 
 Run:
 
