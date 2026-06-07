@@ -478,6 +478,8 @@ Expected:
 
 **Risk:** Medium. Authenticated GETs are read-only, but negative/special contracts touch high-risk route families and should stay contract-first.
 
+**Status:** Complete on 2026-06-07. `smoke:proof-actions` passed authenticated public/authenticated JSON checks and contract-only negative/special API buckets with 195 executed checks, 0 failures, and 5 deferred sample/CSV-specific skips. Runtime API proof coverage now reports 116/120 covered with 4 sample-fixture API proof gaps remaining.
+
 **Files:**
 - Modify: `scripts/smoke/runtime-proof-action-smoke.cjs`
 - Modify: `scripts/smoke/runtime-proof-action-smoke.test.cjs`
@@ -485,7 +487,7 @@ Expected:
 - Modify: `docs/wiring/RUNTIME_COVERAGE_AUDIT.md`
 - Modify: `docs/wiring/RUNTIME_PROOF_DISPOSITION.md`
 
-- [ ] **Step 1: Add authenticated JSON bucket tests**
+- [x] **Step 1: Add authenticated JSON bucket tests**
 
 Extend `runtime-proof-action-smoke.test.cjs` so `selectProofActions` supports:
 
@@ -502,7 +504,7 @@ Expected:
 - Static selection tests pass.
 - Dynamic sampled endpoints are excluded unless sample fixtures exist.
 
-- [ ] **Step 2: Add negative and special contract bucket tests**
+- [x] **Step 2: Add negative and special contract bucket tests**
 
 Extend tests for:
 
@@ -524,7 +526,7 @@ Expected:
 - Contract-only buckets run without mutating live data.
 - Token/signature routes are verified with intentionally missing or invalid credentials/signatures.
 
-- [ ] **Step 3: Run authenticated JSON smoke with seeded admin**
+- [x] **Step 3: Run authenticated JSON smoke with seeded admin**
 
 Set:
 
@@ -545,7 +547,7 @@ Expected:
 - Authenticated JSON GET endpoints return JSON with non-error statuses.
 - Sampled dynamic JSON routes remain deferred until Thread 5 unless fixture IDs are configured.
 
-- [ ] **Step 4: Run negative and special contracts**
+- [x] **Step 4: Run negative and special contracts**
 
 Run:
 
@@ -559,7 +561,7 @@ Expected:
 - Invalid token/signature cases reject.
 - No successful mutating production call is made.
 
-- [ ] **Step 5: Recompute coverage and push Thread 4**
+- [x] **Step 5: Recompute coverage and push Thread 4**
 
 Run:
 

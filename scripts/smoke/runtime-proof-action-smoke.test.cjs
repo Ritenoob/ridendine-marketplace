@@ -31,3 +31,45 @@ test('summarizeProofActionResults fails when one result fails', () => {
   assert.equal(summary.ok, false);
   assert.equal(summary.failures.length, 1);
 });
+
+test('selectProofActions picks authenticated and public JSON API buckets', () => {
+  const selected = selectProofActions({
+    disposition: {
+      pages: [],
+      apis: [
+        { endpoint: '/api/health', proofCovered: false, proofDisposition: { nextProofAction: 'public-json-smoke' } },
+        { endpoint: '/api/profile', proofCovered: false, proofDisposition: { nextProofAction: 'authenticated-json-smoke' } },
+        { endpoint: '/api/orders/[id]', proofCovered: false, proofDisposition: { nextProofAction: 'sampled-authenticated-json-smoke' } },
+        { endpoint: '/api/checkout', proofCovered: false, proofDisposition: { nextProofAction: 'negative-authz-contract' } },
+      ],
+    },
+    buckets: ['public-json-smoke', 'authenticated-json-smoke', 'sampled-authenticated-json-smoke'],
+  });
+
+  assert.deepEqual(selected.map((item) => item.endpoint), [
+    '/api/health',
+    '/api/profile',
+    '/api/orders/[id]',
+  ]);
+});
+
+test('selectProofActions picks contract-only API buckets', () => {
+  const selected = selectProofActions({
+    disposition: {
+      pages: [],
+      apis: [
+        { endpoint: '/api/auth/login', proofDisposition: { nextProofAction: 'auth-entry-contract' } },
+        { endpoint: '/api/stripe/webhook', proofDisposition: { nextProofAction: 'signature-contract' } },
+        { endpoint: '/api/internal/command-center/change-requests', proofDisposition: { nextProofAction: 'command-center-contract' } },
+        { endpoint: '/api/health', proofDisposition: { nextProofAction: 'public-json-smoke' } },
+      ],
+    },
+    buckets: ['auth-entry-contract', 'signature-contract', 'command-center-contract'],
+  });
+
+  assert.deepEqual(selected.map((item) => item.endpoint), [
+    '/api/auth/login',
+    '/api/stripe/webhook',
+    '/api/internal/command-center/change-requests',
+  ]);
+});

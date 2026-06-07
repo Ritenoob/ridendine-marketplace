@@ -191,6 +191,8 @@ function collectContractSources(options = {}) {
   }
   for (const api of classification.apis) {
     addApiSource(api.app, api.endpoint, 'runtime-api-classification');
+    const proofActionSource = apiProofActionSource(api);
+    if (proofActionSource) addApiSource(api.app, api.endpoint, proofActionSource);
   }
 
   return { pageFileSources, apiSources, sourceCounts };
@@ -213,6 +215,34 @@ function staticPageProofActionSource(page) {
   if (hasDynamicSegment(page.route)) return null;
   if (authIntent === 'public' || authIntent === 'public-auth-entry') return 'runtime-proof-action-page';
   if (authIntent === 'protected' || authIntent === 'protected-redirect') return 'runtime-proof-action-page';
+  return null;
+}
+
+function apiProofActionSource(api) {
+  const classification = api.classification || {};
+  const guardIntent = classification.guardIntent || '';
+  const mutationClass = classification.mutationClass || '';
+
+  if (api.app === 'ops' && api.endpoint === '/api/export') return 'ops-export-audit-smoke';
+
+  if (guardIntent === 'public-read') {
+    return hasDynamicSegment(api.endpoint) ? null : 'runtime-proof-action-api';
+  }
+  if (guardIntent === 'public-auth-entry') return 'runtime-proof-action-api';
+  if (
+    guardIntent === 'signature-guarded' ||
+    guardIntent === 'token-guarded' ||
+    guardIntent === 'command-center-guarded' ||
+    guardIntent === 'fixture-only' ||
+    guardIntent === 'internal-docs'
+  ) {
+    return 'runtime-proof-action-api';
+  }
+  if (guardIntent === 'protected-session') {
+    if (hasDynamicSegment(api.endpoint) && mutationClass === 'read-only') return null;
+    return 'runtime-proof-action-api';
+  }
+
   return null;
 }
 

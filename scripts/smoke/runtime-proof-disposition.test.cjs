@@ -33,13 +33,14 @@ test('dispositions every remaining API proof gap', () => {
   const summary = collectProofDisposition({ root: repoRoot });
 
   assert.equal(summary.apiTotals.total, 120);
-  assert.equal(summary.apiTotals.proofCovered, 46);
-  assert.equal(summary.apiTotals.dispositionedGaps, 74);
+  assert.equal(summary.apiTotals.proofCovered, 116);
+  assert.equal(summary.apiTotals.dispositionedGaps, 4);
   assert.equal(summary.apiTotals.unresolved, 0);
 
   const customerLogin = summary.apis.find((api) => api.app === 'customer' && api.endpoint === '/api/auth/login');
-  assert.equal(customerLogin.proofCovered, false);
-  assert.equal(customerLogin.proofDisposition.nextProofAction, 'auth-entry-contract');
+  assert.equal(customerLogin.proofCovered, true);
+  assert.equal(customerLogin.proofDisposition.nextProofAction, 'already-covered');
+  assert.equal(customerLogin.proofDisposition.recommendedProofAction, 'auth-entry-contract');
 
   const stripeWebhook = summary.apis.find((api) => api.app === 'ops' && api.endpoint === '/api/stripe/webhook');
   assert.equal(stripeWebhook.proofCovered, true);
@@ -47,8 +48,13 @@ test('dispositions every remaining API proof gap', () => {
   assert.equal(stripeWebhook.proofDisposition.recommendedProofAction, 'signature-contract');
 
   const checkout = summary.apis.find((api) => api.app === 'customer' && api.endpoint === '/api/checkout');
-  assert.equal(checkout.proofCovered, false);
-  assert.equal(checkout.proofDisposition.nextProofAction, 'negative-authz-contract');
+  assert.equal(checkout.proofCovered, true);
+  assert.equal(checkout.proofDisposition.nextProofAction, 'already-covered');
+  assert.equal(checkout.proofDisposition.recommendedProofAction, 'negative-authz-contract');
+
+  const ticketDetail = summary.apis.find((api) => api.app === 'customer' && api.endpoint === '/api/support/tickets/[id]');
+  assert.equal(ticketDetail.proofCovered, false);
+  assert.equal(ticketDetail.proofDisposition.nextProofAction, 'sampled-authenticated-json-smoke');
 });
 
 test('generates markdown proof disposition docs with zero unresolved gaps', () => {
@@ -60,7 +66,7 @@ test('generates markdown proof disposition docs with zero unresolved gaps', () =
 
   assert.ok(markdown.includes('# Runtime Proof Disposition'));
   assert.ok(markdown.includes('| Pages | 90 | 80 | 10 | 10 | 0 |'));
-  assert.ok(markdown.includes('| API route handlers | 120 | 46 | 74 | 74 | 0 |'));
+  assert.ok(markdown.includes('| API route handlers | 120 | 116 | 4 | 4 | 0 |'));
   assert.ok(markdown.includes('## Page Proof Gap Disposition'));
   assert.ok(markdown.includes('## API Proof Gap Disposition'));
 });
