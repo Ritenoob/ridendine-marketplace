@@ -1,6 +1,6 @@
 # Non-Admin Role Fixture Smoke
 
-Generated: 2026-06-07T17:15:48.897Z
+Generated: 2026-06-07T18:12:03.174Z
 
 This generated smoke matrix verifies read-only live Ops access boundaries for seeded non-admin platform roles when their credentials are supplied. It uses app-owned Ops login, then runs GET probes that should either return 200 JSON for allowed capabilities or 403 JSON for denied capabilities.
 
@@ -12,6 +12,16 @@ This generated smoke matrix verifies read-only live Ops access boundaries for se
 | Live-safe GET contracts | 15 |
 | Passed live probes | 0 |
 | Failed checks | 0 |
+
+## Credential Readiness
+
+Credential values are intentionally never printed in this report. This table only records which env var slots are configured for the current run.
+
+| Status | Role | Email env vars | Password env vars | Email configured | Password configured |
+|---|---|---|---|---|---|
+| MISSING | support_agent | RIDENDINE_SUPPORT_AGENT_EMAIL, RIDENDINE_SMOKE_SUPPORT_AGENT_EMAIL | RIDENDINE_SUPPORT_AGENT_PASSWORD, RIDENDINE_SMOKE_SUPPORT_AGENT_PASSWORD | No | No |
+| MISSING | finance_manager | RIDENDINE_FINANCE_MANAGER_EMAIL, RIDENDINE_SMOKE_FINANCE_MANAGER_EMAIL | RIDENDINE_FINANCE_MANAGER_PASSWORD, RIDENDINE_SMOKE_FINANCE_MANAGER_PASSWORD | No | No |
+| MISSING | ops_agent | RIDENDINE_OPS_AGENT_EMAIL, RIDENDINE_SMOKE_OPS_AGENT_EMAIL | RIDENDINE_OPS_AGENT_PASSWORD, RIDENDINE_SMOKE_OPS_AGENT_PASSWORD | No | No |
 
 ## Probe Matrix
 

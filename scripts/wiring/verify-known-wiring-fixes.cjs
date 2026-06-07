@@ -258,20 +258,53 @@ const checks = [
     name: 'phase 15 non-admin role fixture smoke contracts are generated',
     pass: () => {
       const {
+        credentialReadiness,
         nonAdminRoleFixtures,
         nonAdminRoleProbeContracts,
+        runNonAdminRoleFixturePreflight,
         validateContracts,
       } = require(path.join(root, 'scripts/smoke/non-admin-role-fixture-smoke.cjs'));
       const result = validateContracts();
+      const readiness = credentialReadiness({});
+      const preflight = runNonAdminRoleFixturePreflight({ env: {}, requireAllRoles: true });
+      const readinessDoc = generatedDoc('docs/wiring/NON_ADMIN_ROLE_FIXTURE_SMOKE.md');
       return nonAdminRoleFixtures.length >= 3 &&
         nonAdminRoleProbeContracts.length >= 12 &&
         result.failures.length === 0 &&
+        readiness.roles.length === nonAdminRoleFixtures.length &&
+        preflight.failures.includes('support_agent credentials are required') &&
+        preflight.failures.includes('finance_manager credentials are required') &&
+        preflight.failures.includes('ops_agent credentials are required') &&
+        readinessDoc.includes('Credential Readiness') &&
         nonAdminRoleProbeContracts.every((contract) => contract.method === 'GET' && contract.liveSafe === true) &&
         nonAdminRoleProbeContracts.some((contract) => contract.expectedStatus === 200) &&
         nonAdminRoleProbeContracts.some((contract) => contract.expectedStatus === 403) &&
         exists('docs/wiring/NON_ADMIN_ROLE_FIXTURE_SMOKE.md') &&
         exists('docs/architecture/codebase-map/wiring/NON_ADMIN_ROLE_FIXTURE_SMOKE.md') &&
         exists('docs/obsidian/codebase-map/Non Admin Role Fixture Smoke.md');
+    },
+  },
+  {
+    name: 'phase 17 runtime coverage audit inventories discovered pages and API route files',
+    pass: () => {
+      const {
+        collectRuntimeCoverage,
+      } = require(path.join(root, 'scripts/smoke/runtime-coverage-audit.cjs'));
+      const summary = collectRuntimeCoverage({ root });
+      const doc = generatedDoc('docs/wiring/RUNTIME_COVERAGE_AUDIT.md');
+      return summary.ok &&
+        summary.totals.pages.total >= 90 &&
+        summary.totals.apis.total >= 118 &&
+        summary.totals.pages.covered >= 17 &&
+        summary.totals.apis.covered >= 20 &&
+        summary.gaps.pages.length > 0 &&
+        summary.gaps.apis.length > 0 &&
+        doc.includes('Phase 17 coverage inventory') &&
+        doc.includes('Uncovered Pages') &&
+        doc.includes('Uncovered API Route Files') &&
+        exists('docs/wiring/RUNTIME_COVERAGE_AUDIT.md') &&
+        exists('docs/architecture/codebase-map/wiring/RUNTIME_COVERAGE_AUDIT.md') &&
+        exists('docs/obsidian/codebase-map/Runtime Coverage Audit.md');
     },
   },
 ];

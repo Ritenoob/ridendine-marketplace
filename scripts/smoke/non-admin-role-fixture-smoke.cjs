@@ -124,6 +124,29 @@ function credentialsFromEnv(env = process.env) {
   return credentials;
 }
 
+function credentialReadiness(env = process.env) {
+  const roles = nonAdminRoleFixtures.map((fixture) => {
+    const hasEmail = Boolean(firstEnv(env, fixture.emailEnv));
+    const hasPassword = Boolean(firstEnv(env, fixture.passwordEnv));
+    return {
+      role: fixture.role,
+      label: fixture.label,
+      emailEnv: fixture.emailEnv,
+      passwordEnv: fixture.passwordEnv,
+      hasEmail,
+      hasPassword,
+      configured: hasEmail && hasPassword,
+    };
+  });
+
+  return {
+    ready: roles.every((role) => role.configured),
+    configuredRoles: roles.filter((role) => role.configured).map((role) => role.role),
+    missingRoles: roles.filter((role) => !role.configured).map((role) => role.role),
+    roles,
+  };
+}
+
 function result(ok, contract, status, url, message) {
   return {
     ok,
@@ -222,12 +245,40 @@ function normalizeOptions(options = {}) {
   };
 }
 
+function runNonAdminRoleFixturePreflight(options = {}) {
+  const normalized = normalizeOptions(options);
+  const validation = validateContracts(normalized.contracts, {
+    requireAllFixtureRoles: normalized.contracts === nonAdminRoleProbeContracts,
+  });
+  const readiness = credentialReadiness(normalized.env);
+  const failures = [...validation.failures];
+  const requireAllRoles = options.requireAllRoles !== false;
+
+  if (requireAllRoles) {
+    for (const role of readiness.missingRoles) failures.push(`${role} credentials are required`);
+  } else if (readiness.configuredRoles.length === 0) {
+    failures.push('non-admin role credentials are required');
+  }
+
+  return {
+    ok: failures.length === 0,
+    preflight: true,
+    readiness,
+    roles: readiness.configuredRoles,
+    sessions: [],
+    results: [],
+    failures,
+    skipped: readiness.missingRoles.map((role) => `${role}: credentials not configured`),
+  };
+}
+
 async function runNonAdminRoleFixtureSmoke(options = {}) {
   const normalized = normalizeOptions(options);
   const results = [];
   const failures = [];
   const skipped = [];
   const sessions = [];
+  const readiness = credentialReadiness(normalized.env);
 
   const validation = validateContracts(normalized.contracts, {
     requireAllFixtureRoles: normalized.contracts === nonAdminRoleProbeContracts,
@@ -235,6 +286,7 @@ async function runNonAdminRoleFixtureSmoke(options = {}) {
   if (!validation.ok) {
     return {
       ok: false,
+      readiness,
       roles: [],
       sessions,
       results,
@@ -252,6 +304,7 @@ async function runNonAdminRoleFixtureSmoke(options = {}) {
   if (configuredRoles.length === 0) {
     return {
       ok: false,
+      readiness,
       roles: [],
       sessions,
       results,
@@ -302,6 +355,7 @@ async function runNonAdminRoleFixtureSmoke(options = {}) {
 
   return {
     ok: failures.length === 0,
+    readiness,
     roles: configuredRoles,
     sessions,
     results,
@@ -319,6 +373,10 @@ function generateMarkdown(summary) {
   const contractCount = nonAdminRoleProbeContracts.length;
   const passed = summary ? summary.results.filter((item) => item.ok).length : 0;
   const failed = summary ? summary.failures.length : 0;
+  const readiness = summary?.readiness || credentialReadiness({});
+  const readinessRows = readiness.roles.map((role) => (
+    `| ${role.configured ? 'READY' : 'MISSING'} | ${escapeCell(role.role)} | ${escapeCell(role.emailEnv.join(', '))} | ${escapeCell(role.passwordEnv.join(', '))} | ${role.hasEmail ? 'Yes' : 'No'} | ${role.hasPassword ? 'Yes' : 'No'} |`
+  ));
   const rows = nonAdminRoleProbeContracts.map((contract) => {
     const check = summary?.results.find(
       (item) => item.role === contract.role && item.path === contract.path && item.expectation === contract.expectation
@@ -347,6 +405,14 @@ This generated smoke matrix verifies read-only live Ops access boundaries for se
 | Live-safe GET contracts | ${contractCount} |
 | Passed live probes | ${passed} |
 | Failed checks | ${failed} |
+
+## Credential Readiness
+
+Credential values are intentionally never printed in this report. This table only records which env var slots are configured for the current run.
+
+| Status | Role | Email env vars | Password env vars | Email configured | Password configured |
+|---|---|---|---|---|---|
+${readinessRows.join('\n')}
 
 ## Probe Matrix
 
@@ -385,6 +451,7 @@ function parseArgs(argv) {
     json: false,
     writeDocs: false,
     contractsOnly: false,
+    preflight: false,
     timeoutMs: 45_000,
   };
 
@@ -395,6 +462,7 @@ function parseArgs(argv) {
     else if (arg === '--json') parsed.json = true;
     else if (arg === '--write-docs') parsed.writeDocs = true;
     else if (arg === '--contracts-only') parsed.contractsOnly = true;
+    else if (arg === '--preflight') parsed.preflight = true;
     else if (arg === '--timeout-ms') {
       parsed.timeoutMs = Number(argv[i + 1]);
       i += 1;
@@ -406,6 +474,12 @@ function parseArgs(argv) {
 
 function printTextSummary(summary) {
   console.log('Non-admin role fixture smoke checks');
+  if (summary.readiness) {
+    for (const role of summary.readiness.roles) {
+      const marker = role.configured ? 'READY' : 'MISSING';
+      console.log(`${marker} ${role.role} credentials`);
+    }
+  }
   for (const session of summary.sessions) {
     const marker = session.authenticated ? 'PASS' : 'FAIL';
     console.log(`${marker} ${session.role} ops login - ${session.message}${session.status ? ` (${session.status})` : ''}`);
@@ -425,9 +499,12 @@ function printTextSummary(summary) {
 
 if (require.main === module) {
   const args = parseArgs(process.argv.slice(2));
-  const run = args.contractsOnly
+  const run = args.preflight
+    ? Promise.resolve(runNonAdminRoleFixturePreflight(args))
+    : args.contractsOnly
     ? Promise.resolve({
         ok: true,
+        readiness: credentialReadiness(process.env),
         roles: [],
         sessions: [],
         results: [],
@@ -451,11 +528,13 @@ if (require.main === module) {
 
 module.exports = {
   checkRoleProbe,
+  credentialReadiness,
   credentialsFromEnv,
   generateMarkdown,
   nonAdminRoleFixtures,
   nonAdminRoleProbeContracts,
   parseArgs,
+  runNonAdminRoleFixturePreflight,
   runNonAdminRoleFixtureSmoke,
   validateContracts,
   writeDocs,

@@ -137,3 +137,67 @@ test('writes generated docs only when explicitly requested', () => {
   assert.equal(parseArgs(['--require-auth']).writeDocs, false);
   assert.equal(parseArgs(['--require-auth', '--write-docs']).writeDocs, true);
 });
+
+test('reports credential readiness without exposing credential values', () => {
+  const { credentialReadiness } = require('./non-admin-role-fixture-smoke.cjs');
+  const readiness = credentialReadiness({
+    RIDENDINE_SUPPORT_AGENT_EMAIL: 'support@example.test',
+    RIDENDINE_SUPPORT_AGENT_PASSWORD: 'secret-support-password',
+  });
+
+  assert.equal(readiness.ready, false);
+  assert.deepEqual(readiness.configuredRoles, ['support_agent']);
+  assert.deepEqual(readiness.missingRoles.sort(), ['finance_manager', 'ops_agent']);
+  assert.equal(readiness.roles.find((role) => role.role === 'support_agent').configured, true);
+  assert.equal(readiness.roles.find((role) => role.role === 'finance_manager').configured, false);
+
+  const serialized = JSON.stringify(readiness);
+  assert.equal(serialized.includes('support@example.test'), false);
+  assert.equal(serialized.includes('secret-support-password'), false);
+  assert.equal(serialized.includes('RIDENDINE_SUPPORT_AGENT_EMAIL'), true);
+});
+
+test('preflight fails when all non-admin role credentials are required and missing', () => {
+  const { runNonAdminRoleFixturePreflight } = require('./non-admin-role-fixture-smoke.cjs');
+  const summary = runNonAdminRoleFixturePreflight({
+    env: {},
+    requireAllRoles: true,
+    fetchImpl: async () => {
+      throw new Error('fetch should not run during preflight');
+    },
+  });
+
+  assert.equal(summary.ok, false);
+  assert.equal(summary.preflight, true);
+  assert.deepEqual(summary.roles, []);
+  assert.deepEqual(summary.sessions, []);
+  assert.deepEqual(summary.results, []);
+  assert.ok(summary.failures.includes('support_agent credentials are required'));
+  assert.ok(summary.failures.includes('finance_manager credentials are required'));
+  assert.ok(summary.failures.includes('ops_agent credentials are required'));
+});
+
+test('preflight passes without network when all role credentials are configured', () => {
+  const { runNonAdminRoleFixturePreflight } = require('./non-admin-role-fixture-smoke.cjs');
+  const summary = runNonAdminRoleFixturePreflight({
+    env: {
+      RIDENDINE_SUPPORT_AGENT_EMAIL: 'support@example.test',
+      RIDENDINE_SUPPORT_AGENT_PASSWORD: 'password123',
+      RIDENDINE_FINANCE_MANAGER_EMAIL: 'finance@example.test',
+      RIDENDINE_FINANCE_MANAGER_PASSWORD: 'password123',
+      RIDENDINE_OPS_AGENT_EMAIL: 'ops@example.test',
+      RIDENDINE_OPS_AGENT_PASSWORD: 'password123',
+    },
+    requireAllRoles: true,
+    fetchImpl: async () => {
+      throw new Error('fetch should not run during preflight');
+    },
+  });
+
+  assert.equal(summary.ok, true);
+  assert.equal(summary.preflight, true);
+  assert.deepEqual(summary.roles.sort(), ['finance_manager', 'ops_agent', 'support_agent']);
+  assert.deepEqual(summary.failures, []);
+  assert.deepEqual(summary.sessions, []);
+  assert.deepEqual(summary.results, []);
+});
