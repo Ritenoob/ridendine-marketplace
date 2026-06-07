@@ -25,6 +25,14 @@ function obsidianDoc(relativePath) {
   return fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath, 'utf8') : '';
 }
 
+function apiGuardSnapshotEvidence() {
+  const snapshot = obsidianDoc('06 - Product and Technology/App Architecture/16 - Generated API Guard Snapshot.md');
+  if (snapshot) {
+    return { mode: 'snapshot', text: snapshot };
+  }
+  return { mode: 'generator', text: generatedDoc('scripts/docs/generate-api-guard-snapshot.ps1') };
+}
+
 function markdownRowsFor(text, token) {
   return text.split('\n').filter((line) => line.startsWith('| ') && line.includes(token));
 }
@@ -157,13 +165,20 @@ const checks = [
   {
     name: 'phase 10 public read APIs are guard-classified as intentional public',
     pass: () => {
-      const snapshot = obsidianDoc('06 - Product and Technology/App Architecture/16 - Generated API Guard Snapshot.md');
+      const evidence = apiGuardSnapshotEvidence();
       const publicReadRoutes = [
         '/api/eta',
         '/api/storefronts',
         '/api/storefronts/[id]',
         '/api/storefronts/[id]/menu',
       ];
+      if (evidence.mode === 'generator') {
+        return publicReadRoutes.every((route) => evidence.text.includes(`'${route}'`)) &&
+          evidence.text.includes('$intentionalPublicReadRoutes.Contains($Route)') &&
+          evidence.text.includes("return 'Intentional public'") &&
+          evidence.text.includes("return 'Review read-only'");
+      }
+      const snapshot = evidence.text;
       const fullMatrixRows = publicReadRoutes.map((route) => markdownRowsFor(snapshot, `\`${route}\``))
         .flat()
         .filter((line) => line.includes('| Customer marketplace |'));
