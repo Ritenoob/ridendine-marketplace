@@ -16,6 +16,9 @@ const {
 const {
   endpointNegativeContracts,
 } = require('../audit/high-risk-ops-negative-authz.cjs');
+const {
+  collectSurfaceClassifications,
+} = require('./runtime-surface-classification.cjs');
 
 const runtimeApps = [
   { app: 'customer', name: 'Customer Web', appDir: 'apps/web' },
@@ -129,10 +132,11 @@ function addSource(map, key, source) {
   map.get(key).add(source);
 }
 
-function collectContractSources() {
+function collectContractSources(options = {}) {
   const pageFileSources = new Map();
   const apiSources = new Map();
   const sourceCounts = new Map();
+  const repoRoot = options.root || process.cwd();
 
   function addPageSource(file, source) {
     addSource(pageFileSources, slash(file), source);
@@ -176,6 +180,17 @@ function collectContractSources() {
     addApiSource('ops', contract.route, 'high-risk-negative-authz');
   }
 
+  const classification = options.classification || collectSurfaceClassifications({
+    root: repoRoot,
+    inventory: options.inventory,
+  });
+  for (const page of classification.pages) {
+    addPageSource(page.file, 'runtime-page-classification');
+  }
+  for (const api of classification.apis) {
+    addApiSource(api.app, api.endpoint, 'runtime-api-classification');
+  }
+
   return { pageFileSources, apiSources, sourceCounts };
 }
 
@@ -183,30 +198,43 @@ function sortedSources(sourceSet) {
   return sourceSet ? [...sourceSet].sort() : [];
 }
 
+function proofSources(sources) {
+  return sources.filter((source) => !source.endsWith('-classification'));
+}
+
 function collectRuntimeCoverage(options = {}) {
+  const repoRoot = options.root || process.cwd();
   const inventory = options.inventory || discoverRuntimeSurfaces(options);
-  const sources = options.sources || collectContractSources();
+  const sources = options.sources || collectContractSources({ root: repoRoot, inventory });
 
   const pageCoverage = inventory.pages.map((page) => {
     const coverageSources = sortedSources(sources.pageFileSources.get(page.file));
+    const pageProofSources = proofSources(coverageSources);
     return {
       ...page,
       covered: coverageSources.length > 0,
+      proofCovered: pageProofSources.length > 0,
       coverageSources,
+      proofSources: pageProofSources,
     };
   });
 
   const apiCoverage = inventory.apis.map((api) => {
     const coverageSources = sortedSources(sources.apiSources.get(sourceKey(api.app, api.endpoint)));
+    const apiProofSources = proofSources(coverageSources);
     return {
       ...api,
       covered: coverageSources.length > 0,
+      proofCovered: apiProofSources.length > 0,
       coverageSources,
+      proofSources: apiProofSources,
     };
   });
 
   const pageGaps = pageCoverage.filter((page) => !page.covered);
   const apiGaps = apiCoverage.filter((api) => !api.covered);
+  const pageProofGaps = pageCoverage.filter((page) => !page.proofCovered);
+  const apiProofGaps = apiCoverage.filter((api) => !api.proofCovered);
   const sourceCounts = [...sources.sourceCounts.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([source, count]) => ({ source, count }));
@@ -219,11 +247,15 @@ function collectRuntimeCoverage(options = {}) {
         total: pageCoverage.length,
         covered: pageCoverage.length - pageGaps.length,
         uncovered: pageGaps.length,
+        proofCovered: pageCoverage.length - pageProofGaps.length,
+        proofUncovered: pageProofGaps.length,
       },
       apis: {
         total: apiCoverage.length,
         covered: apiCoverage.length - apiGaps.length,
         uncovered: apiGaps.length,
+        proofCovered: apiCoverage.length - apiProofGaps.length,
+        proofUncovered: apiProofGaps.length,
       },
     },
     sourceCounts,
@@ -235,6 +267,10 @@ function collectRuntimeCoverage(options = {}) {
       pages: pageGaps,
       apis: apiGaps,
     },
+    proofGaps: {
+      pages: pageProofGaps,
+      apis: apiProofGaps,
+    },
   };
 }
 
@@ -242,17 +278,17 @@ function escapeCell(value) {
   return String(value ?? '-').replace(/\|/g, '\\|');
 }
 
-function pageRows(pages) {
+function pageRows(pages, sourceField = 'coverageSources') {
   if (!pages.length) return 'None found.';
   return pages.map((page) => (
-    `| ${escapeCell(page.appName)} | \`${escapeCell(page.route)}\` | \`${escapeCell(page.file)}\` | ${escapeCell(page.coverageSources.join(', ') || '-')} |`
+    `| ${escapeCell(page.appName)} | \`${escapeCell(page.route)}\` | \`${escapeCell(page.file)}\` | ${escapeCell(page[sourceField].join(', ') || '-')} |`
   )).join('\n');
 }
 
-function apiRows(apis) {
+function apiRows(apis, sourceField = 'coverageSources') {
   if (!apis.length) return 'None found.';
   return apis.map((api) => (
-    `| ${escapeCell(api.appName)} | \`${escapeCell(api.endpoint)}\` | \`${escapeCell(api.file)}\` | ${escapeCell(api.coverageSources.join(', ') || '-')} |`
+    `| ${escapeCell(api.appName)} | \`${escapeCell(api.endpoint)}\` | \`${escapeCell(api.file)}\` | ${escapeCell(api[sourceField].join(', ') || '-')} |`
   )).join('\n');
 }
 
@@ -267,14 +303,14 @@ function generateMarkdown(summary = collectRuntimeCoverage()) {
 
 Generated: ${summary.generatedAt}
 
-This Phase 17 coverage inventory maps every discovered app page and API route file to the runtime, live-role, non-admin role, and high-risk authorization contracts that currently exercise or document it. Uncovered rows are visibility gaps for the next hardening phase; this audit does not make live requests against every dynamic or state-changing route.
+This Phase 17 coverage inventory maps every discovered app page and API route file to the runtime, live-role, non-admin role, high-risk authorization, and Phase 18/19 classification contracts that currently exercise, document, or classify it. Structural uncovered rows mean a surface has no classification or contract. Proof gaps mean a surface is classified but still lacks runtime/live/static proof coverage.
 
 ## Summary
 
-| Surface | Total discovered | Covered by current contracts | Uncovered |
-|---|---:|---:|---:|
-| Pages | ${summary.totals.pages.total} | ${summary.totals.pages.covered} | ${summary.totals.pages.uncovered} |
-| API route files | ${summary.totals.apis.total} | ${summary.totals.apis.covered} | ${summary.totals.apis.uncovered} |
+| Surface | Total discovered | Structurally covered | Structural gaps | Proof covered | Proof gaps |
+|---|---:|---:|---:|---:|---:|
+| Pages | ${summary.totals.pages.total} | ${summary.totals.pages.covered} | ${summary.totals.pages.uncovered} | ${summary.totals.pages.proofCovered} | ${summary.totals.pages.proofUncovered} |
+| API route files | ${summary.totals.apis.total} | ${summary.totals.apis.covered} | ${summary.totals.apis.uncovered} | ${summary.totals.apis.proofCovered} | ${summary.totals.apis.proofUncovered} |
 
 ## Contract Source Counts
 
@@ -294,6 +330,12 @@ ${pageRows(coveredPages)}
 |---|---|---|---|
 ${pageRows(summary.gaps.pages)}
 
+## Page Proof Gaps
+
+| App | Route | File | Proof sources |
+|---|---|---|---|
+${pageRows(summary.proofGaps.pages, 'proofSources')}
+
 ## Covered API Route Files
 
 | App | Endpoint | File | Contract sources |
@@ -305,6 +347,12 @@ ${apiRows(coveredApis)}
 | App | Endpoint | File | Contract sources |
 |---|---|---|---|
 ${apiRows(summary.gaps.apis)}
+
+## API Proof Gaps
+
+| App | Endpoint | File | Proof sources |
+|---|---|---|---|
+${apiRows(summary.proofGaps.apis, 'proofSources')}
 `;
 }
 
@@ -367,4 +415,3 @@ module.exports = {
   shapePath,
   writeDocs,
 };
-

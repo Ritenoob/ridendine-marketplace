@@ -40,25 +40,35 @@ test('maps discovered surfaces to existing runtime contract sources', () => {
   assert.equal(summary.ok, true);
   assert.ok(summary.totals.pages.total >= 90);
   assert.ok(summary.totals.apis.total >= 118);
+  assert.equal(summary.totals.pages.covered, summary.totals.pages.total);
+  assert.equal(summary.totals.apis.covered, summary.totals.apis.total);
 
   const chefAvailability = summary.coverage.pages.find(
     (page) => page.file === 'apps/chef-admin/src/app/dashboard/availability/page.tsx'
   );
   assert.ok(chefAvailability.covered);
   assert.ok(chefAvailability.coverageSources.includes('runtime-page-auth-intent'));
+  assert.ok(chefAvailability.coverageSources.includes('runtime-page-classification'));
+  assert.ok(chefAvailability.proofSources.includes('runtime-page-auth-intent'));
 
   const chefOrders = summary.coverage.apis.find((api) => api.app === 'chef' && api.endpoint === '/api/orders');
   assert.ok(chefOrders.covered);
   assert.ok(chefOrders.coverageSources.includes('runtime-authenticated-json'));
   assert.ok(chefOrders.coverageSources.includes('live-role-fixture'));
+  assert.ok(chefOrders.coverageSources.includes('runtime-api-classification'));
+  assert.ok(chefOrders.proofSources.includes('runtime-authenticated-json'));
 
   const opsFinance = summary.coverage.apis.find((api) => api.app === 'ops' && api.endpoint === '/api/engine/finance');
   assert.ok(opsFinance.covered);
   assert.ok(opsFinance.coverageSources.includes('live-role-fixture'));
   assert.ok(opsFinance.coverageSources.includes('non-admin-role-fixture'));
+  assert.ok(opsFinance.coverageSources.includes('runtime-api-classification'));
+  assert.ok(opsFinance.proofSources.includes('live-role-fixture'));
 
-  assert.ok(summary.gaps.pages.length > 0);
-  assert.ok(summary.gaps.apis.length > 0);
+  assert.equal(summary.gaps.pages.length, 0);
+  assert.equal(summary.gaps.apis.length, 0);
+  assert.ok(summary.proofGaps.pages.length > 0);
+  assert.ok(summary.proofGaps.apis.length > 0);
 });
 
 test('generates markdown coverage docs with page and API gap sections', () => {
@@ -71,6 +81,7 @@ test('generates markdown coverage docs with page and API gap sections', () => {
   assert.ok(markdown.includes('# Runtime Coverage Audit'));
   assert.ok(markdown.includes('## Uncovered Pages'));
   assert.ok(markdown.includes('## Uncovered API Route Files'));
+  assert.ok(markdown.includes('## Page Proof Gaps'));
+  assert.ok(markdown.includes('## API Proof Gaps'));
   assert.ok(markdown.includes('Phase 17 coverage inventory'));
 });
-

@@ -1,6 +1,6 @@
 # Non-Admin Role Fixture Smoke
 
-Generated: 2026-06-07T18:12:03.174Z
+Generated: 2026-06-07T18:40:38.761Z
 
 This generated smoke matrix verifies read-only live Ops access boundaries for seeded non-admin platform roles when their credentials are supplied. It uses app-owned Ops login, then runs GET probes that should either return 200 JSON for allowed capabilities or 403 JSON for denied capabilities.
 

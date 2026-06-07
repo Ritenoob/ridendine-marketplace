@@ -295,16 +295,44 @@ const checks = [
       return summary.ok &&
         summary.totals.pages.total >= 90 &&
         summary.totals.apis.total >= 118 &&
-        summary.totals.pages.covered >= 17 &&
-        summary.totals.apis.covered >= 20 &&
-        summary.gaps.pages.length > 0 &&
-        summary.gaps.apis.length > 0 &&
+        summary.totals.pages.covered === summary.totals.pages.total &&
+        summary.totals.apis.covered === summary.totals.apis.total &&
+        summary.totals.pages.proofCovered >= 17 &&
+        summary.totals.apis.proofCovered >= 20 &&
+        summary.gaps.pages.length === 0 &&
+        summary.gaps.apis.length === 0 &&
+        summary.proofGaps.pages.length > 0 &&
+        summary.proofGaps.apis.length > 0 &&
         doc.includes('Phase 17 coverage inventory') &&
+        doc.includes('Page Proof Gaps') &&
+        doc.includes('API Proof Gaps') &&
         doc.includes('Uncovered Pages') &&
         doc.includes('Uncovered API Route Files') &&
         exists('docs/wiring/RUNTIME_COVERAGE_AUDIT.md') &&
         exists('docs/architecture/codebase-map/wiring/RUNTIME_COVERAGE_AUDIT.md') &&
         exists('docs/obsidian/codebase-map/Runtime Coverage Audit.md');
+    },
+  },
+  {
+    name: 'phase 18/19 runtime surface classification covers every page and route handler',
+    pass: () => {
+      const {
+        collectSurfaceClassifications,
+      } = require(path.join(root, 'scripts/smoke/runtime-surface-classification.cjs'));
+      const summary = collectSurfaceClassifications({ root });
+      const doc = generatedDoc('docs/wiring/RUNTIME_SURFACE_CLASSIFICATION.md');
+      return summary.ok &&
+        summary.pageTotals.total >= 90 &&
+        summary.apiTotals.total >= 118 &&
+        summary.pageTotals.classified === summary.pageTotals.total &&
+        summary.apiTotals.classified === summary.apiTotals.total &&
+        summary.failures.length === 0 &&
+        doc.includes('Runtime Surface Classification') &&
+        doc.includes('Page Surface Classification') &&
+        doc.includes('API Route Handler Classification') &&
+        exists('docs/wiring/RUNTIME_SURFACE_CLASSIFICATION.md') &&
+        exists('docs/architecture/codebase-map/wiring/RUNTIME_SURFACE_CLASSIFICATION.md') &&
+        exists('docs/obsidian/codebase-map/Runtime Surface Classification.md');
     },
   },
 ];
