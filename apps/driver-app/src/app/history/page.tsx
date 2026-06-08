@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createServerClient, getDriverByUserId, getDeliveryHistory } from '@ridendine/db';
+import { DriverShell } from '@/components/layout/driver-shell';
 import HistoryView from './components/HistoryView';
 
 export const dynamic = 'force-dynamic';
@@ -36,5 +37,12 @@ export default async function HistoryPage() {
 
   const completedDeliveries = await getDeliveryHistory(supabase as any, driver.id, { limit: 50 });
 
-  return <HistoryView deliveries={completedDeliveries} />;
+  return (
+    <DriverShell
+      title="Delivery History"
+      subtitle="Review completed deliveries, route distance, and earnings"
+    >
+      <HistoryView deliveries={completedDeliveries} />
+    </DriverShell>
+  );
 }

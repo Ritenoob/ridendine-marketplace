@@ -4,6 +4,7 @@ import { createServerClient, getDriverByUserId, getActiveDeliveriesForDriver } f
 import { ErrorState } from '@ridendine/ui';
 import { isApprovedDriver } from '@/lib/driver-eligibility';
 import { getDriverAppPlatformRole } from '@/lib/platform-access';
+import { DriverShell } from '@/components/layout/driver-shell';
 import DriverDashboard from './components/DriverDashboard';
 
 export const dynamic = 'force-dynamic';
@@ -41,9 +42,19 @@ export default async function DriverHomePage() {
     );
   }
 
-  const activeDeliveries = isApprovedDriver(driver)
+  const approvedDriver = isApprovedDriver(driver);
+  const activeDeliveries = approvedDriver
     ? await getActiveDeliveriesForDriver(supabase as any, driver.id)
     : [];
 
-  return <DriverDashboard driver={driver} activeDeliveries={activeDeliveries} />;
+  return (
+    <DriverShell
+      title="Work Dashboard"
+      subtitle="Shift, readiness, offers, and active deliveries"
+      statusLabel={approvedDriver ? 'Approved' : 'Pending'}
+      statusTone={approvedDriver ? 'success' : 'warning'}
+    >
+      <DriverDashboard driver={driver} activeDeliveries={activeDeliveries} />
+    </DriverShell>
+  );
 }

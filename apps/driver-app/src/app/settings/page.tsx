@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createServerClient, createAdminClient, getDriverByUserId } from '@ridendine/db';
+import { DriverShell } from '@/components/layout/driver-shell';
 import SettingsClient from './settings-client';
 
 export const dynamic = 'force-dynamic';
@@ -47,10 +48,15 @@ export default async function DriverSettingsPage() {
     .maybeSingle();
 
   return (
-    <SettingsClient
-      driver={driver}
-      balanceCents={(acct?.balance_cents as number) ?? 0}
-      currency={acct?.currency ?? 'CAD'}
-    />
+    <DriverShell
+      title="Settings"
+      subtitle="Payout preferences and driver notifications"
+    >
+      <SettingsClient
+        driver={driver}
+        balanceCents={(acct?.balance_cents as number) ?? 0}
+        currency={acct?.currency ?? 'CAD'}
+      />
+    </DriverShell>
   );
 }

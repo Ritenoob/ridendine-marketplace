@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createServerClient, getDriverByUserId } from '@ridendine/db';
+import { DriverShell } from '@/components/layout/driver-shell';
 import ProfileView from './components/ProfileView';
 
 export const dynamic = 'force-dynamic';
@@ -34,5 +35,12 @@ export default async function ProfilePage() {
     );
   }
 
-  return <ProfileView driver={driver} />;
+  return (
+    <DriverShell
+      title="Profile"
+      subtitle="Driver details, vehicle information, and payout onboarding"
+    >
+      <ProfileView driver={driver} />
+    </DriverShell>
+  );
 }

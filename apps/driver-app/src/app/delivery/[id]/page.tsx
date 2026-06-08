@@ -8,6 +8,7 @@ import {
   type SupabaseClient,
 } from '@ridendine/db';
 import { isApprovedDriver } from '@/lib/driver-eligibility';
+import { DriverShell } from '@/components/layout/driver-shell';
 import DeliveryDetail from './components/DeliveryDetail';
 
 export const dynamic = 'force-dynamic';
@@ -95,5 +96,18 @@ export default async function ActiveDeliveryPage({ params }: PageProps) {
     .eq('id', delivery.order_id)
     .single();
 
-  return <DeliveryDetail delivery={delivery} order={(order as DeliveryOrderRow | null) ?? null} />;
+  const orderRow = (order as DeliveryOrderRow | null) ?? null;
+
+  return (
+    <DriverShell
+      title="Active Delivery"
+      subtitle={orderRow?.order_number ? `Order ${orderRow.order_number}` : 'Delivery workflow'}
+      statusLabel="Live"
+      statusTone="success"
+      fullBleed
+      showBottomNav={false}
+    >
+      <DeliveryDetail delivery={delivery} order={orderRow} />
+    </DriverShell>
+  );
 }

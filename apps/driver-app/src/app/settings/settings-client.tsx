@@ -60,13 +60,8 @@ export default function SettingsClient({ driver, balanceCents, currency = 'CAD' 
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="bg-brand-600 p-6 text-white">
-        <h1 className="text-[22px] font-bold tracking-tight">Payout settings</h1>
-        <p className="mt-1 text-sm text-white/90">Instant payouts are optional and include a 1.5% fee.</p>
-      </div>
-
-      <div className="p-4 space-y-4">
+    <div className="space-y-4">
+      <div className="space-y-4">
         <Card className="border-0 shadow-sm">
           <p className="text-[14px] text-[#6b7280]">Available driver payable balance (ledger-derived)</p>
           <p className="mt-2 text-[32px] font-bold text-[#15803d]">{formatMoney(balanceCents / 100)}</p>
@@ -101,20 +96,6 @@ export default function SettingsClient({ driver, balanceCents, currency = 'CAD' 
 
         <NotificationPreferences />
       </div>
-
-      <nav className="fixed bottom-0 left-0 right-0 border-t border-[#e5e7eb] bg-white">
-        <div className="flex justify-around py-3">
-          <Link href="/" className="text-[12px] font-medium text-[#9ca3af]">
-            Home
-          </Link>
-          <Link href="/earnings" className="text-[12px] font-medium text-[#9ca3af]">
-            Earnings
-          </Link>
-          <Link href="/profile" className="text-[12px] font-medium text-[#9ca3af]">
-            Profile
-          </Link>
-        </div>
-      </nav>
     </div>
   );
 }

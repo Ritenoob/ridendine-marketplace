@@ -2,9 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useAuthContext } from '@ridendine/auth';
 import type { Driver, Delivery } from '@ridendine/db';
 import type { DriverOperationsSummary, DriverShiftOperationsSummary } from '@ridendine/types';
 import { OfferAlert } from '@/components/offer-alert';
@@ -14,29 +11,6 @@ interface DriverDashboardProps {
   driver: Driver;
   activeDeliveries: Delivery[];
 }
-
-const NAV_ITEMS = [
-  {
-    icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
-    label: 'Home',
-    href: '/',
-  },
-  {
-    icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-    label: 'History',
-    href: '/history',
-  },
-  {
-    icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-    label: 'Earnings',
-    href: '/earnings',
-  },
-  {
-    icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-    label: 'Profile',
-    href: '/profile',
-  },
-];
 
 const DELIVERY_STATUS_LABELS: Record<string, string> = {
   assigned: 'Assigned',
@@ -143,8 +117,6 @@ const READINESS_BADGE_CLASSES: Record<DriverOperationsSummary['readiness']['prio
 };
 
 export default function DriverDashboard({ driver, activeDeliveries }: DriverDashboardProps) {
-  const router = useRouter();
-  const { signOut } = useAuthContext();
   const [isOnline, setIsOnline] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -152,11 +124,6 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
   const [readinessSummary, setReadinessSummary] = useState<DriverOperationsSummary | null>(null);
   const [shiftSummary, setShiftSummary] = useState<DriverShiftOperationsSummary | null>(null);
   const dashboardRequestIdRef = useRef(0);
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/auth/login');
-  };
 
   const currentDelivery = activeDeliveries[0];
   const locationTracker = useLocationTracker({
@@ -361,53 +328,11 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
   const shiftStatusLabel = presenceLoading ? 'Loading...' : isOnShift ? 'On shift' : 'Off shift';
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pb-24">
+    <div className="space-y-4">
       <OfferAlert driverId={driver.id} isOnline={isOnline} />
-      {/* Header */}
-      <div className="bg-white border-b border-divider px-5 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/logo-icon.png"
-              alt="RideNDine"
-              width={32}
-              height={32}
-              className="rounded-lg"
-            />
-            <div>
-              <span className="text-base font-bold">
-                <span className="text-accent">RideN</span>
-                <span className="text-primary">Dine</span>
-              </span>
-              <span className="ml-1.5 rounded-full bg-surfaceMuted px-2 py-0.5 text-xs font-medium text-textMuted">
-                Driver
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm font-semibold text-text">
-                {driver ? `${driver.first_name} ${driver.last_name}` : 'Driver'}
-              </p>
-              <p className="text-xs text-textSubtle">Hamilton, ON</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              title="Sign out"
-              aria-label="Sign out"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-textMuted transition-colors hover:border-danger/30 hover:bg-dangerSoft hover:text-danger"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
 
       {statusError && (
-        <div className="px-4 pt-4">
+        <div>
           <div className="rounded-xl border border-danger/30 bg-dangerSoft p-3 text-sm text-danger">
             {statusError}
           </div>
@@ -415,7 +340,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
       )}
 
       {/* Ready-to-work panel */}
-      <div className="px-4 pt-4">
+      <div>
         <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm" aria-label="Ready to work">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -521,7 +446,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
       </div>
 
       {/* Today's Summary */}
-      <div className="px-4 pt-4">
+      <div>
         <div className="rounded-2xl bg-white p-5 shadow-sm border border-divider">
           <h2 className="text-base font-bold text-text">Today&apos;s Summary</h2>
           <div className="mt-4 grid grid-cols-3 gap-4">
@@ -547,7 +472,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
 
       {/* Active Delivery Card */}
       {currentDelivery && (isOnShift || isOnline) && (
-        <div className="px-4 pt-4">
+        <div>
           <div className="rounded-2xl border-2 border-primary bg-white p-5 shadow-md">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-bold text-text">Active Delivery</h2>
@@ -600,7 +525,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
 
       {/* No active deliveries empty state */}
       {!currentDelivery && activeDeliveries.length === 0 && (
-        <div className="px-4 pt-4">
+        <div>
           <div className="rounded-2xl bg-white p-8 shadow-sm border border-divider text-center">
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#fff0e8]">
               <svg className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -620,7 +545,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
 
       {/* Waiting state */}
       {isOnShift && !currentDelivery && (
-        <div className="px-4 pt-4">
+        <div>
           <div className="rounded-2xl bg-white p-8 shadow-sm border border-divider text-center">
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-successSoft">
               <svg className="h-10 w-10 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -637,7 +562,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
 
       {/* Offline state */}
       {!isOnShift && (
-        <div className="px-4 pt-4">
+        <div>
           <div className="rounded-2xl bg-white p-8 shadow-sm border border-divider text-center">
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-surfaceMuted">
               <svg className="h-10 w-10 text-textSubtle" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -661,7 +586,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
       )}
 
       {/* Quick Actions */}
-      <div className="px-4 pt-4">
+      <div>
         <h3 className="mb-3 text-sm font-semibold text-text">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-3">
           <Link href="/earnings">
@@ -689,25 +614,6 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 border-t border-divider bg-white shadow-lg">
-        <div className="flex justify-around py-2">
-          {NAV_ITEMS.map((item, idx) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={`flex flex-col items-center gap-1 px-4 py-2 ${
-                idx === 0 ? 'text-primary' : 'text-textSubtle'
-              }`}
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-              </svg>
-              <span className="text-[11px] font-medium">{item.label}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
     </div>
   );
 }

@@ -219,14 +219,9 @@ export default function EarningsView({
   const previewFee = Number.isFinite(previewCents) && previewCents > 0 ? instantFeeCents(previewCents) : 0;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="bg-brand-600 p-6 text-white">
-        <h1 className="text-[22px] font-bold tracking-tight">Earnings</h1>
-      </div>
-
+    <div className="space-y-4">
       {/* Weekly Summary */}
-      <div className="p-4">
+      <div>
         <Card className="border-0 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-[17px] font-semibold text-[#1a1a1a]">This Week</h2>
@@ -259,7 +254,7 @@ export default function EarningsView({
       </div>
 
       {/* Today's Deliveries */}
-      <div className="p-4 pt-0">
+      <div>
         <Card className="border-0 shadow-sm">
           <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Today&apos;s Deliveries</h2>
           {todayDeliveries.length === 0 ? (
@@ -302,7 +297,7 @@ export default function EarningsView({
       </div>
 
       {/* Payout Info */}
-      <div className="p-4 pt-0">
+      <div>
         <Card className="border-0 shadow-sm">
           <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Delivery pay estimate</h2>
           <p className="mt-2 text-[13px] leading-relaxed text-[#6b7280]">
@@ -326,7 +321,7 @@ export default function EarningsView({
       </div>
 
       {/* Payout Info */}
-      <div className="p-4 pt-0">
+      <div>
         <Card className="border-0 shadow-sm">
           <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Next scheduled payout</h2>
           <div className="mt-4 flex items-center justify-between">
@@ -350,7 +345,7 @@ export default function EarningsView({
         </Card>
       </div>
 
-      <div className="p-4 pt-0">
+      <div>
         <Card className="border-0 shadow-sm">
           <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Available balance</h2>
           <p className="mt-1 text-[28px] font-bold text-[#15803d]">
@@ -371,7 +366,7 @@ export default function EarningsView({
       </div>
 
       {pendingInstantPayoutRequests.length > 0 ? (
-        <div className="p-4 pt-0">
+        <div>
           <Card className="border-0 shadow-sm">
             <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Pending instant payout requests</h2>
             <div className="mt-3 space-y-2">
@@ -387,7 +382,7 @@ export default function EarningsView({
       ) : null}
 
       {instantPayoutsEnabled ? (
-        <div className="p-4 pt-0">
+        <div>
           <Card className="border-0 shadow-sm">
             <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Instant payout</h2>
             <p className="mt-2 text-[13px] leading-relaxed text-[#6b7280]">
@@ -429,7 +424,7 @@ export default function EarningsView({
           </Card>
         </div>
       ) : (
-        <div className="p-4 pt-0">
+        <div>
           <Card className="border-0 shadow-sm">
             <p className="text-[14px] text-[#6b7280]">
               Enable instant payouts in{' '}
@@ -441,31 +436,6 @@ export default function EarningsView({
           </Card>
         </div>
       )}
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 border-t border-[#e5e7eb] bg-white">
-        <div className="flex justify-around py-3">
-          {[
-            { icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', label: 'Home', href: '/', active: false },
-            { icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', label: 'History', href: '/history', active: false },
-            { icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Earnings', href: '/earnings', active: true },
-            { icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', label: 'Profile', href: '/profile', active: false },
-          ].map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={`flex flex-col items-center gap-1 px-4 py-2 ${
-                item.active ? 'text-brand-600' : 'text-[#9ca3af]'
-              }`}
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-              </svg>
-              <span className="text-[12px] font-medium">{item.label}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
     </div>
   );
 }

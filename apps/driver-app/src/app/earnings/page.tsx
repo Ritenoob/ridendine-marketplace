@@ -5,6 +5,7 @@ import {
   getDriverByUserId,
   getDeliveryHistory,
 } from '@ridendine/db';
+import { DriverShell } from '@/components/layout/driver-shell';
 import EarningsView from './components/EarningsView';
 
 export const dynamic = 'force-dynamic';
@@ -127,25 +128,30 @@ export default async function EarningsPage() {
   );
 
   return (
-    <EarningsView
-      deliveries={completedDeliveries}
-      availableBalanceCents={(acct?.balance_cents as number) ?? 0}
-      currency={normalizeCurrency(acct?.currency)}
-      instantPayoutsEnabled={instantEnabled}
-      pendingInstantPayoutRequests={(pendingInstantResult.data ?? []).map((request) => ({
-        id: request.id,
-        amountCents: request.amount_cents,
-        feeCents: request.fee_cents,
-        status: request.status,
-        requestedAt: request.requested_at,
-      }))}
-      payoutAccountStatus={{
-        connected: Boolean(payoutAccount),
-        status: payoutAccount?.status ?? 'not_started',
-        payoutsEnabled: Boolean(payoutAccount?.payouts_enabled),
-        chargesEnabled: Boolean(payoutAccount?.charges_enabled),
-        onboardingCompletedAt: payoutAccount?.onboarding_completed_at ?? null,
-      }}
-    />
+    <DriverShell
+      title="Earnings"
+      subtitle="Track delivery pay, payout balance, tips, and instant payout settings"
+    >
+      <EarningsView
+        deliveries={completedDeliveries}
+        availableBalanceCents={(acct?.balance_cents as number) ?? 0}
+        currency={normalizeCurrency(acct?.currency)}
+        instantPayoutsEnabled={instantEnabled}
+        pendingInstantPayoutRequests={(pendingInstantResult.data ?? []).map((request) => ({
+          id: request.id,
+          amountCents: request.amount_cents,
+          feeCents: request.fee_cents,
+          status: request.status,
+          requestedAt: request.requested_at,
+        }))}
+        payoutAccountStatus={{
+          connected: Boolean(payoutAccount),
+          status: payoutAccount?.status ?? 'not_started',
+          payoutsEnabled: Boolean(payoutAccount?.payouts_enabled),
+          chargesEnabled: Boolean(payoutAccount?.charges_enabled),
+          onboardingCompletedAt: payoutAccount?.onboarding_completed_at ?? null,
+        }}
+      />
+    </DriverShell>
   );
 }
