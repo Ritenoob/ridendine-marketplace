@@ -210,6 +210,8 @@ Expected: all pass.
 
 **Purpose:** Replace the basic online/offline experience with a real "Ready to work" panel.
 
+**Status:** Completed on 2026-06-07. Verified with readiness route tests, dashboard readiness tests, location tracker tests, full Driver app tests, Driver app lint, Driver app typecheck, Ops app typecheck, `test:wiring-fixes`, refreshed runtime wiring docs, and production contract smoke.
+
 **Files:**
 - Create: `apps/driver-app/src/app/api/driver/readiness/route.ts`
 - Modify: `apps/driver-app/src/app/components/DriverDashboard.tsx`
@@ -217,7 +219,7 @@ Expected: all pass.
 - Test: `apps/driver-app/src/__tests__/driver-readiness-route.test.ts`
 - Test: `apps/driver-app/src/__tests__/driver-dashboard-empty-state.test.tsx`
 
-- [ ] **Step 1: Add route tests**
+- [x] **Step 1: Add route tests**
 
 Test that `GET /api/driver/readiness`:
 - returns `401` when no driver session exists
@@ -226,7 +228,7 @@ Test that `GET /api/driver/readiness`:
 - returns GPS freshness from `driver_presence.last_location_at` or `last_location_update`
 - returns payout readiness from `driver_payout_accounts` and `drivers.instant_payouts_enabled`
 
-- [ ] **Step 2: Implement readiness endpoint**
+- [x] **Step 2: Implement readiness endpoint**
 
 Use `getDriverActorContext({ requireApproved: false })` so pending drivers can see why they are blocked. Query:
 - `drivers`
@@ -238,7 +240,7 @@ Use `getDriverActorContext({ requireApproved: false })` so pending drivers can s
 
 Return a `DriverOperationsSummary`.
 
-- [ ] **Step 3: Upgrade dashboard**
+- [x] **Step 3: Upgrade dashboard**
 
 Modify `DriverDashboard.tsx` to show:
 - approval state
@@ -248,7 +250,7 @@ Modify `DriverDashboard.tsx` to show:
 - active delivery risk if trying to go offline mid-delivery
 - retry location button when GPS is blocked or stale
 
-- [ ] **Step 4: Improve location tracking feedback**
+- [x] **Step 4: Improve location tracking feedback**
 
 Modify `use-location-tracker.ts` so it returns:
 - `lastLocation`
@@ -259,7 +261,7 @@ Modify `use-location-tracker.ts` so it returns:
 
 Keep existing POST cadence unchanged.
 
-- [ ] **Step 5: Verify Phase 2**
+- [x] **Step 5: Verify Phase 2**
 
 Run:
 

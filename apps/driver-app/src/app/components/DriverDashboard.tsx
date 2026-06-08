@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@ridendine/auth';
 import type { Driver, Delivery } from '@ridendine/db';
+import type { DriverOperationsSummary } from '@ridendine/types';
 import { OfferAlert } from '@/components/offer-alert';
+import { useLocationTracker } from '@/hooks/use-location-tracker';
 
 interface DriverDashboardProps {
   driver: Driver;
@@ -51,6 +53,82 @@ function formatDeliveryStatus(status?: string | null) {
   return DELIVERY_STATUS_LABELS[status] ?? status.replace(/_/g, ' ');
 }
 
+function formatStatusLabel(status?: string | null) {
+  if (!status) return 'Unknown';
+  return status
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function parseReadinessSummary(json: unknown): DriverOperationsSummary | null {
+  if (!json || typeof json !== 'object') return null;
+
+  const root = json as Record<string, unknown>;
+  const payload = root.success === true && root.data && typeof root.data === 'object'
+    ? (root.data as Record<string, unknown>)
+    : root;
+
+  return payload.readiness && typeof payload.readiness === 'object'
+    ? (payload as unknown as DriverOperationsSummary)
+    : null;
+}
+
+function formatGpsFreshness(
+  serverLastLocationAt: string | null | undefined,
+  clientLastPostedAt: string | null | undefined,
+  hasClientFix: boolean
+) {
+  const timestamp = clientLastPostedAt ?? serverLastLocationAt;
+
+  if (!timestamp) {
+    return hasClientFix ? 'GPS fix captured, waiting to post' : 'No GPS fix yet';
+  }
+
+  const postedAt = Date.parse(timestamp);
+  if (!Number.isFinite(postedAt)) {
+    return 'GPS freshness unknown';
+  }
+
+  const ageMs = Date.now() - postedAt;
+  if (ageMs < 0) return 'GPS timestamp is ahead of device time';
+  if (ageMs < 60_000) return 'GPS refreshed just now';
+
+  const ageMinutes = Math.round(ageMs / 60_000);
+  if (ageMinutes < 60) return `GPS refreshed ${ageMinutes} min ago`;
+
+  const ageHours = Math.round(ageMinutes / 60);
+  return `GPS refreshed ${ageHours} hr ago`;
+}
+
+function shouldShowRetryLocation(
+  summary: DriverOperationsSummary | null,
+  permissionState: string,
+  locationError: string | null,
+  isOnline: boolean
+) {
+  if (!isOnline) return false;
+
+  const readiness = summary?.readiness;
+  const detail = readiness?.detail.toLowerCase() ?? '';
+
+  return (
+    Boolean(locationError) ||
+    permissionState === 'denied' ||
+    readiness?.status === 'needs_location' ||
+    detail.includes('gps') ||
+    detail.includes('location')
+  );
+}
+
+const READINESS_BADGE_CLASSES: Record<DriverOperationsSummary['readiness']['priority'], string> = {
+  success: 'bg-successSoft text-success',
+  warning: 'bg-warningSoft text-warning',
+  danger: 'bg-dangerSoft text-danger',
+  idle: 'bg-surfaceMuted text-textMuted',
+};
+
 export default function DriverDashboard({ driver, activeDeliveries }: DriverDashboardProps) {
   const router = useRouter();
   const { signOut } = useAuthContext();
@@ -58,6 +136,8 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [presenceLoading, setPresenceLoading] = useState(true);
+  const [readinessSummary, setReadinessSummary] = useState<DriverOperationsSummary | null>(null);
+  const dashboardRequestIdRef = useRef(0);
 
   const handleSignOut = async () => {
     await signOut();
@@ -65,6 +145,49 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
   };
 
   const currentDelivery = activeDeliveries[0];
+  const locationTracker = useLocationTracker({
+    driverId: driver?.id ?? null,
+    isOnline,
+    deliveryId: currentDelivery?.id ?? null,
+  });
+
+  const applyReadinessSummary = useCallback(
+    (
+      summary: DriverOperationsSummary,
+      expectedPresenceStatus?: DriverOperationsSummary['presenceStatus']
+    ) => {
+      const presenceStatus = expectedPresenceStatus ?? summary.presenceStatus;
+      const nextSummary = expectedPresenceStatus
+        ? {
+            ...summary,
+            presenceStatus,
+          }
+        : summary;
+
+      setReadinessSummary(nextSummary);
+      setIsOnline(presenceStatus === 'online' || presenceStatus === 'busy');
+    },
+    []
+  );
+
+  const refreshReadiness = useCallback(async (
+    expectedPresenceStatus?: DriverOperationsSummary['presenceStatus']
+  ) => {
+    const requestId = dashboardRequestIdRef.current + 1;
+    dashboardRequestIdRef.current = requestId;
+
+    const readinessResponse = await fetch('/api/driver/readiness');
+    if (requestId !== dashboardRequestIdRef.current) return;
+    if (!readinessResponse.ok) return;
+
+    const readinessJson = await readinessResponse.json();
+    if (requestId !== dashboardRequestIdRef.current) return;
+
+    const summary = parseReadinessSummary(readinessJson);
+    if (!summary) return;
+
+    applyReadinessSummary(summary, expectedPresenceStatus);
+  }, [applyReadinessSummary]);
 
   const toggleOnlineStatus = async () => {
     setIsTogglingStatus(true);
@@ -81,7 +204,17 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
       if (!response.ok || !json.success) {
         throw new Error(json.error || 'Failed to update status');
       }
-      setIsOnline(!isOnline);
+      setIsOnline(newStatus === 'online');
+      setPresenceLoading(false);
+      setReadinessSummary((summary) =>
+        summary
+          ? {
+              ...summary,
+              presenceStatus: newStatus,
+            }
+          : summary
+      );
+      void refreshReadiness(newStatus);
     } catch (error) {
       console.error('Error toggling status:', error instanceof Error ? error.message : 'unknown');
       setStatusError('Unable to update your online status right now. Please try again.');
@@ -98,20 +231,30 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
 
   useEffect(() => {
     async function hydrateDashboard() {
+      const requestId = dashboardRequestIdRef.current + 1;
+      dashboardRequestIdRef.current = requestId;
+
       try {
-        const [presenceResponse, earningsResponse] = await Promise.all([
+        const [presenceResponse, earningsResponse, readinessResponse] = await Promise.all([
           fetch('/api/driver/presence'),
           fetch('/api/earnings'),
+          fetch('/api/driver/readiness'),
         ]);
+
+        if (requestId !== dashboardRequestIdRef.current) return;
 
         if (presenceResponse.ok) {
           const presenceJson = await presenceResponse.json();
+          if (requestId !== dashboardRequestIdRef.current) return;
+
           const status = presenceJson.data?.presence?.status;
           setIsOnline(status === 'online' || status === 'busy');
         }
 
         if (earningsResponse.ok) {
           const json = await earningsResponse.json();
+          if (requestId !== dashboardRequestIdRef.current) return;
+
           const payload = json.success === true && json.data != null ? json.data : json;
           setTodayStats({
             deliveries: payload.today?.count ?? 0,
@@ -119,14 +262,54 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
             hours: null,
           });
         }
+
+        if (readinessResponse.ok) {
+          const readinessJson = await readinessResponse.json();
+          if (requestId !== dashboardRequestIdRef.current) return;
+
+          const summary = parseReadinessSummary(readinessJson);
+          if (summary) {
+            applyReadinessSummary(summary);
+          }
+        }
       } catch {
         // Keep defaults on error
       } finally {
-        setPresenceLoading(false);
+        if (requestId === dashboardRequestIdRef.current) {
+          setPresenceLoading(false);
+        }
       }
     }
     hydrateDashboard();
-  }, []);
+  }, [applyReadinessSummary]);
+
+  const readiness = readinessSummary?.readiness;
+  const readinessPriority = readiness?.priority ?? 'idle';
+  const approvalLabel = formatStatusLabel(readinessSummary?.approvalStatus ?? driver.status);
+  const onlineStateLabel = formatStatusLabel(
+    readinessSummary?.presenceStatus ?? (isOnline ? 'online' : 'offline')
+  );
+  const activeDeliveryCount = readinessSummary?.activeDeliveryCount ?? activeDeliveries.length;
+  const gpsFreshness = locationTracker.isPosting
+    ? 'Posting GPS update...'
+    : formatGpsFreshness(
+        readinessSummary?.lastLocationAt,
+        locationTracker.lastPostedAt,
+        Boolean(locationTracker.lastLocation)
+      );
+  const showRetryLocation = shouldShowRetryLocation(
+    readinessSummary,
+    locationTracker.permissionState,
+    locationTracker.locationError,
+    isOnline
+  );
+  const showOfflineActiveDeliveryRisk = isOnline && activeDeliveryCount > 0;
+  const dispatchText =
+    readiness?.status === 'ready'
+      ? 'Dispatch ready'
+      : readiness?.detail ?? 'Checking driver requirements...';
+  const readinessTitle =
+    readiness?.status === 'ready' ? 'Dispatch ready' : readiness?.label ?? 'Checking readiness';
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-24">
@@ -181,6 +364,70 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
           </div>
         </div>
       )}
+
+      {/* Ready-to-work panel */}
+      <div className="px-4 pt-4">
+        <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm" aria-label="Ready to work">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-textMuted">Ready to work</p>
+              <h2 className="mt-1 text-xl font-bold text-text">{readinessTitle}</h2>
+              <p className="mt-2 text-sm text-textMuted">{dispatchText}</p>
+            </div>
+            <span
+              className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                READINESS_BADGE_CLASSES[readinessPriority]
+              }`}
+            >
+              {readiness?.blocksDispatch ? 'Blocked' : readiness?.status === 'ready' ? 'Ready' : 'Check'}
+            </span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-surfaceMuted px-3 py-2">
+              <p className="text-xs font-medium text-textMuted">Approval</p>
+              <p className="mt-1 text-sm font-semibold text-text">{approvalLabel}</p>
+            </div>
+            <div className="rounded-xl bg-surfaceMuted px-3 py-2">
+              <p className="text-xs font-medium text-textMuted">Online state</p>
+              <p className="mt-1 text-sm font-semibold text-text">{onlineStateLabel}</p>
+            </div>
+            <div className="rounded-xl bg-surfaceMuted px-3 py-2">
+              <p className="text-xs font-medium text-textMuted">GPS freshness</p>
+              <p className="mt-1 text-sm font-semibold text-text">{gpsFreshness}</p>
+            </div>
+            <div className="rounded-xl bg-surfaceMuted px-3 py-2">
+              <p className="text-xs font-medium text-textMuted">Active work</p>
+              <p className="mt-1 text-sm font-semibold text-text">
+                {activeDeliveryCount === 0
+                  ? 'None active'
+                  : `${activeDeliveryCount} active delivery${activeDeliveryCount === 1 ? '' : 'ies'}`}
+              </p>
+            </div>
+          </div>
+
+          {locationTracker.locationError && (
+            <p className="mt-3 text-sm font-medium text-danger">{locationTracker.locationError}</p>
+          )}
+
+          {showOfflineActiveDeliveryRisk && (
+            <p className="mt-3 rounded-xl border border-warning/30 bg-warningSoft px-3 py-2 text-sm font-medium text-warning">
+              Going offline during an active delivery can delay the customer and alert Ops.
+            </p>
+          )}
+
+          {showRetryLocation && (
+            <button
+              type="button"
+              onClick={locationTracker.startTracking}
+              disabled={locationTracker.isPosting}
+              className="mt-4 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primaryHover disabled:opacity-60"
+            >
+              {locationTracker.isPosting ? 'Retrying location...' : 'Retry location'}
+            </button>
+          )}
+        </section>
+      </div>
 
       {/* Online/Offline Toggle */}
       <div

@@ -1,6 +1,6 @@
 # Runtime Coverage Audit
 
-Generated: 2026-06-07T21:43:13.958Z
+Generated: 2026-06-08T01:16:44.711Z
 
 This Phase 17 coverage inventory maps every discovered app page and API route file to the runtime, live-role, non-admin role, high-risk authorization, and Phase 18/19 classification contracts that currently exercise, document, or classify it. Structural uncovered rows mean a surface has no classification or contract. Proof gaps mean a surface is classified but still lacks runtime/live/static proof coverage.
 
@@ -9,7 +9,7 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | Surface | Total discovered | Structurally covered | Structural gaps | Proof covered | Proof gaps |
 |---|---:|---:|---:|---:|---:|
 | Pages | 90 | 90 | 0 | 89 | 1 |
-| API route files | 120 | 120 | 0 | 120 | 0 |
+| API route files | 121 | 121 | 0 | 121 | 0 |
 
 ## Contract Source Counts
 
@@ -20,11 +20,11 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | live-role-fixture | 27 |
 | non-admin-role-fixture | 15 |
 | ops-export-audit-smoke | 1 |
-| runtime-api-classification | 120 |
+| runtime-api-classification | 121 |
 | runtime-authenticated-json | 15 |
 | runtime-page-auth-intent | 17 |
 | runtime-page-classification | 90 |
-| runtime-proof-action-api | 115 |
+| runtime-proof-action-api | 116 |
 | runtime-proof-action-page | 76 |
 | runtime-public-json | 7 |
 | runtime-sample-fixture | 17 |
@@ -206,6 +206,7 @@ None found.
 | Driver App | `/api/deliveries/[id]/proof` | `apps/driver-app/src/app/api/deliveries/[id]/proof/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Driver App | `/api/driver` | `apps/driver-app/src/app/api/driver/route.ts` | live-role-fixture, runtime-api-classification, runtime-authenticated-json, runtime-proof-action-api |
 | Driver App | `/api/driver/presence` | `apps/driver-app/src/app/api/driver/presence/route.ts` | runtime-api-classification, runtime-proof-action-api |
+| Driver App | `/api/driver/readiness` | `apps/driver-app/src/app/api/driver/readiness/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Driver App | `/api/earnings` | `apps/driver-app/src/app/api/earnings/route.ts` | live-role-fixture, runtime-api-classification, runtime-authenticated-json, runtime-proof-action-api |
 | Driver App | `/api/health` | `apps/driver-app/src/app/api/health/route.ts` | runtime-api-classification, runtime-proof-action-api, runtime-public-json |
 | Driver App | `/api/location` | `apps/driver-app/src/app/api/location/route.ts` | runtime-api-classification, runtime-proof-action-api |
