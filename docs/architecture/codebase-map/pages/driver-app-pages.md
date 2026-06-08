@@ -249,14 +249,18 @@ flowchart TB
   Page --> Layout
   Page --> File
   Page --> Auth
-  Table0["DB table/RPC<br/>platform_accounts"]
+  Table0["DB table/RPC<br/>driver_payout_accounts"]
   Page --> Table0
+  Table1["DB table/RPC<br/>instant_payout_requests"]
+  Page --> Table1
+  Table2["DB table/RPC<br/>platform_accounts"]
+  Page --> Table2
   classDef page fill:#111827,stroke:#111827,color:#ffffff
   classDef data fill:#dcfce7,stroke:#16a34a,color:#172033
   classDef api fill:#dbeafe,stroke:#2563eb,color:#172033
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   class Page page
-  class Table0 data
+  class Table0,Table1,Table2 data
 ```
 
 ### Actual Page Information
@@ -270,13 +274,13 @@ flowchart TB
 | Auth | Detected |
 | Page file | [apps/driver-app/src/app/earnings/page.tsx](../../../../apps/driver-app/src/app/earnings/page.tsx) |
 | Layout | [apps/driver-app/src/app/layout.tsx](../../../../apps/driver-app/src/app/layout.tsx) |
-| Data source summary | table:platform_accounts, @ridendine/db |
+| Data source summary | table:driver_payout_accounts, table:instant_payout_requests, table:platform_accounts, @ridendine/db |
 
 ### Data And API Wiring
 
 | Type | Details |
 | --- | --- |
-| DB tables/RPCs | `platform_accounts` |
+| DB tables/RPCs | `driver_payout_accounts`, `instant_payout_requests`, `platform_accounts` |
 | Fetch/API calls | None detected |
 | Shared packages | @ridendine/db |
 | Components/imports | None detected |

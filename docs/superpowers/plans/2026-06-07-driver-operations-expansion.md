@@ -629,13 +629,15 @@ Expected: all pass.
 
 **Purpose:** Make the new Driver/Ops section auditable in the same style as the rest of Ridendine.
 
+**Status:** Locally verified on 2026-06-08. Focused red-green coverage added for `GET /api/driver/shift`; runtime contract smoke catalog now includes Driver readiness, shift, and notification preferences; broad production smoke now discovers an Ops sample driver and probes `/api/drivers/{sample}/operations`. Full local verification passed; push, Vercel deploy confirmation, and post-deploy production smoke remain pending.
+
 **Files:**
 - Modify: `docs/CROSS_APP_CONTRACTS.md`
 - Modify: `docs/LAUNCH_CHECKLIST.md`
 - Create or modify: `docs/superpowers/plans/2026-06-07-driver-operations-expansion-results.md`
 - Modify: production smoke scripts only if new critical routes need coverage.
 
-- [ ] **Step 1: Update cross-app contracts**
+- [x] **Step 1: Update cross-app contracts**
 
 Document:
 - `GET /api/driver/readiness`
@@ -645,14 +647,14 @@ Document:
 - how readiness maps to dispatch eligibility
 - what Driver sees vs what Ops sees
 
-- [ ] **Step 2: Extend smoke coverage**
+- [x] **Step 2: Extend smoke coverage**
 
 Add read-only authenticated production probes for:
 - Driver `/api/driver/readiness`
 - Driver `/api/driver/shift`
 - Ops `/api/drivers/[sample]/operations` only if a stable sample driver fixture exists
 
-- [ ] **Step 3: Run full local verification**
+- [x] **Step 3: Run full local verification**
 
 Run:
 

@@ -16,8 +16,6 @@ Use this folder as the Obsidian entry point for the repo map.
 - [[Every Page Document]]
 - [[API Wiring]]
 - [[Runtime Contract Smoke]]
-- [[Thread Closure Outstanding Work]]
-- [[Remaining Issue Execution Plan]]
 - [[Link Wiring]]
 - [[Database And Engine]]
 - [[Known Gaps]]

@@ -636,6 +636,23 @@ Indexes detected: 3
 | recorded_at | TIMESTAMPTZ | required, default | - |
 | created_at | TIMESTAMPTZ | required, default | - |
 
+## driver_notification_preferences
+
+Source migrations: supabase/migrations/00044_driver_notification_preferences.sql
+
+RLS: enabled
+
+Policies detected: 4
+
+Indexes detected: 0
+
+| Column | Type | Flags | References |
+| --- | --- | --- | --- |
+| driver_id | UUID | PK, FK | drivers.id |
+| preferences | JSONB | required, default | - |
+| created_at | TIMESTAMPTZ | required, default | - |
+| updated_at | TIMESTAMPTZ | required, default | - |
+
 ## driver_payout_accounts
 
 Source migrations: supabase/migrations/00026_driver_payout_accounts.sql

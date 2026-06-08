@@ -18,8 +18,8 @@ pnpm smoke:prod:contracts -- --require-auth
 | --- | ---: | --- |
 | Auth-intent pages | 17 | Public pages return HTML, protected pages resolve to login guard, legacy redirect shims expose their redirect target. |
 | Public JSON APIs | 7 | Public/health/marketplace-read endpoints return JSON with allowed status codes. |
-| Protected JSON APIs | 15 | Unauthenticated requests do not return 200. |
-| Authenticated JSON APIs | 15 | App-owned customer, chef, driver, and ops login sessions can read expected JSON APIs. |
+| Protected JSON APIs | 18 | Unauthenticated requests do not return 200. |
+| Authenticated JSON APIs | 18 | App-owned customer, chef, driver, and ops login sessions can read expected JSON APIs. |
 
 ## Auth-Intent Page Contracts
 
@@ -63,6 +63,9 @@ pnpm smoke:prod:contracts -- --require-auth
 | Customer Web | `/api/orders` | 401, 403, 404, 405, 307, 308 | Yes |  |
 | Customer Web | `/api/loyalty` | 401, 403, 404, 405, 307, 308 | Yes |  |
 | Driver App | `/api/driver` | 401, 403, 404, 405, 307, 308 | Yes |  |
+| Driver App | `/api/driver/readiness` | 401, 403, 404, 405, 307, 308 | Yes | Driver app-owned auth smoke proves readiness blockers and dispatch eligibility summary. |
+| Driver App | `/api/driver/shift` | 401, 403, 404, 405, 307, 308 | Yes | Driver app-owned auth smoke proves shift summary, active work, and today earnings JSON. |
+| Driver App | `/api/driver/notification-preferences` | 401, 403, 404, 405, 307, 308 | Yes | Driver app-owned auth smoke proves DB-backed notification preferences GET. |
 | Driver App | `/api/deliveries` | 401, 403, 404, 405, 307, 308 | Yes |  |
 | Driver App | `/api/offers` | 401, 403, 404, 405, 307, 308 | Yes |  |
 | Driver App | `/api/earnings` | 401, 403, 404, 405, 307, 308 | Yes |  |

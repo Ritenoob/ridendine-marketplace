@@ -23,22 +23,23 @@ This matrix maps application code and shared packages to Supabase tables, RPCs, 
 | DEFINED | chef_storefronts | Chef Admin, Customer Web, Ops Admin, Shared Packages | insert, select, update | 54 | apps/chef-admin/src/app/api/storefront/route.ts |
 | DEFINED | customer_addresses | Chef Admin, Customer Web, Shared Packages | delete, insert, select, update | 20 | apps/chef-admin/src/app/api/orders/route.ts |
 | DEFINED | customers | Chef Admin, Customer Web, Ops Admin, Shared Packages | insert, select, update, upsert | 28 | apps/chef-admin/src/app/api/orders/route.ts |
-| DEFINED | deliveries | Driver App, Ops Admin, Shared Packages | delete, insert, select, update | 77 | apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts |
+| DEFINED | deliveries | Driver App, Ops Admin, Shared Packages | delete, insert, select, update | 80 | apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts |
 | DEFINED | delivery_assignments | - | - | 0 | - |
 | DEFINED | delivery_events | Shared Packages | insert, select | 4 | packages/db/src/repositories/ops.repository.ts |
 | DEFINED | delivery_tracking_events | Driver App, Shared Packages | insert, select | 4 | apps/driver-app/src/app/api/location/route.ts |
 | DEFINED | domain_events | Shared Packages | insert, update | 2 | packages/engine/src/core/event-emitter.ts |
-| DEFINED | driver_documents | Ops Admin | select | 1 | apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx |
+| DEFINED | driver_documents | Driver App, Ops Admin, Shared Packages | select | 5 | apps/driver-app/src/app/api/driver/readiness/route.ts |
 | DEFINED | driver_earnings | - | - | 0 | - |
 | DEFINED | driver_locations | Driver App | insert | 1 | apps/driver-app/src/app/api/location/route.ts |
-| DEFINED | driver_payout_accounts | Driver App | insert, select | 4 | apps/driver-app/src/app/api/payouts/setup/route.ts |
+| DEFINED | driver_notification_preferences | Driver App | touch | 1 | apps/driver-app/src/app/api/driver/notification-preferences/route.ts |
+| DEFINED | driver_payout_accounts | Driver App, Ops Admin | insert, select | 9 | apps/driver-app/src/app/api/driver/readiness/route.ts |
 | DEFINED | driver_payouts | Ops Admin, Shared Packages | insert, select, update | 4 | apps/ops-admin/src/app/dashboard/finance/payouts/[runId]/page.tsx |
-| DEFINED | driver_presence | Driver App, Ops Admin, Shared Packages | insert, select, update, upsert | 25 | apps/driver-app/src/app/api/auth/signup/route.ts |
-| DEFINED | driver_shifts | - | - | 0 | - |
+| DEFINED | driver_presence | Driver App, Ops Admin, Shared Packages | insert, select, update, upsert | 28 | apps/driver-app/src/app/api/auth/signup/route.ts |
+| DEFINED | driver_shifts | Driver App | select | 1 | apps/driver-app/src/app/api/driver/shift/route.ts |
 | DEFINED | driver_vehicles | - | - | 0 | - |
-| DEFINED | drivers | Driver App, Ops Admin, Shared Packages | insert, select, update | 44 | apps/driver-app/src/app/api/driver/route.ts |
+| DEFINED | drivers | Driver App, Ops Admin, Shared Packages | insert, select, update | 46 | apps/driver-app/src/app/api/driver/readiness/route.ts |
 | DEFINED | favorites | Customer Web | delete, insert, select | 4 | apps/web/src/app/api/favorites/route.ts |
-| DEFINED | instant_payout_requests | Ops Admin, Shared Packages | insert, select, update | 14 | apps/ops-admin/src/app/api/engine/payouts/instant/[id]/route.ts |
+| DEFINED | instant_payout_requests | Driver App, Ops Admin, Shared Packages | insert, select, update | 16 | apps/driver-app/src/app/api/earnings/route.ts |
 | DEFINED | kitchen_queue_entries | Shared Packages | insert, select, update | 6 | packages/engine/src/e2e/order-lifecycle.e2e.ts |
 | DEFINED | ledger_entries | Ops Admin, Shared Packages | delete, insert, select | 38 | apps/ops-admin/src/app/api/analytics/trends/route.ts |
 | DEFINED | loyalty_accounts | Shared Packages | insert, select | 4 | packages/engine/src/services/loyalty.service.ts |
@@ -51,14 +52,14 @@ This matrix maps application code and shared packages to Supabase tables, RPCs, 
 | DEFINED | notifications | Customer Web, Ops Admin, Shared Packages | insert, select, update | 16 | apps/ops-admin/src/app/api/announcements/route.ts |
 | DEFINED | ops_override_logs | Ops Admin, Shared Packages | insert, select | 2 | apps/ops-admin/src/app/dashboard/activity/page.tsx |
 | DEFINED | ops_processor_runs | Ops Admin | insert, select, update | 3 | apps/ops-admin/src/app/api/engine/health/route.ts |
-| DEFINED | order_exceptions | Driver App, Ops Admin, Shared Packages | delete, insert, select, update | 27 | apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts |
+| DEFINED | order_exceptions | Driver App, Ops Admin, Shared Packages | delete, insert, select, update | 28 | apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts |
 | DEFINED | order_item_modifiers | Shared Packages | insert | 1 | packages/engine/src/orchestrators/order-creation.service.ts |
 | DEFINED | order_items | Chef Admin, Ops Admin, Shared Packages | delete, insert, select | 8 | apps/chef-admin/src/app/api/analytics/route.ts |
 | DEFINED | order_status_history | Customer Web, Ops Admin, Shared Packages | delete, insert, select | 7 | apps/ops-admin/src/app/api/fixtures/reset/route.ts |
 | DEFINED | orders | Chef Admin, Customer Web, Driver App, Ops Admin, Shared Packages | delete, insert, select, update | 114 | apps/chef-admin/src/app/api/analytics/route.ts |
 | DEFINED | payout_adjustments | Shared Packages | insert, select, update | 5 | packages/db/src/repositories/finance.repository.ts |
 | DEFINED | payout_runs | Ops Admin, Shared Packages | insert, select, update | 7 | apps/ops-admin/src/app/api/engine/payouts/execute/route.ts |
-| DEFINED | platform_accounts | Driver App, Ops Admin, Shared Packages | select | 11 | apps/driver-app/src/app/earnings/page.tsx |
+| DEFINED | platform_accounts | Driver App, Ops Admin, Shared Packages | select | 14 | apps/driver-app/src/app/api/driver/readiness/route.ts |
 | DEFINED | platform_settings | Ops Admin, Shared Packages | select, update | 11 | apps/ops-admin/src/app/api/engine/maintenance/route.ts |
 | DEFINED | platform_users | Driver App, Ops Admin, Shared Packages | insert, select, update, upsert | 11 | apps/driver-app/src/lib/platform-access.ts |
 | DEFINED | promo_code_usages | Shared Packages | insert, select | 2 | packages/db/src/repositories/promo.repository.ts |

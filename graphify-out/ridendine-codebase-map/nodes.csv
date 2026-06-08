@@ -208,6 +208,7 @@ file:apps/driver-app/src/app/delivery/[id]/page.tsx,apps/driver-app/src/app/deli
 table:assignment_attempts,assignment_attempts,table,,,,
 route:driver-app:/earnings,Driver App /earnings,page-route,WIRED,apps/driver-app/src/app/earnings/page.tsx,,
 file:apps/driver-app/src/app/earnings/page.tsx,apps/driver-app/src/app/earnings/page.tsx,file,WIRED,,,
+table:driver_payout_accounts,driver_payout_accounts,table,,,,
 route:driver-app:/history,Driver App /history,page-route,WIRED,apps/driver-app/src/app/history/page.tsx,,
 file:apps/driver-app/src/app/history/page.tsx,apps/driver-app/src/app/history/page.tsx,file,WIRED,,,
 route:driver-app:/,Driver App /,page-route,WIRED,apps/driver-app/src/app/page.tsx,,
@@ -330,6 +331,8 @@ api:ops-admin:/api/deliveries/:id,Ops Admin /api/deliveries/:id,api-route,WIRED,
 file:apps/ops-admin/src/app/api/deliveries/[id]/route.ts,apps/ops-admin/src/app/api/deliveries/[id]/route.ts,file,WIRED,,,
 api:ops-admin:/api/deliveries,Ops Admin /api/deliveries,api-route,WIRED,apps/ops-admin/src/app/api/deliveries/route.ts,,GET
 file:apps/ops-admin/src/app/api/deliveries/route.ts,apps/ops-admin/src/app/api/deliveries/route.ts,file,WIRED,,,
+api:ops-admin:/api/drivers/:id/operations,Ops Admin /api/drivers/:id/operations,api-route,WIRED,apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts,,GET
+file:apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts,apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts,file,WIRED,,,
 api:ops-admin:/api/drivers/:id,Ops Admin /api/drivers/:id,api-route,WIRED,apps/ops-admin/src/app/api/drivers/[id]/route.ts,,PATCH
 file:apps/ops-admin/src/app/api/drivers/[id]/route.ts,apps/ops-admin/src/app/api/drivers/[id]/route.ts,file,WIRED,,,
 api:ops-admin:/api/drivers,Ops Admin /api/drivers,api-route,WIRED,apps/ops-admin/src/app/api/drivers/route.ts,,"GET,POST"
@@ -464,10 +467,18 @@ api:driver-app:/api/deliveries/:id,Driver App /api/deliveries/:id,api-route,WIRE
 file:apps/driver-app/src/app/api/deliveries/[id]/route.ts,apps/driver-app/src/app/api/deliveries/[id]/route.ts,file,WIRED,,,
 api:driver-app:/api/deliveries,Driver App /api/deliveries,api-route,WIRED,apps/driver-app/src/app/api/deliveries/route.ts,,GET
 file:apps/driver-app/src/app/api/deliveries/route.ts,apps/driver-app/src/app/api/deliveries/route.ts,file,WIRED,,,
+api:driver-app:/api/driver/notification-preferences,Driver App /api/driver/notification-preferences,api-route,WIRED,apps/driver-app/src/app/api/driver/notification-preferences/route.ts,,"GET,PATCH"
+file:apps/driver-app/src/app/api/driver/notification-preferences/route.ts,apps/driver-app/src/app/api/driver/notification-preferences/route.ts,file,WIRED,,,
+table:driver_notification_preferences,driver_notification_preferences,table,,,,
 api:driver-app:/api/driver/presence,Driver App /api/driver/presence,api-route,WIRED,apps/driver-app/src/app/api/driver/presence/route.ts,,"GET,PATCH"
 file:apps/driver-app/src/app/api/driver/presence/route.ts,apps/driver-app/src/app/api/driver/presence/route.ts,file,WIRED,,,
+api:driver-app:/api/driver/readiness,Driver App /api/driver/readiness,api-route,WIRED,apps/driver-app/src/app/api/driver/readiness/route.ts,,GET
+file:apps/driver-app/src/app/api/driver/readiness/route.ts,apps/driver-app/src/app/api/driver/readiness/route.ts,file,WIRED,,,
 api:driver-app:/api/driver,Driver App /api/driver,api-route,WIRED,apps/driver-app/src/app/api/driver/route.ts,,"GET,PATCH"
 file:apps/driver-app/src/app/api/driver/route.ts,apps/driver-app/src/app/api/driver/route.ts,file,WIRED,,,
+api:driver-app:/api/driver/shift,Driver App /api/driver/shift,api-route,WIRED,apps/driver-app/src/app/api/driver/shift/route.ts,,GET
+file:apps/driver-app/src/app/api/driver/shift/route.ts,apps/driver-app/src/app/api/driver/shift/route.ts,file,WIRED,,,
+table:driver_shifts,driver_shifts,table,,,,
 api:driver-app:/api/earnings,Driver App /api/earnings,api-route,WIRED,apps/driver-app/src/app/api/earnings/route.ts,,GET
 file:apps/driver-app/src/app/api/earnings/route.ts,apps/driver-app/src/app/api/earnings/route.ts,file,WIRED,,,
 api:driver-app:/api/health,Driver App /api/health,api-route,WIRED,apps/driver-app/src/app/api/health/route.ts,,GET
@@ -482,7 +493,6 @@ api:driver-app:/api/payouts/instant,Driver App /api/payouts/instant,api-route,WI
 file:apps/driver-app/src/app/api/payouts/instant/route.ts,apps/driver-app/src/app/api/payouts/instant/route.ts,file,WIRED,,,
 api:driver-app:/api/payouts/setup,Driver App /api/payouts/setup,api-route,WIRED,apps/driver-app/src/app/api/payouts/setup/route.ts,,"GET,POST"
 file:apps/driver-app/src/app/api/payouts/setup/route.ts,apps/driver-app/src/app/api/payouts/setup/route.ts,file,WIRED,,,
-table:driver_payout_accounts,driver_payout_accounts,table,,,,
 api:driver-app:/api/upload,Driver App /api/upload,api-route,WIRED,apps/driver-app/src/app/api/upload/route.ts,,POST
 file:apps/driver-app/src/app/api/upload/route.ts,apps/driver-app/src/app/api/upload/route.ts,file,WIRED,,,
 table:${accountSid}:${authToken},${accountSid}:${authToken},table,,,,
@@ -494,7 +504,6 @@ table:delivery_assignments,delivery_assignments,table,,,,
 table:delivery_events,delivery_events,table,,,,
 table:domain_events,domain_events,table,,,,
 table:driver_earnings,driver_earnings,table,,,,
-table:driver_shifts,driver_shifts,table,,,,
 table:driver_vehicles,driver_vehicles,table,,,,
 table:idx_assignment_attempts_delivery,idx_assignment_attempts_delivery,table,,,,
 table:idx_assignment_attempts_driver,idx_assignment_attempts_driver,table,,,,

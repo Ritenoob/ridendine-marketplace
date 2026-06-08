@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T19:06:57.872Z",
+  "generatedAt": "2026-06-08T13:50:35.952Z",
   "nodes": [
     {
       "id": "app:web",
@@ -1307,6 +1307,11 @@
       "status": "WIRED"
     },
     {
+      "id": "table:driver_payout_accounts",
+      "label": "driver_payout_accounts",
+      "type": "table"
+    },
+    {
       "id": "route:driver-app:/history",
       "label": "Driver App /history",
       "type": "page-route",
@@ -2119,6 +2124,20 @@
     {
       "id": "file:apps/ops-admin/src/app/api/deliveries/route.ts",
       "label": "apps/ops-admin/src/app/api/deliveries/route.ts",
+      "type": "file",
+      "status": "WIRED"
+    },
+    {
+      "id": "api:ops-admin:/api/drivers/:id/operations",
+      "label": "Ops Admin /api/drivers/:id/operations",
+      "type": "api-route",
+      "status": "WIRED",
+      "file": "apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts",
+      "methods": "GET"
+    },
+    {
+      "id": "file:apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts",
+      "label": "apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts",
       "type": "file",
       "status": "WIRED"
     },
@@ -3045,6 +3064,25 @@
       "status": "WIRED"
     },
     {
+      "id": "api:driver-app:/api/driver/notification-preferences",
+      "label": "Driver App /api/driver/notification-preferences",
+      "type": "api-route",
+      "status": "WIRED",
+      "file": "apps/driver-app/src/app/api/driver/notification-preferences/route.ts",
+      "methods": "GET,PATCH"
+    },
+    {
+      "id": "file:apps/driver-app/src/app/api/driver/notification-preferences/route.ts",
+      "label": "apps/driver-app/src/app/api/driver/notification-preferences/route.ts",
+      "type": "file",
+      "status": "WIRED"
+    },
+    {
+      "id": "table:driver_notification_preferences",
+      "label": "driver_notification_preferences",
+      "type": "table"
+    },
+    {
       "id": "api:driver-app:/api/driver/presence",
       "label": "Driver App /api/driver/presence",
       "type": "api-route",
@@ -3055,6 +3093,20 @@
     {
       "id": "file:apps/driver-app/src/app/api/driver/presence/route.ts",
       "label": "apps/driver-app/src/app/api/driver/presence/route.ts",
+      "type": "file",
+      "status": "WIRED"
+    },
+    {
+      "id": "api:driver-app:/api/driver/readiness",
+      "label": "Driver App /api/driver/readiness",
+      "type": "api-route",
+      "status": "WIRED",
+      "file": "apps/driver-app/src/app/api/driver/readiness/route.ts",
+      "methods": "GET"
+    },
+    {
+      "id": "file:apps/driver-app/src/app/api/driver/readiness/route.ts",
+      "label": "apps/driver-app/src/app/api/driver/readiness/route.ts",
       "type": "file",
       "status": "WIRED"
     },
@@ -3071,6 +3123,25 @@
       "label": "apps/driver-app/src/app/api/driver/route.ts",
       "type": "file",
       "status": "WIRED"
+    },
+    {
+      "id": "api:driver-app:/api/driver/shift",
+      "label": "Driver App /api/driver/shift",
+      "type": "api-route",
+      "status": "WIRED",
+      "file": "apps/driver-app/src/app/api/driver/shift/route.ts",
+      "methods": "GET"
+    },
+    {
+      "id": "file:apps/driver-app/src/app/api/driver/shift/route.ts",
+      "label": "apps/driver-app/src/app/api/driver/shift/route.ts",
+      "type": "file",
+      "status": "WIRED"
+    },
+    {
+      "id": "table:driver_shifts",
+      "label": "driver_shifts",
+      "type": "table"
     },
     {
       "id": "api:driver-app:/api/earnings",
@@ -3167,11 +3238,6 @@
       "status": "WIRED"
     },
     {
-      "id": "table:driver_payout_accounts",
-      "label": "driver_payout_accounts",
-      "type": "table"
-    },
-    {
       "id": "api:driver-app:/api/upload",
       "label": "Driver App /api/upload",
       "type": "api-route",
@@ -3228,11 +3294,6 @@
     {
       "id": "table:driver_earnings",
       "label": "driver_earnings",
-      "type": "table"
-    },
-    {
-      "id": "table:driver_shifts",
-      "label": "driver_shifts",
       "type": "table"
     },
     {
@@ -6009,6 +6070,18 @@
     },
     {
       "from": "route:driver-app:/earnings",
+      "to": "table:driver_payout_accounts",
+      "label": "reads/writes table",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:driver-app:/earnings",
+      "to": "table:instant_payout_requests",
+      "label": "reads/writes table",
+      "status": "WIRED"
+    },
+    {
+      "from": "route:driver-app:/earnings",
       "to": "table:platform_accounts",
       "label": "reads/writes table",
       "status": "WIRED"
@@ -7737,6 +7810,24 @@
     },
     {
       "from": "app:ops-admin",
+      "to": "api:ops-admin:/api/drivers/:id/operations",
+      "label": "owns API",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:ops-admin:/api/drivers/:id/operations",
+      "to": "file:apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts",
+      "label": "implemented by",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:ops-admin:/api/drivers/:id/operations",
+      "to": "package:@ridendine/db",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "app:ops-admin",
       "to": "api:ops-admin:/api/drivers/:id",
       "label": "owns API",
       "status": "WIRED"
@@ -8662,6 +8753,18 @@
     {
       "from": "api:ops-admin:/api/ops/live-board",
       "to": "table:chef_storefronts",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:ops-admin:/api/ops/live-board",
+      "to": "table:driver_documents",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:ops-admin:/api/ops/live-board",
+      "to": "table:driver_payout_accounts",
       "label": "touches table",
       "status": "WIRED"
     },
@@ -9615,12 +9718,6 @@
     },
     {
       "from": "api:driver-app:/api/auth/signup",
-      "to": "external:Stripe",
-      "label": "calls external",
-      "status": "WIRED"
-    },
-    {
-      "from": "api:driver-app:/api/auth/signup",
       "to": "external:Supabase",
       "label": "calls external",
       "status": "WIRED"
@@ -9747,6 +9844,36 @@
     },
     {
       "from": "app:driver-app",
+      "to": "api:driver-app:/api/driver/notification-preferences",
+      "label": "owns API",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/notification-preferences",
+      "to": "file:apps/driver-app/src/app/api/driver/notification-preferences/route.ts",
+      "label": "implemented by",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/notification-preferences",
+      "to": "table:driver_notification_preferences",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/notification-preferences",
+      "to": "package:@ridendine/db",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/notification-preferences",
+      "to": "package:@ridendine/validation",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "app:driver-app",
       "to": "api:driver-app:/api/driver/presence",
       "label": "owns API",
       "status": "WIRED"
@@ -9772,6 +9899,66 @@
     {
       "from": "api:driver-app:/api/driver/presence",
       "to": "package:@ridendine/db",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "api:driver-app:/api/driver/readiness",
+      "label": "owns API",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/readiness",
+      "to": "file:apps/driver-app/src/app/api/driver/readiness/route.ts",
+      "label": "implemented by",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/readiness",
+      "to": "table:deliveries",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/readiness",
+      "to": "table:driver_documents",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/readiness",
+      "to": "table:driver_payout_accounts",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/readiness",
+      "to": "table:driver_presence",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/readiness",
+      "to": "table:drivers",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/readiness",
+      "to": "table:platform_accounts",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/readiness",
+      "to": "package:@ridendine/db",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/readiness",
+      "to": "package:@ridendine/types",
       "label": "imports",
       "status": "WIRED"
     },
@@ -9807,6 +9994,54 @@
     },
     {
       "from": "app:driver-app",
+      "to": "api:driver-app:/api/driver/shift",
+      "label": "owns API",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/shift",
+      "to": "file:apps/driver-app/src/app/api/driver/shift/route.ts",
+      "label": "implemented by",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/shift",
+      "to": "table:deliveries",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/shift",
+      "to": "table:driver_presence",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/shift",
+      "to": "table:driver_shifts",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/shift",
+      "to": "package:@ridendine/db",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/shift",
+      "to": "package:@ridendine/types",
+      "label": "imports",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/driver/shift",
+      "to": "external:Supabase",
+      "label": "calls external",
+      "status": "WIRED"
+    },
+    {
+      "from": "app:driver-app",
       "to": "api:driver-app:/api/earnings",
       "label": "owns API",
       "status": "WIRED"
@@ -9815,6 +10050,24 @@
       "from": "api:driver-app:/api/earnings",
       "to": "file:apps/driver-app/src/app/api/earnings/route.ts",
       "label": "implemented by",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/earnings",
+      "to": "table:driver_payout_accounts",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/earnings",
+      "to": "table:instant_payout_requests",
+      "label": "touches table",
+      "status": "WIRED"
+    },
+    {
+      "from": "api:driver-app:/api/earnings",
+      "to": "table:platform_accounts",
+      "label": "touches table",
       "status": "WIRED"
     },
     {
@@ -10947,6 +11200,12 @@
     },
     {
       "from": "file:apps/driver-app/src/app/components/DriverDashboard.tsx",
+      "to": "file:apps/driver-app/src/app/api/driver/readiness/route.ts",
+      "label": "fetch: /api/driver/readiness",
+      "status": "WORKING"
+    },
+    {
+      "from": "file:apps/driver-app/src/app/components/DriverDashboard.tsx",
       "to": "file:apps/driver-app/src/app/api/earnings/route.ts",
       "label": "fetch: /api/earnings",
       "status": "WORKING"
@@ -10991,6 +11250,12 @@
       "from": "file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx",
       "to": "file:apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts",
       "label": "fetch: /api/deliveries/${delivery.id}/issue",
+      "status": "WORKING_DYNAMIC"
+    },
+    {
+      "from": "file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx",
+      "to": "file:apps/driver-app/src/app/api/deliveries/[id]/proof/route.ts",
+      "label": "fetch: /api/deliveries/${delivery.id}/proof",
       "status": "WORKING_DYNAMIC"
     },
     {

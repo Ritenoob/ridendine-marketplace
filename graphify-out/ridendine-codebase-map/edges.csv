@@ -344,6 +344,8 @@ route:driver-app:/delivery/:id,table:orders,reads/writes table,WIRED
 route:driver-app:/delivery/:id,package:@ridendine/db,imports,WIRED
 app:driver-app,route:driver-app:/earnings,owns route,WIRED
 route:driver-app:/earnings,file:apps/driver-app/src/app/earnings/page.tsx,implemented by,WIRED
+route:driver-app:/earnings,table:driver_payout_accounts,reads/writes table,WIRED
+route:driver-app:/earnings,table:instant_payout_requests,reads/writes table,WIRED
 route:driver-app:/earnings,table:platform_accounts,reads/writes table,WIRED
 route:driver-app:/earnings,package:@ridendine/db,imports,WIRED
 app:driver-app,route:driver-app:/history,owns route,WIRED
@@ -632,6 +634,9 @@ app:ops-admin,api:ops-admin:/api/deliveries,owns API,WIRED
 api:ops-admin:/api/deliveries,file:apps/ops-admin/src/app/api/deliveries/route.ts,implemented by,WIRED
 api:ops-admin:/api/deliveries,package:@ridendine/db,imports,WIRED
 api:ops-admin:/api/deliveries,external:Supabase,calls external,WIRED
+app:ops-admin,api:ops-admin:/api/drivers/:id/operations,owns API,WIRED
+api:ops-admin:/api/drivers/:id/operations,file:apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts,implemented by,WIRED
+api:ops-admin:/api/drivers/:id/operations,package:@ridendine/db,imports,WIRED
 app:ops-admin,api:ops-admin:/api/drivers/:id,owns API,WIRED
 api:ops-admin:/api/drivers/:id,file:apps/ops-admin/src/app/api/drivers/[id]/route.ts,implemented by,WIRED
 api:ops-admin:/api/drivers/:id,package:@ridendine/utils,imports,WIRED
@@ -787,6 +792,8 @@ api:ops-admin:/api/internal/command-center/change-requests,file:apps/ops-admin/s
 app:ops-admin,api:ops-admin:/api/ops/live-board,owns API,WIRED
 api:ops-admin:/api/ops/live-board,file:apps/ops-admin/src/app/api/ops/live-board/route.ts,implemented by,WIRED
 api:ops-admin:/api/ops/live-board,table:chef_storefronts,touches table,WIRED
+api:ops-admin:/api/ops/live-board,table:driver_documents,touches table,WIRED
+api:ops-admin:/api/ops/live-board,table:driver_payout_accounts,touches table,WIRED
 api:ops-admin:/api/ops/live-board,table:drivers,touches table,WIRED
 api:ops-admin:/api/ops/live-board,table:orders,touches table,WIRED
 api:ops-admin:/api/ops/live-board,package:@ridendine/db,imports,WIRED
@@ -945,7 +952,6 @@ api:driver-app:/api/auth/signup,file:apps/driver-app/src/app/api/auth/signup/rou
 api:driver-app:/api/auth/signup,table:driver_presence,touches table,WIRED
 api:driver-app:/api/auth/signup,package:@ridendine/db,imports,WIRED
 api:driver-app:/api/auth/signup,package:@ridendine/utils,imports,WIRED
-api:driver-app:/api/auth/signup,external:Stripe,calls external,WIRED
 api:driver-app:/api/auth/signup,external:Supabase,calls external,WIRED
 app:driver-app,api:driver-app:/api/deliveries/:id/issue,owns API,WIRED
 api:driver-app:/api/deliveries/:id/issue,file:apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts,implemented by,WIRED
@@ -967,18 +973,44 @@ app:driver-app,api:driver-app:/api/deliveries,owns API,WIRED
 api:driver-app:/api/deliveries,file:apps/driver-app/src/app/api/deliveries/route.ts,implemented by,WIRED
 api:driver-app:/api/deliveries,package:@ridendine/db,imports,WIRED
 api:driver-app:/api/deliveries,external:Supabase,calls external,WIRED
+app:driver-app,api:driver-app:/api/driver/notification-preferences,owns API,WIRED
+api:driver-app:/api/driver/notification-preferences,file:apps/driver-app/src/app/api/driver/notification-preferences/route.ts,implemented by,WIRED
+api:driver-app:/api/driver/notification-preferences,table:driver_notification_preferences,touches table,WIRED
+api:driver-app:/api/driver/notification-preferences,package:@ridendine/db,imports,WIRED
+api:driver-app:/api/driver/notification-preferences,package:@ridendine/validation,imports,WIRED
 app:driver-app,api:driver-app:/api/driver/presence,owns API,WIRED
 api:driver-app:/api/driver/presence,file:apps/driver-app/src/app/api/driver/presence/route.ts,implemented by,WIRED
 api:driver-app:/api/driver/presence,table:deliveries,touches table,WIRED
 api:driver-app:/api/driver/presence,table:driver_presence,touches table,WIRED
 api:driver-app:/api/driver/presence,package:@ridendine/db,imports,WIRED
+app:driver-app,api:driver-app:/api/driver/readiness,owns API,WIRED
+api:driver-app:/api/driver/readiness,file:apps/driver-app/src/app/api/driver/readiness/route.ts,implemented by,WIRED
+api:driver-app:/api/driver/readiness,table:deliveries,touches table,WIRED
+api:driver-app:/api/driver/readiness,table:driver_documents,touches table,WIRED
+api:driver-app:/api/driver/readiness,table:driver_payout_accounts,touches table,WIRED
+api:driver-app:/api/driver/readiness,table:driver_presence,touches table,WIRED
+api:driver-app:/api/driver/readiness,table:drivers,touches table,WIRED
+api:driver-app:/api/driver/readiness,table:platform_accounts,touches table,WIRED
+api:driver-app:/api/driver/readiness,package:@ridendine/db,imports,WIRED
+api:driver-app:/api/driver/readiness,package:@ridendine/types,imports,WIRED
 app:driver-app,api:driver-app:/api/driver,owns API,WIRED
 api:driver-app:/api/driver,file:apps/driver-app/src/app/api/driver/route.ts,implemented by,WIRED
 api:driver-app:/api/driver,table:drivers,touches table,WIRED
 api:driver-app:/api/driver,package:@ridendine/db,imports,WIRED
 api:driver-app:/api/driver,external:Supabase,calls external,WIRED
+app:driver-app,api:driver-app:/api/driver/shift,owns API,WIRED
+api:driver-app:/api/driver/shift,file:apps/driver-app/src/app/api/driver/shift/route.ts,implemented by,WIRED
+api:driver-app:/api/driver/shift,table:deliveries,touches table,WIRED
+api:driver-app:/api/driver/shift,table:driver_presence,touches table,WIRED
+api:driver-app:/api/driver/shift,table:driver_shifts,touches table,WIRED
+api:driver-app:/api/driver/shift,package:@ridendine/db,imports,WIRED
+api:driver-app:/api/driver/shift,package:@ridendine/types,imports,WIRED
+api:driver-app:/api/driver/shift,external:Supabase,calls external,WIRED
 app:driver-app,api:driver-app:/api/earnings,owns API,WIRED
 api:driver-app:/api/earnings,file:apps/driver-app/src/app/api/earnings/route.ts,implemented by,WIRED
+api:driver-app:/api/earnings,table:driver_payout_accounts,touches table,WIRED
+api:driver-app:/api/earnings,table:instant_payout_requests,touches table,WIRED
+api:driver-app:/api/earnings,table:platform_accounts,touches table,WIRED
 api:driver-app:/api/earnings,package:@ridendine/db,imports,WIRED
 api:driver-app:/api/earnings,external:Supabase,calls external,WIRED
 app:driver-app,api:driver-app:/api/health,owns API,WIRED
@@ -1167,6 +1199,7 @@ file:apps/driver-app/src/app/auth/signup/page.tsx,file:apps/driver-app/src/app/a
 file:apps/driver-app/src/app/auth/signup/page.tsx,file:apps/driver-app/src/app/privacy/page.tsx,href: /privacy,WORKING
 file:apps/driver-app/src/app/auth/signup/page.tsx,file:apps/driver-app/src/app/terms/page.tsx,href: /terms,WORKING
 file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/api/driver/presence/route.ts,fetch: /api/driver/presence,WORKING
+file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/api/driver/readiness/route.ts,fetch: /api/driver/readiness,WORKING
 file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/api/earnings/route.ts,fetch: /api/earnings,WORKING
 file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/auth/login/page.tsx,router.push: /auth/login,WORKING
 file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app/src/app/delivery/[id]/page.tsx,href: /delivery/${currentDelivery.id},WORKING_DYNAMIC
@@ -1175,6 +1208,7 @@ file:apps/driver-app/src/app/components/DriverDashboard.tsx,file:apps/driver-app
 file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx,file:apps/driver-app/src/app/page.tsx,router.push: /,WORKING
 file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx,file:apps/driver-app/src/app/api/deliveries/[id]/route.ts,fetch: /api/deliveries/${delivery.id},WORKING_DYNAMIC
 file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx,file:apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts,fetch: /api/deliveries/${delivery.id}/issue,WORKING_DYNAMIC
+file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx,file:apps/driver-app/src/app/api/deliveries/[id]/proof/route.ts,fetch: /api/deliveries/${delivery.id}/proof,WORKING_DYNAMIC
 file:apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx,file:apps/driver-app/src/app/api/upload/route.ts,fetch: /api/upload,WORKING
 file:apps/driver-app/src/app/delivery/[id]/page.tsx,file:apps/driver-app/src/app/auth/login/page.tsx,redirect: /auth/login,WORKING
 file:apps/driver-app/src/app/earnings/components/EarningsView.tsx,file:apps/driver-app/src/app/api/payouts/instant/route.ts,fetch: /api/payouts/instant,WORKING

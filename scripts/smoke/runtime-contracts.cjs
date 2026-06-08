@@ -124,6 +124,18 @@ const protectedJsonApis = [
   apiContract('customer', '/api/orders', 'protected', { authenticated: true }),
   apiContract('customer', '/api/loyalty', 'protected', { authenticated: true }),
   apiContract('driver', '/api/driver', 'protected', { authenticated: true }),
+  apiContract('driver', '/api/driver/readiness', 'protected', {
+    authenticated: true,
+    note: 'Driver app-owned auth smoke proves readiness blockers and dispatch eligibility summary.',
+  }),
+  apiContract('driver', '/api/driver/shift', 'protected', {
+    authenticated: true,
+    note: 'Driver app-owned auth smoke proves shift summary, active work, and today earnings JSON.',
+  }),
+  apiContract('driver', '/api/driver/notification-preferences', 'protected', {
+    authenticated: true,
+    note: 'Driver app-owned auth smoke proves DB-backed notification preferences GET.',
+  }),
   apiContract('driver', '/api/deliveries', 'protected', { authenticated: true }),
   apiContract('driver', '/api/offers', 'protected', { authenticated: true }),
   apiContract('driver', '/api/earnings', 'protected', { authenticated: true }),

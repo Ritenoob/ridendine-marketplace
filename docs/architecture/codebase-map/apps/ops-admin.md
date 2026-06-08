@@ -12,7 +12,7 @@
 ## Status Summary
 
 - Page routes: 40 total, 40 WIRED, 0 PARTIAL, 0 MISSING.
-- API route files: 53 total, 53 WIRED, 0 PARTIAL.
+- API route files: 54 total, 54 WIRED, 0 PARTIAL.
 - Internal link/API references: 85 total, 0 BROKEN, 2 UNKNOWN_DYNAMIC.
 
 ## Standalone App Diagram
@@ -25,7 +25,7 @@ flowchart TB
   classDef warn fill:#fef3c7,stroke:#f59e0b,color:#172033
   App["Ops Admin<br/>ops.ridendine.ca"]:::app
   Pages["40 pages"]:::api
-  APIs["53 API route files"]:::api
+  APIs["54 API route files"]:::api
   Shared["Shared packages"]:::data
   DB["Supabase tables/RPCs"]:::data
   External["Stripe / routing / notifications where detected"]:::warn
@@ -101,6 +101,7 @@ flowchart TB
 | WIRED | `/api/customers` | GET, POST | [apps/ops-admin/src/app/api/customers/route.ts](../../../../apps/ops-admin/src/app/api/customers/route.ts) | Detected | None detected | @ridendine/db, @ridendine/validation | Supabase |
 | WIRED | `/api/deliveries/:id` | PATCH | [apps/ops-admin/src/app/api/deliveries/[id]/route.ts](../../../../apps/ops-admin/src/app/api/deliveries/[id]/route.ts) | Detected | None detected | None detected | None detected |
 | WIRED | `/api/deliveries` | GET | [apps/ops-admin/src/app/api/deliveries/route.ts](../../../../apps/ops-admin/src/app/api/deliveries/route.ts) | Detected | None detected | @ridendine/db | Supabase |
+| WIRED | `/api/drivers/:id/operations` | GET | [apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts](../../../../apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts) | Detected | None detected | @ridendine/db | None detected |
 | WIRED | `/api/drivers/:id` | PATCH | [apps/ops-admin/src/app/api/drivers/[id]/route.ts](../../../../apps/ops-admin/src/app/api/drivers/[id]/route.ts) | Detected | None detected | @ridendine/utils | None detected |
 | WIRED | `/api/drivers` | GET, POST | [apps/ops-admin/src/app/api/drivers/route.ts](../../../../apps/ops-admin/src/app/api/drivers/route.ts) | Detected | `audit_logs`, `driver_presence` | @ridendine/db, @ridendine/utils, @ridendine/validation | Supabase |
 | WIRED | `/api/engine/dashboard` | GET, POST | [apps/ops-admin/src/app/api/engine/dashboard/route.ts](../../../../apps/ops-admin/src/app/api/engine/dashboard/route.ts) | Detected | `get_ops_dashboard_stats`, `orders`, `system_alerts` | @ridendine/db, @ridendine/validation | Supabase |
@@ -128,7 +129,7 @@ flowchart TB
 | WIRED | `/api/fixtures/reset` | POST | [apps/ops-admin/src/app/api/fixtures/reset/route.ts](../../../../apps/ops-admin/src/app/api/fixtures/reset/route.ts) | Detected | `deliveries`, `ledger_entries`, `order_exceptions`, `order_items`, `order_status_history`, `orders` | @ridendine/db | None detected |
 | WIRED | `/api/health` | GET | [apps/ops-admin/src/app/api/health/route.ts](../../../../apps/ops-admin/src/app/api/health/route.ts) | Public health check | `chef_profiles`, `customers`, `deliveries`, `driver_presence`, `drivers`, `orders` | @ridendine/db, @ridendine/utils | Stripe, Supabase |
 | WIRED | `/api/internal/command-center/change-requests` | GET, PATCH, POST | [apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts](../../../../apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts) | Detected | None detected | None detected | None detected |
-| WIRED | `/api/ops/live-board` | GET | [apps/ops-admin/src/app/api/ops/live-board/route.ts](../../../../apps/ops-admin/src/app/api/ops/live-board/route.ts) | Detected | `chef_storefronts`, `drivers`, `orders` | @ridendine/db, @ridendine/types | None detected |
+| WIRED | `/api/ops/live-board` | GET | [apps/ops-admin/src/app/api/ops/live-board/route.ts](../../../../apps/ops-admin/src/app/api/ops/live-board/route.ts) | Detected | `chef_storefronts`, `driver_documents`, `driver_payout_accounts`, `drivers`, `orders` | @ridendine/db, @ridendine/types | None detected |
 | WIRED | `/api/orders/:id/refund` | POST | [apps/ops-admin/src/app/api/orders/[id]/refund/route.ts](../../../../apps/ops-admin/src/app/api/orders/[id]/refund/route.ts) | Detected | None detected | @ridendine/utils, @ridendine/validation | None detected |
 | WIRED | `/api/orders/:id` | GET, PATCH | [apps/ops-admin/src/app/api/orders/[id]/route.ts](../../../../apps/ops-admin/src/app/api/orders/[id]/route.ts) | Detected | None detected | @ridendine/db, @ridendine/types, @ridendine/utils | Supabase |
 | WIRED | `/api/orders` | GET | [apps/ops-admin/src/app/api/orders/route.ts](../../../../apps/ops-admin/src/app/api/orders/route.ts) | Detected | None detected | @ridendine/db, @ridendine/validation | Supabase |

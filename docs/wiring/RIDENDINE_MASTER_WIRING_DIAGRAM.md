@@ -37,7 +37,7 @@ flowchart LR
 
 ## API Map
 
-Detected API route files: 119. Customer Web: 31, Ops Admin: 53, Chef Admin: 19, Driver App: 16.
+Detected API route files: 123. Customer Web: 31, Ops Admin: 54, Chef Admin: 19, Driver App: 19.
 
 ```mermaid
 flowchart TB

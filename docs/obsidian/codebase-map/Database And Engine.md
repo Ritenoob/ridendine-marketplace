@@ -30,6 +30,7 @@
 - `driver_documents`
 - `driver_earnings`
 - `driver_locations`
+- `driver_notification_preferences`
 - `driver_payout_accounts`
 - `driver_payouts`
 - `driver_presence`
@@ -183,6 +184,7 @@
 - [supabase/migrations/00041_engine_status_check.sql](../../../supabase/migrations/00041_engine_status_check.sql)
 - [supabase/migrations/00042_remove_anon_bypass_policies.sql](../../../supabase/migrations/00042_remove_anon_bypass_policies.sql)
 - [supabase/migrations/00043_promo_customer_usage.sql](../../../supabase/migrations/00043_promo_customer_usage.sql)
+- [supabase/migrations/00044_driver_notification_preferences.sql](../../../supabase/migrations/00044_driver_notification_preferences.sql)
 
 ## Core Services And Packages
 
@@ -206,7 +208,7 @@
 | [packages/db/src/repositories/storefront.repository.ts](../../../packages/db/src/repositories/storefront.repository.ts) | `chef_storefronts` | None detected |
 | [packages/db/src/repositories/support.repository.test.ts](../../../packages/db/src/repositories/support.repository.test.ts) | None detected | None detected |
 | [packages/db/src/repositories/support.repository.ts](../../../packages/db/src/repositories/support.repository.ts) | `support_tickets` | None detected |
-| [packages/db/src/schema/phase0-business-engine.migration.test.ts](../../../packages/db/src/schema/phase0-business-engine.migration.test.ts) | `IF` | None detected |
+| [packages/db/src/schema/phase0-business-engine.migration.test.ts](../../../packages/db/src/schema/phase0-business-engine.migration.test.ts) | `IF`, `driver_notification_preferences` | None detected |
 | [packages/engine/src/client-helpers.ts](../../../packages/engine/src/client-helpers.ts) | None detected | @ridendine/db |
 | [packages/engine/src/constants.test.ts](../../../packages/engine/src/constants.test.ts) | None detected | None detected |
 | [packages/engine/src/constants.ts](../../../packages/engine/src/constants.ts) | None detected | None detected |
@@ -249,7 +251,7 @@
 | [packages/engine/src/orchestrators/dispatch-orchestrator.ts](../../../packages/engine/src/orchestrators/dispatch-orchestrator.ts) | `assignment_attempts`, `deliveries`, `driver_presence`, `drivers`, `orders` | @ridendine/db, @ridendine/routing, @ridendine/types |
 | [packages/engine/src/orchestrators/dispatch.engine.test.ts](../../../packages/engine/src/orchestrators/dispatch.engine.test.ts) | None detected | None detected |
 | [packages/engine/src/orchestrators/driver-matching.service.test.ts](../../../packages/engine/src/orchestrators/driver-matching.service.test.ts) | None detected | None detected |
-| [packages/engine/src/orchestrators/driver-matching.service.ts](../../../packages/engine/src/orchestrators/driver-matching.service.ts) | `assignment_attempts`, `deliveries`, `drivers` | @ridendine/routing, @ridendine/types, @ridendine/utils |
+| [packages/engine/src/orchestrators/driver-matching.service.ts](../../../packages/engine/src/orchestrators/driver-matching.service.ts) | `assignment_attempts`, `deliveries`, `driver_documents`, `drivers` | @ridendine/routing, @ridendine/types, @ridendine/utils |
 | [packages/engine/src/orchestrators/kitchen-availability.test.ts](../../../packages/engine/src/orchestrators/kitchen-availability.test.ts) | None detected | None detected |
 | [packages/engine/src/orchestrators/kitchen-availability.ts](../../../packages/engine/src/orchestrators/kitchen-availability.ts) | None detected | None detected |
 | [packages/engine/src/orchestrators/kitchen.engine.ts](../../../packages/engine/src/orchestrators/kitchen.engine.ts) | `chef_availability`, `chef_profiles`, `chef_storefronts`, `kitchen_queue_entries`, `menu_items`, `order_exceptions`, `order_items`, `orders`, `storefront_state_changes` | @ridendine/types |
@@ -268,6 +270,7 @@
 | [packages/engine/src/orchestrators/payout-engine.test.ts](../../../packages/engine/src/orchestrators/payout-engine.test.ts) | None detected | None detected |
 | [packages/engine/src/orchestrators/payout-engine.ts](../../../packages/engine/src/orchestrators/payout-engine.ts) | `chef_payouts`, `ledger_entries`, `order_exceptions`, `orders` | @ridendine/types |
 | [packages/engine/src/orchestrators/platform-settings.test.ts](../../../packages/engine/src/orchestrators/platform-settings.test.ts) | None detected | @ridendine/db |
+| [packages/engine/src/orchestrators/platform.engine.test.ts](../../../packages/engine/src/orchestrators/platform.engine.test.ts) | None detected | @ridendine/db, @ridendine/types |
 | [packages/engine/src/orchestrators/platform.engine.ts](../../../packages/engine/src/orchestrators/platform.engine.ts) | `chef_kitchens`, `customers`, `ledger_entries`, `notifications`, `order_status_history`, `orders`, `storefront_state_changes` | @ridendine/db, @ridendine/types |
 | [packages/engine/src/orchestrators/repair-validation.test.ts](../../../packages/engine/src/orchestrators/repair-validation.test.ts) | None detected | None detected |
 | [packages/engine/src/orchestrators/risk.engine.test.ts](../../../packages/engine/src/orchestrators/risk.engine.test.ts) | None detected | None detected |
@@ -291,6 +294,7 @@
 | [packages/engine/src/services/ops-analytics.service.ts](../../../packages/engine/src/services/ops-analytics.service.ts) | None detected | @ridendine/utils |
 | [packages/engine/src/services/orders.service.test.ts](../../../packages/engine/src/services/orders.service.test.ts) | None detected | None detected |
 | [packages/engine/src/services/orders.service.ts](../../../packages/engine/src/services/orders.service.ts) | `order_status_history`, `orders` | @ridendine/db |
+| [packages/engine/src/services/payout-risk.service.test.ts](../../../packages/engine/src/services/payout-risk.service.test.ts) | None detected | None detected |
 | [packages/engine/src/services/payout-risk.service.ts](../../../packages/engine/src/services/payout-risk.service.ts) | `chef_payout_accounts`, `chef_payouts`, `driver_payouts`, `drivers`, `instant_payout_requests`, `platform_accounts` | None detected |
 | [packages/engine/src/services/payout.service.test.ts](../../../packages/engine/src/services/payout.service.test.ts) | None detected | None detected |
 | [packages/engine/src/services/payout.service.ts](../../../packages/engine/src/services/payout.service.ts) | `chef_payouts`, `chef_storefronts`, `driver_payouts`, `drivers`, `instant_payout_requests`, `payout_runs`, `platform_accounts` | @ridendine/types |

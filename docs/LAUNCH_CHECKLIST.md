@@ -26,6 +26,7 @@
 | T14 | Distributed rate limiter (Upstash Redis) configured in production (`UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`). Per-instance in-memory rate limiter is dev-only. | Eng | |
 | T15 | Driver notification preferences DB migration `00044_driver_notification_preferences.sql` applied before launch; Driver settings now save through `/api/driver/notification-preferences`. | Eng | |
 | T16 | Local cron runner (`scripts/local-cron.mjs`) replaced by Vercel Cron config in `vercel.json` for production | Eng | |
+| T17 | Driver operations contract smoke covers `/api/driver/readiness`, `/api/driver/shift`, `/api/driver/notification-preferences`, and Ops `/api/drivers/{sample}/operations` with seeded `sean@ridendine.ca` credentials. | Eng + Ops | |
 
 ---
 
@@ -45,6 +46,8 @@ Canonical list: **Part 14** in [`21_FULL_CORRECTION_AND_UPGRADE_EXECUTION_PLAN.m
 | 8 | Realtime: ops board updates without full page refresh | Staging | ☐ | |
 | 9 | Refund → negative ledger + Stripe refund (**test** mode) | Staging | ☐ | |
 | 10 | Audit log row for override/refund includes **actor** id | Staging | ☐ | |
+| 11 | Driver can load readiness, shift, earnings, offers, deliveries, and notification preferences after authenticated smoke login. | Staging + Prod read-only | ☐ | |
+| 12 | Ops can load driver list and a sample driver's operations summary showing readiness, compliance, active work, payout, and exception context. | Staging + Prod read-only | ☐ | |
 
 **Playwright:** E2E suite is **recommended** in Part 14 but may still be absent; manual execution of rows 1–10 remains the **minimum** gate until automated smoke exists.
 

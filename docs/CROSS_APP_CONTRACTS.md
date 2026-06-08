@@ -98,6 +98,33 @@ This document is the authoritative inventory of every cross-app data hop in Ride
 | Instant payout request | `POST /api/payouts/instant` (`apps/driver-app/src/app/api/payouts/instant/route.ts`) | Driver session | `{ amount_cents }` | `instant_payout_requests` queue (Phase 5: Stripe execution) |
 | Notification preferences | `GET/PATCH /api/driver/notification-preferences` (`apps/driver-app/src/app/api/driver/notification-preferences/route.ts`) | Driver session | `{ preferences }` on PATCH | `driver_notification_preferences.preferences` for the authenticated driver only |
 
+### Driver → Server (HTTP reads / operational summaries)
+
+These Driver-owned routes are read-only except where noted. They let drivers see the same operational truth that Ops uses without exposing internal-only data such as raw Ops GPS maps or governance audit details.
+
+| Surface | Route | Auth | Returns | Notes |
+|---------|-------|------|---------|-------|
+| Driver profile | `GET /api/driver` (`apps/driver-app/src/app/api/driver/route.ts`) | Driver session, `requireApproved: false` for onboarding/profile contexts | Driver profile fields for the authenticated driver | Profile access stays available while pending/suspended so the app can show blockers. Dispatch APIs remain approved-only by default. |
+| Dispatch readiness | `GET /api/driver/readiness` (`apps/driver-app/src/app/api/driver/readiness/route.ts`) | Driver session, `requireApproved: false` | `DriverOperationsSummary`: approval state, presence state, readiness status, last location timestamp, active delivery count, available balance cents, instant payout flag, compliance open-item count | Does not return raw `current_lat` / `current_lng`; only location freshness. |
+| Shift summary | `GET /api/driver/shift` (`apps/driver-app/src/app/api/driver/shift/route.ts`) | Approved driver session | Current shift id, online/offline/busy state, location freshness, active delivery summaries, current shift totals, today's completed delivery count and earnings | Backed by `driver_presence.current_shift_id`, `driver_shifts`, active `deliveries`, and delivery history. Does not return raw GPS coordinates. |
+| Notification preferences | `GET /api/driver/notification-preferences` (`apps/driver-app/src/app/api/driver/notification-preferences/route.ts`) | Driver session, `requireApproved: false` | Current DB-backed preferences or safe defaults | PATCH writes only the authenticated driver's row. |
+
+### Driver readiness → dispatch eligibility
+
+Readiness labels are shared between Driver and Ops through `DriverReadinessSignal` (`packages/types/src/domains/driver-operations.ts`) and helper logic in the Driver/Ops readiness modules. The dispatch source of truth is still server-side: `getDriverActorContext()` is approved-only by default, and `packages/engine/src/orchestrators/driver-matching.service.ts` filters candidates before offers are ranked.
+
+| Readiness status | Blocks dispatch? | Meaning |
+|------------------|------------------|---------|
+| `ready` | No | Approved driver is online, has fresh GPS, required compliance documents are approved/current, and no active-work risk is present. |
+| `payout_setup_needed` | No | Driver can receive dispatch work, but payout setup should be completed before cash-out. |
+| `needs_location` | Yes | Driver is approved/online but no usable location timestamp exists. |
+| `not_dispatchable` | Yes | Driver is offline, GPS is stale, or required compliance documents are missing, pending, rejected, or expired. |
+| `not_approved` | Yes | Driver profile is pending/rejected and can view blockers only. |
+| `suspended` | Yes | Ops has suspended the driver. |
+| `active_delivery_risk` | Yes | Driver has active work in a state that requires intervention before new work should be offered. |
+
+Dispatch eligibility also requires all three required driver document types to be current and approved: `drivers_license`, `vehicle_registration`, and `vehicle_insurance`. Ops and Driver both count those through `summarizeDriverComplianceDocuments`.
+
 ### Server → Driver (Realtime)
 
 **Offer stream channel:** `driver:{driverId}:offers` (constructed in `packages/engine/src/core/event-emitter.ts:124`; see also `driverAssignmentsChannel(driverId)` in channels.ts:17 for the related assignments channel).
@@ -133,6 +160,11 @@ This is the cross-cutting boundary that makes ops-admin "the brain." It is asymm
   }
   ```
 - "Delivered today only" filter applied client-side; everything else returned as-is.
+
+**Driver operations detail:** `GET /api/drivers/[id]/operations` (`apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts`)
+- Capability required: `ops_entity_read`.
+- Returns one driver's dispatch readiness, active delivery context, location health, open exceptions, compliance document counts, payout account status, and payable balance.
+- This is the Ops internal counterpart to Driver `/api/driver/readiness` and `/api/driver/shift`. Ops can see broader operational context and raw GPS-derived health because the surface is internal and capability-guarded; Driver sees only its own summaries and freshness timestamps.
 
 **Live update channel:** `ops:live` (`opsLiveBoardChannel()` in channels.ts:27).
 - `postgres_changes` attached on the same channel for: `orders`, `deliveries`, `driver_presence`, `chef_storefronts`.
@@ -193,6 +225,7 @@ The legacy `/api/cron/sla-tick` is deprecated (see its file header) and is **not
 | Chef realtime (`chef:{storefrontId}:orders`) | Yes (delivery addresses) | Yes | Internal — RLS scopes to chef's storefront |
 | Driver offer (`driver:{driverId}:offers`) | Addresses only (no lat/lng) | n/a | `stripSensitiveCoordinateKeys` enforces |
 | Driver assignments (`driver:{driverId}:assignments`) | Yes | Yes | Driver's own active deliveries |
+| Driver readiness / shift APIs | No raw coordinates | No | Driver-owned summaries expose freshness timestamps and active-work status only |
 | Ops live (`ops:live`) | Yes | Yes | Internal — RLS scopes to platform roles |
 | Ops map (`ops:map:presence`) | Yes (full GPS) | n/a | Internal only |
 

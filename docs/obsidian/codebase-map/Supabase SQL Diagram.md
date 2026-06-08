@@ -94,6 +94,8 @@ flowchart LR
   DriverApp --> table_delivery_tracking_events
   table_driver_payout_accounts["driver_payout_accounts"]:::table
   DriverApp --> table_driver_payout_accounts
+  table_instant_payout_requests["instant_payout_requests"]:::table
+  DriverApp --> table_instant_payout_requests
   OpsAdmin["Ops Admin"]:::surface
   table_platform_users["platform_users"]:::table
   OpsAdmin --> table_platform_users

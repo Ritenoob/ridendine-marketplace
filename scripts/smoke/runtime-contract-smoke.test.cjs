@@ -178,3 +178,24 @@ test('chef admin participates in app-owned authenticated runtime contracts', () 
     '/api/storefront',
   ]);
 });
+
+test('driver app participates in app-owned authenticated runtime contracts for operations readiness', () => {
+  const { apps, protectedJsonApis } = require('./runtime-contracts.cjs');
+  assert.equal(apps.driver.appOwnedLogin, true);
+  assert.equal(apps.driver.loginPath, '/api/auth/login');
+
+  const authenticatedDriverApis = protectedJsonApis
+    .filter((contract) => contract.app === 'driver' && contract.authenticated)
+    .map((contract) => contract.path)
+    .sort();
+
+  assert.deepEqual(authenticatedDriverApis, [
+    '/api/deliveries',
+    '/api/driver',
+    '/api/driver/notification-preferences',
+    '/api/driver/readiness',
+    '/api/driver/shift',
+    '/api/earnings',
+    '/api/offers',
+  ]);
+});

@@ -206,6 +206,98 @@ function Invoke-AppLoginSmoke {
   return $results
 }
 
+function Resolve-FirstDriverId {
+  param([object]$Json)
+
+  if ($env:RIDENDINE_SAMPLE_DRIVER_ID) {
+    return [string]$env:RIDENDINE_SAMPLE_DRIVER_ID
+  }
+
+  $items = @()
+  if ($Json -and $Json.PSObject.Properties.Name -contains 'data') {
+    $data = $Json.data
+    if ($data -and $data.PSObject.Properties.Name -contains 'items') {
+      $items = @($data.items)
+    } elseif ($data -is [array]) {
+      $items = @($data)
+    }
+  }
+
+  if (-not $items.Count -and $Json -and $Json.PSObject.Properties.Name -contains 'items') {
+    $items = @($Json.items)
+  }
+
+  $first = @($items | Where-Object { $_ -and $_.PSObject.Properties.Name -contains 'id' } | Select-Object -First 1)
+  if ($first.Count -gt 0) {
+    return [string]$first[0].id
+  }
+
+  return ''
+}
+
+function Invoke-OpsDriverOperationsSmoke {
+  param(
+    [string]$BaseUrl
+  )
+
+  $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+  $body = @{ email = $AuthEmail; password = $AuthPassword } | ConvertTo-Json
+  $login = Invoke-SmokeRequest -Name 'Ops sample /api/auth/login' -Url "$BaseUrl/api/auth/login" -Method POST -Session $session -Body $body -ContentType 'application/json' -ExpectJson
+
+  $loginSuccess = $false
+  try {
+    $json = $login.Content | ConvertFrom-Json
+    if ($json.PSObject.Properties.Name -contains 'success') {
+      $loginSuccess = [bool]$json.success
+    }
+  } catch {
+    $loginSuccess = $false
+  }
+
+  if (-not $loginSuccess) {
+    $Failures.Add('Ops sample login did not return success=true')
+    return @()
+  }
+
+  $drivers = Invoke-SmokeRequest -Name 'Ops /api/drivers sample discovery' -Url "$BaseUrl/api/drivers" -Session $session -ExpectJson
+  $driverId = ''
+  try {
+    $driverId = Resolve-FirstDriverId -Json ($drivers.Content | ConvertFrom-Json)
+  } catch {
+    $driverId = ''
+  }
+
+  if ([string]::IsNullOrWhiteSpace($driverId)) {
+    $Failures.Add('Ops driver operations smoke could not resolve a sample driver id')
+    return @(
+      [pscustomobject]@{
+        App = 'Ops'
+        Route = '/api/drivers/{sample}/operations'
+        Status = 0
+        ContentType = ''
+        LooksLikeLogin = $false
+        Length = 0
+      }
+    )
+  }
+
+  $operations = Invoke-SmokeRequest -Name 'Ops /api/drivers/{sample}/operations' -Url "$BaseUrl/api/drivers/$driverId/operations" -Session $session -ExpectJson
+  if ($operations.LooksLikeLogin) {
+    $Failures.Add('Ops /api/drivers/{sample}/operations resolved to a login surface after authenticated smoke login')
+  }
+
+  return @(
+    [pscustomobject]@{
+      App = 'Ops'
+      Route = '/api/drivers/{sample}/operations'
+      Status = $operations.Status
+      ContentType = $operations.ContentType
+      LooksLikeLogin = $operations.LooksLikeLogin
+      Length = $operations.Length
+    }
+  )
+}
+
 $CustomerBaseUrl = Trim-BaseUrl -Url $CustomerBaseUrl
 $ChefBaseUrl = Trim-BaseUrl -Url $ChefBaseUrl
 $DriverBaseUrl = Trim-BaseUrl -Url $DriverBaseUrl
@@ -268,8 +360,9 @@ if ($SkipAuth) {
   $authResults = @()
   $authResults += Invoke-AppLoginSmoke -App 'Customer' -BaseUrl $CustomerBaseUrl -Routes @('/account', '/account/favorites', '/account/settings', '/api/profile', '/api/orders', '/api/loyalty')
   $authResults += Invoke-AppLoginSmoke -App 'Chef' -BaseUrl $ChefBaseUrl -Routes @('/dashboard', '/api/profile', '/api/storefront', '/api/orders')
-  $authResults += Invoke-AppLoginSmoke -App 'Driver' -BaseUrl $DriverBaseUrl -Routes @('/', '/api/driver', '/api/deliveries', '/api/offers', '/api/earnings')
+  $authResults += Invoke-AppLoginSmoke -App 'Driver' -BaseUrl $DriverBaseUrl -Routes @('/', '/api/driver', '/api/driver/readiness', '/api/driver/shift', '/api/driver/notification-preferences', '/api/deliveries', '/api/offers', '/api/earnings')
   $authResults += Invoke-AppLoginSmoke -App 'Ops' -BaseUrl $OpsBaseUrl -Routes @('/dashboard', '/api/engine/health', '/api/ops/live-board', '/api/orders', '/api/drivers', '/api/chefs')
+  $authResults += Invoke-OpsDriverOperationsSmoke -BaseUrl $OpsBaseUrl
   $authResults | Format-Table App, Route, Status, ContentType, LooksLikeLogin, Length -AutoSize
 }
 

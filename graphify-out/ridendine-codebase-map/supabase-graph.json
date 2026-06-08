@@ -371,6 +371,11 @@
       "type": "supabase_table"
     },
     {
+      "id": "table:driver_notification_preferences",
+      "label": "driver_notification_preferences",
+      "type": "supabase_table"
+    },
+    {
       "id": "rpc:update_updated_at_column",
       "label": "update_updated_at_column",
       "type": "supabase_rpc"
@@ -765,6 +770,12 @@
       "from": "table:driver_locations",
       "to": "table:driver_shifts",
       "label": "fk:shift_id",
+      "status": "mapped"
+    },
+    {
+      "from": "table:driver_notification_preferences",
+      "to": "table:drivers",
+      "label": "fk:driver_id",
       "status": "mapped"
     },
     {
@@ -1537,6 +1548,12 @@
     },
     {
       "from": "app:driver-app",
+      "to": "table:driver_notification_preferences",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
       "to": "table:drivers",
       "label": "uses table",
       "status": "mapped"
@@ -1550,6 +1567,78 @@
     {
       "from": "app:packages",
       "to": "table:drivers",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:driver_payout_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:driver_payout_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:driver_documents",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:driver_documents",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:driver_documents",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:platform_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:platform_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:platform_accounts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:driver_shifts",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:driver-app",
+      "to": "table:instant_payout_requests",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:ops-admin",
+      "to": "table:instant_payout_requests",
+      "label": "uses table",
+      "status": "mapped"
+    },
+    {
+      "from": "app:packages",
+      "to": "table:instant_payout_requests",
       "label": "uses table",
       "status": "mapped"
     },
@@ -1568,30 +1657,6 @@
     {
       "from": "app:packages",
       "to": "table:delivery_tracking_events",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:driver-app",
-      "to": "table:driver_payout_accounts",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:driver-app",
-      "to": "table:platform_accounts",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:ops-admin",
-      "to": "table:platform_accounts",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:packages",
-      "to": "table:platform_accounts",
       "label": "uses table",
       "status": "mapped"
     },
@@ -1694,18 +1759,6 @@
     {
       "from": "app:packages",
       "to": "table:payout_runs",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:ops-admin",
-      "to": "table:instant_payout_requests",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:packages",
-      "to": "table:instant_payout_requests",
       "label": "uses table",
       "status": "mapped"
     },
@@ -1832,12 +1885,6 @@
     {
       "from": "app:ops-admin",
       "to": "table:chef_documents",
-      "label": "uses table",
-      "status": "mapped"
-    },
-    {
-      "from": "app:ops-admin",
-      "to": "table:driver_documents",
       "label": "uses table",
       "status": "mapped"
     },
