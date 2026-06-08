@@ -24,7 +24,7 @@
 | T12 | `pnpm test:e2e:lifecycle` runs green against staging before production promote | Eng | |
 | T13 | `ENGINE_PROCESSOR_TOKEN` / `CRON_SECRET` set in production — required by SLA and offer processors | Eng | |
 | T14 | Distributed rate limiter (Upstash Redis) configured in production (`UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`). Per-instance in-memory rate limiter is dev-only. | Eng | |
-| T15 | Notification preferences DB migration `00026_notification_preferences.sql` applied before launch (Phase 10 deferred — currently localStorage only) | Eng | |
+| T15 | Driver notification preferences DB migration `00044_driver_notification_preferences.sql` applied before launch; Driver settings now save through `/api/driver/notification-preferences`. | Eng | |
 | T16 | Local cron runner (`scripts/local-cron.mjs`) replaced by Vercel Cron config in `vercel.json` for production | Eng | |
 
 ---

@@ -1,6 +1,6 @@
 # Runtime Proof Disposition
 
-Generated: 2026-06-08T01:16:44.641Z
+Generated: 2026-06-08T03:11:04.854Z
 
 This Phase 20/21 proof disposition audit assigns every remaining runtime proof gap to an explicit next proof action. It does not make new production calls or mutate data; it converts the remaining proof gaps into actionable buckets for future safe smoke, negative authorization, sample-data, or contract-only work.
 
@@ -9,7 +9,7 @@ This Phase 20/21 proof disposition audit assigns every remaining runtime proof g
 | Surface | Total discovered | Proof covered | Proof gaps | Dispositioned proof gaps | Unresolved |
 |---|---:|---:|---:|---:|---:|
 | Pages | 90 | 89 | 1 | 1 | 0 |
-| API route handlers | 121 | 121 | 0 | 0 | 0 |
+| API route handlers | 122 | 122 | 0 | 0 | 0 |
 
 ## Page Proof Gap Disposition
 

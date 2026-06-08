@@ -453,14 +453,19 @@ Expected: all pass.
 
 **Purpose:** Replace the current local-only notification settings with real driver preferences.
 
+**Status:** Completed on 2026-06-07. Verified with failing-first route and UI tests, DB migration contract test, Driver app typecheck, Driver app lint, Validation package typecheck, runtime wiring audit, and regenerated runtime wiring docs/Obsidian records.
+
 **Files:**
 - Create: `apps/driver-app/src/app/api/driver/notification-preferences/route.ts`
 - Modify: `apps/driver-app/src/components/settings/notification-preferences.tsx`
-- Modify: `packages/validation/src/schemas/driver-operations.ts`
+- Modify: `packages/validation/src/schemas/driver.ts`
+- Create: `supabase/migrations/00044_driver_notification_preferences.sql`
 - Modify: `docs/LAUNCH_CHECKLIST.md`
 - Test: `apps/driver-app/src/__tests__/notification-preferences-route.test.ts`
+- Test: `apps/driver-app/src/__tests__/notification-preferences.test.tsx`
+- Test: `packages/db/src/schema/phase0-business-engine.migration.test.ts`
 
-- [ ] **Step 1: Add route tests**
+- [x] **Step 1: Add route tests**
 
 Test:
 - unauthenticated returns `401`
@@ -468,15 +473,15 @@ Test:
 - PATCH validates known event/channel keys
 - PATCH stores preferences for the current driver only
 
-- [ ] **Step 2: Implement route**
+- [x] **Step 2: Implement route**
 
 Use existing driver session context. Store in the existing notification preference table if already migrated, otherwise add the smallest compatible migration only after confirming the schema in Supabase migrations.
 
-- [ ] **Step 3: Update settings UI**
+- [x] **Step 3: Update settings UI**
 
 Remove the copy that says preferences are stored locally. Load and save through the API.
 
-- [ ] **Step 4: Verify Phase 6**
+- [x] **Step 4: Verify Phase 6**
 
 Run:
 

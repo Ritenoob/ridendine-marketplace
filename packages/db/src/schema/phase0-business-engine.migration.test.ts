@@ -57,3 +57,23 @@ describe('Phase 5 migration contract (00020_ledger_entries_order_optional.sql)',
     expect(sql).toContain('ledger_entries');
   });
 });
+
+describe('Phase 6 migration contract (00044_driver_notification_preferences.sql)', () => {
+  const migrationPath = join(repoRoot, 'supabase', 'migrations', '00044_driver_notification_preferences.sql');
+  const sql = readFileSync(migrationPath, 'utf8');
+
+  it('defines driver notification preferences with owner-scoped RLS', () => {
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS driver_notification_preferences');
+    expect(sql).toContain('driver_id UUID PRIMARY KEY REFERENCES drivers(id) ON DELETE CASCADE');
+    expect(sql).toContain('ALTER TABLE driver_notification_preferences ENABLE ROW LEVEL SECURITY');
+    expect(sql).toContain('driver_notification_preferences_driver_select');
+    expect(sql).toContain('driver_notification_preferences_driver_insert');
+    expect(sql).toContain('driver_notification_preferences_driver_update');
+  });
+
+  it('allows canonical active platform staff through the shared RLS helper', () => {
+    expect(sql).toContain('driver_notification_preferences_ops_all');
+    expect(sql).toContain('public.is_platform_staff(auth.uid())');
+    expect(sql).not.toContain("platform_users.role IN ('ops_admin', 'support', 'finance')");
+  });
+});

@@ -14,6 +14,8 @@ type NotificationEvent =
 
 type Preferences = Record<NotificationEvent, Record<NotificationChannel, boolean>>;
 
+const API_PATH = '/api/driver/notification-preferences';
+
 const EVENTS: { key: NotificationEvent; label: string; description: string }[] = [
   { key: 'new_order', label: 'New Order', description: 'When a new order is available nearby' },
   { key: 'order_accepted', label: 'Order Accepted', description: 'When an order is accepted' },
@@ -23,8 +25,6 @@ const EVENTS: { key: NotificationEvent; label: string; description: string }[] =
   { key: 'payment_received', label: 'Payment Received', description: 'When you receive a payment' },
 ];
 
-const STORAGE_KEY = 'driver_notification_prefs';
-
 function buildDefaultPrefs(): Preferences {
   const defaults = {} as Preferences;
   for (const ev of EVENTS) {
@@ -33,30 +33,53 @@ function buildDefaultPrefs(): Preferences {
   return defaults;
 }
 
-function loadPrefs(): Preferences {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...buildDefaultPrefs(), ...JSON.parse(raw) };
-  } catch {
-    // Ignore
-  }
-  return buildDefaultPrefs();
-}
+function mergePrefs(value: unknown): Preferences {
+  const defaults = buildDefaultPrefs();
+  if (!value || typeof value !== 'object') return defaults;
 
-function savePrefs(prefs: Preferences): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
-  } catch {
-    // Ignore
+  const candidate = value as Partial<Preferences>;
+  for (const ev of EVENTS) {
+    const row = candidate[ev.key];
+    if (row && typeof row.email === 'boolean' && typeof row.sms === 'boolean') {
+      defaults[ev.key] = { email: row.email, sms: row.sms };
+    }
   }
+
+  return defaults;
 }
 
 export function NotificationPreferences() {
   const [prefs, setPrefs] = useState<Preferences>(buildDefaultPrefs);
-  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setPrefs(loadPrefs());
+    let active = true;
+
+    async function loadPrefs() {
+      try {
+        const response = await fetch(API_PATH);
+        const json = await response.json();
+        if (!active) return;
+
+        if (response.ok && json?.success) {
+          setPrefs(mergePrefs(json.data?.preferences));
+          setMessage(null);
+        } else {
+          setMessage('Could not load preferences. Defaults are shown.');
+        }
+      } catch {
+        if (active) setMessage('Could not load preferences. Defaults are shown.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void loadPrefs();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const toggle = (event: NotificationEvent, channel: NotificationChannel) => {
@@ -64,21 +87,40 @@ export function NotificationPreferences() {
       ...prev,
       [event]: { ...prev[event], [channel]: !prev[event][channel] },
     }));
-    setSaved(false);
+    setMessage(null);
   };
 
-  const handleSave = () => {
-    savePrefs(prefs);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage(null);
+    try {
+      const response = await fetch(API_PATH, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ preferences: prefs }),
+      });
+      const json = await response.json();
+
+      if (!response.ok || !json?.success) {
+        setMessage('Could not save preferences.');
+        return;
+      }
+
+      setPrefs(mergePrefs(json.data?.preferences));
+      setMessage('Saved!');
+      setTimeout(() => setMessage((current) => (current === 'Saved!' ? null : current)), 2500);
+    } catch {
+      setMessage('Could not save preferences.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="mt-6">
       <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Notification Preferences</h2>
       <p className="mt-1 text-[13px] text-[#6b7280]">
-        Choose how you want to be notified.{' '}
-        <span className="text-xs text-warning">(Stored locally — production will sync to DB)</span>
+        Choose how you want to be notified. Synced with your driver account.
       </p>
 
       <Card className="mt-3 border-0 shadow-sm">
@@ -103,6 +145,7 @@ export function NotificationPreferences() {
                       <button
                         type="button"
                         onClick={() => toggle(key, ch)}
+                        aria-label={`${label} ${ch.toUpperCase()}`}
                         className={`inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:shadow-focus ${
                           prefs[key][ch] ? 'bg-primary' : 'bg-surfaceMuted'
                         }`}
@@ -124,10 +167,19 @@ export function NotificationPreferences() {
         </div>
 
         <div className="mt-4 flex items-center gap-3">
-          <Button onClick={handleSave} className="rounded-lg bg-primary hover:bg-primaryHover">
-            Save Preferences
+          <Button
+            onClick={() => void handleSave()}
+            disabled={loading || saving}
+            className="rounded-lg bg-primary hover:bg-primaryHover"
+          >
+            {saving ? 'Saving...' : 'Save Preferences'}
           </Button>
-          {saved && <span className="text-[13px] text-success">Saved!</span>}
+          {loading && <span className="text-[13px] text-[#6b7280]">Loading preferences...</span>}
+          {message && (
+            <span className={`text-[13px] ${message === 'Saved!' ? 'text-success' : 'text-warning'}`}>
+              {message}
+            </span>
+          )}
         </div>
       </Card>
     </div>

@@ -136,6 +136,35 @@ export const offerActionSchema = z.object({
   reason: z.string().optional(),
 });
 
+export const driverNotificationEvents = [
+  'new_order',
+  'order_accepted',
+  'order_ready',
+  'delivery_offer',
+  'delivery_assigned',
+  'payment_received',
+] as const;
+
+export const driverNotificationChannels = ['email', 'sms'] as const;
+
+export const driverNotificationChannelPreferencesSchema = z.object({
+  email: z.boolean(),
+  sms: z.boolean(),
+}).strict();
+
+export const driverNotificationPreferencesSchema = z.object({
+  new_order: driverNotificationChannelPreferencesSchema,
+  order_accepted: driverNotificationChannelPreferencesSchema,
+  order_ready: driverNotificationChannelPreferencesSchema,
+  delivery_offer: driverNotificationChannelPreferencesSchema,
+  delivery_assigned: driverNotificationChannelPreferencesSchema,
+  payment_received: driverNotificationChannelPreferencesSchema,
+}).strict();
+
+export const driverNotificationPreferencesPatchSchema = z.object({
+  preferences: driverNotificationPreferencesSchema,
+}).strict();
+
 // Type exports
 export type CreateDriverProfileInput = z.infer<typeof createDriverProfileSchema>;
 export type UpdateDriverProfileInput = z.infer<typeof updateDriverProfileSchema>;
@@ -154,3 +183,7 @@ export type DriverDeliveryPatchInput = z.infer<typeof driverDeliveryPatchSchema>
 export type DriverDeliveryProofInput = z.infer<typeof driverDeliveryProofSchema>;
 export type DriverDeliveryIssueInput = z.infer<typeof driverDeliveryIssueSchema>;
 export type OfferActionInput = z.infer<typeof offerActionSchema>;
+export type DriverNotificationEvent = typeof driverNotificationEvents[number];
+export type DriverNotificationChannel = typeof driverNotificationChannels[number];
+export type DriverNotificationPreferencesInput = z.infer<typeof driverNotificationPreferencesSchema>;
+export type DriverNotificationPreferencesPatchInput = z.infer<typeof driverNotificationPreferencesPatchSchema>;

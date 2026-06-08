@@ -96,6 +96,7 @@ This document is the authoritative inventory of every cross-app data hop in Ride
 | Flag delivery issue | `POST /api/deliveries/[id]/issue` (`apps/driver-app/src/app/api/deliveries/[id]/issue/route.ts`) | Driver session + ownership | `{ issue_type, notes }` | `order_exceptions` row; ops sees in dispatch view |
 | GPS ping | `POST /api/location` (`apps/driver-app/src/app/api/location/route.ts`) | Driver session | `{ lat, lng, accuracy?, heading?, speed?, deliveryId? }` | `driver_presence` row updated; **if `deliveryId` present and active customer leg**, also triggers `engine.eta.refreshFromDriverPing` + `engine.events.broadcastPublic` (sanitized) to the customer's `order:{orderId}` channel |
 | Instant payout request | `POST /api/payouts/instant` (`apps/driver-app/src/app/api/payouts/instant/route.ts`) | Driver session | `{ amount_cents }` | `instant_payout_requests` queue (Phase 5: Stripe execution) |
+| Notification preferences | `GET/PATCH /api/driver/notification-preferences` (`apps/driver-app/src/app/api/driver/notification-preferences/route.ts`) | Driver session | `{ preferences }` on PATCH | `driver_notification_preferences.preferences` for the authenticated driver only |
 
 ### Server → Driver (Realtime)
 
