@@ -46,7 +46,7 @@ function createMockClient(deliveryData: Record<string, unknown> = {}) {
 }
 
 function createMockAudit() {
-  return { log: vi.fn().mockResolvedValue(null) };
+  return { log: vi.fn().mockResolvedValue(null), logStatusChange: vi.fn().mockResolvedValue(null) };
 }
 
 function createMockEvents() {
@@ -58,6 +58,60 @@ function createMockMasterOrderEngine() {
     syncFromDelivery: vi.fn().mockResolvedValue({ success: true }),
     transitionOrder: vi.fn().mockResolvedValue({ success: true }),
   } as unknown as MasterOrderEngine;
+}
+
+function createDeliveryStatusMockClient(deliveryData: Record<string, unknown> = {}) {
+  const delivery = {
+    id: 'delivery-1',
+    order_id: 'order-1',
+    driver_id: 'driver-1',
+    status: 'arrived_at_dropoff',
+    ...deliveryData,
+  };
+  const deliveryUpdatePayloads: Array<Record<string, unknown>> = [];
+
+  return {
+    deliveryUpdatePayloads,
+    from: vi.fn((table: string) => {
+      if (table === 'deliveries') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: delivery, error: null }),
+            }),
+          }),
+          update: vi.fn((payload: Record<string, unknown>) => {
+            deliveryUpdatePayloads.push(payload);
+            return {
+              eq: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({
+                    data: { ...delivery, ...payload },
+                    error: null,
+                  }),
+                }),
+              }),
+            };
+          }),
+        };
+      }
+      if (table === 'drivers') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({ data: { id: 'driver-1' }, error: null }),
+            }),
+          }),
+        };
+      }
+      return {
+        insert: vi.fn().mockResolvedValue({ error: null }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
+      };
+    }),
+  };
 }
 
 describe('DeliveryEngine', () => {
@@ -173,6 +227,30 @@ describe('DeliveryEngine', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid delivery transition');
+    });
+  });
+
+  describe('proof metadata persistence', () => {
+    it('stores customer signature URL when delivered proof includes a signature', async () => {
+      const statusClient = createDeliveryStatusMockClient();
+      engine = new DeliveryEngine(statusClient as any, audit as any, events as any, masterOrder);
+
+      const result = await engine.updateDeliveryStatus(
+        'delivery-1',
+        'delivered',
+        { userId: 'driver-user-1', role: 'driver', entityId: 'driver-1' },
+        {
+          proofUrl: 'https://example.com/dropoff.jpg',
+          signatureUrl: 'https://example.com/signature.jpg',
+        } as any
+      );
+
+      expect(result.success).toBe(true);
+      expect(statusClient.deliveryUpdatePayloads[0]).toMatchObject({
+        status: 'delivered',
+        dropoff_proof_url: 'https://example.com/dropoff.jpg',
+        customer_signature_url: 'https://example.com/signature.jpg',
+      });
     });
   });
 

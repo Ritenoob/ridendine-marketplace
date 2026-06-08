@@ -108,7 +108,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
   const [isDrawing, setIsDrawing] = useState(false);
 
   // Location tracking
-  useLocationTracker({
+  const locationTracker = useLocationTracker({
     driverId: delivery.driver_id || '',
     isOnline: true,
     deliveryId:
@@ -117,6 +117,24 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
         : null,
     updateInterval: 15000,
   });
+
+  const getLocationMetadata = () => {
+    const lat = locationTracker.lastLocation?.lat;
+    const lng = locationTracker.lastLocation?.lng;
+    if (
+      typeof lat !== 'number' ||
+      typeof lng !== 'number' ||
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      return {};
+    }
+    return { lat, lng };
+  };
 
   const getStatusSteps = () => {
     const steps = [
@@ -191,7 +209,11 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
       const response = await fetch(`/api/deliveries/${delivery.id}/issue`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ issueType, notes: trimmedNotes }),
+        body: JSON.stringify({
+          issueType,
+          notes: trimmedNotes,
+          ...getLocationMetadata(),
+        }),
       });
       const json = await response.json().catch(() => ({}));
 
@@ -254,6 +276,28 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
     }
   };
 
+  const submitDeliveryProof = async (
+    eventType: 'pickup' | 'dropoff',
+    proofUrl: string,
+    metadata: { notes?: string; signatureUrl?: string } = {}
+  ) => {
+    const response = await fetch(`/api/deliveries/${delivery.id}/proof`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventType,
+        proofUrl,
+        ...getLocationMetadata(),
+        ...metadata,
+      }),
+    });
+
+    if (!response.ok) {
+      const json = await response.json();
+      throw new Error(json.error || 'Failed to submit delivery proof');
+    }
+  };
+
   const handlePickupConfirm = async () => {
     if (!pickupPhoto) return;
     setIsUploading(true);
@@ -270,10 +314,16 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
         const json = await uploadRes.json();
         throw new Error(json.error || 'Upload failed');
       }
+      const uploadJson = await uploadRes.json();
+      if (typeof uploadJson.url !== 'string') {
+        throw new Error('Upload failed');
+      }
 
-      await advanceStatus('picked_up');
+      await submitDeliveryProof('pickup', uploadJson.url);
+      setStatus('picked_up');
       setShowPickupModal(false);
       setPickupPhoto(null);
+      router.refresh();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Failed to confirm pickup');
     } finally {
@@ -390,18 +440,19 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
     setErrorMessage(null);
 
     try {
-      // Upload photo proof if provided
-      let proofUrl: string | undefined;
-      if (photo) {
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dataUrl: photo, context: 'dropoff', deliveryId: delivery.id }),
-        });
-        if (uploadRes.ok) {
-          const uploadJson = await uploadRes.json();
-          proofUrl = uploadJson.url ?? undefined;
-        }
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl: photo, context: 'dropoff', deliveryId: delivery.id }),
+      });
+      if (!uploadRes.ok) {
+        const json = await uploadRes.json();
+        throw new Error(json.error || 'Upload failed');
+      }
+      const uploadJson = await uploadRes.json();
+      const proofUrl = uploadJson.url;
+      if (typeof proofUrl !== 'string') {
+        throw new Error('Upload failed');
       }
 
       // Upload signature if provided
@@ -412,27 +463,21 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ dataUrl: signature, context: 'signature', deliveryId: delivery.id }),
         });
-        if (sigRes.ok) {
-          const sigJson = await sigRes.json();
-          signatureUrl = sigJson.url ?? undefined;
+        if (!sigRes.ok) {
+          const json = await sigRes.json();
+          throw new Error(json.error || 'Signature upload failed');
+        }
+        const sigJson = await sigRes.json();
+        if (typeof sigJson.url === 'string') {
+          signatureUrl = sigJson.url;
         }
       }
 
-      const response = await fetch(`/api/deliveries/${delivery.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update_status',
-          status: 'delivered',
-          proofUrl: proofUrl ?? photo,
-          notes: signatureUrl ? `Signature: ${signatureUrl}` : signature ? 'Signature captured' : undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        const json = await response.json();
-        throw new Error(json.error || 'Failed to complete delivery');
-      }
+      await submitDeliveryProof(
+        'dropoff',
+        proofUrl,
+        signatureUrl ? { signatureUrl } : {}
+      );
 
       router.push('/');
       router.refresh();
@@ -451,151 +496,110 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
   const workStep = WORK_STEPS[status];
   const isPickupWork = status.includes('pickup') || status === 'accepted' || status === 'assigned';
 
-  return (
-    <div className="min-h-screen bg-background pb-24">
-      {errorMessage && (
-        <div className="p-4 pb-0">
-          <Card className="border border-danger/30 bg-dangerSoft p-3 text-sm text-danger">
-            {errorMessage}
-          </Card>
-        </div>
-      )}
-      {/* Header */}
-      <div className="bg-brand-600 p-6 text-white">
-        <div className="flex items-center justify-between">
+  const renderWorkPanel = () => (
+    <div className="p-4">
+      <Card className="border border-divider bg-white p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[14px] font-medium opacity-90">Active Delivery</p>
-            <p className="mt-1 text-[20px] font-bold tracking-tight">
-              {order?.order_number ?? 'Loading...'}
+            <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Delivery work</h2>
+            <p className="mt-1 text-[14px] leading-relaxed text-[#6b7280]">{workStep.guidance}</p>
+          </div>
+          <span className="rounded-full bg-infoSoft px-3 py-1 text-[12px] font-semibold text-info">
+            {workStep.focus}
+          </span>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-lg bg-surfaceMuted p-3">
+            <p className="text-[12px] font-medium uppercase text-[#6b7280]">Current step</p>
+            <p className="mt-1 text-[15px] font-semibold text-[#1a1a1a]">{workStep.label}</p>
+          </div>
+          <div className="rounded-lg bg-surfaceMuted p-3">
+            <p className="text-[12px] font-medium uppercase text-[#6b7280]">Next action</p>
+            <p className="mt-1 text-[15px] font-semibold text-[#1a1a1a]">
+              {status === 'arrived_at_dropoff' ? 'Complete Delivery' : action?.label ?? 'No action needed'}
             </p>
           </div>
-          <div className="rounded-lg bg-white/20 px-4 py-2">
-            <p className="text-[18px] font-bold">${delivery.driver_payout.toFixed(2)}</p>
-          </div>
         </div>
-      </div>
 
-      {/* Progress Steps */}
-      <div className="bg-white p-6">
-        <div className="flex items-center justify-between">
-          {steps.map((step, i) => (
-            <div key={step.id} className="flex items-center">
-              <div
-                className={`h-3 w-3 rounded-full transition-colors ${
-                  step.completed ? 'bg-[#22c55e]' : step.current ? 'bg-brand-500' : 'bg-[#e5e7eb]'
-                }`}
+        <button
+          type="button"
+          className="mt-4 w-full rounded-lg border border-danger/30 px-4 py-3 text-[14px] font-semibold text-danger transition-colors hover:bg-dangerSoft"
+          onClick={() => {
+            setShowIssuePanel((current) => !current);
+            setIssueError(null);
+            setIssueSuccess(null);
+          }}
+        >
+          {showIssuePanel ? 'Close issue report' : 'Report issue to Ops'}
+        </button>
+      </Card>
+    </div>
+  );
+
+  const renderIssuePanel = () => {
+    if (!showIssuePanel) return null;
+
+    return (
+      <div className="px-4 pb-4">
+        <Card className="border border-danger/20 bg-white p-4 shadow-sm">
+          <h3 className="text-[16px] font-semibold text-[#1a1a1a]">Send issue to Ops</h3>
+          <form className="mt-4 space-y-4" onSubmit={handleIssueSubmit}>
+            <label className="block">
+              <span className="text-[13px] font-medium text-[#374151]">Issue type</span>
+              <select
+                aria-label="Issue type"
+                value={issueType}
+                onChange={(event) => setIssueType(event.target.value as DeliveryIssueType)}
+                className="mt-1 w-full rounded-lg border border-divider bg-white px-3 py-2 text-[14px] text-[#1a1a1a]"
+              >
+                {ISSUE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="text-[13px] font-medium text-[#374151]">Issue notes</span>
+              <textarea
+                aria-label="Issue notes"
+                value={issueNotes}
+                onChange={(event) => setIssueNotes(event.target.value)}
+                rows={4}
+                maxLength={1000}
+                className="mt-1 w-full resize-none rounded-lg border border-divider px-3 py-2 text-[14px] text-[#1a1a1a]"
+                placeholder="Example: Chef needs another 20 minutes."
               />
-              {i < steps.length - 1 && (
-                <div
-                  className={`h-0.5 w-8 transition-colors ${step.completed ? 'bg-[#22c55e]' : 'bg-[#e5e7eb]'}`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-        <p className="mt-3 text-center text-[14px] font-semibold text-[#1a1a1a]">
-          {steps.find((s) => s.current)?.label}
-        </p>
-      </div>
+            </label>
 
-      {/* Delivery Work Panel */}
-      <div className="p-4">
-        <Card className="border border-divider bg-white p-4 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Delivery work</h2>
-              <p className="mt-1 text-[14px] leading-relaxed text-[#6b7280]">{workStep.guidance}</p>
-            </div>
-            <span className="rounded-full bg-infoSoft px-3 py-1 text-[12px] font-semibold text-info">
-              {workStep.focus}
-            </span>
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-lg bg-surfaceMuted p-3">
-              <p className="text-[12px] font-medium uppercase text-[#6b7280]">Current step</p>
-              <p className="mt-1 text-[15px] font-semibold text-[#1a1a1a]">{workStep.label}</p>
-            </div>
-            <div className="rounded-lg bg-surfaceMuted p-3">
-              <p className="text-[12px] font-medium uppercase text-[#6b7280]">Next action</p>
-              <p className="mt-1 text-[15px] font-semibold text-[#1a1a1a]">
-                {status === 'arrived_at_dropoff' ? 'Complete Delivery' : action?.label ?? 'No action needed'}
+            {issueError && (
+              <p className="rounded-lg bg-dangerSoft p-3 text-[13px] font-medium text-danger">
+                {issueError}
               </p>
-            </div>
-          </div>
+            )}
+            {issueSuccess && (
+              <p className="rounded-lg bg-successSoft p-3 text-[13px] font-medium text-success">
+                {issueSuccess}
+              </p>
+            )}
 
-          <button
-            type="button"
-            className="mt-4 w-full rounded-lg border border-danger/30 px-4 py-3 text-[14px] font-semibold text-danger transition-colors hover:bg-dangerSoft"
-            onClick={() => {
-              setShowIssuePanel((current) => !current);
-              setIssueError(null);
-              setIssueSuccess(null);
-            }}
-          >
-            {showIssuePanel ? 'Close issue report' : 'Report issue to Ops'}
-          </button>
+            <Button
+              type="submit"
+              disabled={isSubmittingIssue}
+              className="w-full rounded-lg bg-danger py-3 text-[14px] font-semibold text-white hover:opacity-90 disabled:opacity-60"
+            >
+              {isSubmittingIssue ? 'Sending...' : 'Send issue to Ops'}
+            </Button>
+          </form>
         </Card>
       </div>
+    );
+  };
 
-      {showIssuePanel && (
-        <div className="px-4 pb-4">
-          <Card className="border border-danger/20 bg-white p-4 shadow-sm">
-            <h3 className="text-[16px] font-semibold text-[#1a1a1a]">Send issue to Ops</h3>
-            <form className="mt-4 space-y-4" onSubmit={handleIssueSubmit}>
-              <label className="block">
-                <span className="text-[13px] font-medium text-[#374151]">Issue type</span>
-                <select
-                  aria-label="Issue type"
-                  value={issueType}
-                  onChange={(event) => setIssueType(event.target.value as DeliveryIssueType)}
-                  className="mt-1 w-full rounded-lg border border-divider bg-white px-3 py-2 text-[14px] text-[#1a1a1a]"
-                >
-                  {ISSUE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="text-[13px] font-medium text-[#374151]">Issue notes</span>
-                <textarea
-                  aria-label="Issue notes"
-                  value={issueNotes}
-                  onChange={(event) => setIssueNotes(event.target.value)}
-                  rows={4}
-                  maxLength={1000}
-                  className="mt-1 w-full resize-none rounded-lg border border-divider px-3 py-2 text-[14px] text-[#1a1a1a]"
-                  placeholder="Example: Chef needs another 20 minutes."
-                />
-              </label>
-
-              {issueError && (
-                <p className="rounded-lg bg-dangerSoft p-3 text-[13px] font-medium text-danger">
-                  {issueError}
-                </p>
-              )}
-              {issueSuccess && (
-                <p className="rounded-lg bg-successSoft p-3 text-[13px] font-medium text-success">
-                  {issueSuccess}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                disabled={isSubmittingIssue}
-                className="w-full rounded-lg bg-danger py-3 text-[14px] font-semibold text-white hover:opacity-90 disabled:opacity-60"
-              >
-                {isSubmittingIssue ? 'Sending...' : 'Send issue to Ops'}
-              </Button>
-            </form>
-          </Card>
-        </div>
-      )}
-
-      {/* Navigation Button */}
+  const renderRoutePanel = () => (
+    <>
       <div className="p-4">
         <Button
           variant="outline"
@@ -616,7 +620,6 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
         </Button>
       </div>
 
-      {/* Route Map */}
       <div className="p-4 pt-0">
         <RouteMap
           pickupLat={delivery.pickup_lat}
@@ -628,93 +631,64 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
           className="h-52 w-full rounded-2xl overflow-hidden border border-divider shadow-sm"
         />
       </div>
+    </>
+  );
 
-      {/* Destination Card */}
-      <div className="p-4 pt-0">
-        <Card className="border-0 shadow-sm">
-          {isPickupWork ? (
-            <>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-[#22c55e]" />
-                <h3 className="text-[17px] font-semibold text-[#1a1a1a]">Pickup</h3>
+  const renderContactPanel = () => (
+    <div className="p-4 pt-0">
+      <Card className="border-0 shadow-sm">
+        {isPickupWork ? (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-[#22c55e]" />
+              <h3 className="text-[17px] font-semibold text-[#1a1a1a]">Pickup</h3>
+            </div>
+            <p className="mt-3 text-[15px] font-medium text-[#1a1a1a]">Restaurant Location</p>
+            <p className="mt-1 text-[14px] leading-relaxed text-[#6b7280]">
+              {delivery.pickup_address}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4 rounded-lg"
+              onClick={() => window.open(`tel:${deliveryWithContact.pickup_phone || ''}`, '_self')}
+            >
+              Call Restaurant
+            </Button>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-[#ef4444]" />
+              <h3 className="text-[17px] font-semibold text-[#1a1a1a]">Dropoff</h3>
+            </div>
+            <p className="mt-3 text-[15px] font-medium text-[#1a1a1a]">Customer</p>
+            <p className="mt-1 text-[14px] leading-relaxed text-[#6b7280]">
+              {delivery.dropoff_address}
+            </p>
+            {order?.special_instructions && (
+              <div className="mt-4 rounded-lg bg-[#fef3c7] p-4">
+                <p className="text-[14px] leading-relaxed text-[#92400e]">
+                  Note: {order.special_instructions}
+                </p>
               </div>
-              <p className="mt-3 text-[15px] font-medium text-[#1a1a1a]">Restaurant Location</p>
-              <p className="mt-1 text-[14px] leading-relaxed text-[#6b7280]">
-                {delivery.pickup_address}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4 rounded-lg"
-                onClick={() => window.open(`tel:${deliveryWithContact.pickup_phone || ''}`, '_self')}
-              >
-                Call Restaurant
-              </Button>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-[#ef4444]" />
-                <h3 className="text-[17px] font-semibold text-[#1a1a1a]">Dropoff</h3>
-              </div>
-              <p className="mt-3 text-[15px] font-medium text-[#1a1a1a]">Customer</p>
-              <p className="mt-1 text-[14px] leading-relaxed text-[#6b7280]">
-                {delivery.dropoff_address}
-              </p>
-              {order?.special_instructions && (
-                <div className="mt-4 rounded-lg bg-[#fef3c7] p-4">
-                  <p className="text-[14px] leading-relaxed text-[#92400e]">
-                    Note: {order.special_instructions}
-                  </p>
-                </div>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4 rounded-lg"
-                onClick={() => window.open(`tel:${order?.customer_phone || ''}`, '_self')}
-              >
-                Call Customer
-              </Button>
-            </>
-          )}
-        </Card>
-      </div>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4 rounded-lg"
+              onClick={() => window.open(`tel:${order?.customer_phone || ''}`, '_self')}
+            >
+              Call Customer
+            </Button>
+          </>
+        )}
+      </Card>
+    </div>
+  );
 
-      {/* Order Details */}
-      <div className="p-4 pt-0">
-        <Card className="border-0 shadow-sm">
-          <h3 className="text-[17px] font-semibold text-[#1a1a1a]">Order Details</h3>
-          <div className="mt-4 space-y-2">
-            <div className="flex justify-between text-[14px]">
-              <span className="text-[#6b7280]">Distance</span>
-              <span className="font-medium text-[#1a1a1a]">
-                {delivery.distance_km?.toFixed(1) ?? '—'} km
-              </span>
-            </div>
-            <div className="flex justify-between text-[14px]">
-              <span className="text-[#6b7280]">Delivery Fee</span>
-              <span className="font-medium text-[#1a1a1a]">
-                ${delivery.delivery_fee.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between text-[14px]">
-              <span className="text-[#6b7280]">Tip</span>
-              <span className="font-medium text-[#1a1a1a]">
-                ${(deliveryWithContact.driver_tip || 0).toFixed(2)}
-              </span>
-            </div>
-            <div className="border-t pt-2 flex justify-between text-[14px]">
-              <span className="text-[#6b7280]">Your Earnings</span>
-              <span className="font-semibold text-[#22c55e]">
-                ${delivery.driver_payout.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Action Button */}
+  const renderProofPanel = () => (
+    <>
       <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg">
         {status === 'arrived_at_dropoff' ? (
           <Button
@@ -733,7 +707,6 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
         ) : null}
       </div>
 
-      {/* Pickup Confirmation Modal */}
       {showPickupModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6">
@@ -792,7 +765,6 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
         </div>
       )}
 
-      {/* Completion Modal */}
       {showCompletionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6">
@@ -801,7 +773,6 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
               Please take a photo and collect customer signature
             </p>
 
-            {/* Photo Capture */}
             <div className="mt-4">
               <p className="text-sm font-medium text-text">Proof of Delivery Photo</p>
               <input
@@ -838,7 +809,6 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
               )}
             </div>
 
-            {/* Signature Pad */}
             <div className="mt-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-text">Customer Signature (optional)</p>
@@ -863,7 +833,6 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
               />
             </div>
 
-            {/* Action Buttons */}
             <div className="mt-6 flex gap-3">
               <Button
                 variant="outline"
@@ -883,6 +852,93 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
           </div>
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      {errorMessage && (
+        <div className="p-4 pb-0">
+          <Card className="border border-danger/30 bg-dangerSoft p-3 text-sm text-danger">
+            {errorMessage}
+          </Card>
+        </div>
+      )}
+      <div className="bg-brand-600 p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[14px] font-medium opacity-90">Active Delivery</p>
+            <p className="mt-1 text-[20px] font-bold tracking-tight">
+              {order?.order_number ?? 'Loading...'}
+            </p>
+          </div>
+          <div className="rounded-lg bg-white/20 px-4 py-2">
+            <p className="text-[18px] font-bold">${delivery.driver_payout.toFixed(2)}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white p-6">
+        <div className="flex items-center justify-between">
+          {steps.map((step, i) => (
+            <div key={step.id} className="flex items-center">
+              <div
+                className={`h-3 w-3 rounded-full transition-colors ${
+                  step.completed ? 'bg-[#22c55e]' : step.current ? 'bg-brand-500' : 'bg-[#e5e7eb]'
+                }`}
+              />
+              {i < steps.length - 1 && (
+                <div
+                  className={`h-0.5 w-8 transition-colors ${step.completed ? 'bg-[#22c55e]' : 'bg-[#e5e7eb]'}`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-center text-[14px] font-semibold text-[#1a1a1a]">
+          {steps.find((s) => s.current)?.label}
+        </p>
+      </div>
+
+      {renderWorkPanel()}
+      {renderIssuePanel()}
+      {renderRoutePanel()}
+      {renderContactPanel()}
+
+      {/* Order Details */}
+      <div className="p-4 pt-0">
+        <Card className="border-0 shadow-sm">
+          <h3 className="text-[17px] font-semibold text-[#1a1a1a]">Order Details</h3>
+          <div className="mt-4 space-y-2">
+            <div className="flex justify-between text-[14px]">
+              <span className="text-[#6b7280]">Distance</span>
+              <span className="font-medium text-[#1a1a1a]">
+                {delivery.distance_km?.toFixed(1) ?? '—'} km
+              </span>
+            </div>
+            <div className="flex justify-between text-[14px]">
+              <span className="text-[#6b7280]">Delivery Fee</span>
+              <span className="font-medium text-[#1a1a1a]">
+                ${delivery.delivery_fee.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between text-[14px]">
+              <span className="text-[#6b7280]">Tip</span>
+              <span className="font-medium text-[#1a1a1a]">
+                ${(deliveryWithContact.driver_tip || 0).toFixed(2)}
+              </span>
+            </div>
+            <div className="border-t pt-2 flex justify-between text-[14px]">
+              <span className="text-[#6b7280]">Your Earnings</span>
+              <span className="font-semibold text-[#22c55e]">
+                ${delivery.driver_payout.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {renderProofPanel()}
     </div>
   );
 }

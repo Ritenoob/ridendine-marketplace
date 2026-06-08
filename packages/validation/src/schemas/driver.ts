@@ -97,6 +97,15 @@ export const driverDeliveryPatchSchema = z.object({
   newStatus: z.string().optional(),
 });
 
+const coordinatePairRefinement = (value: { lat?: number; lng?: number }) =>
+  (value.lat === undefined && value.lng === undefined) ||
+  (value.lat !== undefined && value.lng !== undefined);
+
+const coordinatePairMessage = {
+  message: 'Latitude and longitude must be provided together',
+  path: ['lng'],
+};
+
 export const driverDeliveryProofSchema = z.object({
   eventType: z.enum(['pickup', 'dropoff']),
   proofUrl: z.string().url(),
@@ -104,7 +113,7 @@ export const driverDeliveryProofSchema = z.object({
   lng: z.number().min(-180).max(180).optional(),
   notes: z.string().max(500).optional(),
   signatureUrl: z.string().url().optional(),
-});
+}).refine(coordinatePairRefinement, coordinatePairMessage);
 
 export const driverDeliveryIssueSchema = z.object({
   issueType: z.enum([
@@ -119,7 +128,7 @@ export const driverDeliveryIssueSchema = z.object({
   notes: z.string().min(1).max(1000),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
-});
+}).refine(coordinatePairRefinement, coordinatePairMessage);
 
 export const offerActionSchema = z.object({
   attemptId: z.string().min(1, 'Attempt ID is required'),

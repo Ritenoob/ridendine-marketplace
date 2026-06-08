@@ -55,23 +55,57 @@ describe('POST /api/deliveries/[id]/proof', () => {
     expect(res.status).toBe(403);
   });
 
-  it('routes dropoff events to completeDeliveredOrder', async () => {
+  it('rejects partial coordinate metadata', async () => {
     const res = await POST(
-      buildRequest({ eventType: 'dropoff', proofUrl: 'https://example.com/p.jpg', notes: 'Left at door' }) as never,
+      buildRequest({
+        eventType: 'dropoff',
+        proofUrl: 'https://example.com/p.jpg',
+        lat: 43.2601,
+      }) as never,
+      params,
+    );
+
+    expect(res.status).toBe(400);
+    expect(mockCompleteDeliveredOrder).not.toHaveBeenCalled();
+    expect(mockUpdateDeliveryStatus).not.toHaveBeenCalled();
+  });
+
+  it('routes dropoff events to completeDeliveredOrder with proof metadata', async () => {
+    const res = await POST(
+      buildRequest({
+        eventType: 'dropoff',
+        proofUrl: 'https://example.com/p.jpg',
+        notes: 'Left at door',
+        signatureUrl: 'https://example.com/signature.jpg',
+        lat: 43.2601,
+        lng: -79.8712,
+      }) as never,
       params,
     );
     expect(res.status).toBe(200);
     expect(mockCompleteDeliveredOrder).toHaveBeenCalledWith(
       'del-1',
       expect.objectContaining({ role: 'driver' }),
-      expect.objectContaining({ proofUrl: 'https://example.com/p.jpg', notes: 'Left at door' }),
+      expect.objectContaining({
+        proofUrl: 'https://example.com/p.jpg',
+        notes: 'Left at door',
+        signatureUrl: 'https://example.com/signature.jpg',
+        lat: 43.2601,
+        lng: -79.8712,
+      }),
     );
     expect(mockUpdateDeliveryStatus).not.toHaveBeenCalled();
   });
 
-  it('routes pickup events to updateDeliveryStatus(picked_up)', async () => {
+  it('routes pickup events to updateDeliveryStatus(picked_up) with proof metadata', async () => {
     const res = await POST(
-      buildRequest({ eventType: 'pickup', proofUrl: 'https://example.com/p.jpg' }) as never,
+      buildRequest({
+        eventType: 'pickup',
+        proofUrl: 'https://example.com/p.jpg',
+        notes: 'Order matched ticket',
+        lat: 43.2601,
+        lng: -79.8712,
+      }) as never,
       params,
     );
     expect(res.status).toBe(200);
@@ -79,7 +113,12 @@ describe('POST /api/deliveries/[id]/proof', () => {
       'del-1',
       'picked_up',
       expect.objectContaining({ role: 'driver' }),
-      expect.any(Object),
+      expect.objectContaining({
+        proofUrl: 'https://example.com/p.jpg',
+        notes: 'Order matched ticket',
+        lat: 43.2601,
+        lng: -79.8712,
+      }),
     );
     expect(mockCompleteDeliveredOrder).not.toHaveBeenCalled();
   });

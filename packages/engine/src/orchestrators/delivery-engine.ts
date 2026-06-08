@@ -443,7 +443,7 @@ export class DeliveryEngine {
     deliveryId: string,
     status: string,
     actor: ActorContext,
-    metadata?: { proofUrl?: string; notes?: string }
+    metadata?: { proofUrl?: string; notes?: string; signatureUrl?: string; lat?: number; lng?: number }
   ): Promise<{ success: boolean; data?: { id: string; status: string }; error?: { code: string; message: string } }> {
     const { data: delivery, error: deliveryError } = await this.client
       .from('deliveries')
@@ -501,6 +501,7 @@ export class DeliveryEngine {
     if (status === 'delivered') {
       updateData.actual_dropoff_at = now;
       if (metadata?.proofUrl) updateData.dropoff_proof_url = metadata.proofUrl;
+      if (metadata?.signatureUrl) updateData.customer_signature_url = metadata.signatureUrl;
       if (this.sla) {
         await this.sla.completeTimer('delivery', deliveryId, 'driver_delivery' as SLAType);
       }

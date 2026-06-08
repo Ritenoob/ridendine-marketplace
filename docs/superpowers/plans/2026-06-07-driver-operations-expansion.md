@@ -339,6 +339,8 @@ Expected: all pass.
 
 **Purpose:** Make every active delivery a guided workflow: pickup, proof, dropoff, exceptions, customer/chef contact, and Ops feedback.
 
+**Status:** Completed on 2026-06-07. Verified with delivery workflow tests, proof/issue route tests, delivery engine proof metadata tests, Driver app full tests, Driver app lint, Driver app typecheck, Engine typecheck, Validation typecheck, Ops app typecheck, `test:wiring-fixes`, and authenticated production contract smoke.
+
 **Files:**
 - Modify: `apps/driver-app/src/app/delivery/[id]/components/DeliveryDetail.tsx`
 - Modify: `apps/driver-app/src/app/api/deliveries/[id]/proof/route.ts`
@@ -347,7 +349,7 @@ Expected: all pass.
 - Test: `apps/driver-app/src/__tests__/deliveries-proof-route.test.ts`
 - Test: `apps/driver-app/src/__tests__/deliveries-issue-route.test.ts`
 
-- [ ] **Step 1: Expand workflow tests**
+- [x] **Step 1: Expand workflow tests**
 
 Add tests for:
 - required pickup proof before `picked_up`
@@ -357,7 +359,7 @@ Add tests for:
 - customer instructions are visible only on dropoff leg
 - restaurant contact is visible only on pickup leg
 
-- [ ] **Step 2: Convert delivery detail to a task list**
+- [x] **Step 2: Convert delivery detail to a task list**
 
 Split visible UI inside the existing file into small local render functions:
 - `renderWorkPanel`
@@ -368,15 +370,15 @@ Split visible UI inside the existing file into small local render functions:
 
 Do not move files in this phase unless the file becomes impossible to test.
 
-- [ ] **Step 3: Route proof through the proof endpoint**
+- [x] **Step 3: Route proof through the proof endpoint**
 
 Use `POST /api/deliveries/[id]/proof` for pickup and dropoff proof instead of duplicating completion behavior through `PATCH /api/deliveries/[id]`.
 
-- [ ] **Step 4: Add location to issue submissions**
+- [x] **Step 4: Add location to issue submissions**
 
 When `useLocationTracker` has a last known location, include `lat` and `lng` in issue submissions. The existing issue route already validates optional coordinates.
 
-- [ ] **Step 5: Verify Phase 4**
+- [x] **Step 5: Verify Phase 4**
 
 Run:
 

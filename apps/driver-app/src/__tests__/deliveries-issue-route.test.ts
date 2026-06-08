@@ -108,6 +108,45 @@ describe('POST /api/deliveries/[id]/issue', () => {
     });
   });
 
+  it('rejects partial coordinate metadata', async () => {
+    const admin = buildAdminClientMock({ delivery: { id: 'del-1', order_id: 'ord-1' } });
+    mockCreateAdminClient.mockReturnValue(admin);
+
+    const res = await POST(
+      buildRequest({
+        issueType: 'wrong_address',
+        notes: 'Map pin and street number do not match',
+        lng: -79.8712,
+      }) as never,
+      params,
+    );
+
+    expect(res.status).toBe(400);
+    expect(admin.__inserted.payload).toBeUndefined();
+  });
+
+  it('persists optional driver coordinates in internal notes', async () => {
+    const admin = buildAdminClientMock({ delivery: { id: 'del-1', order_id: 'ord-1' } });
+    mockCreateAdminClient.mockReturnValue(admin);
+
+    const res = await POST(
+      buildRequest({
+        issueType: 'wrong_address',
+        notes: 'Map pin and street number do not match',
+        lat: 43.2601,
+        lng: -79.8712,
+      }) as never,
+      params,
+    );
+
+    expect(res.status).toBe(201);
+    expect(JSON.parse(admin.__inserted.payload?.internal_notes as string)).toMatchObject({
+      reportedBy: 'driver',
+      lat: 43.2601,
+      lng: -79.8712,
+    });
+  });
+
   it('returns 404 when the delivery row cannot be found', async () => {
     mockCreateAdminClient.mockReturnValue(buildAdminClientMock({ delivery: null }));
 
