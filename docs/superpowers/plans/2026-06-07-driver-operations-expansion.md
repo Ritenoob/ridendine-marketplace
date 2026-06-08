@@ -395,17 +395,22 @@ Expected: all pass.
 
 **Purpose:** Give drivers a clear financial picture and remove confusing currency/account gaps.
 
+**Status:** Completed on 2026-06-07. Verified with failing-first instant payout fee regressions, focused Phase 5 tests, full Driver app tests, Driver app lint, Driver app typecheck, Engine typecheck, Engine payout-risk test, wiring checks, authenticated production contract smoke, `git diff --check`, and independent subagent review. Known residual output: existing React Testing Library `ReactDOMTestUtils.act` deprecation warnings.
+
 **Files:**
 - Modify: `apps/driver-app/src/app/earnings/components/EarningsView.tsx`
 - Modify: `apps/driver-app/src/app/api/earnings/route.ts`
 - Modify: `apps/driver-app/src/app/settings/settings-client.tsx`
 - Modify: `apps/driver-app/src/app/api/payouts/instant/route.ts`
+- Modify: `packages/engine/src/services/payout-risk.service.ts`
 - Test: `apps/driver-app/src/__tests__/payouts-setup-get-route.test.ts`
 - Test: `apps/driver-app/src/__tests__/payouts-setup-route.test.ts`
 - Create: `apps/driver-app/src/__tests__/earnings-route.test.ts`
 - Create: `apps/driver-app/src/__tests__/earnings-view.test.tsx`
+- Create: `apps/driver-app/src/__tests__/payouts-instant-route.test.ts`
+- Create: `packages/engine/src/services/payout-risk.service.test.ts`
 
-- [ ] **Step 1: Add earnings route tests**
+- [x] **Step 1: Add earnings route tests**
 
 Test route returns:
 - today count and earnings
@@ -416,11 +421,11 @@ Test route returns:
 - pending instant payout requests
 - payout account status
 
-- [ ] **Step 2: Fix currency copy**
+- [x] **Step 2: Fix currency copy**
 
 Replace "Amount (USD)" with dynamic currency copy from the API. For Ridendine Canada, display CAD unless the ledger account says otherwise.
 
-- [ ] **Step 3: Add earnings breakdown**
+- [x] **Step 3: Add earnings breakdown**
 
 Show:
 - base delivery pay
@@ -431,7 +436,7 @@ Show:
 - pending payout requests
 - next scheduled payout explanation
 
-- [ ] **Step 4: Add route and UI verification**
+- [x] **Step 4: Add route and UI verification**
 
 Run:
 

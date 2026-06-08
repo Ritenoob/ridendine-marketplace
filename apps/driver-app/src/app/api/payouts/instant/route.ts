@@ -6,6 +6,34 @@ import { getDriverActorContext, errorResponse, successResponse } from '@/lib/eng
 
 export const dynamic = 'force-dynamic';
 
+type PendingInstantPayoutRow = {
+  amount_cents?: number | null;
+  fee_cents?: number | null;
+};
+
+function normalizeCurrency(currency?: string | null): string {
+  const normalized = currency?.trim().toUpperCase();
+  if (!normalized) return 'CAD';
+
+  try {
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: normalized }).format(0);
+    return normalized;
+  } catch {
+    return 'CAD';
+  }
+}
+
+function pendingHoldCents(rows: PendingInstantPayoutRow[]): number {
+  return rows.reduce(
+    (sum, row) => sum + Number(row.amount_cents ?? 0) + Number(row.fee_cents ?? 0),
+    0
+  );
+}
+
+function instantFeeCents(amountCents: number): number {
+  return Math.round((amountCents * 150) / 10_000);
+}
+
 export async function POST(request: NextRequest) {
   try {
     const ctx = await getDriverActorContext({ requireApproved: true });
@@ -46,11 +74,27 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     const bal = Number((acct as { balance_cents?: number } | null)?.balance_cents ?? 0);
-    if (amountCents > bal) {
-      return errorResponse('INSUFFICIENT_BALANCE', 'Amount exceeds available payable balance', 400);
+    const { data: pendingRows, error: pendingError } = await (db as SupabaseClient & { from: (t: string) => SupabaseClient['from'] })
+      .from('instant_payout_requests' as never)
+      .select('amount_cents, fee_cents')
+      .eq('driver_id', ctx.driverId)
+      .eq('status', 'pending');
+
+    if (pendingError) {
+      return errorResponse('FINANCIAL_QUERY_ERROR', 'Could not verify pending instant payout requests', 500);
     }
 
-    const currency = (acct as { currency?: string } | null)?.currency || 'CAD';
+    const netAvailableCents = Math.max(0, bal - pendingHoldCents((pendingRows ?? []) as PendingInstantPayoutRow[]));
+    const currentFeeCents = instantFeeCents(amountCents);
+    if (amountCents + currentFeeCents > netAvailableCents) {
+      return errorResponse(
+        'INSUFFICIENT_BALANCE',
+        'Amount plus instant payout fee exceeds available payable balance after pending instant payout requests and fees',
+        400
+      );
+    }
+
+    const currency = normalizeCurrency((acct as { currency?: string } | null)?.currency);
     const engine = createCentralEngine(db);
     const created = await engine.payoutAutomation.requestInstantPayout({
       driverId: ctx.driverId,

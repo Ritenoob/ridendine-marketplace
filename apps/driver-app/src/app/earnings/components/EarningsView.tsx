@@ -9,7 +9,93 @@ interface EarningsViewProps {
   deliveries: Delivery[];
   /** Ledger-derived driver_payable balance (cents). */
   availableBalanceCents?: number;
+  currency?: string;
   instantPayoutsEnabled?: boolean;
+  pendingInstantPayoutRequests?: PendingInstantPayoutRequest[];
+  payoutAccountStatus?: PayoutAccountStatus;
+}
+
+type DeliveryWithEarningDetails = Delivery & {
+  base_amount?: number | null;
+  baseAmount?: number | null;
+  base_delivery_pay?: number | null;
+  baseDeliveryPay?: number | null;
+  tip_amount?: number | null;
+  tipAmount?: number | null;
+  bonus_amount?: number | null;
+  bonusAmount?: number | null;
+  adjustment_amount?: number | null;
+  adjustmentAmount?: number | null;
+  adjustment_cents?: number | null;
+  orders?: { tip?: number | null } | null;
+};
+
+type PendingInstantPayoutRequest = {
+  id: string;
+  amountCents: number;
+  feeCents: number;
+  status: string;
+  requestedAt: string | null;
+};
+
+type PayoutAccountStatus = {
+  connected: boolean;
+  status: string;
+  payoutsEnabled: boolean;
+  chargesEnabled: boolean;
+  onboardingCompletedAt: string | null;
+};
+
+function normalizeCurrency(currency: string): string {
+  const normalized = currency.trim().toUpperCase();
+  if (!normalized) return 'CAD';
+
+  try {
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: normalized }).format(0);
+    return normalized;
+  } catch {
+    return 'CAD';
+  }
+}
+
+function centsToMajor(cents: number): number {
+  return cents / 100;
+}
+
+function getNumericField(delivery: DeliveryWithEarningDetails, fields: Array<keyof DeliveryWithEarningDetails>) {
+  for (const field of fields) {
+    const value = delivery[field];
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+  }
+  return 0;
+}
+
+function getEarningsBreakdown(deliveries: Delivery[]) {
+  return deliveries.reduce(
+    (breakdown, delivery) => {
+      const detailed = delivery as DeliveryWithEarningDetails;
+      const tip = getNumericField(detailed, ['tip_amount', 'tipAmount']) + (detailed.orders?.tip ?? 0);
+      const bonus = getNumericField(detailed, ['bonus_amount', 'bonusAmount']);
+      const adjustment =
+        getNumericField(detailed, ['adjustment_amount', 'adjustmentAmount']) +
+        centsToMajor(getNumericField(detailed, ['adjustment_cents']));
+      const explicitBase = getNumericField(detailed, [
+        'base_amount',
+        'baseAmount',
+        'base_delivery_pay',
+        'baseDeliveryPay',
+      ]);
+      const base = explicitBase || Math.max(delivery.driver_payout - tip - bonus - adjustment, 0);
+
+      return {
+        base: breakdown.base + base,
+        tips: breakdown.tips + tip,
+        bonuses: breakdown.bonuses + bonus,
+        adjustments: breakdown.adjustments + adjustment,
+      };
+    },
+    { base: 0, tips: 0, bonuses: 0, adjustments: 0 }
+  );
 }
 
 function getWeeklyEarnings(deliveries: Delivery[]) {
@@ -53,13 +139,40 @@ function instantFeeCents(amountCents: number): number {
   return Math.round((amountCents * 150) / 10_000);
 }
 
+function getPendingHoldCents(requests: PendingInstantPayoutRequest[]): number {
+  return requests.reduce((sum, request) => sum + request.amountCents + request.feeCents, 0);
+}
+
 export default function EarningsView({
   deliveries,
   availableBalanceCents = 0,
+  currency = 'CAD',
   instantPayoutsEnabled = false,
+  pendingInstantPayoutRequests = [],
+  payoutAccountStatus = {
+    connected: false,
+    status: 'not_started',
+    payoutsEnabled: false,
+    chargesEnabled: false,
+    onboardingCompletedAt: null,
+  },
 }: EarningsViewProps) {
+  const displayCurrency = normalizeCurrency(currency);
+  const formatMoney = (amount: number) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: displayCurrency,
+      currencyDisplay: 'symbol',
+    }).format(amount);
   const weeklyEarnings = getWeeklyEarnings(deliveries);
   const todayDeliveries = getTodayDeliveries(deliveries);
+  const breakdown = getEarningsBreakdown(deliveries);
+  const pendingInstantPayoutTotalCents = pendingInstantPayoutRequests.reduce(
+    (sum, request) => sum + request.amountCents,
+    0
+  );
+  const pendingInstantPayoutHoldCents = getPendingHoldCents(pendingInstantPayoutRequests);
+  const netAvailableCents = Math.max(0, availableBalanceCents - pendingInstantPayoutHoldCents);
 
   const totalWeek = weeklyEarnings.reduce((sum, d) => sum + d.amount, 0);
   const totalDeliveries = weeklyEarnings.reduce((sum, d) => sum + d.deliveries, 0);
@@ -75,8 +188,9 @@ export default function EarningsView({
       setInstantMsg('Enter a valid dollar amount.');
       return;
     }
-    if (cents > availableBalanceCents) {
-      setInstantMsg('Amount exceeds available balance.');
+    const currentFeeCents = instantFeeCents(cents);
+    if (cents + currentFeeCents > netAvailableCents) {
+      setInstantMsg('Amount exceeds available balance after pending instant payouts and fees.');
       return;
     }
     setBusy(true);
@@ -122,7 +236,7 @@ export default function EarningsView({
           </div>
 
           <p className="mt-6 text-[40px] font-bold leading-tight text-[#22c55e]">
-            ${totalWeek.toFixed(2)}
+            {formatMoney(totalWeek)}
           </p>
 
           {/* Bar Chart */}
@@ -174,7 +288,7 @@ export default function EarningsView({
                   </div>
                   <div className="text-right">
                     <p className="text-[17px] font-semibold text-[#1a1a1a]">
-                      ${delivery.driver_payout.toFixed(2)}
+                      {formatMoney(delivery.driver_payout)}
                     </p>
                     <p className="mt-1 text-[13px] text-[#6b7280]">
                       {delivery.distance_km?.toFixed(1) ?? '—'} km
@@ -190,18 +304,49 @@ export default function EarningsView({
       {/* Payout Info */}
       <div className="p-4 pt-0">
         <Card className="border-0 shadow-sm">
-          <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Next Payout</h2>
+          <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Delivery pay estimate</h2>
+          <p className="mt-2 text-[13px] leading-relaxed text-[#6b7280]">
+            This delivery-history estimate treats driver payout as base delivery pay unless explicit tip, bonus, or
+            adjustment fields are available.
+          </p>
+          <div className="mt-4 space-y-3">
+            {[
+              ['Base delivery pay', breakdown.base],
+              ['Tips', breakdown.tips],
+              ['Bonuses', breakdown.bonuses],
+              ['Adjustments', breakdown.adjustments],
+            ].map(([label, amount]) => (
+              <div key={label} className="flex items-center justify-between text-[14px]">
+                <span className="text-[#6b7280]">{label}</span>
+                <span className="font-semibold text-[#1a1a1a]">{formatMoney(amount as number)}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Payout Info */}
+      <div className="p-4 pt-0">
+        <Card className="border-0 shadow-sm">
+          <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Next scheduled payout</h2>
           <div className="mt-4 flex items-center justify-between">
             <div>
               <p className="text-[32px] font-bold leading-tight text-[#1a1a1a]">
-                ${totalWeek.toFixed(2)}
+                {formatMoney(netAvailableCents / 100)}
               </p>
-              <p className="mt-1 text-[14px] text-[#6b7280]">Scheduled payouts (see Settings)</p>
+              <p className="mt-1 text-[14px] text-[#6b7280]">
+                Net of pending instant payout requests and fees. Delivery earnings this week: {formatMoney(totalWeek)}.
+              </p>
             </div>
             <Badge variant="info" className="bg-[#eff6ff] text-[#1e40af]">
               Weekly
             </Badge>
           </div>
+          <p className="mt-3 text-[13px] leading-relaxed text-[#6b7280]">
+            {payoutAccountStatus.connected
+              ? `Your payout account is ${payoutAccountStatus.status}.`
+              : 'Set up your payout account before scheduled or instant payouts can move funds.'}
+          </p>
         </Card>
       </div>
 
@@ -209,13 +354,37 @@ export default function EarningsView({
         <Card className="border-0 shadow-sm">
           <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Available balance</h2>
           <p className="mt-1 text-[28px] font-bold text-[#15803d]">
-            ${(availableBalanceCents / 100).toFixed(2)}
+            {formatMoney(netAvailableCents / 100)}
           </p>
           <p className="mt-2 text-[13px] leading-relaxed text-[#6b7280]">
-            From your driver payable ledger account (same source ops uses for payouts).
+            Available to request after pending instant payout requests and fees.
           </p>
+          <p className="mt-1 text-[13px] leading-relaxed text-[#6b7280]">
+            {formatMoney(availableBalanceCents / 100)} ledger balance in your {displayCurrency} driver payable account.
+          </p>
+          {pendingInstantPayoutTotalCents > 0 ? (
+            <p className="mt-2 text-[13px] text-[#6b7280]">
+              {formatMoney(pendingInstantPayoutTotalCents / 100)} is already requested as an instant payout.
+            </p>
+          ) : null}
         </Card>
       </div>
+
+      {pendingInstantPayoutRequests.length > 0 ? (
+        <div className="p-4 pt-0">
+          <Card className="border-0 shadow-sm">
+            <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Pending instant payout requests</h2>
+            <div className="mt-3 space-y-2">
+              {pendingInstantPayoutRequests.map((request) => (
+                <div key={request.id} className="flex items-center justify-between text-[13px]">
+                  <span className="text-[#6b7280]">{formatMoney(request.amountCents / 100)} requested</span>
+                  <span className="font-medium text-[#1a1a1a]">Fee {formatMoney(request.feeCents / 100)}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      ) : null}
 
       {instantPayoutsEnabled ? (
         <div className="p-4 pt-0">
@@ -227,7 +396,7 @@ export default function EarningsView({
             </p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
               <label className="flex-1 text-[13px] text-[#374151]">
-                Amount (USD)
+                Amount ({displayCurrency})
                 <input
                   type="number"
                   min={0}
@@ -244,10 +413,15 @@ export default function EarningsView({
             </div>
             {previewCents > 0 ? (
               <p className="mt-3 text-[13px] text-[#6b7280]">
-                Estimated fee: <span className="font-semibold text-[#1a1a1a]">${(previewFee / 100).toFixed(2)}</span>{' '}
+                <span>Instant payout fee preview</span>:{' '}
+                <span className="font-semibold text-[#1a1a1a]">{formatMoney(previewFee / 100)}</span>{' '}
                 (1.5%)
               </p>
-            ) : null}
+            ) : (
+              <p className="mt-3 text-[13px] text-[#6b7280]">
+                <span>Instant payout fee preview</span>: {formatMoney(0)} until you enter an amount.
+              </p>
+            )}
             {instantMsg ? <p className="mt-3 text-[13px] text-[#b45309]">{instantMsg}</p> : null}
             <Link href="/settings" className="mt-4 inline-block text-[14px] font-medium text-brand-600">
               Payout settings

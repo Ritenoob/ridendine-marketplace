@@ -135,7 +135,7 @@ export async function validateInstantPayoutRequest(
 
   const { data: req } = await client
     .from('instant_payout_requests')
-    .select('id, status, amount_cents')
+    .select('id, status, amount_cents, fee_cents')
     .eq('id', input.requestId)
     .maybeSingle();
 
@@ -148,6 +148,7 @@ export async function validateInstantPayoutRequest(
   if ((req.amount_cents as number) !== input.amountCents) {
     return { ok: false, code: 'AMOUNT_MISMATCH', message: 'Amount does not match stored request' };
   }
+  const feeCents = Number((req as { fee_cents?: number | null }).fee_cents ?? 0);
 
   const { data: drv } = await client
     .from('drivers')
@@ -173,11 +174,12 @@ export async function validateInstantPayoutRequest(
     .maybeSingle();
 
   const bal = (acct?.balance_cents as number) ?? 0;
-  if (bal < input.amountCents) {
+  const requiredCents = input.amountCents + feeCents;
+  if (bal < requiredCents) {
     return {
       ok: false,
       code: 'INSUFFICIENT_BALANCE',
-      message: `Driver payable balance ${bal} < requested ${input.amountCents}`,
+      message: `Driver payable balance ${bal} < requested ${requiredCents} including instant payout fee`,
     };
   }
 

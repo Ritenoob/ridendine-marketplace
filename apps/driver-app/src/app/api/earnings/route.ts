@@ -3,6 +3,50 @@ import { getDriverActorContext, errorResponse, successResponse } from '@/lib/eng
 
 export const dynamic = 'force-dynamic';
 
+type PlatformAccountRow = {
+  balance_cents?: number | null;
+  currency?: string | null;
+};
+
+type InstantPayoutRequestRow = {
+  id?: string;
+  amount_cents?: number | null;
+  fee_cents?: number | null;
+  status?: string | null;
+  requested_at?: string | null;
+};
+
+type DriverPayoutAccountRow = {
+  status?: string | null;
+  payouts_enabled?: boolean | null;
+  charges_enabled?: boolean | null;
+  onboarding_completed_at?: string | null;
+};
+
+type QueryableAdminClient = SupabaseClient & {
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        eq: (column: string, value: string) => unknown;
+        maybeSingle: () => Promise<{ data: unknown; error: unknown }>;
+        order: (column: string, options?: { ascending?: boolean }) => Promise<{ data: unknown; error: unknown }>;
+      };
+    };
+  };
+};
+
+function normalizeCurrency(currency?: string | null): string {
+  const normalized = currency?.trim().toUpperCase();
+  if (!normalized) return 'CAD';
+
+  try {
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: normalized }).format(0);
+    return normalized;
+  } catch {
+    return 'CAD';
+  }
+}
+
 export async function GET() {
   try {
     const driverContext = await getDriverActorContext();
@@ -18,6 +62,39 @@ export async function GET() {
       limit: 1000,
     }
     );
+
+    const queryableAdmin = adminClient as unknown as QueryableAdminClient;
+    const [platformAccountResult, instantPayoutsResult, payoutAccountResult] = await Promise.all([
+      queryableAdmin
+        .from('platform_accounts')
+        .select('balance_cents, currency')
+        .eq('account_type', 'driver_payable')
+        .eq('owner_id', driverContext.driverId)
+        .maybeSingle(),
+      queryableAdmin
+        .from('instant_payout_requests')
+        .select('id, amount_cents, fee_cents, status, requested_at')
+        .eq('driver_id', driverContext.driverId)
+        .eq('status', 'pending')
+        .order('requested_at', { ascending: false }),
+      queryableAdmin
+        .from('driver_payout_accounts')
+        .select('status, payouts_enabled, charges_enabled, onboarding_completed_at')
+        .eq('driver_id', driverContext.driverId)
+        .maybeSingle(),
+    ]);
+
+    const platformAccount = platformAccountResult.data as PlatformAccountRow | null;
+    const pendingInstantPayoutRows = (instantPayoutsResult.data ?? []) as InstantPayoutRequestRow[];
+    const payoutAccount = payoutAccountResult.data as DriverPayoutAccountRow | null;
+
+    if (platformAccountResult.error || instantPayoutsResult.error || payoutAccountResult.error) {
+      return errorResponse(
+        'FINANCIAL_QUERY_ERROR',
+        'Could not load earnings financial data. Please try again.',
+        500
+      );
+    }
 
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -82,6 +159,22 @@ export async function GET() {
       today,
       week,
       month,
+      availableBalanceCents: Number(platformAccount?.balance_cents ?? 0),
+      currency: normalizeCurrency(platformAccount?.currency),
+      pendingInstantPayoutRequests: pendingInstantPayoutRows.map((request) => ({
+        id: request.id ?? '',
+        amountCents: Number(request.amount_cents ?? 0),
+        feeCents: Number(request.fee_cents ?? 0),
+        status: request.status ?? 'pending',
+        requestedAt: request.requested_at ?? null,
+      })),
+      payoutAccountStatus: {
+        connected: Boolean(payoutAccount),
+        status: payoutAccount?.status ?? 'not_started',
+        payoutsEnabled: Boolean(payoutAccount?.payouts_enabled),
+        chargesEnabled: Boolean(payoutAccount?.charges_enabled),
+        onboardingCompletedAt: payoutAccount?.onboarding_completed_at ?? null,
+      },
     });
   } catch (error) {
     console.error('Error fetching earnings:', error);

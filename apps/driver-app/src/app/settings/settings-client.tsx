@@ -10,10 +10,30 @@ import { NotificationPreferences } from '@/components/settings/notification-pref
 type Props = {
   driver: Driver;
   balanceCents: number;
+  currency?: string;
 };
 
-export default function SettingsClient({ driver, balanceCents }: Props) {
+function normalizeCurrency(currency: string): string {
+  const normalized = currency.trim().toUpperCase();
+  if (!normalized) return 'CAD';
+
+  try {
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: normalized }).format(0);
+    return normalized;
+  } catch {
+    return 'CAD';
+  }
+}
+
+export default function SettingsClient({ driver, balanceCents, currency = 'CAD' }: Props) {
   const router = useRouter();
+  const displayCurrency = normalizeCurrency(currency);
+  const formatMoney = (amount: number) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: displayCurrency,
+      currencyDisplay: 'symbol',
+    }).format(amount);
   const [enabled, setEnabled] = useState(
     Boolean((driver as { instant_payouts_enabled?: boolean }).instant_payouts_enabled)
   );
@@ -49,7 +69,8 @@ export default function SettingsClient({ driver, balanceCents }: Props) {
       <div className="p-4 space-y-4">
         <Card className="border-0 shadow-sm">
           <p className="text-[14px] text-[#6b7280]">Available driver payable balance (ledger-derived)</p>
-          <p className="mt-2 text-[32px] font-bold text-[#15803d]">${(balanceCents / 100).toFixed(2)}</p>
+          <p className="mt-2 text-[32px] font-bold text-[#15803d]">{formatMoney(balanceCents / 100)}</p>
+          <p className="mt-1 text-[13px] text-[#6b7280]">Ledger currency: {displayCurrency}</p>
         </Card>
 
         <Card className="border-0 shadow-sm">
