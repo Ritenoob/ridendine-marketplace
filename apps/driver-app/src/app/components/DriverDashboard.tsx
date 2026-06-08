@@ -12,6 +12,20 @@ interface DriverDashboardProps {
   activeDeliveries: Delivery[];
 }
 
+type DashboardOffer = {
+  attemptId: string;
+  deliveryId: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  estimatedDistanceKm: number | null;
+  estimatedRouteSeconds: number | null;
+  estimatedPayout: number | null;
+  customerTip: number | null;
+  orderNumber: string | null;
+  storefrontName: string | null;
+  expiresAt: string | null;
+};
+
 const DELIVERY_STATUS_LABELS: Record<string, string> = {
   assigned: 'Assigned',
   accepted: 'Accepted',
@@ -109,12 +123,120 @@ function shouldShowRetryLocation(
   );
 }
 
+function numericOrNull(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function parseOffersPayload(json: unknown): DashboardOffer[] {
+  if (!json || typeof json !== 'object') return [];
+  const root = json as Record<string, unknown>;
+  const data = root.success === true && root.data && typeof root.data === 'object'
+    ? (root.data as Record<string, unknown>)
+    : root;
+  const offers = Array.isArray(data.offers) ? data.offers : [];
+
+  return offers
+    .map((offer) => {
+      if (!offer || typeof offer !== 'object') return null;
+      const row = offer as Record<string, unknown>;
+      const attemptId = typeof row.attemptId === 'string' ? row.attemptId : '';
+      const deliveryId = typeof row.deliveryId === 'string' ? row.deliveryId : '';
+      if (!attemptId || !deliveryId) return null;
+
+      return {
+        attemptId,
+        deliveryId,
+        pickupAddress: typeof row.pickupAddress === 'string' ? row.pickupAddress : '',
+        dropoffAddress: typeof row.dropoffAddress === 'string' ? row.dropoffAddress : '',
+        estimatedDistanceKm: numericOrNull(row.estimatedDistanceKm),
+        estimatedRouteSeconds: numericOrNull(row.estimatedRouteSeconds),
+        estimatedPayout: numericOrNull(row.estimatedPayout),
+        customerTip: numericOrNull(row.customerTip),
+        orderNumber: typeof row.orderNumber === 'string' ? row.orderNumber : null,
+        storefrontName: typeof row.storefrontName === 'string' ? row.storefrontName : null,
+        expiresAt: typeof row.expiresAt === 'string' ? row.expiresAt : null,
+      };
+    })
+    .filter((offer): offer is DashboardOffer => offer !== null);
+}
+
+function formatMoney(value: number | null | undefined) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 'Not available';
+  return `$${value.toFixed(2)}`;
+}
+
+function formatDistance(value: number | null | undefined) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 'Not available';
+  return `${value.toFixed(1)} km`;
+}
+
+function formatRouteTime(seconds: number | null | undefined) {
+  if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds <= 0) {
+    return 'Route time pending';
+  }
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  return `${minutes} min route`;
+}
+
+function formatShiftDuration(startedAt: string | null | undefined, nowMs: number) {
+  if (!startedAt) return 'Not started';
+  const startedMs = Date.parse(startedAt);
+  if (!Number.isFinite(startedMs)) return 'Unknown';
+
+  const elapsedMinutes = Math.max(0, Math.floor((nowMs - startedMs) / 60_000));
+  if (elapsedMinutes < 1) return 'Just started';
+
+  const hours = Math.floor(elapsedMinutes / 60);
+  const minutes = elapsedMinutes % 60;
+  if (hours === 0) return `${minutes}m`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}m`;
+}
+
+function formatExpiry(expiresAt: string | null | undefined, nowMs: number) {
+  if (!expiresAt) return 'Expiry pending';
+  const expiryMs = Date.parse(expiresAt);
+  if (!Number.isFinite(expiryMs)) return 'Expiry pending';
+  const seconds = Math.max(0, Math.floor((expiryMs - nowMs) / 1000));
+  if (seconds <= 0) return 'Expiring now';
+  const minutes = Math.max(1, Math.ceil(seconds / 60));
+  return `${minutes} min left`;
+}
+
 const READINESS_BADGE_CLASSES: Record<DriverOperationsSummary['readiness']['priority'], string> = {
   success: 'bg-successSoft text-success',
   warning: 'bg-warningSoft text-warning',
   danger: 'bg-dangerSoft text-danger',
   idle: 'bg-surfaceMuted text-textMuted',
 };
+
+function CommandMetric({
+  label,
+  value,
+  detail,
+  tone = 'default',
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  tone?: 'default' | 'success' | 'warning';
+}) {
+  const valueClass =
+    tone === 'success' ? 'text-success' : tone === 'warning' ? 'text-warning' : 'text-text';
+
+  return (
+    <div className="rounded-xl border border-divider bg-surfaceMuted px-4 py-3">
+      <p className="text-xs font-medium text-textMuted">{label}</p>
+      <p className={`mt-1 text-lg font-bold ${valueClass}`}>{value}</p>
+      <p className="mt-1 text-xs text-textSubtle">{detail}</p>
+    </div>
+  );
+}
 
 export default function DriverDashboard({ driver, activeDeliveries }: DriverDashboardProps) {
   const [isOnline, setIsOnline] = useState(false);
@@ -123,6 +245,15 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
   const [presenceLoading, setPresenceLoading] = useState(true);
   const [readinessSummary, setReadinessSummary] = useState<DriverOperationsSummary | null>(null);
   const [shiftSummary, setShiftSummary] = useState<DriverShiftOperationsSummary | null>(null);
+  const [todayStats, setTodayStats] = useState<{ deliveries: number; earnings: number; hours: number | null }>({
+    deliveries: 0,
+    earnings: 0,
+    hours: null,
+  });
+  const [pendingOffers, setPendingOffers] = useState<DashboardOffer[]>([]);
+  const [offersLoading, setOffersLoading] = useState(true);
+  const [offersError, setOffersError] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const dashboardRequestIdRef = useRef(0);
 
   const currentDelivery = activeDeliveries[0];
@@ -154,6 +285,11 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
   const applyShiftSummary = useCallback((summary: DriverShiftOperationsSummary) => {
     setShiftSummary(summary);
     setIsOnline(summary.presenceStatus === 'online' || summary.presenceStatus === 'busy');
+    setTodayStats((current) => ({
+      deliveries: summary.today?.completedDeliveries ?? current.deliveries,
+      earnings: summary.today?.earnings ?? current.earnings,
+      hours: current.hours,
+    }));
     setReadinessSummary((current) =>
       current
         ? {
@@ -223,23 +359,20 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
     }
   };
 
-  const [todayStats, setTodayStats] = useState<{ deliveries: number; earnings: number; hours: number | null }>({
-    deliveries: 0,
-    earnings: 0,
-    hours: null,
-  });
-
   useEffect(() => {
     async function hydrateDashboard() {
       const requestId = dashboardRequestIdRef.current + 1;
       dashboardRequestIdRef.current = requestId;
+      setOffersLoading(true);
+      setOffersError(null);
 
       try {
-        const [presenceResponse, earningsResponse, readinessResponse, shiftResponse] = await Promise.all([
+        const [presenceResponse, earningsResponse, readinessResponse, shiftResponse, offersResponse] = await Promise.all([
           fetch('/api/driver/presence'),
           fetch('/api/earnings'),
           fetch('/api/driver/readiness'),
           fetch('/api/driver/shift'),
+          fetch('/api/offers'),
         ]);
 
         if (requestId !== dashboardRequestIdRef.current) return;
@@ -283,16 +416,41 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
             applyShiftSummary(summary);
           }
         }
+
+        if (offersResponse.ok) {
+          const offersJson = await offersResponse.json();
+          if (requestId !== dashboardRequestIdRef.current) return;
+
+          setPendingOffers(parseOffersPayload(offersJson));
+          setOffersError(null);
+        } else {
+          setPendingOffers([]);
+          setOffersError('Offer queue unavailable');
+        }
       } catch {
         // Keep defaults on error
+        setPendingOffers([]);
+        setOffersError('Offer queue unavailable');
       } finally {
         if (requestId === dashboardRequestIdRef.current) {
           setPresenceLoading(false);
+          setOffersLoading(false);
         }
       }
     }
     hydrateDashboard();
   }, [applyReadinessSummary, applyShiftSummary]);
+
+  useEffect(() => {
+    setNowMs(Date.now());
+
+    if (!shiftSummary?.isOnShift || !shiftSummary.shiftStartedAt) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => setNowMs(Date.now()), 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [shiftSummary?.isOnShift, shiftSummary?.shiftStartedAt]);
 
   const readiness = readinessSummary?.readiness;
   const readinessPriority = readiness?.priority ?? 'idle';
@@ -326,6 +484,29 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
     ? isOnShift ? 'Ending...' : 'Starting...'
     : isOnShift ? 'End shift' : 'Start shift';
   const shiftStatusLabel = presenceLoading ? 'Loading...' : isOnShift ? 'On shift' : 'Off shift';
+  const shiftDurationLabel = isOnShift
+    ? formatShiftDuration(shiftSummary?.shiftStartedAt, nowMs)
+    : 'Not on shift';
+  const shiftDeliveries = shiftSummary?.currentShift?.totalDeliveries
+    ?? shiftSummary?.today?.completedDeliveries
+    ?? todayStats.deliveries;
+  const shiftEarnings = shiftSummary?.currentShift?.totalEarnings
+    ?? shiftSummary?.today?.earnings
+    ?? todayStats.earnings;
+  const shiftDistance = shiftSummary?.currentShift?.totalDistanceKm ?? null;
+  const activeWorkValue = activeDeliveryCount > 0
+    ? `${activeDeliveryCount} active`
+    : pendingOffers.length > 0
+      ? `${pendingOffers.length} offer${pendingOffers.length === 1 ? '' : 's'}`
+      : 'Clear';
+  const activeWorkDetail = activeDeliveryCount > 0
+    ? 'Finish active deliveries before ending shift'
+    : pendingOffers.length > 0
+      ? 'Review available work'
+      : isOnShift
+        ? 'Waiting in the offer queue'
+        : 'Start shift to receive offers';
+  const activeShiftDeliveries = shiftSummary?.activeDeliveries ?? [];
 
   return (
     <div className="space-y-4">
@@ -339,10 +520,180 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
         </div>
       )}
 
-      {/* Ready-to-work panel */}
-      <div>
-        <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm" aria-label="Ready to work">
-          <div className="flex items-start justify-between gap-3">
+      <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-textMuted">Driver command center</p>
+            <h2 className="mt-1 text-2xl font-bold text-text">
+              {isOnShift ? 'Shift live' : 'Ready for shift'}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-textMuted">
+              {isOnShift
+                ? 'You are visible to dispatch. Keep GPS fresh and watch active work and offer queue changes here.'
+                : 'Start your shift when you are ready. Ops will only dispatch drivers who are approved, online, and location-ready.'}
+            </p>
+          </div>
+          <button
+            data-testid="driver-online-toggle"
+            onClick={toggleShiftStatus}
+            disabled={isTogglingStatus || showShiftEndBlock}
+            className={`rounded-xl px-5 py-3 text-sm font-semibold transition-all disabled:opacity-60 ${
+              isOnShift
+                ? 'bg-text text-white hover:bg-text/90'
+                : 'bg-primary text-white hover:bg-primaryHover'
+            }`}
+          >
+            {shiftActionLabel}
+          </button>
+        </div>
+
+        {showShiftEndBlock && (
+          <p className="mt-4 rounded-xl border border-warning/30 bg-warningSoft px-3 py-2 text-sm font-medium text-warning">
+            Complete active deliveries before ending your shift.
+          </p>
+        )}
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <CommandMetric
+            label="Shift duration"
+            value={shiftDurationLabel}
+            detail={isOnShift ? shiftStatusLabel : 'Clock starts when your shift begins'}
+            tone={isOnShift ? 'success' : 'default'}
+          />
+          <CommandMetric
+            label="Today earnings"
+            value={formatMoney(shiftEarnings)}
+            detail={`${shiftDeliveries} completed today`}
+            tone="success"
+          />
+          <CommandMetric
+            label="Distance"
+            value={formatDistance(shiftDistance)}
+            detail={isOnShift ? 'Current shift total' : 'Tracked after first delivery'}
+          />
+          <CommandMetric
+            label="Active work"
+            value={activeWorkValue}
+            detail={activeWorkDetail}
+            tone={activeDeliveryCount > 0 ? 'warning' : 'default'}
+          />
+        </div>
+      </section>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.85fr)]">
+        <div className="space-y-4">
+          <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-textMuted">Active work</p>
+                <h2 className="mt-1 text-xl font-bold text-text">
+                  {currentDelivery ? 'Delivery in progress' : 'Work queue'}
+                </h2>
+              </div>
+              <span className="rounded-full bg-surfaceMuted px-3 py-1 text-xs font-semibold text-textMuted">
+                {shiftStatusLabel}
+              </span>
+            </div>
+
+            {currentDelivery && (isOnShift || isOnline) && (
+              <div className="mt-5 rounded-2xl border-2 border-primary bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-base font-bold text-text">Active Delivery</h3>
+                  <span className="rounded-full bg-[#fff0e8] px-3 py-1 text-xs font-semibold text-primary">
+                    {formatDeliveryStatus(currentDelivery.status)}
+                  </span>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1.5 h-3 w-3 flex-shrink-0 rounded-full bg-success" />
+                    <div>
+                      <p className="text-sm font-semibold text-text">Pickup</p>
+                      <p className="text-sm text-textMuted">{currentDelivery.pickup_address}</p>
+                    </div>
+                  </div>
+                  <div className="ml-[5px] h-6 w-px bg-surfaceMuted" />
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1.5 h-3 w-3 flex-shrink-0 rounded-full bg-danger" />
+                    <div>
+                      <p className="text-sm font-semibold text-text">Dropoff</p>
+                      <p className="text-sm text-textMuted">{currentDelivery.dropoff_address}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between rounded-xl bg-surfaceMuted p-3">
+                  <div>
+                    <p className="text-xs text-textMuted">Distance</p>
+                    <p className="text-sm font-bold text-text">
+                      {currentDelivery.distance_km?.toFixed(1) ?? '—'} km
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-textMuted">Earnings</p>
+                    <p className="text-xl font-bold text-success">
+                      ${Number(currentDelivery.driver_payout).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+
+                <Link href={`/delivery/${currentDelivery.id}`} className="mt-4 block">
+                  <button className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-white hover:bg-primaryHover">
+                    Open Delivery Workflow
+                  </button>
+                </Link>
+              </div>
+            )}
+
+            {!currentDelivery && activeDeliveries.length === 0 && (
+              <div className="mt-5 rounded-2xl border border-divider bg-white p-8 text-center">
+                <div className={`mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full ${
+                  isOnShift ? 'bg-successSoft' : 'bg-surfaceMuted'
+                }`}>
+                  {isOnShift ? (
+                    <svg className="h-10 w-10 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="h-10 w-10 text-textSubtle" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1.5.5M13 16H3m10 0h3m3-3V9.5a1 1 0 00-.293-.707L16 6H13v10h6z" />
+                    </svg>
+                  )}
+                </div>
+                <h3 className="text-lg font-bold text-text">
+                  {isOnShift ? "You're On Shift!" : 'No active deliveries'}
+                </h3>
+                <p className="mt-2 text-sm text-textMuted">
+                  {isOnShift
+                    ? 'You are in the offer queue. Keep this app open; new offers will appear here with a countdown.'
+                    : 'Go online when you are ready to receive offers. Keep this app open while you wait.'}
+                </p>
+              </div>
+            )}
+
+            {!isOnShift && (
+              <div className="mt-5 rounded-2xl border border-divider bg-surfaceMuted p-5 text-center">
+                <h3 className="text-lg font-bold text-text">You&apos;re Off Shift</h3>
+                <p className="mt-2 text-sm text-textMuted">
+                  Start your shift when your vehicle, phone, and route window are ready.
+                </p>
+                <button
+                  data-testid="driver-online-toggle"
+                  onClick={toggleShiftStatus}
+                  disabled={isTogglingStatus}
+                  className="mt-4 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primaryHover disabled:opacity-60"
+                >
+                  {shiftActionLabel}
+                </button>
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm" aria-label="Ready to work">
+            <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-textMuted">Ready to work</p>
               <h2 className="mt-1 text-xl font-bold text-text">{readinessTitle}</h2>
@@ -389,12 +740,6 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
             <p className="mt-3 text-sm font-medium text-danger">{locationTracker.locationError}</p>
           )}
 
-          {showShiftEndBlock && (
-            <p className="mt-3 rounded-xl border border-warning/30 bg-warningSoft px-3 py-2 text-sm font-medium text-warning">
-              Complete active deliveries before ending your shift.
-            </p>
-          )}
-
           {showRetryLocation && (
             <button
               type="button"
@@ -405,212 +750,137 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
               {locationTracker.isPosting ? 'Retrying location...' : 'Retry location'}
             </button>
           )}
-        </section>
-      </div>
-
-      {/* Shift Toggle */}
-      <div
-        className={`px-5 py-5 transition-colors duration-300 ${
-          isOnShift
-            ? 'bg-gradient-to-r from-success to-success'
-            : 'bg-gradient-to-r from-surfaceMuted to-borderStrong'
-        }`}
-      >
-        <div className="flex items-center justify-between">
-          <div className="text-white">
-            <p className="text-sm font-medium opacity-80">Driver Shift</p>
-            <div className="mt-1 flex items-center gap-2">
-              <span
-                className={`inline-block h-2.5 w-2.5 rounded-full ${
-                  isOnShift ? 'bg-white animate-pulse' : 'bg-white/50'
-                }`}
-              />
-              <p className="text-2xl font-bold tracking-tight">
-                {shiftStatusLabel}
-              </p>
-            </div>
-          </div>
-          <button
-            data-testid="driver-online-toggle"
-            onClick={toggleShiftStatus}
-            disabled={isTogglingStatus || showShiftEndBlock}
-            className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition-all disabled:opacity-60 ${
-              isOnShift
-                ? 'bg-white/20 text-white hover:bg-white/30'
-                : 'bg-white text-text hover:bg-surfaceMuted'
-            }`}
-          >
-            {shiftActionLabel}
-          </button>
+          </section>
         </div>
-      </div>
 
-      {/* Today's Summary */}
-      <div>
-        <div className="rounded-2xl bg-white p-5 shadow-sm border border-divider">
-          <h2 className="text-base font-bold text-text">Today&apos;s Summary</h2>
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-primary">{todayStats.deliveries}</p>
-              <p className="mt-1 text-xs font-medium text-textMuted">Deliveries</p>
-            </div>
-            <div className="text-center border-x border-divider">
-              <p className="text-3xl font-bold text-success">
-                ${todayStats.earnings.toFixed(2)}
-              </p>
-              <p className="mt-1 text-xs font-medium text-textMuted">Earnings</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-text">
-                {todayStats.hours === null ? '—' : todayStats.hours.toFixed(1)}
-              </p>
-              <p className="mt-1 text-xs font-medium text-textMuted">Hours</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Active Delivery Card */}
-      {currentDelivery && (isOnShift || isOnline) && (
-        <div>
-          <div className="rounded-2xl border-2 border-primary bg-white p-5 shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-text">Active Delivery</h2>
-              <span className="rounded-full bg-[#fff0e8] px-3 py-1 text-xs font-semibold text-primary">
-                {formatDeliveryStatus(currentDelivery.status)}
+        <div className="space-y-4">
+          <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-textMuted">Offer queue</p>
+                <h2 className="mt-1 text-xl font-bold text-text">
+                  {offersLoading ? 'Offer queue' : 'Pending offers'}
+                </h2>
+              </div>
+              <span className="rounded-full bg-surfaceMuted px-3 py-1 text-xs font-semibold text-textMuted">
+                {offersLoading ? 'Checking' : `${pendingOffers.length} open`}
               </span>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="mt-1.5 h-3 w-3 flex-shrink-0 rounded-full bg-success" />
-                <div>
-                  <p className="text-sm font-semibold text-text">Pickup</p>
-                  <p className="text-sm text-textMuted">{currentDelivery.pickup_address}</p>
-                </div>
-              </div>
-              <div className="ml-1.5 h-6 w-px bg-surfaceMuted ml-[5px]" />
-              <div className="flex items-start gap-3">
-                <div className="mt-1.5 h-3 w-3 flex-shrink-0 rounded-full bg-danger" />
-                <div>
-                  <p className="text-sm font-semibold text-text">Dropoff</p>
-                  <p className="text-sm text-textMuted">{currentDelivery.dropoff_address}</p>
-                </div>
-              </div>
-            </div>
+            {offersLoading && (
+              <p className="mt-4 rounded-xl bg-surfaceMuted px-3 py-3 text-sm text-textMuted">
+                Checking durable offer queue...
+              </p>
+            )}
 
-            <div className="mt-4 flex items-center justify-between rounded-xl bg-surfaceMuted p-3">
-              <div>
-                <p className="text-xs text-textMuted">Distance</p>
-                <p className="text-sm font-bold text-text">
-                  {currentDelivery.distance_km?.toFixed(1) ?? '—'} km
+            {!offersLoading && offersError && (
+              <p className="mt-4 rounded-xl border border-warning/30 bg-warningSoft px-3 py-3 text-sm font-medium text-warning">
+                {offersError}
+              </p>
+            )}
+
+            {!offersLoading && !offersError && pendingOffers.length === 0 && (
+              <p className="mt-4 rounded-xl bg-surfaceMuted px-3 py-3 text-sm text-textMuted">
+                No pending offers right now. Stay on shift and keep GPS fresh for dispatch.
+              </p>
+            )}
+
+            {!offersLoading && !offersError && pendingOffers.length > 0 && (
+              <div className="mt-4 space-y-3">
+                {pendingOffers.map((offer) => (
+                  <div key={offer.attemptId} className="rounded-xl border border-divider p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-bold text-text">
+                          Order {offer.orderNumber ?? offer.deliveryId.slice(0, 8)}
+                        </p>
+                        <p className="mt-1 text-sm text-textMuted">
+                          {offer.storefrontName ?? 'Storefront pending'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-success">{formatMoney(offer.estimatedPayout)}</p>
+                        {offer.customerTip !== null && (
+                          <p className="text-xs text-textSubtle">Tip {formatMoney(offer.customerTip)}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-3 grid gap-2 text-xs text-textMuted sm:grid-cols-3">
+                      <span className="rounded-lg bg-surfaceMuted px-2 py-1 font-semibold text-text">
+                        {formatDistance(offer.estimatedDistanceKm)}
+                      </span>
+                      <span className="rounded-lg bg-surfaceMuted px-2 py-1">
+                        {formatRouteTime(offer.estimatedRouteSeconds)}
+                      </span>
+                      <span className="rounded-lg bg-surfaceMuted px-2 py-1">
+                        {formatExpiry(offer.expiresAt, nowMs)}
+                      </span>
+                    </div>
+                    <div className="mt-3 space-y-1 text-sm text-textMuted">
+                      <p><span className="font-semibold text-text">Pickup:</span> {offer.pickupAddress || 'Pickup pending'}</p>
+                      <p><span className="font-semibold text-text">Dropoff:</span> {offer.dropoffAddress || 'Dropoff pending'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+            <h2 className="text-base font-bold text-text">Today&apos;s Summary</h2>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-primary">{shiftDeliveries}</p>
+                <p className="mt-1 text-xs font-medium text-textMuted">Deliveries</p>
+              </div>
+              <div className="text-center sm:border-l sm:border-divider">
+                <p className="text-2xl font-bold text-success">
+                  {formatMoney(shiftEarnings)}
                 </p>
+                <p className="mt-1 text-xs font-medium text-textMuted">Earnings</p>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-textMuted">Earnings</p>
-                <p className="text-xl font-bold text-success">
-                  ${Number(currentDelivery.driver_payout).toFixed(2)}
+              <div className="text-center sm:border-l sm:border-divider">
+                <p className="text-2xl font-bold text-text">
+                  {activeShiftDeliveries.length}
                 </p>
+                <p className="mt-1 text-xs font-medium text-textMuted">In route</p>
+              </div>
+              <div className="text-center sm:border-l sm:border-divider">
+                <p className="text-2xl font-bold text-text">
+                  {todayStats.hours === null ? '—' : todayStats.hours.toFixed(1)}
+                </p>
+                <p className="mt-1 text-xs font-medium text-textMuted">Hours</p>
               </div>
             </div>
+          </section>
 
-            <Link href={`/delivery/${currentDelivery.id}`} className="mt-4 block">
-              <button className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-white hover:bg-primaryHover">
-                Open Delivery Workflow
-              </button>
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* No active deliveries empty state */}
-      {!currentDelivery && activeDeliveries.length === 0 && (
-        <div>
-          <div className="rounded-2xl bg-white p-8 shadow-sm border border-divider text-center">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#fff0e8]">
-              <svg className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l1.5.5M13 16H3m10 0h3m3-3V9.5a1 1 0 00-.293-.707L16 6H13v10h6z" />
-              </svg>
+          <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+            <h3 className="text-sm font-semibold text-text">Quick Actions</h3>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <Link href="/earnings">
+                <div className="rounded-2xl border border-divider bg-white p-4 shadow-sm transition-colors hover:border-primary/30">
+                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-successSoft">
+                    <svg className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-semibold text-text">My Earnings</p>
+                  <p className="text-xs text-textMuted">View payout history</p>
+                </div>
+              </Link>
+              <Link href="/history">
+                <div className="rounded-2xl border border-divider bg-white p-4 shadow-sm transition-colors hover:border-primary/30">
+                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-infoSoft">
+                    <svg className="h-5 w-5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-semibold text-text">Delivery History</p>
+                  <p className="text-xs text-textMuted">Past deliveries</p>
+                </div>
+              </Link>
             </div>
-            <h3 className="text-lg font-bold text-text">No active deliveries</h3>
-            <p className="mt-2 text-sm text-textMuted">
-              Go online when you are ready to receive offers. Keep this app open while you wait.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Waiting state */}
-      {isOnShift && !currentDelivery && (
-        <div>
-          <div className="rounded-2xl bg-white p-8 shadow-sm border border-divider text-center">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-successSoft">
-              <svg className="h-10 w-10 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold text-text">You&apos;re On Shift!</h3>
-            <p className="mt-2 text-sm text-textMuted">
-              You are in the offer queue. Keep this app open; new offers will appear here with a countdown.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Offline state */}
-      {!isOnShift && (
-        <div>
-          <div className="rounded-2xl bg-white p-8 shadow-sm border border-divider text-center">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-surfaceMuted">
-              <svg className="h-10 w-10 text-textSubtle" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold text-text">You&apos;re Off Shift</h3>
-            <p className="mt-2 text-sm text-textMuted">
-              Go online when you are ready to receive offers. Keep this app open while you wait.
-            </p>
-            <button
-              data-testid="driver-online-toggle"
-              onClick={toggleShiftStatus}
-              disabled={isTogglingStatus}
-              className="mt-4 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primaryHover"
-            >
-              {shiftActionLabel}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div>
-        <h3 className="mb-3 text-sm font-semibold text-text">Quick Actions</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/earnings">
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-divider hover:border-primary/30 transition-colors">
-              <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-successSoft">
-                <svg className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-sm font-semibold text-text">My Earnings</p>
-              <p className="text-xs text-textMuted">View payout history</p>
-            </div>
-          </Link>
-          <Link href="/history">
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-divider hover:border-primary/30 transition-colors">
-              <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-infoSoft">
-                <svg className="h-5 w-5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <p className="text-sm font-semibold text-text">Delivery History</p>
-              <p className="text-xs text-textMuted">Past deliveries</p>
-            </div>
-          </Link>
+          </section>
         </div>
       </div>
 

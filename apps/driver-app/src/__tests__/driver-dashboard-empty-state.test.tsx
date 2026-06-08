@@ -125,10 +125,18 @@ function shiftSummary(overrides: Record<string, unknown> = {}) {
 
 function mockDashboardFetch(
   summary: Record<string, unknown>,
-  shift: Record<string, unknown> = shiftSummary({ presenceStatus: summary.presenceStatus })
+  shift: Record<string, unknown> = shiftSummary({ presenceStatus: summary.presenceStatus }),
+  offers: Array<Record<string, unknown>> = []
 ) {
   global.fetch = jest.fn((input: RequestInfo | URL) => {
     const url = String(input);
+
+    if (url.includes('/api/offers')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ success: true, data: { offers } }),
+      });
+    }
 
     if (url.includes('/api/driver/shift')) {
       return Promise.resolve({
@@ -293,6 +301,7 @@ describe('DriverDashboard — no active deliveries empty state', () => {
   });
 
   it('shows an end shift action when the driver is already on shift', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-06-08T20:45:00.000Z').getTime());
     mockDashboardFetch(
       readinessSummary({ presenceStatus: 'online' }),
       shiftSummary({
@@ -307,6 +316,43 @@ describe('DriverDashboard — no active deliveries empty state', () => {
 
     expect(await screen.findByRole('button', { name: /end shift/i })).toBeInTheDocument();
     expect(screen.getAllByText(/on shift/i).length).toBeGreaterThan(0);
+    expect(screen.getByText('Shift duration')).toBeInTheDocument();
+    expect(screen.getByText('2h 30m')).toBeInTheDocument();
+  });
+
+  it('renders pending offers from the durable offer queue', async () => {
+    mockDashboardFetch(
+      readinessSummary({ presenceStatus: 'online' }),
+      shiftSummary({
+        presenceStatus: 'online',
+        currentShiftId: 'shift-1',
+        isOnShift: true,
+        shiftStartedAt: '2026-06-08T18:15:00.000Z',
+      }),
+      [
+        {
+          attemptId: 'attempt-1',
+          deliveryId: 'delivery-1',
+          pickupAddress: '1 King St W, Hamilton',
+          dropoffAddress: '100 Queen St E, Hamilton',
+          estimatedDistanceKm: 2.8,
+          estimatedRouteSeconds: 900,
+          estimatedPayout: 12.4,
+          customerTip: 3,
+          orderNumber: 'RD-100',
+          storefrontName: 'Ridendine Kitchen',
+          expiresAt: '2026-06-08T21:00:00.000Z',
+        },
+      ]
+    );
+
+    render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[]} />);
+
+    expect(await screen.findByText('Pending offers')).toBeInTheDocument();
+    expect(screen.getByText('Order RD-100')).toBeInTheDocument();
+    expect(screen.getByText('Ridendine Kitchen')).toBeInTheDocument();
+    expect(screen.getByText('$12.40')).toBeInTheDocument();
+    expect(screen.getByText('2.8 km')).toBeInTheDocument();
   });
 
   it('blocks ending a shift while an active delivery is in progress', async () => {
