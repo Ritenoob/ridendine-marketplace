@@ -143,6 +143,37 @@ function getPendingHoldCents(requests: PendingInstantPayoutRequest[]): number {
   return requests.reduce((sum, request) => sum + request.amountCents + request.feeCents, 0);
 }
 
+function formatStatusText(status: string) {
+  return status
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function FinanceMetric({
+  label,
+  value,
+  detail,
+  tone = 'default',
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  tone?: 'default' | 'success' | 'warning';
+}) {
+  const valueClass =
+    tone === 'success' ? 'text-success' : tone === 'warning' ? 'text-warning' : 'text-text';
+
+  return (
+    <div className="rounded-xl border border-divider bg-surfaceMuted px-4 py-3">
+      <p className="text-xs font-medium text-textMuted">{label}</p>
+      <p className={`mt-1 text-lg font-bold ${valueClass}`}>{value}</p>
+      <p className="mt-1 text-xs text-textSubtle">{detail}</p>
+    </div>
+  );
+}
+
 export default function EarningsView({
   deliveries,
   availableBalanceCents = 0,
@@ -177,6 +208,18 @@ export default function EarningsView({
   const totalWeek = weeklyEarnings.reduce((sum, d) => sum + d.amount, 0);
   const totalDeliveries = weeklyEarnings.reduce((sum, d) => sum + d.deliveries, 0);
   const maxAmount = Math.max(...weeklyEarnings.map((d) => d.amount), 1);
+  const totalDistance = deliveries.reduce((sum, delivery) => sum + (delivery.distance_km ?? 0), 0);
+  const averageDeliveryPay = totalDeliveries > 0 ? totalWeek / totalDeliveries : 0;
+  const payoutReady = payoutAccountStatus.connected && payoutAccountStatus.payoutsEnabled;
+  const payoutStatusLabel = payoutAccountStatus.connected
+    ? `Your payout account is ${payoutAccountStatus.status}.`
+    : 'Set up your payout account before scheduled or instant payouts can move funds.';
+  const instantAvailabilityLabel = instantPayoutsEnabled
+    ? 'Instant payouts available'
+    : 'Instant payouts not enabled';
+  const pendingHoldLabel = pendingInstantPayoutHoldCents > 0
+    ? `${formatMoney(pendingInstantPayoutHoldCents / 100)} pending hold`
+    : 'No pending holds';
 
   const [amountStr, setAmountStr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -220,222 +263,289 @@ export default function EarningsView({
 
   return (
     <div className="space-y-4">
-      {/* Weekly Summary */}
-      <div>
-        <Card className="border-0 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[17px] font-semibold text-[#1a1a1a]">This Week</h2>
-            <Badge variant="success" className="bg-[#f0fdf4] text-[#15803d]">
-              {totalDeliveries} deliveries
-            </Badge>
+      <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-textMuted">Finance</p>
+            <h2 className="mt-1 text-2xl font-bold text-text">Earnings command center</h2>
+            <p className="mt-2 max-w-2xl text-sm text-textMuted">
+              Track what is available now, what is held for instant payout requests, and the delivery proof behind each
+              payout total.
+            </p>
           </div>
+          <Badge
+            variant={payoutReady ? 'success' : 'warning'}
+            className={payoutReady ? 'bg-successSoft text-success' : 'bg-warningSoft text-warning'}
+          >
+            {payoutReady ? 'Payouts enabled' : 'Payout setup needed'}
+          </Badge>
+        </div>
 
-          <p className="mt-6 text-[40px] font-bold leading-tight text-[#22c55e]">
-            {formatMoney(totalWeek)}
-          </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <FinanceMetric
+            label="Available now"
+            value={formatMoney(netAvailableCents / 100)}
+            detail="Ledger balance before holds"
+            tone="success"
+          />
+          <FinanceMetric
+            label="Weekly earnings"
+            value={formatMoney(totalWeek)}
+            detail={`${formatMoney(averageDeliveryPay)} average per completed delivery`}
+          />
+          <FinanceMetric
+            label="Completed this week"
+            value={`${totalDeliveries}`}
+            detail={`${totalDistance.toFixed(1)} km tracked`}
+          />
+          <FinanceMetric
+            label="Pending holds"
+            value={formatMoney(pendingInstantPayoutHoldCents / 100)}
+            detail={pendingInstantPayoutHoldCents > 0 ? 'Held by pending requests' : pendingHoldLabel}
+            tone={pendingInstantPayoutHoldCents > 0 ? 'warning' : 'default'}
+          />
+        </div>
+      </section>
 
-          {/* Bar Chart */}
-          <div className="mt-8 flex items-end justify-between gap-2">
-            {weeklyEarnings.map((day) => (
-              <div key={day.day} className="flex flex-1 flex-col items-center gap-2">
-                <div
-                  className="w-full rounded-t-md transition-all"
-                  style={{
-                    height: maxAmount > 0 ? `${(day.amount / maxAmount) * 100}px` : '4px',
-                    minHeight: day.amount > 0 ? '8px' : '4px',
-                    backgroundColor: day.amount > 0 ? '#ed751b' : '#e5e7eb',
-                  }}
-                />
-                <span className="text-[12px] font-medium text-[#6b7280]">{day.day}</span>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <div className="space-y-4">
+          <Card className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold text-text">Payout readiness</h2>
+                <p className="mt-2 text-sm text-textMuted">{payoutStatusLabel}</p>
               </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* Today's Deliveries */}
-      <div>
-        <Card className="border-0 shadow-sm">
-          <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Today&apos;s Deliveries</h2>
-          {todayDeliveries.length === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-[14px] text-[#6b7280]">No deliveries yet today</p>
+              <Badge
+                variant={payoutReady ? 'success' : 'warning'}
+                className={payoutReady ? 'bg-successSoft text-success' : 'bg-warningSoft text-warning'}
+              >
+                {formatStatusText(payoutAccountStatus.status || 'not_started')}
+              </Badge>
             </div>
-          ) : (
-            <div className="mt-4 space-y-3">
-              {todayDeliveries.map((delivery) => (
-                <div
-                  key={delivery.id}
-                  className="flex items-center justify-between border-b border-[#f5f5f5] pb-3 last:border-0 last:pb-0"
-                >
-                  <div className="flex-1">
-                    <p className="text-[15px] font-medium text-[#1a1a1a]">
-                      {delivery.dropoff_address.split(',')[0]}
-                    </p>
-                    <p className="mt-1 text-[13px] text-[#6b7280]">
-                      {delivery.actual_dropoff_at
-                        ? new Date(delivery.actual_dropoff_at).toLocaleTimeString('en-US', {
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl bg-surfaceMuted px-3 py-2">
+                <p className="text-xs font-medium text-textMuted">Scheduled payouts</p>
+                <p className="mt-1 text-sm font-semibold text-text">
+                  {payoutAccountStatus.payoutsEnabled ? 'Enabled' : 'Not enabled'}
+                </p>
+              </div>
+              <div className="rounded-xl bg-surfaceMuted px-3 py-2">
+                <p className="text-xs font-medium text-textMuted">Instant payout access</p>
+                <p className="mt-1 text-sm font-semibold text-text">{instantAvailabilityLabel}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold text-text">Next scheduled payout</h2>
+                <p className="mt-1 text-sm text-textMuted">
+                  Net of pending instant payout requests and fees. Delivery earnings this week: {formatMoney(totalWeek)}.
+                </p>
+              </div>
+              <Badge variant="info" className="bg-infoSoft text-info">
+                Weekly
+              </Badge>
+            </div>
+            <p className="mt-4 text-3xl font-bold leading-tight text-text">
+              {formatMoney(netAvailableCents / 100)}
+            </p>
+          </Card>
+
+          <Card className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+            <h2 className="text-base font-bold text-text">Available balance</h2>
+            <p className="mt-2 text-3xl font-bold text-success">
+              {formatMoney(netAvailableCents / 100)}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-textMuted">
+              Available to request after pending instant payout requests and fees.
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-textMuted">
+              {formatMoney(availableBalanceCents / 100)} ledger balance in your {displayCurrency} driver payable account.
+            </p>
+            {pendingInstantPayoutTotalCents > 0 ? (
+              <p className="mt-2 text-sm text-textMuted">
+                {formatMoney(pendingInstantPayoutTotalCents / 100)} is already requested as an instant payout.
+              </p>
+            ) : null}
+          </Card>
+
+          {pendingInstantPayoutRequests.length > 0 ? (
+            <Card className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+              <h2 className="text-base font-bold text-text">Pending instant payout requests</h2>
+              <p className="mt-2 text-sm text-textMuted">{pendingHoldLabel} including requested funds and fees.</p>
+              <div className="mt-4 space-y-3">
+                {pendingInstantPayoutRequests.map((request) => (
+                  <div key={request.id} className="rounded-xl bg-surfaceMuted px-3 py-2">
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span className="text-textMuted">{formatMoney(request.amountCents / 100)} requested</span>
+                      <span className="font-semibold text-text">Fee {formatMoney(request.feeCents / 100)}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-textSubtle">
+                      {request.requestedAt
+                        ? new Date(request.requestedAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
                             hour: 'numeric',
                             minute: '2-digit',
                           })
-                        : '—'}
+                        : 'Request time pending'}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[17px] font-semibold text-[#1a1a1a]">
-                      {formatMoney(delivery.driver_payout)}
-                    </p>
-                    <p className="mt-1 text-[13px] text-[#6b7280]">
-                      {delivery.distance_km?.toFixed(1) ?? '—'} km
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
-
-      {/* Payout Info */}
-      <div>
-        <Card className="border-0 shadow-sm">
-          <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Delivery pay estimate</h2>
-          <p className="mt-2 text-[13px] leading-relaxed text-[#6b7280]">
-            This delivery-history estimate treats driver payout as base delivery pay unless explicit tip, bonus, or
-            adjustment fields are available.
-          </p>
-          <div className="mt-4 space-y-3">
-            {[
-              ['Base delivery pay', breakdown.base],
-              ['Tips', breakdown.tips],
-              ['Bonuses', breakdown.bonuses],
-              ['Adjustments', breakdown.adjustments],
-            ].map(([label, amount]) => (
-              <div key={label} className="flex items-center justify-between text-[14px]">
-                <span className="text-[#6b7280]">{label}</span>
-                <span className="font-semibold text-[#1a1a1a]">{formatMoney(amount as number)}</span>
+                ))}
               </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* Payout Info */}
-      <div>
-        <Card className="border-0 shadow-sm">
-          <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Next scheduled payout</h2>
-          <div className="mt-4 flex items-center justify-between">
-            <div>
-              <p className="text-[32px] font-bold leading-tight text-[#1a1a1a]">
-                {formatMoney(netAvailableCents / 100)}
-              </p>
-              <p className="mt-1 text-[14px] text-[#6b7280]">
-                Net of pending instant payout requests and fees. Delivery earnings this week: {formatMoney(totalWeek)}.
-              </p>
-            </div>
-            <Badge variant="info" className="bg-[#eff6ff] text-[#1e40af]">
-              Weekly
-            </Badge>
-          </div>
-          <p className="mt-3 text-[13px] leading-relaxed text-[#6b7280]">
-            {payoutAccountStatus.connected
-              ? `Your payout account is ${payoutAccountStatus.status}.`
-              : 'Set up your payout account before scheduled or instant payouts can move funds.'}
-          </p>
-        </Card>
-      </div>
-
-      <div>
-        <Card className="border-0 shadow-sm">
-          <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Available balance</h2>
-          <p className="mt-1 text-[28px] font-bold text-[#15803d]">
-            {formatMoney(netAvailableCents / 100)}
-          </p>
-          <p className="mt-2 text-[13px] leading-relaxed text-[#6b7280]">
-            Available to request after pending instant payout requests and fees.
-          </p>
-          <p className="mt-1 text-[13px] leading-relaxed text-[#6b7280]">
-            {formatMoney(availableBalanceCents / 100)} ledger balance in your {displayCurrency} driver payable account.
-          </p>
-          {pendingInstantPayoutTotalCents > 0 ? (
-            <p className="mt-2 text-[13px] text-[#6b7280]">
-              {formatMoney(pendingInstantPayoutTotalCents / 100)} is already requested as an instant payout.
-            </p>
+            </Card>
           ) : null}
-        </Card>
-      </div>
 
-      {pendingInstantPayoutRequests.length > 0 ? (
-        <div>
-          <Card className="border-0 shadow-sm">
-            <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Pending instant payout requests</h2>
-            <div className="mt-3 space-y-2">
-              {pendingInstantPayoutRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between text-[13px]">
-                  <span className="text-[#6b7280]">{formatMoney(request.amountCents / 100)} requested</span>
-                  <span className="font-medium text-[#1a1a1a]">Fee {formatMoney(request.feeCents / 100)}</span>
+          {instantPayoutsEnabled ? (
+            <Card className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+              <h2 className="text-base font-bold text-text">Instant payout</h2>
+              <p className="mt-2 text-sm leading-relaxed text-textMuted">
+                Fee is <span className="font-semibold text-text">1.5%</span> of the amount you request, taken from
+                your balance before transfer. You submit a request here; finance executes it in ops-admin.
+              </p>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+                <label className="flex-1 text-sm font-medium text-text">
+                  Amount ({displayCurrency})
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={amountStr}
+                    onChange={(e) => setAmountStr(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-divider px-3 py-2 text-sm"
+                    placeholder="0.00"
+                  />
+                </label>
+                <Button type="button" disabled={busy} onClick={() => void requestInstant()}>
+                  {busy ? 'Submitting...' : 'Request instant payout'}
+                </Button>
+              </div>
+              {previewCents > 0 ? (
+                <p className="mt-3 text-sm text-textMuted">
+                  <span>Instant payout fee preview</span>:{' '}
+                  <span className="font-semibold text-text">{formatMoney(previewFee / 100)}</span>{' '}
+                  (1.5%)
+                </p>
+              ) : (
+                <p className="mt-3 text-sm text-textMuted">
+                  <span>Instant payout fee preview</span>: {formatMoney(0)} until you enter an amount.
+                </p>
+              )}
+              {instantMsg ? <p className="mt-3 text-sm font-medium text-warning">{instantMsg}</p> : null}
+              <Link href="/settings" className="mt-4 inline-block text-sm font-semibold text-primary">
+                Payout settings
+              </Link>
+            </Card>
+          ) : (
+            <Card className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+              <p className="text-sm text-textMuted">
+                Enable instant payouts in{' '}
+                <Link href="/settings" className="font-semibold text-primary">
+                  Settings
+                </Link>{' '}
+                to request on-demand transfers (1.5% fee).
+              </p>
+            </Card>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <Card className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold text-text">Weekly activity</h2>
+                <p className="mt-1 text-sm text-textMuted">This week</p>
+              </div>
+              <Badge variant="success" className="bg-successSoft text-success">
+                {totalDeliveries} deliveries
+              </Badge>
+            </div>
+
+            <p className="mt-5 text-4xl font-bold leading-tight text-success">
+              {formatMoney(totalWeek)}
+            </p>
+
+            <div className="mt-7 flex items-end justify-between gap-2">
+              {weeklyEarnings.map((day) => (
+                <div key={day.day} className="flex flex-1 flex-col items-center gap-2">
+                  <div
+                    className="w-full rounded-t-md bg-primary transition-all"
+                    style={{
+                      height: maxAmount > 0 ? `${(day.amount / maxAmount) * 100}px` : '4px',
+                      minHeight: day.amount > 0 ? '8px' : '4px',
+                      opacity: day.amount > 0 ? 1 : 0.2,
+                    }}
+                  />
+                  <span className="text-xs font-medium text-textMuted">{day.day}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+            <h2 className="text-base font-bold text-text">Today&apos;s Deliveries</h2>
+            {todayDeliveries.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-sm text-textMuted">No deliveries yet today</p>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {todayDeliveries.map((delivery) => (
+                  <div
+                    key={delivery.id}
+                    className="flex items-center justify-between gap-3 border-b border-divider pb-3 last:border-0 last:pb-0"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-text">
+                        {delivery.dropoff_address.split(',')[0]}
+                      </p>
+                      <p className="mt-1 text-xs text-textMuted">
+                        {delivery.actual_dropoff_at
+                          ? new Date(delivery.actual_dropoff_at).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-base font-bold text-text">
+                        {formatMoney(delivery.driver_payout)}
+                      </p>
+                      <p className="mt-1 text-xs text-textMuted">
+                        {delivery.distance_km?.toFixed(1) ?? '—'} km
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+            <h2 className="text-base font-bold text-text">Delivery pay estimate</h2>
+            <p className="mt-2 text-sm leading-relaxed text-textMuted">
+              This delivery-history estimate treats driver payout as base delivery pay unless explicit tip, bonus, or
+              adjustment fields are available.
+            </p>
+            <div className="mt-4 space-y-3">
+              {[
+                ['Base delivery pay', breakdown.base],
+                ['Tips', breakdown.tips],
+                ['Bonuses', breakdown.bonuses],
+                ['Adjustments', breakdown.adjustments],
+              ].map(([label, amount]) => (
+                <div key={label} className="flex items-center justify-between text-sm">
+                  <span className="text-textMuted">{label}</span>
+                  <span className="font-semibold text-text">{formatMoney(amount as number)}</span>
                 </div>
               ))}
             </div>
           </Card>
         </div>
-      ) : null}
-
-      {instantPayoutsEnabled ? (
-        <div>
-          <Card className="border-0 shadow-sm">
-            <h2 className="text-[17px] font-semibold text-[#1a1a1a]">Instant payout</h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-[#6b7280]">
-              Fee is <span className="font-semibold text-[#1a1a1a]">1.5%</span> of the amount you request, taken from
-              your balance before transfer. You submit a request here; finance executes it in ops-admin.
-            </p>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-              <label className="flex-1 text-[13px] text-[#374151]">
-                Amount ({displayCurrency})
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={amountStr}
-                  onChange={(e) => setAmountStr(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-[#e5e7eb] px-3 py-2 text-[15px]"
-                  placeholder="0.00"
-                />
-              </label>
-              <Button type="button" disabled={busy} onClick={() => void requestInstant()}>
-                {busy ? 'Submitting…' : 'Request instant payout'}
-              </Button>
-            </div>
-            {previewCents > 0 ? (
-              <p className="mt-3 text-[13px] text-[#6b7280]">
-                <span>Instant payout fee preview</span>:{' '}
-                <span className="font-semibold text-[#1a1a1a]">{formatMoney(previewFee / 100)}</span>{' '}
-                (1.5%)
-              </p>
-            ) : (
-              <p className="mt-3 text-[13px] text-[#6b7280]">
-                <span>Instant payout fee preview</span>: {formatMoney(0)} until you enter an amount.
-              </p>
-            )}
-            {instantMsg ? <p className="mt-3 text-[13px] text-[#b45309]">{instantMsg}</p> : null}
-            <Link href="/settings" className="mt-4 inline-block text-[14px] font-medium text-brand-600">
-              Payout settings
-            </Link>
-          </Card>
-        </div>
-      ) : (
-        <div>
-          <Card className="border-0 shadow-sm">
-            <p className="text-[14px] text-[#6b7280]">
-              Enable instant payouts in{' '}
-              <Link href="/settings" className="font-medium text-brand-600">
-                Settings
-              </Link>{' '}
-              to request on-demand transfers (1.5% fee).
-            </p>
-          </Card>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

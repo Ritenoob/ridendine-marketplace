@@ -87,6 +87,42 @@ describe('EarningsView', () => {
     global.fetch = jest.fn();
   });
 
+  it('renders the earnings command surface with payout readiness and hold metrics', () => {
+    render(
+      <EarningsView
+        deliveries={[delivery as never]}
+        availableBalanceCents={12550}
+        currency="CAD"
+        instantPayoutsEnabled
+        pendingInstantPayoutRequests={[
+          {
+            id: 'ipr-1',
+            amountCents: 5000,
+            feeCents: 75,
+            status: 'pending',
+            requestedAt: '2026-06-15T16:00:00.000Z',
+          },
+        ]}
+        payoutAccountStatus={{
+          connected: true,
+          status: 'active',
+          payoutsEnabled: true,
+          chargesEnabled: true,
+          onboardingCompletedAt: '2026-06-01T12:00:00.000Z',
+        }}
+      />
+    );
+
+    expect(screen.getByText('Earnings command center')).toBeInTheDocument();
+    expect(screen.getByText('Available now')).toBeInTheDocument();
+    expect(screen.getByText('Weekly earnings')).toBeInTheDocument();
+    expect(screen.getByText('Completed this week')).toBeInTheDocument();
+    expect(screen.getByText('Pending holds')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Payout readiness' })).toBeInTheDocument();
+    expect(screen.getByText('Instant payouts available')).toBeInTheDocument();
+    expect(screen.getByText(/CA\$50\.75 pending hold/i)).toBeInTheDocument();
+  });
+
   it('uses dynamic currency copy and shows driver trust payout details', () => {
     render(
       <EarningsView
