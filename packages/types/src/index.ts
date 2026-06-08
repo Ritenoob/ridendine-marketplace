@@ -7,6 +7,7 @@ export * from './domains/chef';
 export * from './domains/customer';
 export * from './domains/order';
 export * from './domains/driver';
+export * from './domains/driver-operations';
 export * from './domains/delivery';
 export * from './domains/platform';
 
