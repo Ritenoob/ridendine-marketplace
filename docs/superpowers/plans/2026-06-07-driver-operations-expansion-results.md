@@ -1,6 +1,6 @@
 # Driver Operations Expansion Results
 
-Status: Phase 9 locally verified; notification-preferences production fallback pending push/deploy proof
+Status: Phase 9 complete; pushed, deployed, CI verified, and production smoke verified
 Started: 2026-06-07
 Current update: 2026-06-08
 Scope: Driver app delivery operations, earnings clarity, approval/compliance readiness, and Ops-connected driver operations.
@@ -48,15 +48,20 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 | Guard audit | Passed; `pnpm audit:guards` scanned 123 routes, allowlisted 14, and reported 0 unguarded state-changing routes. |
 | Whitespace check | Passed; `git diff --check` exited 0 with only the existing PowerShell CRLF warning. |
 | First post-deploy production contract smoke | Blocked on `GET /api/driver/notification-preferences` returning `500` in production. Vercel runtime logs confirmed the live `500`; the fallback fix is queued for the next push/deploy proof. |
+| Fallback fix push | Passed; commit `489412ef7dfece41b6e947db2d0a41cb3bcd093c` pushed to `origin/master`. |
+| GitHub CI | Passed; run `27143651952` completed `Lint, Typecheck, Test, Build` and `Playwright Browser Gate` successfully for commit `489412ef7dfece41b6e947db2d0a41cb3bcd093c`. |
+| Vercel deployments | Passed; production deployments are `READY` on commit `489412ef7dfece41b6e947db2d0a41cb3bcd093c`: Web `dpl_6AYvgxNvnMzmnYiqqZ7PxM7tP1Nz`, Chef `dpl_J5bG7M3cHXWDAEzxZFqmB3URc7Ui`, Driver `dpl_AnkmbFDECAek6D7myTJ5aKAWULDZ`, Ops `dpl_4mxGLoEzHrBRWS1k8W3NHduKycxV`. |
+| Post-deploy runtime contracts | Passed; `pnpm smoke:prod:contracts -- --require-auth` validated seeded authenticated Customer/Chef/Driver/Ops JSON contracts, including Driver `/api/driver/notification-preferences` returning `200`. |
+| Post-deploy production smoke | Passed; `pnpm smoke:prod` checked public pages, static assets, health APIs, authenticated Customer/Chef/Driver/Ops paths, Driver readiness/shift/notification-preferences, and Ops `/api/drivers/{sample}/operations`. |
 
-## Pending Gates
+## Completed Remote Gates
 
 | Gate | Command or action |
 |---|---|
-| Repo packaging | Commit and push the notification-preferences fallback fix after local verification. |
-| GitHub CI | Confirm `Lint, Typecheck, Test, Build` and `Playwright Browser Gate` pass on the pushed commit. |
-| Vercel deploy | Confirm all four Vercel production app projects deploy the pushed commit successfully. |
-| Post-deploy production smoke | `smoke:prod:contracts -- --require-auth` and `smoke:prod` with `RIDENDINE_SMOKE_EMAIL=sean@ridendine.ca` and `RIDENDINE_SMOKE_PASSWORD=password123`. |
+| Repo packaging | Completed; `489412ef7dfece41b6e947db2d0a41cb3bcd093c` pushed to `origin/master`. |
+| GitHub CI | Completed; `Lint, Typecheck, Test, Build` and `Playwright Browser Gate` passed. |
+| Vercel deploy | Completed; all four production app projects are `READY` on the pushed commit. |
+| Post-deploy production smoke | Completed; `smoke:prod:contracts -- --require-auth` and `smoke:prod` passed with `RIDENDINE_SMOKE_EMAIL=sean@ridendine.ca` and `RIDENDINE_SMOKE_PASSWORD=password123`. |
 
 ## Known Risks
 
