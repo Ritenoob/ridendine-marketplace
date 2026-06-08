@@ -1,4 +1,8 @@
-import type { DriverReadinessSignal } from '@ridendine/types';
+import {
+  summarizeDriverComplianceDocuments,
+  type DriverComplianceDocumentInput,
+  type DriverReadinessSignal,
+} from '@ridendine/types';
 import { getLocationHealth, type LocationHealth } from '@/lib/location-health';
 import {
   buildOpsDriverReadinessSignal,
@@ -90,33 +94,15 @@ function one<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value;
 }
 
-function isExpired(expiresAt: unknown, now: Date): boolean {
-  if (typeof expiresAt !== 'string' || expiresAt.length === 0) return false;
-  const time = Date.parse(expiresAt);
-  return Number.isFinite(time) && time < now.getTime();
-}
-
 function summarizeCompliance(rows: Array<Record<string, unknown>>, now: Date) {
-  let pendingDocuments = 0;
-  let rejectedDocuments = 0;
-  let expiredDocuments = 0;
-  let openItems = 0;
-
-  for (const row of rows) {
-    const status = normalizeStatus(row.status);
-    const expired = isExpired(row.expires_at, now);
-    if (['pending', 'submitted', 'in_review'].includes(status)) pendingDocuments += 1;
-    if (status === 'rejected') rejectedDocuments += 1;
-    if (expired) expiredDocuments += 1;
-    if (status !== 'approved' || expired) openItems += 1;
-  }
+  const summary = summarizeDriverComplianceDocuments(rows as DriverComplianceDocumentInput[], now);
 
   return {
     totalDocuments: rows.length,
-    pendingDocuments,
-    rejectedDocuments,
-    expiredDocuments,
-    openItems,
+    pendingDocuments: summary.pendingReview,
+    rejectedDocuments: summary.rejected,
+    expiredDocuments: summary.expired,
+    openItems: summary.openItems,
   };
 }
 

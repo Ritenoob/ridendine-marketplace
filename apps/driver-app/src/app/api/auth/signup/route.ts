@@ -142,9 +142,9 @@ export async function POST(request: Request) {
         phone,
         email,
         // Closed-beta: drivers are self-serve. They still have to upload
-        // licence + insurance docs (gated by driver_documents review) and
-        // complete Stripe Connect before they can be paid. Ops can flip
-        // this to 'suspended' to block a driver post-signup.
+        // drivers licence, vehicle registration, and vehicle insurance docs
+        // (gated by driver_documents review) before dispatch readiness clears.
+        // Ops can flip this to 'suspended' to block a driver post-signup.
         status: 'approved',
         vehicle_type: vehicleType ?? null,
         profile_image_url: null,

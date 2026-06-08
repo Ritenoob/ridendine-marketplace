@@ -1,3 +1,5 @@
+import { REQUIRED_DRIVER_DOCUMENT_TYPES as SHARED_REQUIRED_DRIVER_DOCUMENT_TYPES } from '@ridendine/types';
+
 export type ComplianceOwnerType = 'chef' | 'driver';
 export type ComplianceRiskLevel = 'critical' | 'warning' | 'attention' | 'healthy';
 export type ComplianceExpiryState = 'none' | 'current' | 'expiring_soon' | 'expiring_urgent' | 'expired';
@@ -83,11 +85,7 @@ export const REQUIRED_CHEF_DOCUMENT_TYPES = [
   'kitchen_inspection',
 ];
 
-export const REQUIRED_DRIVER_DOCUMENT_TYPES = [
-  'drivers_license',
-  'vehicle_registration',
-  'vehicle_insurance',
-];
+export const REQUIRED_DRIVER_DOCUMENT_TYPES = SHARED_REQUIRED_DRIVER_DOCUMENT_TYPES;
 
 const DOCUMENT_LABELS: Record<string, string> = {
   food_handler_certificate: 'Food Handler Certificate',
@@ -121,8 +119,8 @@ export function formatComplianceStatus(status: string): string {
 
 export function getRequiredDocumentTypes(ownerType: ComplianceOwnerType): string[] {
   return ownerType === 'chef'
-    ? REQUIRED_CHEF_DOCUMENT_TYPES
-    : REQUIRED_DRIVER_DOCUMENT_TYPES;
+    ? [...REQUIRED_CHEF_DOCUMENT_TYPES]
+    : [...REQUIRED_DRIVER_DOCUMENT_TYPES];
 }
 
 export function getComplianceTone(riskLevel: ComplianceRiskLevel): ComplianceTone {

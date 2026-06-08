@@ -1,5 +1,11 @@
 import { createAdminClient } from '@ridendine/db';
-import type { DriverOperationsSummary, DriverPresenceStatus, DriverStatus } from '@ridendine/types';
+import {
+  summarizeDriverComplianceDocuments,
+  type DriverComplianceDocumentInput,
+  type DriverOperationsSummary,
+  type DriverPresenceStatus,
+  type DriverStatus,
+} from '@ridendine/types';
 import { getDriverActorContext, errorResponse, successResponse } from '@/lib/engine';
 import { getDriverReadinessSignal } from '@/lib/driver-readiness';
 
@@ -39,8 +45,10 @@ type PlatformAccountRow = {
   balance_cents: number | null;
 };
 
-type DriverDocumentRow = {
+type DriverDocumentRow = DriverComplianceDocumentInput & {
   status: string | null;
+  document_type: string | null;
+  expires_at: string | null;
 };
 
 type QueryResult<T> = {
@@ -110,13 +118,10 @@ export async function GET() {
         .select('id,status,payouts_enabled,onboarding_completed_at')
         .eq('driver_id', driverContext.driverId)
         .maybeSingle(),
-      // driver_documents has no generated "open item" column; Phase 2
-      // conservatively treats any non-approved row as an open compliance item.
       adminClient
         .from('driver_documents')
-        .select('id,status')
-        .eq('driver_id', driverContext.driverId)
-        .neq('status', 'approved'),
+        .select('id,status,document_type,expires_at')
+        .eq('driver_id', driverContext.driverId),
       adminClient
         .from('platform_accounts')
         .select('balance_cents')
@@ -148,7 +153,8 @@ export async function GET() {
     const presenceStatus = (presence?.status ?? 'offline') as DriverPresenceStatus;
     const lastLocationAt = presence?.last_location_at ?? presence?.last_location_update ?? null;
     const activeDeliveryCount = countRows(activeDeliveriesResult.data);
-    const complianceOpenItems = countRows(complianceDocumentsResult.data);
+    const compliance = summarizeDriverComplianceDocuments(complianceDocumentsResult.data, new Date());
+    const complianceOpenItems = compliance.openItems;
     const instantPayoutsEnabled = Boolean(driver.instant_payouts_enabled);
     const availableBalanceCents = Number(platformAccountResult.data?.balance_cents ?? 0);
 

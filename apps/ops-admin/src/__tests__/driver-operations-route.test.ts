@@ -130,9 +130,9 @@ function installOpsData(overrides: {
     ),
     driver_documents: listResult(
       overrides.documents ?? [
-        { id: 'doc-1', document_type: 'license', status: 'approved', expires_at: null },
-        { id: 'doc-2', document_type: 'insurance', status: 'pending', expires_at: null },
-        { id: 'doc-3', document_type: 'background_check', status: 'rejected', expires_at: null },
+        { id: 'doc-1', document_type: 'drivers_license', status: 'approved', expires_at: '2027-06-01T00:00:00.000Z' },
+        { id: 'doc-2', document_type: 'vehicle_registration', status: 'pending', expires_at: null },
+        { id: 'doc-3', document_type: 'vehicle_insurance', status: 'rejected', expires_at: null },
       ]
     ),
     driver_payout_accounts: singleResult(

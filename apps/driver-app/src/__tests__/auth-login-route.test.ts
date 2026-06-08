@@ -121,4 +121,50 @@ describe('driver auth login route', () => {
     expect(body.error).toBe('Driver profile not found');
     expect(mockSignOut).toHaveBeenCalledTimes(1);
   });
+
+  it('allows a pending driver profile to sign in so readiness blockers can render', async () => {
+    const pendingDriver = {
+      id: 'driver-pending',
+      user_id: 'user-driver',
+      status: 'pending',
+      first_name: 'Pending',
+      last_name: 'Driver',
+    };
+    mockSignInWithPassword.mockResolvedValue({
+      data: {
+        user: { id: 'user-driver', email: 'pending.driver@example.com' },
+        session: { access_token: 'token' },
+      },
+      error: null,
+    });
+    mockGetDriverByUserId.mockResolvedValue(pendingDriver);
+    mockFrom.mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: null,
+              error: { code: 'PGRST116', message: 'not found' },
+            }),
+          }),
+        }),
+      }),
+    });
+
+    const request = new Request('https://driver.ridendine.ca/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: 'pending.driver@example.com',
+        password: 'correct-password',
+      }),
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.driver).toEqual(pendingDriver);
+    expect(mockSignOut).not.toHaveBeenCalled();
+  });
 });

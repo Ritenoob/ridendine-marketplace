@@ -14,6 +14,7 @@ import type { EligibleDriver } from './driver-matching.service';
 const DRIVER_A_ID = '00000000-0000-0000-0001-000000000001';
 const DRIVER_B_ID = '00000000-0000-0000-0001-000000000002';
 const DRIVER_C_ID = '00000000-0000-0000-0001-000000000003';
+const REQUIRED_DRIVER_DOC_TYPES = ['drivers_license', 'vehicle_registration', 'vehicle_insurance'];
 
 function makeDriver(overrides: Partial<EligibleDriver> = {}): EligibleDriver {
   return {
@@ -104,7 +105,27 @@ describe('calculateDriverAssignmentScore', () => {
 // ==========================================
 
 describe('DriverMatchingService', () => {
-  function buildMockClient(driversData: unknown[], deliveriesData: unknown[], attemptsData: unknown[]) {
+  function approvedDriverDocs(driverIds: string[]) {
+    return driverIds.flatMap((driverId) =>
+      REQUIRED_DRIVER_DOC_TYPES.map((documentType) => ({
+        driver_id: driverId,
+        document_type: documentType,
+        status: 'approved',
+        expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      }))
+    );
+  }
+
+  function buildMockClient(
+    driversData: Array<{ id?: string }>,
+    deliveriesData: unknown[],
+    attemptsData: unknown[],
+    documentsData?: unknown[]
+  ) {
+    const complianceRows = documentsData ?? approvedDriverDocs(
+      driversData.map((driver) => driver.id).filter((id): id is string => Boolean(id))
+    );
+
     return {
       from: vi.fn((table: string) => {
         if (table === 'drivers') {
@@ -117,6 +138,13 @@ describe('DriverMatchingService', () => {
                   gte: vi.fn().mockResolvedValue({ data: driversData, error: null }),
                 }),
               }),
+            }),
+          };
+        }
+        if (table === 'driver_documents') {
+          return {
+            select: vi.fn().mockReturnValue({
+              in: vi.fn().mockResolvedValue({ data: complianceRows, error: null }),
             }),
           };
         }
@@ -147,7 +175,12 @@ describe('DriverMatchingService', () => {
     };
   }
 
-  function makeDriverRow(id: string, lat: number, lng: number) {
+  function makeDriverRow(
+    id: string,
+    lat: number,
+    lng: number,
+    overrides: Record<string, unknown> = {}
+  ) {
     return {
       id,
       user_id: `user-${id}`,
@@ -163,6 +196,7 @@ describe('DriverMatchingService', () => {
         last_location_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
+      ...overrides,
     };
   }
 
@@ -202,6 +236,24 @@ describe('DriverMatchingService', () => {
     // Only 1 driver should be within 10km
     expect(result.length).toBe(1);
     expect(result[0]!.id).toBe(DRIVER_A_ID);
+  });
+
+  it('findEligibleDrivers ignores non-approved and non-compliant drivers before ranking', async () => {
+    const compliantApproved = makeDriverRow(DRIVER_A_ID, 43.26, -79.87);
+    const pendingDriver = makeDriverRow(DRIVER_B_ID, 43.26, -79.87, { status: 'pending' });
+    const suspendedDriver = makeDriverRow(DRIVER_C_ID, 43.26, -79.87, { status: 'suspended' });
+    const missingDocsDriver = makeDriverRow('00000000-0000-0000-0001-000000000004', 43.26, -79.87);
+    const client = buildMockClient(
+      [compliantApproved, pendingDriver, suspendedDriver, missingDocsDriver],
+      [],
+      [],
+      approvedDriverDocs([DRIVER_A_ID])
+    );
+    const service = new DriverMatchingService(client as any);
+
+    const result = await service.findEligibleDrivers(43.26, -79.87, 10);
+
+    expect(result.map((driver) => driver.id)).toEqual([DRIVER_A_ID]);
   });
 
   describe('selectBestDriver', () => {

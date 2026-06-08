@@ -1,5 +1,10 @@
 import { createAdminClient } from '@ridendine/db';
-import { mapEngineStatusToPublicStage, PublicOrderStage } from '@ridendine/types';
+import {
+  mapEngineStatusToPublicStage,
+  PublicOrderStage,
+  summarizeDriverComplianceDocuments,
+  type DriverComplianceDocumentInput,
+} from '@ridendine/types';
 import {
   getEngine,
   getOpsActorContext,
@@ -86,22 +91,8 @@ function mapDeliveryNested(row: Record<string, unknown> | null): OpsLiveDelivery
   };
 }
 
-function normalizeStatus(status: unknown): string {
-  return typeof status === 'string' ? status.trim().toLowerCase() : '';
-}
-
-function isExpired(expiresAt: unknown, now: Date): boolean {
-  if (typeof expiresAt !== 'string' || expiresAt.length === 0) return false;
-  const time = Date.parse(expiresAt);
-  return Number.isFinite(time) && time < now.getTime();
-}
-
 function countComplianceOpenItems(rows: Record<string, unknown>[], now: Date): number {
-  return rows.reduce((count, row) => {
-    const status = normalizeStatus(row.status);
-    const expired = isExpired(row.expires_at, now);
-    return status !== 'approved' || expired ? count + 1 : count;
-  }, 0);
+  return summarizeDriverComplianceDocuments(rows as DriverComplianceDocumentInput[], now).openItems;
 }
 
 function isPayoutConnected(row: Record<string, unknown> | undefined): boolean {
@@ -211,7 +202,7 @@ export async function GET() {
       ? await Promise.all([
           admin
             .from('driver_documents')
-            .select('driver_id, status, expires_at')
+            .select('driver_id, document_type, status, expires_at')
             .in('driver_id', driverIds)
             .limit(1000),
           admin

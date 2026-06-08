@@ -582,6 +582,8 @@ Expected: all pass and guard audit reports `unguarded 0`.
 
 **Purpose:** Ensure a driver cannot receive real dispatch work unless Ops has approved the profile and required compliance state.
 
+**Status:** Completed on 2026-06-08. Verified with failing-first Driver auth/readiness and engine matching/context tests, full Driver app tests, touched Ops compliance/operations tests, full repo typecheck through the pinned pnpm wrapper, Driver/Ops lint, API guard audit, `test:wiring-fixes`, and `git diff --check`.
+
 **Files:**
 - Modify: `packages/engine/src/server.ts`
 - Modify: `packages/engine/src/orchestrators/driver-matching.service.ts`
@@ -592,7 +594,7 @@ Expected: all pass and guard audit reports `unguarded 0`.
 - Test: `packages/engine/src/orchestrators/driver-matching.service.test.ts`
 - Test: `apps/driver-app/src/__tests__/auth-login-route.test.ts`
 
-- [ ] **Step 1: Confirm approval gate tests**
+- [x] **Step 1: Confirm approval gate tests**
 
 Add tests that:
 - pending drivers can sign in and view onboarding/readiness blockers
@@ -601,15 +603,15 @@ Add tests that:
 - approved drivers can access dispatch APIs
 - driver matching ignores pending and suspended drivers
 
-- [ ] **Step 2: Keep signup behavior explicit**
+- [x] **Step 2: Keep signup behavior explicit**
 
 If closed beta still auto-approves self-serve driver signup, keep that behavior visible in code comments and Ops docs. If business wants manual approval, change signup status to `pending` and require Ops approval before dispatch.
 
-- [ ] **Step 3: Add compliance blocker to readiness**
+- [x] **Step 3: Add compliance blocker to readiness**
 
 If required document rows are missing or rejected, readiness should say `not_dispatchable` with a compliance detail. Do not block profile/settings access.
 
-- [ ] **Step 4: Verify Phase 8**
+- [x] **Step 4: Verify Phase 8**
 
 Run:
 

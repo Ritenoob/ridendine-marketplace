@@ -69,14 +69,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (driver.status !== 'approved') {
-      await supabase.auth.signOut();
-      return NextResponse.json(
-        { error: 'Driver account is not approved yet' },
-        { status: 403 }
-      );
-    }
-
+    // Pending, rejected, and suspended driver profiles may sign in so the app can
+    // show onboarding/readiness blockers. Dispatch APIs still require approved
+    // context through getDriverActorContext() by default.
     return NextResponse.json({
       success: true,
       data: {

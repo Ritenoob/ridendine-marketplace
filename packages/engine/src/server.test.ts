@@ -111,6 +111,27 @@ describe('server actor context helpers', () => {
     await expect(getDriverActorContext()).resolves.toBeNull();
   });
 
+  it('denies driver context for suspended drivers by default', async () => {
+    setCurrentUser('user-driver');
+    setAdminTables({
+      drivers: { id: 'driver-1', status: 'suspended' },
+    });
+
+    await expect(getDriverActorContext()).resolves.toBeNull();
+  });
+
+  it('allows dispatch context for approved drivers by default', async () => {
+    setCurrentUser('user-driver');
+    setAdminTables({
+      drivers: { id: 'driver-1', status: 'approved' },
+    });
+
+    await expect(getDriverActorContext()).resolves.toEqual({
+      actor: { userId: 'user-driver', role: 'driver', entityId: 'driver-1' },
+      driverId: 'driver-1',
+    });
+  });
+
   it('allows driver onboarding context when approval is not required', async () => {
     setCurrentUser('user-driver');
     setAdminTables({

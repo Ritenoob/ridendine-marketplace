@@ -52,7 +52,11 @@ function baseFixture(overrides: Partial<ReadinessFixture> = {}): ReadinessFixtur
       payouts_enabled: true,
       onboarding_completed_at: '2026-06-01T12:00:00.000Z',
     },
-    documents: [],
+    documents: [
+      { id: 'doc-license', document_type: 'drivers_license', status: 'approved', expires_at: '2027-06-01T00:00:00.000Z' },
+      { id: 'doc-registration', document_type: 'vehicle_registration', status: 'approved', expires_at: '2027-06-01T00:00:00.000Z' },
+      { id: 'doc-insurance', document_type: 'vehicle_insurance', status: 'approved', expires_at: '2027-06-01T00:00:00.000Z' },
+    ],
     platformAccount: {
       balance_cents: 4250,
     },
@@ -204,12 +208,30 @@ describe('GET /api/driver/readiness', () => {
     expect(JSON.stringify(json.data)).not.toContain('current_lng');
   });
 
-  it('counts non-approved driver document rows as conservative open compliance items', async () => {
+  it('counts missing required driver documents as compliance blockers', async () => {
+    mockDb(baseFixture({ documents: [] }));
+
+    const { GET } = await getRoute();
+    const response = await GET();
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.data).toMatchObject({
+      complianceOpenItems: 3,
+      readiness: {
+        status: 'not_dispatchable',
+        detail: expect.stringContaining('compliance'),
+      },
+    });
+  });
+
+  it('counts non-approved required driver document rows as compliance blockers', async () => {
     mockDb(
       baseFixture({
         documents: [
-          { id: 'doc-1', status: 'pending' },
-          { id: 'doc-2', status: 'rejected' },
+          { id: 'doc-1', document_type: 'drivers_license', status: 'pending', expires_at: null },
+          { id: 'doc-2', document_type: 'vehicle_registration', status: 'approved', expires_at: '2027-06-01T00:00:00.000Z' },
+          { id: 'doc-3', document_type: 'vehicle_insurance', status: 'rejected', expires_at: null },
         ],
       })
     );

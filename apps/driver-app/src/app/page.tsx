@@ -41,15 +41,9 @@ export default async function DriverHomePage() {
     );
   }
 
-  if (!isApprovedDriver(driver)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#080b10] p-6">
-        <ErrorState title="Awaiting approval" description="You will get full access once your driver account is approved." />
-      </div>
-    );
-  }
-
-  const activeDeliveries = await getActiveDeliveriesForDriver(supabase as any, driver.id);
+  const activeDeliveries = isApprovedDriver(driver)
+    ? await getActiveDeliveriesForDriver(supabase as any, driver.id)
+    : [];
 
   return <DriverDashboard driver={driver} activeDeliveries={activeDeliveries} />;
 }

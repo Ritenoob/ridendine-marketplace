@@ -6,7 +6,12 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { EtaService } from '@ridendine/routing';
-import type { DriverSupplySnapshot, PlatformRuleSet } from '@ridendine/types';
+import {
+  summarizeDriverComplianceDocuments,
+  type DriverComplianceDocumentInput,
+  type DriverSupplySnapshot,
+  type PlatformRuleSet,
+} from '@ridendine/types';
 import { calculateDistanceKm, scoreDriverForDispatch } from '@ridendine/utils';
 
 // ==========================================
@@ -124,15 +129,19 @@ export class DriverMatchingService {
     if (error || !drivers) return [];
 
     const driverIds = drivers.map((d) => d.id);
-    const [activeResult, attemptsResult] = await this.fetchDriverWorkloadData(driverIds);
+    const [activeResult, attemptsResult, documentsResult] = await this.fetchDriverWorkloadData(driverIds);
 
     const activeWorkload = buildCountMap(activeResult.data ?? [], 'driver_id');
     const recentDeclines = buildDeclineMap(attemptsResult.data ?? [], 'declined');
     const recentExpiries = buildDeclineMap(attemptsResult.data ?? [], 'expired');
+    const complianceOpenItems = buildDriverComplianceMap(documentsResult.data ?? [], new Date());
 
     const eligible: EligibleDriver[] = [];
 
     for (const driver of drivers) {
+      if (driver.status !== 'approved') continue;
+      if ((complianceOpenItems.get(driver.id) ?? 1) > 0) continue;
+
       const presence = driver.driver_presence as unknown as {
         status: string;
         current_lat: number | null;
@@ -283,10 +292,12 @@ export class DriverMatchingService {
 
   private async fetchDriverWorkloadData(driverIds: string[]): Promise<[
     { data: Array<{ driver_id: string }> | null; error: unknown },
-    { data: Array<{ driver_id: string; response: string }> | null; error: unknown }
+    { data: Array<{ driver_id: string; response: string }> | null; error: unknown },
+    { data: DriverComplianceDocumentRow[] | null; error: unknown }
   ]> {
     if (driverIds.length === 0) {
       return [
+        { data: [], error: null },
         { data: [], error: null },
         { data: [], error: null },
       ];
@@ -306,6 +317,13 @@ export class DriverMatchingService {
         .in('driver_id', driverIds)
         .gte('offered_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) as unknown) as Promise<{
         data: Array<{ driver_id: string; response: string }> | null;
+        error: unknown;
+      }>,
+      (this.client
+        .from('driver_documents')
+        .select('driver_id, document_type, status, expires_at')
+        .in('driver_id', driverIds) as unknown) as Promise<{
+        data: DriverComplianceDocumentRow[] | null;
         error: unknown;
       }>,
     ]);
@@ -463,6 +481,31 @@ function buildDeclineMap(
     map.set(row.driver_id, (map.get(row.driver_id) ?? 0) + 1);
   }
   return map;
+}
+
+type DriverComplianceDocumentRow = DriverComplianceDocumentInput & {
+  driver_id?: string | null;
+};
+
+function buildDriverComplianceMap(
+  rows: DriverComplianceDocumentRow[],
+  now: Date
+): Map<string, number> {
+  const rowsByDriver = new Map<string, DriverComplianceDocumentRow[]>();
+
+  for (const row of rows) {
+    if (!row.driver_id) continue;
+    const driverRows = rowsByDriver.get(row.driver_id) ?? [];
+    driverRows.push(row);
+    rowsByDriver.set(row.driver_id, driverRows);
+  }
+
+  const openItemsByDriver = new Map<string, number>();
+  for (const [driverId, driverRows] of rowsByDriver.entries()) {
+    openItemsByDriver.set(driverId, summarizeDriverComplianceDocuments(driverRows, now).openItems);
+  }
+
+  return openItemsByDriver;
 }
 
 function resolveRiskLevel(
