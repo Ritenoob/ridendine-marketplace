@@ -194,6 +194,110 @@ describe('OfferManagementService', () => {
     mockGetPlatform.mockResolvedValue(platformDefaults());
   });
 
+  describe('offerToNextDriver', () => {
+    it('broadcasts live offer decision-support fields without coordinate keys', async () => {
+      const delivery = makeDelivery({
+        route_to_dropoff_seconds: 930,
+        driver_payout: 11.75,
+        distance_km: 4.2,
+        pickup_lat: 43.255,
+        pickup_lng: -79.871,
+        dropoff_lat: 43.26,
+        dropoff_lng: -79.86,
+        orders: {
+          order_number: 'RD-1007',
+          tip: 3.25,
+          storefront: { name: 'Every Bite Yum' },
+        },
+      });
+      const attempt = makeAttempt({
+        id: ATTEMPT_ID,
+        distance_meters: 1200,
+        estimated_minutes: 6,
+      });
+
+      const { service, events, driverMatching } = makeService((table) => {
+        if (table === 'deliveries') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: delivery, error: null }),
+              }),
+            }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
+            }),
+          };
+        }
+        if (table === 'assignment_attempts') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockReturnValue({
+                  gt: vi.fn().mockReturnValue({
+                    maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                  }),
+                }),
+                in: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: attempt, error: null }),
+              }),
+            }),
+          };
+        }
+        if (table === 'notifications') {
+          return { insert: vi.fn().mockResolvedValue({ error: null }) };
+        }
+        if (table === 'service_areas') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          };
+        }
+        return makeChain();
+      });
+      driverMatching.findEligibleDrivers.mockResolvedValue([
+        {
+          id: DRIVER_ID,
+          user_id: DRIVER_USER_ID,
+          distance_km: 1.2,
+          estimated_minutes: 6,
+        },
+      ]);
+      driverMatching.rankCandidates.mockResolvedValue([{ driverId: DRIVER_ID, seconds: 360 }]);
+
+      const result = await service.offerToNextDriver(DELIVERY_ID, {
+        userId: 'system',
+        role: 'system',
+      });
+
+      expect(result.success).toBe(true);
+      expect(events.broadcastDriverOffer).toHaveBeenCalledWith(
+        DRIVER_ID,
+        expect.objectContaining({
+          attemptId: ATTEMPT_ID,
+          deliveryId: DELIVERY_ID,
+          storefrontName: 'Every Bite Yum',
+          orderNumber: 'RD-1007',
+          customerTip: 3.25,
+          estimatedRouteSeconds: 930,
+          estimatedDistanceKm: 4.2,
+          estimatedPayout: 11.75,
+        }),
+        'offer'
+      );
+      const payload = events.broadcastDriverOffer.mock.calls[0]?.[1] as Record<string, unknown>;
+      expect(JSON.stringify(payload)).not.toMatch(/pickup_lat|pickup_lng|dropoff_lat|dropoff_lng/i);
+      expect(JSON.stringify(payload)).not.toMatch(/"lat"|"lng"|latitude|longitude/i);
+    });
+  });
+
   describe('acceptOffer', () => {
     it('happy path — updates attempt to accepted, delivery gets driver/assigned status, driver_presence set busy, emits events', async () => {
       const attempt = makeAttempt();

@@ -54,6 +54,69 @@ describe('GET /api/offers', () => {
     expect(lastOfferSelect).not.toContain('estimated_distance_km');
     expect(lastOfferSelect).not.toContain('estimated_duration_minutes');
   });
+
+  it('returns a driver-safe offer payload with decision support fields', async () => {
+    const expiresAt = new Date(Date.now() + 45_000).toISOString();
+    const dbOffer = {
+      id: 'att-1',
+      delivery_id: 'del-1',
+      driver_id: 'driver-self',
+      expires_at: expiresAt,
+      delivery: {
+        id: 'del-1',
+        pickup_address: '123 King St W, Hamilton',
+        pickup_lat: 43.255,
+        pickup_lng: -79.871,
+        dropoff_address: '500 Main St E, Hamilton',
+        dropoff_lat: 43.26,
+        dropoff_lng: -79.86,
+        distance_km: 4.2,
+        route_to_dropoff_seconds: 930,
+        driver_payout: 11.75,
+        orders: {
+          order_number: 'RD-1007',
+          total: 42.5,
+          tip: 3.25,
+          storefront: { name: 'Every Bite Yum' },
+        },
+      },
+    };
+    const order = jest.fn().mockResolvedValue({ data: [dbOffer], error: null });
+    const gt = jest.fn().mockReturnValue({ order });
+    const eqResponse = { eq: jest.fn().mockReturnValue({ gt }) };
+    const select = jest.fn((columns: string) => {
+      lastOfferSelect = columns;
+      return { eq: jest.fn().mockReturnValue(eqResponse) };
+    });
+    mockFrom.mockReturnValue({ select });
+
+    const res = await GET();
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.offers).toEqual([
+      expect.objectContaining({
+        attemptId: 'att-1',
+        deliveryId: 'del-1',
+        pickupAddress: '123 King St W, Hamilton',
+        dropoffAddress: '500 Main St E, Hamilton',
+        estimatedDistanceKm: 4.2,
+        estimatedRouteSeconds: 930,
+        estimatedPayout: 11.75,
+        customerTip: 3.25,
+        orderNumber: 'RD-1007',
+        storefrontName: 'Every Bite Yum',
+        expiresAt,
+      }),
+    ]);
+    const serialized = JSON.stringify(body.data.offers[0]);
+    expect(serialized).not.toMatch(/pickup_lat|pickup_lng|dropoff_lat|dropoff_lng/i);
+    expect(serialized).not.toMatch(/"lat"|"lng"|latitude|longitude/i);
+    expect(lastOfferSelect).toContain('route_to_dropoff_seconds');
+    expect(lastOfferSelect).toContain('driver_payout');
+    expect(lastOfferSelect).toContain('tip');
+    expect(lastOfferSelect).toContain('storefront:chef_storefronts');
+  });
 });
 
 describe('POST /api/offers', () => {

@@ -10,7 +10,11 @@ interface DeliveryOffer {
   pickupAddress: string;
   dropoffAddress: string;
   distanceKm: number;
+  routeSeconds: number | null;
   estimatedPayout: number;
+  customerTip: number | null;
+  orderNumber: string | null;
+  storefrontName: string | null;
   expiresAt: string;
 }
 
@@ -20,6 +24,15 @@ interface OfferAlertProps {
   onChannelStatus?: (status: LiveIndicatorStatus) => void;
 }
 
+type DeclineReason = 'too_far' | 'unsafe' | 'busy' | 'other';
+
+const DECLINE_REASONS: Array<{ value: DeclineReason; label: string }> = [
+  { value: 'too_far', label: 'Too far' },
+  { value: 'unsafe', label: 'Unsafe' },
+  { value: 'busy', label: 'Busy' },
+  { value: 'other', label: 'Other' },
+];
+
 function offerErrorMessage(code?: string, fallback?: string) {
   switch (code) {
     case 'OFFER_EXPIRED':
@@ -27,6 +40,7 @@ function offerErrorMessage(code?: string, fallback?: string) {
       return 'This offer has expired.';
     case 'OFFER_ALREADY_ACCEPTED':
     case 'ALREADY_ACCEPTED':
+    case 'ALREADY_RESPONDED':
       return 'Another driver already accepted this offer.';
     case 'FORBIDDEN':
       return 'You are not eligible to accept this offer.';
@@ -46,16 +60,48 @@ function mapBroadcastToOffer(payload: Record<string, unknown>): DeliveryOffer | 
     typeof payload.estimatedDistanceKm === 'number' && Number.isFinite(payload.estimatedDistanceKm)
       ? payload.estimatedDistanceKm
       : 0;
-  const estimatedPayout = Number(payload.estimatedPayout ?? 0);
+  const estimatedPayout =
+    typeof payload.estimatedPayout === 'number' && Number.isFinite(payload.estimatedPayout)
+      ? payload.estimatedPayout
+      : 0;
+  const routeSeconds =
+    typeof payload.estimatedRouteSeconds === 'number' && Number.isFinite(payload.estimatedRouteSeconds)
+      ? payload.estimatedRouteSeconds
+      : typeof payload.estimatedMinutes === 'number' && Number.isFinite(payload.estimatedMinutes)
+        ? payload.estimatedMinutes * 60
+        : null;
+  const customerTip =
+    typeof payload.customerTip === 'number' && Number.isFinite(payload.customerTip)
+      ? payload.customerTip
+      : null;
+  const orderNumber = typeof payload.orderNumber === 'string' ? payload.orderNumber : null;
+  const storefrontName =
+    typeof payload.storefrontName === 'string' && payload.storefrontName.trim() !== ''
+      ? payload.storefrontName
+      : null;
   return {
     id: attemptId,
     deliveryId,
     pickupAddress,
     dropoffAddress,
     distanceKm,
+    routeSeconds,
     estimatedPayout,
+    customerTip,
+    orderNumber,
+    storefrontName,
     expiresAt,
   };
+}
+
+function formatMoney(value: number) {
+  return `$${value.toFixed(2)}`;
+}
+
+function formatRouteTime(seconds: number | null) {
+  if (!seconds || seconds <= 0) return 'Not available';
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  return `${minutes} min`;
 }
 
 function playAlertSound() {
@@ -105,16 +151,21 @@ function CountdownBadge({ secondsLeft }: { secondsLeft: number }) {
 function RouteDisplay({
   pickupAddress,
   dropoffAddress,
+  storefrontName,
 }: {
   pickupAddress: string;
   dropoffAddress: string;
+  storefrontName: string | null;
 }) {
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-3">
         <div className="mt-1.5 h-3 w-3 flex-shrink-0 rounded-full bg-success" />
         <div>
-          <p className="text-xs font-medium text-textMuted">PICKUP</p>
+          <p className="text-xs font-medium text-textMuted">Pickup from</p>
+          {storefrontName ? (
+            <p className="text-sm font-semibold text-text">{storefrontName}</p>
+          ) : null}
           <p className="text-sm font-medium text-text">{pickupAddress}</p>
         </div>
       </div>
@@ -122,7 +173,7 @@ function RouteDisplay({
       <div className="flex items-start gap-3">
         <div className="mt-1.5 h-3 w-3 flex-shrink-0 rounded-full bg-danger" />
         <div>
-          <p className="text-xs font-medium text-textMuted">DROPOFF</p>
+          <p className="text-xs font-medium text-textMuted">Deliver to</p>
           <p className="text-sm font-medium text-text">{dropoffAddress}</p>
         </div>
       </div>
@@ -133,19 +184,31 @@ function RouteDisplay({
 function OfferStats({
   distanceKm,
   estimatedPayout,
+  routeSeconds,
 }: {
   distanceKm: number;
   estimatedPayout: number;
+  routeSeconds: number | null;
 }) {
+  const payPerKm = distanceKm > 0 ? estimatedPayout / distanceKm : 0;
+
   return (
-    <div className="mt-4 flex justify-between rounded-xl bg-surfaceMuted p-3">
+    <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-surfaceMuted p-3">
       <div className="text-center">
         <p className="text-lg font-bold text-text">{distanceKm.toFixed(1)} km</p>
         <p className="text-xs text-textMuted">Distance</p>
       </div>
       <div className="text-center">
-        <p className="text-lg font-bold text-success">${estimatedPayout.toFixed(2)}</p>
+        <p className="text-lg font-bold text-success">{formatMoney(estimatedPayout)}</p>
         <p className="text-xs text-textMuted">Earnings</p>
+      </div>
+      <div className="text-center">
+        <p className="text-lg font-bold text-text">{formatMoney(payPerKm)}/km</p>
+        <p className="text-xs text-textMuted">Pay per km</p>
+      </div>
+      <div className="text-center">
+        <p className="text-lg font-bold text-text">{formatRouteTime(routeSeconds)}</p>
+        <p className="text-xs text-textMuted">Route time</p>
       </div>
     </div>
   );
@@ -154,7 +217,8 @@ function OfferStats({
 export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertProps) {
   const [offer, setOffer] = useState<DeliveryOffer | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
-  const [responding, setResponding] = useState(false);
+  const [respondingAction, setRespondingAction] = useState<'accept' | 'decline' | null>(null);
+  const [declineReason, setDeclineReason] = useState<DeclineReason>('too_far');
   const [responseError, setResponseError] = useState<string | null>(null);
   const hasPlayedSound = useRef(false);
 
@@ -222,7 +286,8 @@ export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertPr
 
   const respond = async (action: 'accept' | 'decline') => {
     if (!offer) return;
-    setResponding(true);
+    let shouldDismissOffer = false;
+    setRespondingAction(action);
     setResponseError(null);
 
     try {
@@ -233,27 +298,41 @@ export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertPr
           attemptId: offer.id,
           driverId,
           action,
-          ...(action === 'decline' ? { reason: 'driver_declined' } : {}),
+          ...(action === 'decline' ? { reason: declineReason } : {}),
         }),
       });
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        setResponseError(offerErrorMessage(payload?.code, payload?.error));
+        const errorCode =
+          typeof payload?.code === 'string'
+            ? payload.code
+            : typeof payload?.error?.code === 'string'
+              ? payload.error.code
+              : undefined;
+        const fallback =
+          typeof payload?.message === 'string'
+            ? payload.message
+            : typeof payload?.error?.message === 'string'
+              ? payload.error.message
+              : undefined;
+        setResponseError(offerErrorMessage(errorCode, fallback));
         return;
       }
 
       if (action === 'accept') {
         window.location.href = `/delivery/${offer.deliveryId}`;
+      } else {
+        shouldDismissOffer = true;
       }
     } catch (error) {
       console.error('Failed to respond to offer:', error);
       setResponseError('Network error while responding to this offer.');
     } finally {
-      if (action === 'decline') {
+      if (shouldDismissOffer) {
         setOffer(null);
       }
-      setResponding(false);
+      setRespondingAction(null);
     }
   };
 
@@ -263,13 +342,32 @@ export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertPr
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-300">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-text">New Delivery!</h2>
+          <div>
+            <h2 className="text-xl font-bold text-text">New Delivery!</h2>
+            {offer.orderNumber ? (
+              <p className="text-xs font-medium text-textMuted">Order {offer.orderNumber}</p>
+            ) : null}
+          </div>
           <CountdownBadge secondsLeft={secondsLeft} />
         </div>
 
-        <RouteDisplay pickupAddress={offer.pickupAddress} dropoffAddress={offer.dropoffAddress} />
+        <RouteDisplay
+          pickupAddress={offer.pickupAddress}
+          dropoffAddress={offer.dropoffAddress}
+          storefrontName={offer.storefrontName}
+        />
 
-        <OfferStats distanceKm={offer.distanceKm} estimatedPayout={offer.estimatedPayout} />
+        <OfferStats
+          distanceKm={offer.distanceKm}
+          estimatedPayout={offer.estimatedPayout}
+          routeSeconds={offer.routeSeconds}
+        />
+
+        {offer.customerTip != null && offer.customerTip > 0 ? (
+          <p className="mt-3 rounded-lg bg-successSoft px-3 py-2 text-sm font-medium text-success">
+            Tip included: {formatMoney(offer.customerTip)}
+          </p>
+        ) : null}
 
         {responseError ? (
           <div className="mt-4 rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-sm text-danger">
@@ -277,22 +375,39 @@ export function OfferAlert({ driverId, isOnline, onChannelStatus }: OfferAlertPr
           </div>
         ) : null}
 
+        <label className="mt-4 block text-xs font-medium text-textMuted" htmlFor="decline-reason">
+          Decline reason
+        </label>
+        <select
+          id="decline-reason"
+          value={declineReason}
+          onChange={(event) => setDeclineReason(event.target.value as DeclineReason)}
+          disabled={respondingAction !== null}
+          className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-text"
+        >
+          {DECLINE_REASONS.map((reason) => (
+            <option key={reason.value} value={reason.value}>
+              {reason.label}
+            </option>
+          ))}
+        </select>
+
         <div className="mt-5 flex gap-3">
           <Button
             variant="outline"
             className="flex-1 rounded-xl py-3"
             onClick={() => respond('decline')}
-            disabled={responding}
+            disabled={respondingAction !== null}
           >
-            Decline
+            {respondingAction === 'decline' ? 'Declining...' : 'Decline'}
           </Button>
           <Button
             variant="success"
             className="flex-1 rounded-xl py-3"
             onClick={() => respond('accept')}
-            disabled={responding}
+            disabled={respondingAction !== null}
           >
-            {responding ? 'Accepting...' : 'Accept'}
+            {respondingAction === 'accept' ? 'Accepting...' : 'Accept'}
           </Button>
         </div>
       </div>

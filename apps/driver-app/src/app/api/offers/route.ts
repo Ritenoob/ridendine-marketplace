@@ -14,6 +14,63 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+type OfferOrder = {
+  order_number?: string | null;
+  tip?: number | string | null;
+  storefront?: { name?: string | null } | Array<{ name?: string | null }> | null;
+};
+
+type OfferDelivery = {
+  id?: string | null;
+  pickup_address?: string | null;
+  dropoff_address?: string | null;
+  distance_km?: number | string | null;
+  route_to_dropoff_seconds?: number | string | null;
+  driver_payout?: number | string | null;
+  orders?: OfferOrder | OfferOrder[] | null;
+};
+
+type AssignmentOfferRow = {
+  id?: string | null;
+  delivery_id?: string | null;
+  expires_at?: string | null;
+  delivery?: OfferDelivery | OfferDelivery[] | null;
+};
+
+function firstRelated<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function numericOrNull(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function mapOfferForDriver(row: AssignmentOfferRow) {
+  const delivery = firstRelated(row.delivery);
+  const order = firstRelated(delivery?.orders);
+  const storefront = firstRelated(order?.storefront);
+
+  return {
+    attemptId: row.id ?? '',
+    deliveryId: delivery?.id ?? row.delivery_id ?? '',
+    pickupAddress: delivery?.pickup_address ?? '',
+    dropoffAddress: delivery?.dropoff_address ?? '',
+    estimatedDistanceKm: numericOrNull(delivery?.distance_km),
+    estimatedRouteSeconds: numericOrNull(delivery?.route_to_dropoff_seconds),
+    estimatedPayout: numericOrNull(delivery?.driver_payout),
+    customerTip: numericOrNull(order?.tip),
+    orderNumber: order?.order_number ?? null,
+    storefrontName: storefront?.name ?? null,
+    expiresAt: row.expires_at ?? '',
+  };
+}
+
 /**
  * GET /api/offers
  * Get pending delivery offers for the current driver
@@ -35,11 +92,7 @@ export async function GET() {
         delivery:deliveries (
           id,
           pickup_address,
-          pickup_lat,
-          pickup_lng,
           dropoff_address,
-          dropoff_lat,
-          dropoff_lng,
           distance_km,
           route_to_dropoff_seconds,
           driver_payout,
@@ -61,7 +114,7 @@ export async function GET() {
     }
 
     return successResponse({
-      offers: offers || [],
+      offers: (offers || []).map((offer) => mapOfferForDriver(offer as AssignmentOfferRow)),
     });
   } catch (error) {
     console.error('Error fetching offers:', error);

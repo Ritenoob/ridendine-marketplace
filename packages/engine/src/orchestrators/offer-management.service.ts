@@ -27,15 +27,28 @@ interface DeliveryRow {
   pickup_lat: number;
   pickup_lng: number;
   distance_km?: number | null;
+  route_to_dropoff_seconds?: number | null;
   delivery_fee: number;
   driver_payout: number;
   assignment_attempts_count: number;
+  orders?: OfferOrderRow | OfferOrderRow[] | null;
+}
+
+interface OfferOrderRow {
+  order_number?: string | null;
+  tip?: number | null;
+  storefront?: { name?: string | null } | Array<{ name?: string | null }> | null;
 }
 
 interface ServiceSettings {
   dispatchRadiusKm: number;
   offerTimeoutSeconds: number;
   maxAssignmentAttempts: number;
+}
+
+function firstRelated<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
 }
 
 // ==========================================
@@ -66,7 +79,14 @@ export class OfferManagementService {
   ): Promise<OperationResult<AssignmentAttempt>> {
     const { data: delivery, error: deliveryError } = await this.client
       .from('deliveries')
-      .select('*')
+      .select(`
+        *,
+        orders (
+          order_number,
+          tip,
+          storefront:chef_storefronts (name)
+        )
+      `)
       .eq('id', deliveryId)
       .single();
 
@@ -200,6 +220,8 @@ export class OfferManagementService {
     );
 
     // Broadcast payload — preserved verbatim (realtime broadcast logic)
+    const offerOrder = firstRelated(typedDelivery.orders);
+    const offerStorefront = firstRelated(offerOrder?.storefront);
     const broadcastPayload: Record<string, unknown> = {
       attemptId: attempt.id,
       deliveryId,
@@ -209,6 +231,10 @@ export class OfferManagementService {
       estimatedDistanceKm: typedDelivery.distance_km ?? null,
       estimatedPayout: typedDelivery.driver_payout,
       estimatedMinutes: etaMinutes,
+      estimatedRouteSeconds: typedDelivery.route_to_dropoff_seconds ?? null,
+      customerTip: offerOrder?.tip ?? null,
+      orderNumber: offerOrder?.order_number ?? null,
+      storefrontName: offerStorefront?.name ?? null,
     };
 
     await this.events.broadcastDriverOffer(selectedDriver.id, broadcastPayload, 'offer');

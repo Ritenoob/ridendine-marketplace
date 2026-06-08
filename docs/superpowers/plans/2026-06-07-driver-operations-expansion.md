@@ -278,13 +278,15 @@ Expected: all pass.
 
 **Purpose:** Help drivers make faster, safer offer decisions while keeping dispatch state server-owned.
 
+**Status:** Completed on 2026-06-07. Verified with engine offer broadcast tests, driver offer route/card tests, Driver app lint, Driver app typecheck, Engine typecheck, Ops app typecheck, `test:wiring-fixes`, and authenticated production contract smoke.
+
 **Files:**
 - Modify: `apps/driver-app/src/components/offer-alert.tsx`
 - Modify: `apps/driver-app/src/app/api/offers/route.ts`
 - Test: `apps/driver-app/src/__tests__/offers-route.test.ts`
 - Create: `apps/driver-app/src/__tests__/offer-alert.test.tsx`
 
-- [ ] **Step 1: Extend offer route tests**
+- [x] **Step 1: Extend offer route tests**
 
 Add tests that the offer payload can include:
 - storefront name
@@ -297,7 +299,7 @@ Add tests that the offer payload can include:
 
 Keep coordinate keys out of driver offer broadcast payloads unless the driver owns the delivery after accept.
 
-- [ ] **Step 2: Add offer alert component tests**
+- [x] **Step 2: Add offer alert component tests**
 
 Test that `OfferAlert` renders:
 - countdown
@@ -309,7 +311,7 @@ Test that `OfferAlert` renders:
 - restaurant/storefront name when present
 - error message for expired or already accepted offer
 
-- [ ] **Step 3: Improve offer UI**
+- [x] **Step 3: Improve offer UI**
 
 Modify `offer-alert.tsx` to show:
 - "Pickup from"
@@ -320,7 +322,7 @@ Modify `offer-alert.tsx` to show:
 - clear accept and decline loading states
 - reasoned decline options: too far, unsafe, busy, other
 
-- [ ] **Step 4: Verify Phase 3**
+- [x] **Step 4: Verify Phase 3**
 
 Run:
 
