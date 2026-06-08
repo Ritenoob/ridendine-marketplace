@@ -1,6 +1,6 @@
 # Driver Operations Expansion Results
 
-Status: Phase 10 complete; local verification, GitHub CI, Vercel deployments, and production smokes passed
+Status: Phase 11 implemented locally; local gate passed; remote proof pending
 Started: 2026-06-07
 Current update: 2026-06-08
 Scope: Driver app delivery operations, earnings clarity, approval/compliance readiness, and Ops-connected driver operations.
@@ -19,6 +19,7 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 | 8 | Driver approval and compliance enforcement added to login, readiness, dispatch context, matching, Ops operations, and live board. |
 | 9 | Driver shift summary, runtime contracts, production smoke additions, and notification preference fallback completed. |
 | 10 | Driver shift start/end lifecycle, dashboard shift controls, and Ops shift visibility implemented locally. |
+| 11 | Guarded Driver shift mutation smoke proof implemented locally with disposable-fixture safety gates. |
 
 ## Phase 9 Scope
 
@@ -40,6 +41,17 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 | Driver dashboard | Replaced the primary work action with `Start shift` / `End shift`, hydrated `/api/driver/shift`, preserved readiness/GPS/active-delivery behavior, and disabled ending while active work exists. |
 | Ops visibility | Added current shift state, duration, totals, and list badges to Ops driver operations using `driver_presence.current_shift_id` and `driver_shifts`. |
 | Planning records | Added `docs/superpowers/specs/2026-06-08-driver-shift-lifecycle-design.md` and `docs/superpowers/plans/2026-06-08-driver-shift-lifecycle.md`; Obsidian Phase 10 record is in progress. |
+
+## Phase 11 Scope
+
+| Area | Current result |
+|---|---|
+| Guarded mutation smoke | Added `scripts/smoke/driver-shift-mutation-smoke.cjs` and `pnpm smoke:driver-shift-mutation`. The command refuses to run unless explicit disposable-fixture env vars are configured. |
+| Fixture safety | The smoke verifies the authenticated Driver id, requires `drivers.status === "approved"`, checks `GET /api/driver/shift`, and refuses to mutate if the fixture has active deliveries or does not match `RIDENDINE_SHIFT_MUTATION_DRIVER_ID`. |
+| Shift proof path | When a safe disposable fixture is configured, the smoke can prove start shift, idempotent start, end shift, and final off-shift state. |
+| Dirty fixture cleanup | The smoke refuses an already-open fixture shift by default. Cleanup requires `RIDENDINE_SHIFT_MUTATION_CLEANUP_OPEN_SHIFT=1`, and restart after cleanup requires `RIDENDINE_SHIFT_MUTATION_ALLOW_RESTART_AFTER_CLEANUP=1`. |
+| Default smoke safety | Normal `smoke:prod` and `smoke:prod:contracts` remain read-only for Driver shift mutation. |
+| Planning records | Added `docs/superpowers/specs/2026-06-08-driver-shift-mutation-proof-design.md` and `docs/superpowers/plans/2026-06-08-driver-shift-mutation-proof.md`. |
 
 ## Verified So Far
 
@@ -80,6 +92,16 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 | Phase 10 wiring gate | Passed; `pnpm test:wiring-fixes` reported known wiring checks 20/20 and smoke/audit Node tests 49/49. |
 | Phase 10 guard audit | Passed; `pnpm audit:guards` scanned 123 routes, allowlisted 14, and reported 0 unguarded state-changing routes. |
 | Phase 10 whitespace check | Passed; `git diff --check` exited 0. |
+| Phase 11 red test | Failed before implementation because `scripts/smoke/driver-shift-mutation-smoke.cjs` did not exist. |
+| Phase 11 focused smoke-script test | Passed; `driver-shift-mutation-smoke.test.cjs` reported 7/7 tests passing. |
+| Phase 11 wiring gate | Passed; `pnpm test:wiring-fixes` reported known wiring checks 20/20 and smoke/audit Node tests 56/56 with the new Driver shift mutation smoke tests included. |
+| Phase 11 full lint | Passed; `pnpm lint` completed 4/4 app lint tasks. |
+| Phase 11 full typecheck | Passed; `pnpm typecheck` completed 13/13 package/app tasks. |
+| Phase 11 full tests | Passed; `pnpm test` completed package/app tests including Engine 922/922, Driver app 133/133, Ops Admin 297/297, and Web 292/292. Existing React/console warning noise remains non-failing. |
+| Phase 11 production build | Passed; `pnpm build` completed all four production app builds and listed Driver `/api/driver/shift`. |
+| Phase 11 guard audit | Passed; `pnpm audit:guards` scanned 123 routes, allowlisted 14, and reported 0 unguarded state-changing routes. |
+| Phase 11 whitespace check | Passed; `git diff --check` exited 0. |
+| Phase 11 live mutation preflight | Safely blocked; `pnpm smoke:driver-shift-mutation -- --json` returned `MISSING_FIXTURE_CONFIG` before any mutation because the disposable Driver fixture env vars are not configured in this shell. |
 
 ## Phase 10 Remote Gates
 
@@ -101,10 +123,11 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 
 ## Known Risks
 
-- Phase 10 adds live shift mutations. Production smoke should continue using read-only shift probes unless a dedicated disposable driver fixture is created for safe start/end mutation proof.
+- Live Driver shift mutation proof still requires dedicated disposable Driver fixture credentials. The new smoke refuses to run without `RIDENDINE_SHIFT_MUTATION_SMOKE=1`, `RIDENDINE_SHIFT_MUTATION_EMAIL`, `RIDENDINE_SHIFT_MUTATION_PASSWORD`, `RIDENDINE_SHIFT_MUTATION_DRIVER_ID`, and `RIDENDINE_SHIFT_MUTATION_FIXTURE_OK=disposable-driver`.
+- The general seeded `sean@ridendine.ca` super-admin account must not be used for shift mutation proof unless a future phase explicitly converts it into a documented disposable Driver fixture.
 - `GET /api/driver/notification-preferences` can read through a missing live preferences table by returning defaults, but persisted preference changes still require applying `supabase/migrations/00044_driver_notification_preferences.sql`.
 - Full live non-admin Ops role proof remains outside this driver phase unless dedicated non-admin credentials are configured.
 
 ## Rollback Path
 
-- Revert the Phase 10 implementation commit to restore the previous read-only shift summary and presence-only dashboard toggle. Phase 9 read contracts can remain independent if rollback is scoped to the lifecycle changes.
+- Revert the Phase 11 smoke-script commit to remove the gated mutation proof command. No app runtime rollback is expected because Phase 11 only adds an opt-in smoke command and documentation. If the shift lifecycle itself must be rolled back, revert the Phase 10 implementation commit separately.
