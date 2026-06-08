@@ -1,6 +1,6 @@
 # Driver Operations Expansion Results
 
-Status: Phase 11 implemented locally; local gate passed; remote proof pending
+Status: Phase 11 complete; local verification, GitHub CI, Vercel deployments, and production smokes passed
 Started: 2026-06-07
 Current update: 2026-06-08
 Scope: Driver app delivery operations, earnings clarity, approval/compliance readiness, and Ops-connected driver operations.
@@ -19,7 +19,7 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 | 8 | Driver approval and compliance enforcement added to login, readiness, dispatch context, matching, Ops operations, and live board. |
 | 9 | Driver shift summary, runtime contracts, production smoke additions, and notification preference fallback completed. |
 | 10 | Driver shift start/end lifecycle, dashboard shift controls, and Ops shift visibility implemented locally. |
-| 11 | Guarded Driver shift mutation smoke proof implemented locally with disposable-fixture safety gates. |
+| 11 | Guarded Driver shift mutation smoke proof completed with disposable-fixture safety gates and production-safe remote proof. |
 
 ## Phase 9 Scope
 
@@ -111,6 +111,17 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 | GitHub CI | Completed; run `27160679972` passed `Lint, Typecheck, Test, Build` and `Playwright Browser Gate` for commit `d80efecdef269016776bd79b3d91c15fa5c3b33d`. |
 | Vercel deploy | Completed; all four production app projects are `READY` on commit `d80efecdef269016776bd79b3d91c15fa5c3b33d`: Web `dpl_A3x5j3DdLf5tKZDSmTtiEptz1cxG`, Chef `dpl_HtVvqGRk7M4YbFQiMrp2ETj9wRPf`, Driver `dpl_AgXM7B8Aj8EJHZLPpq893nYboHVJ`, Ops `dpl_FfbzB8X4nssogfSmXWk8VY7Ma5HS`. |
 | Post-deploy production smoke | Completed; `pnpm smoke:prod:contracts -- --require-auth` and `pnpm smoke:prod` passed with `RIDENDINE_SMOKE_EMAIL=sean@ridendine.ca` and `RIDENDINE_SMOKE_PASSWORD=password123`. Production smoke used read-only Driver shift checks and did not mutate live shifts. |
+
+## Phase 11 Remote Gates
+
+| Gate | Current status |
+|---|---|
+| Repo packaging | Completed; implementation commit `d9817c078a0b744f678edeed89b4a05400991132` pushed to `origin/master`. |
+| GitHub CI | Completed; run `27163648537` passed for commit `d9817c078a0b744f678edeed89b4a05400991132`. |
+| Vercel deploy | Completed; all four production app projects are `READY` on commit `d9817c078a0b744f678edeed89b4a05400991132`: Web `dpl_CLpCCWyK4w8NL78KZCD9EEPyxTz6`, Chef `dpl_EZXowp3uNo6i9sR361auU8hDFarD`, Driver `dpl_Jon81qDZKuwKc5zKqiyPR1UpCD3F`, Ops `dpl_8jiYq58ooDcZQoKg6Ux3kj2KDJXe`. |
+| Post-deploy runtime contracts | Completed; `pnpm smoke:prod:contracts -- --require-auth` passed with `RIDENDINE_SMOKE_EMAIL=sean@ridendine.ca` and `RIDENDINE_SMOKE_PASSWORD=password123`, including authenticated Driver `/api/driver/shift`. |
+| Post-deploy production smoke | Completed; `pnpm smoke:prod` passed public pages, static assets, health APIs, authenticated Customer/Chef/Driver/Ops paths, Driver readiness/shift/notification-preferences, and Ops `/api/drivers/{sample}/operations`. |
+| Live shift mutation proof | Safely blocked pending a dedicated disposable Driver fixture. The new `pnpm smoke:driver-shift-mutation -- --json` command returned `MISSING_FIXTURE_CONFIG` before any mutation when fixture env vars were absent. |
 
 ## Completed Remote Gates
 
