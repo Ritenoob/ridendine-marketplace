@@ -1,6 +1,6 @@
 # Runtime Coverage Audit
 
-Generated: 2026-06-08T03:11:04.966Z
+Generated: 2026-06-08T03:43:20.936Z
 
 This Phase 17 coverage inventory maps every discovered app page and API route file to the runtime, live-role, non-admin role, high-risk authorization, and Phase 18/19 classification contracts that currently exercise, document, or classify it. Structural uncovered rows mean a surface has no classification or contract. Proof gaps mean a surface is classified but still lacks runtime/live/static proof coverage.
 
@@ -9,7 +9,7 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | Surface | Total discovered | Structurally covered | Structural gaps | Proof covered | Proof gaps |
 |---|---:|---:|---:|---:|---:|
 | Pages | 90 | 90 | 0 | 89 | 1 |
-| API route files | 122 | 122 | 0 | 122 | 0 |
+| API route files | 123 | 123 | 0 | 123 | 0 |
 
 ## Contract Source Counts
 
@@ -20,14 +20,14 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | live-role-fixture | 27 |
 | non-admin-role-fixture | 15 |
 | ops-export-audit-smoke | 1 |
-| runtime-api-classification | 122 |
+| runtime-api-classification | 123 |
 | runtime-authenticated-json | 15 |
 | runtime-page-auth-intent | 17 |
 | runtime-page-classification | 90 |
 | runtime-proof-action-api | 117 |
 | runtime-proof-action-page | 76 |
 | runtime-public-json | 7 |
-| runtime-sample-fixture | 17 |
+| runtime-sample-fixture | 18 |
 
 ## Proof Disposition Summary
 
@@ -233,6 +233,7 @@ None found.
 | Ops Admin | `/api/deliveries/[id]` | `apps/ops-admin/src/app/api/deliveries/[id]/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Ops Admin | `/api/drivers` | `apps/ops-admin/src/app/api/drivers/route.ts` | live-role-fixture, runtime-api-classification, runtime-authenticated-json, runtime-proof-action-api |
 | Ops Admin | `/api/drivers/[id]` | `apps/ops-admin/src/app/api/drivers/[id]/route.ts` | runtime-api-classification, runtime-proof-action-api |
+| Ops Admin | `/api/drivers/[id]/operations` | `apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts` | runtime-api-classification, runtime-sample-fixture |
 | Ops Admin | `/api/engine/dashboard` | `apps/ops-admin/src/app/api/engine/dashboard/route.ts` | runtime-api-classification, runtime-proof-action-api |
 | Ops Admin | `/api/engine/dispatch` | `apps/ops-admin/src/app/api/engine/dispatch/route.ts` | high-risk-negative-authz, high-risk-ops-authz, live-role-fixture, non-admin-role-fixture, runtime-api-classification, runtime-proof-action-api |
 | Ops Admin | `/api/engine/dispatch/offer-history` | `apps/ops-admin/src/app/api/engine/dispatch/offer-history/route.ts` | high-risk-negative-authz, high-risk-ops-authz, live-role-fixture, runtime-api-classification, runtime-proof-action-api |

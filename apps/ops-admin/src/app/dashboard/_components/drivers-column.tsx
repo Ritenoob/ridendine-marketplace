@@ -15,6 +15,13 @@ function pingLabel(iso: string | null): string {
   return `${Math.round(ms / 60000)}m`;
 }
 
+function readinessClass(priority: OpsLiveDriverView['readiness']['priority']): string {
+  if (priority === 'success') return 'bg-success/20 text-success';
+  if (priority === 'warning') return 'bg-warning/20 text-warning';
+  if (priority === 'danger') return 'bg-danger/20 text-danger';
+  return 'bg-surfaceMuted/40 text-textSubtle';
+}
+
 export function DriversColumn({ drivers }: { drivers: OpsLiveDriverView[] }) {
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-[#121c2c] p-3">
@@ -50,6 +57,14 @@ export function DriversColumn({ drivers }: { drivers: OpsLiveDriverView[] }) {
               <p className="mt-1 text-xs text-textMuted">
                 Load · {d.activeDeliveryCount} · ping {pingLabel(d.lastPingAt)}
               </p>
+              <div className="mt-2 rounded border border-border bg-surface/60 px-2 py-1.5">
+                <Badge className={`${readinessClass(d.readiness.priority)} text-[10px]`}>
+                  {d.readiness.label}
+                </Badge>
+                <p className="mt-1 text-[11px] leading-snug text-textMuted">
+                  {d.readiness.detail}
+                </p>
+              </div>
               {stale && (
                 <p className="mt-1 text-[11px] text-warning">Stale presence ping</p>
               )}

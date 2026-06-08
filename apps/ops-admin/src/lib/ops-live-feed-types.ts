@@ -1,5 +1,7 @@
 /** Snapshot shapes for GET /api/ops/live-board and useOpsLiveFeed merges. */
 
+import type { DriverReadinessSignal } from '@ridendine/types';
+
 export type OpsLiveDeliverySnapshot = {
   id: string;
   order_id: string;
@@ -41,6 +43,9 @@ export type OpsLiveDriverSnapshot = {
   last_name: string;
   driver_status: string;
   updated_at: string;
+  payoutConnected?: boolean;
+  complianceOpenItems?: number;
+  readiness?: DriverReadinessSignal;
   presence: {
     status: string;
     updated_at: string;

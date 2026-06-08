@@ -7,6 +7,10 @@ import {
   successResponse,
   errorResponse,
 } from '@/lib/engine';
+import {
+  buildOpsDriverReadinessSignal,
+  OPS_ACTIVE_DELIVERY_STATUSES,
+} from '@/lib/driver-readiness';
 import type {
   OpsLiveChefSnapshot,
   OpsLiveDeliverySnapshot,
@@ -16,6 +20,7 @@ import type {
 } from '@/lib/ops-live-feed-types';
 
 export const dynamic = 'force-dynamic';
+const LIVE_ACTIVE_DELIVERY_STATUS_SET: ReadonlySet<string> = new Set(OPS_ACTIVE_DELIVERY_STATUSES);
 
 function one<T>(x: T | T[] | null | undefined): T | null {
   if (x == null) return null;
@@ -79,6 +84,33 @@ function mapDeliveryNested(row: Record<string, unknown> | null): OpsLiveDelivery
     dropoff_address: (row.dropoff_address as string) ?? '',
     route_polyline: (row.route_polyline as string | null | undefined) ?? undefined,
   };
+}
+
+function normalizeStatus(status: unknown): string {
+  return typeof status === 'string' ? status.trim().toLowerCase() : '';
+}
+
+function isExpired(expiresAt: unknown, now: Date): boolean {
+  if (typeof expiresAt !== 'string' || expiresAt.length === 0) return false;
+  const time = Date.parse(expiresAt);
+  return Number.isFinite(time) && time < now.getTime();
+}
+
+function countComplianceOpenItems(rows: Record<string, unknown>[], now: Date): number {
+  return rows.reduce((count, row) => {
+    const status = normalizeStatus(row.status);
+    const expired = isExpired(row.expires_at, now);
+    return status !== 'approved' || expired ? count + 1 : count;
+  }, 0);
+}
+
+function isPayoutConnected(row: Record<string, unknown> | undefined): boolean {
+  return Boolean(
+    row &&
+      (row.status === 'active' ||
+        row.payouts_enabled === true ||
+        row.onboarding_completed_at)
+  );
 }
 
 /**
@@ -163,18 +195,83 @@ export async function GET() {
       orders.push(mapped);
     }
 
+    const activeDeliveriesByDriver = new Map<string, number>();
+    for (const order of orders) {
+      const delivery = order.delivery;
+      if (!delivery?.driver_id || !LIVE_ACTIVE_DELIVERY_STATUS_SET.has(delivery.status)) continue;
+      activeDeliveriesByDriver.set(
+        delivery.driver_id,
+        (activeDeliveriesByDriver.get(delivery.driver_id) ?? 0) + 1
+      );
+    }
+
     const driversData = (driversRes.error ? [] : driversRes.data ?? []) as Record<string, unknown>[];
+    const driverIds = driversData.map((driver) => driver.id).filter((id): id is string => typeof id === 'string');
+    const [documentsRes, payoutAccountsRes] = driverIds.length > 0
+      ? await Promise.all([
+          admin
+            .from('driver_documents')
+            .select('driver_id, status, expires_at')
+            .in('driver_id', driverIds)
+            .limit(1000),
+          admin
+            .from('driver_payout_accounts')
+            .select('driver_id, status, payouts_enabled, onboarding_completed_at')
+            .in('driver_id', driverIds)
+            .limit(1000),
+        ])
+      : [
+          { data: [], error: null },
+          { data: [], error: null },
+        ];
+    const documentsByDriver = new Map<string, Record<string, unknown>[]>();
+    if (!documentsRes.error) {
+      for (const doc of (documentsRes.data ?? []) as Record<string, unknown>[]) {
+        const driverId = doc.driver_id;
+        if (typeof driverId !== 'string') continue;
+        const rows = documentsByDriver.get(driverId) ?? [];
+        rows.push(doc);
+        documentsByDriver.set(driverId, rows);
+      }
+    }
+    const payoutByDriver = new Map<string, Record<string, unknown>>();
+    if (!payoutAccountsRes.error) {
+      for (const account of (payoutAccountsRes.data ?? []) as Record<string, unknown>[]) {
+        const driverId = account.driver_id;
+        if (typeof driverId === 'string') payoutByDriver.set(driverId, account);
+      }
+    }
+    const now = new Date();
     const drivers: OpsLiveDriverSnapshot[] = driversData.map((d) => {
       const p = one(d.driver_presence as Record<string, unknown> | Record<string, unknown>[] | null);
+      const driverId = d.id as string;
+      const presenceStatus = (p?.status as string | null | undefined) ?? 'offline';
+      const lastLocationAt =
+        (p?.last_location_update as string | null | undefined) ??
+        (p?.last_location_at as string | null | undefined) ??
+        (p?.updated_at as string | null | undefined) ??
+        null;
+      const complianceOpenItems = countComplianceOpenItems(documentsByDriver.get(driverId) ?? [], now);
+      const payoutConnected = isPayoutConnected(payoutByDriver.get(driverId));
       return {
-        id: d.id as string,
+        id: driverId,
         first_name: d.first_name as string,
         last_name: d.last_name as string,
         driver_status: d.status as string,
         updated_at: d.updated_at as string,
+        payoutConnected,
+        complianceOpenItems,
+        readiness: buildOpsDriverReadinessSignal({
+          approvalStatus: (d.status as string | null) ?? '',
+          presenceStatus,
+          lastLocationAt,
+          activeDeliveryCount: activeDeliveriesByDriver.get(driverId) ?? 0,
+          payoutConnected,
+          complianceOpenItems,
+        }),
         presence: p
           ? {
-              status: (p.status as string) ?? 'offline',
+              status: presenceStatus,
               updated_at: (p.updated_at as string) ?? (d.updated_at as string),
               current_lat: (p.current_lat as number | null) ?? null,
               current_lng: (p.current_lng as number | null) ?? null,

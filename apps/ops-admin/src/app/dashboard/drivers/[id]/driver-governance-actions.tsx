@@ -15,8 +15,20 @@ export function DriverGovernanceActions({
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reason, setReason] = useState('');
 
   async function updateStatus(status: string) {
+    const trimmedReason = reason.trim();
+    const requiresReason =
+      status === 'rejected' ||
+      status === 'suspended' ||
+      (currentStatus === 'suspended' && status === 'approved');
+
+    if (requiresReason && !trimmedReason) {
+      setError('A governance reason is required for this driver action.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
@@ -24,7 +36,10 @@ export function DriverGovernanceActions({
       const response = await fetch(`/api/drivers/${driverId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({
+          status,
+          ...(trimmedReason ? { reason: trimmedReason } : {}),
+        }),
       });
 
       const result = await response.json();
@@ -57,6 +72,19 @@ export function DriverGovernanceActions({
           {error}
         </div>
       )}
+
+      <label className="block">
+        <span className="text-sm font-medium text-textSubtle">
+          Governance reason
+        </span>
+        <textarea
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          rows={3}
+          className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white outline-none transition-colors placeholder:text-textMuted focus:border-primary"
+          placeholder="Required for rejection, suspension, or restoring a suspended driver"
+        />
+      </label>
 
       <div className="flex flex-wrap gap-3">
         {currentStatus === 'pending' && (

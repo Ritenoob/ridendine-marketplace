@@ -1,6 +1,6 @@
 # Runtime Proof Action Smoke
 
-Generated: 2026-06-08T03:15:55.270Z
+Generated: 2026-06-08T03:44:40.476Z
 
 This smoke proof executes selected proof-disposition buckets against production runtime surfaces. Thread 3 covers public page loads and unauthenticated protected-page login guards only; authenticated APIs, negative authorization, and dynamic sample fixtures remain separate threads.
 
@@ -8,11 +8,11 @@ This smoke proof executes selected proof-disposition buckets against production 
 
 | Metric | Count |
 |---|---:|
-| Selected actions | 211 |
+| Selected actions | 212 |
 | Executed checks | 208 |
 | Passed checks | 208 |
 | Failed checks | 0 |
-| Skipped checks | 7 |
+| Skipped checks | 8 |
 
 ## Buckets
 
@@ -254,6 +254,7 @@ This smoke proof executes selected proof-disposition buckets against production 
 | SKIP | public-json-smoke | customer | `/api/storefronts/[id]` | dynamic API requires Thread 5 sample fixture before live proof |
 | SKIP | public-json-smoke | customer | `/api/storefronts/[id]/menu` | dynamic API requires Thread 5 sample fixture before live proof |
 | SKIP | sampled-authenticated-json-smoke | customer | `/api/support/tickets/phase-proof-id` | dynamic API requires Thread 5 sample fixture before live proof |
+| SKIP | sampled-authenticated-json-smoke | ops | `/api/drivers/phase-proof-id/operations` | dynamic API requires Thread 5 sample fixture before live proof |
 | SKIP | authenticated-json-smoke | ops | `/api/export` | CSV export endpoint is covered by smoke:ops-export-audit, not JSON proof actions |
 
 ## Failures

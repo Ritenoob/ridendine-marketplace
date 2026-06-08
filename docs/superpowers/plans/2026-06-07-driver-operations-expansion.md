@@ -498,17 +498,25 @@ Expected: all pass.
 
 **Purpose:** Tie every Driver app signal back into Ops so operators can approve, monitor, intervene, and explain dispatch outcomes.
 
+**Status:** Completed on 2026-06-07. Verified with failing-first Ops operations route/panel/live-board tests, engine driver governance test, Ops app typecheck, Ops app lint, Engine typecheck, `audit:guards`, refreshed runtime wiring docs/Obsidian records, and route-count proof updates from 122 to 123 API handlers.
+
 **Files:**
+- Create: `apps/ops-admin/src/lib/driver-readiness.ts`
 - Create: `apps/ops-admin/src/lib/driver-operations.ts`
 - Create: `apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts`
 - Modify: `apps/ops-admin/src/app/dashboard/drivers/page.tsx`
 - Modify: `apps/ops-admin/src/app/dashboard/drivers/[id]/page.tsx`
 - Modify: `apps/ops-admin/src/app/dashboard/drivers/[id]/driver-governance-actions.tsx`
 - Modify: `apps/ops-admin/src/app/api/ops/live-board/route.ts`
+- Modify: `apps/ops-admin/src/hooks/use-ops-live-feed.ts`
+- Modify: `apps/ops-admin/src/lib/ops-live-feed-types.ts`
+- Modify: `apps/ops-admin/src/app/dashboard/_components/drivers-column.tsx`
 - Test: `apps/ops-admin/src/__tests__/driver-operations-route.test.ts`
 - Test: `apps/ops-admin/src/__tests__/driver-operations-panel.test.tsx`
+- Test: `apps/ops-admin/src/__tests__/live-board-drivers-column.test.tsx`
+- Test: `packages/engine/src/orchestrators/platform.engine.test.ts`
 
-- [ ] **Step 1: Add Ops route tests**
+- [x] **Step 1: Add Ops route tests**
 
 Test:
 - no ops session returns `401` or guarded response
@@ -519,7 +527,7 @@ Test:
 - route returns compliance document counts
 - route returns payout account status and payable balance
 
-- [ ] **Step 2: Implement Ops operations route**
+- [x] **Step 2: Implement Ops operations route**
 
 Use `getOpsActorContext()` and `guardPlatformApi(actor, 'ops_entity_read')`. Read:
 - `drivers`
@@ -530,7 +538,7 @@ Use `getOpsActorContext()` and `guardPlatformApi(actor, 'ops_entity_read')`. Rea
 - `driver_payout_accounts`
 - `platform_accounts`
 
-- [ ] **Step 3: Upgrade driver list**
+- [x] **Step 3: Upgrade driver list**
 
 Add columns:
 - readiness
@@ -539,9 +547,9 @@ Add columns:
 - approval/compliance blocker
 - payout account status
 
-Keep existing approve/reject/suspend buttons.
+Keep direct pending approval available. Route reject, suspend, and restore decisions to the driver detail page so Ops must record the required governance reason before mutating status.
 
-- [ ] **Step 4: Upgrade driver detail**
+- [x] **Step 4: Upgrade driver detail**
 
 Add panels:
 - dispatch readiness
@@ -552,11 +560,11 @@ Add panels:
 - earnings/payable balance
 - governance actions with reason field
 
-- [ ] **Step 5: Make governance reason required**
+- [x] **Step 5: Make governance reason required**
 
 For reject, suspend, and restore actions, require a reason string. Pass it to `PATCH /api/drivers/[id]` so `engine.platform.updateDriverGovernance` can audit it.
 
-- [ ] **Step 6: Verify Phase 7**
+- [x] **Step 6: Verify Phase 7**
 
 Run:
 

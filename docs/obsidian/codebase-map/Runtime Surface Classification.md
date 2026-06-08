@@ -1,6 +1,6 @@
 # Runtime Surface Classification
 
-Generated: 2026-06-08T03:11:04.736Z
+Generated: 2026-06-08T03:43:09.175Z
 
 This Phase 18/19 classification inventory records the intended auth, guard, method, mutation-risk, and smoke-bucket treatment for every discovered app page and route handler. It is structural coverage, not a claim that every dynamic or mutating route is safe to exercise against production.
 
@@ -9,7 +9,7 @@ This Phase 18/19 classification inventory records the intended auth, guard, meth
 | Surface | Total discovered | Classified | Unclassified |
 |---|---:|---:|---:|
 | Pages | 90 | 90 | 0 |
-| API route handlers | 122 | 122 | 0 |
+| API route handlers | 123 | 123 | 0 |
 
 ## Page Surface Classification
 
@@ -196,6 +196,7 @@ This Phase 18/19 classification inventory records the intended auth, guard, meth
 | Ops Admin | `/api/deliveries/[id]` | `apps/ops-admin/src/app/api/deliveries/[id]/route.ts` | PATCH | protected-session | mutating | medium | negative-authz-contract-only |
 | Ops Admin | `/api/drivers` | `apps/ops-admin/src/app/api/drivers/route.ts` | GET, POST | protected-session | mixed | medium | authenticated-read |
 | Ops Admin | `/api/drivers/[id]` | `apps/ops-admin/src/app/api/drivers/[id]/route.ts` | PATCH | protected-session | mutating | medium | negative-authz-contract-only |
+| Ops Admin | `/api/drivers/[id]/operations` | `apps/ops-admin/src/app/api/drivers/[id]/operations/route.ts` | GET | protected-session | read-only | low | authenticated-read |
 | Ops Admin | `/api/engine/dashboard` | `apps/ops-admin/src/app/api/engine/dashboard/route.ts` | GET, POST | protected-session | mixed | medium | authenticated-read |
 | Ops Admin | `/api/engine/dispatch` | `apps/ops-admin/src/app/api/engine/dispatch/route.ts` | GET, POST | protected-session | mixed | medium | authenticated-read |
 | Ops Admin | `/api/engine/dispatch/offer-history` | `apps/ops-admin/src/app/api/engine/dispatch/offer-history/route.ts` | GET | protected-session | read-only | low | authenticated-read |

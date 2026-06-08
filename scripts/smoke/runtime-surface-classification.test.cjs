@@ -30,7 +30,7 @@ test('classifies every discovered API route handler with method and guard intent
   const { collectSurfaceClassifications } = require('./runtime-surface-classification.cjs');
   const summary = collectSurfaceClassifications({ root: repoRoot });
 
-  assert.equal(summary.apis.length, 122);
+  assert.equal(summary.apis.length, 123);
   assert.equal(summary.apis.every((api) => api.classification.kind === 'api'), true);
 
   const health = summary.apis.find((api) => api.app === 'customer' && api.endpoint === '/api/health');
@@ -45,7 +45,7 @@ test('classifies every discovered API route handler with method and guard intent
   const opsFinance = summary.apis.find((api) => api.app === 'ops' && api.endpoint === '/api/engine/finance');
   assert.equal(opsFinance.classification.guardIntent, 'protected-session');
   assert.equal(opsFinance.classification.liveSmokeBucket, 'authenticated-read');
-  assert.equal(summary.apiTotals.classified, 122);
+  assert.equal(summary.apiTotals.classified, 123);
   assert.deepEqual(summary.failures, []);
 });
 
@@ -60,5 +60,5 @@ test('generates markdown docs with page and API classification sections', () => 
   assert.ok(markdown.includes('## Page Surface Classification'));
   assert.ok(markdown.includes('## API Route Handler Classification'));
   assert.ok(markdown.includes('| Pages | 90 | 90 | 0 |'));
-  assert.ok(markdown.includes('| API route handlers | 122 | 122 | 0 |'));
+  assert.ok(markdown.includes('| API route handlers | 123 | 123 | 0 |'));
 });

@@ -2,13 +2,17 @@
 
 import Link from 'next/link';
 import type { FormEvent } from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { fetchApiItems, fetchJson } from '@/lib/client-api';
 import { getLocationHealth, locationHealthClass } from '@/lib/location-health';
 import { PageHeader, DataTable, EmptyState, Modal, StatusBadge, Button } from '@ridendine/ui';
 import type { ColumnDef } from '@ridendine/ui';
 import { UserCheck, UserX, UserMinus } from 'lucide-react';
+import {
+  DriverOperationsListBadges,
+} from './driver-operations-panel';
+import type { OpsDriverOperationsSummary } from '@/lib/driver-operations';
 
 type Driver = {
   id: string;
@@ -30,6 +34,7 @@ type Driver = {
     last_location_update?: string | null;
     updated_at?: string | null;
   }> | null;
+  operations?: OpsDriverOperationsSummary | null;
 };
 
 type DriverForm = {
@@ -63,17 +68,40 @@ export default function DriversPage() {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  useEffect(() => { void fetchDrivers(); }, []);
+  const fetchDriverOperations = useCallback(async (driverId: string): Promise<OpsDriverOperationsSummary | null> => {
+    try {
+      const payload = await fetchJson<OpsDriverOperationsSummary>(
+        `/api/drivers/${driverId}/operations`,
+        undefined,
+        'Failed to load driver operations'
+      );
+      if (payload && typeof payload === 'object' && 'data' in payload) {
+        return (payload as { data?: OpsDriverOperationsSummary }).data ?? null;
+      }
+      return payload as OpsDriverOperationsSummary;
+    } catch {
+      return null;
+    }
+  }, []);
 
-  async function fetchDrivers() {
+  const fetchDrivers = useCallback(async () => {
     try {
       setError('');
-      setDrivers(await fetchApiItems<Driver>('/api/drivers', undefined, 'Failed to load drivers'));
+      const items = await fetchApiItems<Driver>('/api/drivers', undefined, 'Failed to load drivers');
+      const enriched = await Promise.all(
+        items.map(async (driver) => ({
+          ...driver,
+          operations: await fetchDriverOperations(driver.id),
+        }))
+      );
+      setDrivers(enriched);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load drivers');
     }
     finally { setLoading(false); }
-  }
+  }, [fetchDriverOperations]);
+
+  useEffect(() => { void fetchDrivers(); }, [fetchDrivers]);
 
   async function handleCreateDriver(event: FormEvent) {
     event.preventDefault();
@@ -95,7 +123,16 @@ export default function DriversPage() {
     }
   }
 
-  async function handleStatusChange(id: string, status: string) {
+  async function handleStatusChange(id: string, status: string, currentStatus: string) {
+    const requiresReason =
+      status === 'rejected' ||
+      status === 'suspended' ||
+      (currentStatus === 'suspended' && status === 'approved');
+    if (requiresReason) {
+      setError('Open the driver detail page to record a governance reason before this driver action.');
+      return;
+    }
+
     try {
       setError('');
       await fetchJson(`/api/drivers/${id}`, {
@@ -167,6 +204,15 @@ export default function DriversPage() {
       cell: (row) => <StatusBadge status={statusToVariant(row.status)} label={row.status} />,
     },
     {
+      key: 'operations',
+      header: 'Ops',
+      cell: (row) => row.operations ? (
+        <DriverOperationsListBadges summary={row.operations} />
+      ) : (
+        <span className="text-xs text-textMuted">Signals unavailable</span>
+      ),
+    },
+    {
       key: 'created_at',
       header: 'Joined',
       sortable: true,
@@ -190,38 +236,38 @@ export default function DriversPage() {
           {row.status === 'pending' && (
             <>
               <button
-                onClick={() => void handleStatusChange(row.id, 'approved')}
+                onClick={() => void handleStatusChange(row.id, 'approved', row.status)}
                 className="rounded bg-success px-2 py-1 text-xs text-white hover:bg-success"
                 title="Approve"
               >
                 <UserCheck className="h-3 w-3" />
               </button>
-              <button
-                onClick={() => void handleStatusChange(row.id, 'rejected')}
+              <Link
+                href={`/dashboard/drivers/${row.id}`}
                 className="rounded bg-danger px-2 py-1 text-xs text-white hover:bg-danger"
-                title="Reject"
+                title="Review rejection"
               >
                 <UserX className="h-3 w-3" />
-              </button>
+              </Link>
             </>
           )}
           {row.status === 'approved' && (
-            <button
-              onClick={() => void handleStatusChange(row.id, 'suspended')}
+            <Link
+              href={`/dashboard/drivers/${row.id}`}
               className="rounded bg-surfaceMuted px-2 py-1 text-xs text-white hover:bg-surfaceMuted"
-              title="Suspend"
+              title="Review suspension"
             >
               <UserMinus className="h-3 w-3" />
-            </button>
+            </Link>
           )}
           {row.status === 'suspended' && (
-            <button
-              onClick={() => void handleStatusChange(row.id, 'approved')}
+            <Link
+              href={`/dashboard/drivers/${row.id}`}
               className="rounded bg-success px-2 py-1 text-xs text-white hover:bg-success"
-              title="Unsuspend"
+              title="Review restoration"
             >
               <UserCheck className="h-3 w-3" />
-            </button>
+            </Link>
           )}
         </div>
       ),

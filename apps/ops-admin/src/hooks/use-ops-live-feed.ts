@@ -3,21 +3,20 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { createBrowserClient, opsLiveBoardChannel, parseOrdersRealtimeRow } from '@ridendine/db';
 import { mapEngineStatusToPublicStage, PublicOrderStage } from '@ridendine/types';
+import type { DriverReadinessSignal } from '@ridendine/types';
 import type {
   OpsLiveBoardPressure,
   OpsLiveChefSnapshot,
   OpsLiveDriverSnapshot,
   OpsLiveOrderSnapshot,
 } from '@/lib/ops-live-feed-types';
+import {
+  buildOpsDriverReadinessSignal,
+  OPS_ACTIVE_DELIVERY_STATUSES,
+} from '@/lib/driver-readiness';
 import { createEmptyLiveFeedState, liveFeedReducer, type LiveFeedAction } from '@/lib/ops-live-feed-reducer';
 
-const IN_FLIGHT_DELIVERY = new Set([
-  'assigned',
-  'accepted',
-  'en_route_to_pickup',
-  'picked_up',
-  'en_route_to_dropoff',
-]);
+const IN_FLIGHT_DELIVERY: ReadonlySet<string> = new Set(OPS_ACTIVE_DELIVERY_STATUSES);
 
 export type OpsLiveDriverView = {
   id: string;
@@ -30,6 +29,7 @@ export type OpsLiveDriverView = {
   currentDeliveryId: string | null;
   lat: number | null;
   lng: number | null;
+  readiness: DriverReadinessSignal;
 };
 
 export type OpsLiveChefView = OpsLiveChefSnapshot & {
@@ -43,6 +43,55 @@ type SnapshotResponse = {
   chefs: OpsLiveChefSnapshot[];
   pressure: OpsLiveBoardPressure;
 };
+
+export function buildOpsLiveDriverViews(input: {
+  orders: Iterable<OpsLiveOrderSnapshot>;
+  drivers: Iterable<OpsLiveDriverSnapshot>;
+  now?: Date;
+}): OpsLiveDriverView[] {
+  const now = input.now ?? new Date();
+  const counts = new Map<string, { n: number; orderId: string | null; deliveryId: string | null }>();
+  for (const o of input.orders) {
+    const d = o.delivery;
+    if (!d?.driver_id || !IN_FLIGHT_DELIVERY.has(d.status)) continue;
+    const cur = counts.get(d.driver_id) ?? { n: 0, orderId: null, deliveryId: null };
+    cur.n += 1;
+    cur.orderId = o.id;
+    cur.deliveryId = d.id;
+    counts.set(d.driver_id, cur);
+  }
+
+  return [...input.drivers].map((d) => {
+    const c = counts.get(d.id);
+    const p = d.presence;
+    const lat = p?.current_lat ?? p?.last_location_lat ?? null;
+    const lng = p?.current_lng ?? p?.last_location_lng ?? null;
+    const lastPing =
+      p?.last_location_update ?? p?.last_location_at ?? p?.updated_at ?? null;
+    const activeDeliveryCount = c?.n ?? 0;
+    return {
+      id: d.id,
+      displayName: `${d.first_name} ${d.last_name}`.trim(),
+      driverRowStatus: d.driver_status,
+      presenceStatus: p?.status ?? 'offline',
+      activeDeliveryCount,
+      lastPingAt: lastPing,
+      currentDeliveryOrderId: c?.orderId ?? null,
+      currentDeliveryId: c?.deliveryId ?? null,
+      lat,
+      lng,
+      readiness: buildOpsDriverReadinessSignal({
+        approvalStatus: d.driver_status,
+        presenceStatus: p?.status ?? 'offline',
+        lastLocationAt: lastPing,
+        activeDeliveryCount,
+        payoutConnected: d.payoutConnected ?? false,
+        complianceOpenItems: d.complianceOpenItems ?? 0,
+        now,
+      }),
+    };
+  });
+}
 
 function dispatchFromBroadcastPayload(payload: Record<string, unknown>): LiveFeedAction | null {
   const table = typeof payload.table === 'string' ? payload.table : null;
@@ -169,36 +218,9 @@ export function useOpsLiveFeed() {
   }, [state.ordersById]);
 
   const drivers = useMemo((): OpsLiveDriverView[] => {
-    const counts = new Map<string, { n: number; orderId: string | null; deliveryId: string | null }>();
-    for (const o of state.ordersById.values()) {
-      const d = o.delivery;
-      if (!d?.driver_id || !IN_FLIGHT_DELIVERY.has(d.status)) continue;
-      const cur = counts.get(d.driver_id) ?? { n: 0, orderId: null, deliveryId: null };
-      cur.n += 1;
-      cur.orderId = o.id;
-      cur.deliveryId = d.id;
-      counts.set(d.driver_id, cur);
-    }
-
-    return [...state.driversById.values()].map((d) => {
-      const c = counts.get(d.id);
-      const p = d.presence;
-      const lat = p?.current_lat ?? p?.last_location_lat ?? null;
-      const lng = p?.current_lng ?? p?.last_location_lng ?? null;
-      const lastPing =
-        p?.last_location_update ?? p?.last_location_at ?? p?.updated_at ?? null;
-      return {
-        id: d.id,
-        displayName: `${d.first_name} ${d.last_name}`.trim(),
-        driverRowStatus: d.driver_status,
-        presenceStatus: p?.status ?? 'offline',
-        activeDeliveryCount: c?.n ?? 0,
-        lastPingAt: lastPing,
-        currentDeliveryOrderId: c?.orderId ?? null,
-        currentDeliveryId: c?.deliveryId ?? null,
-        lat,
-        lng,
-      };
+    return buildOpsLiveDriverViews({
+      orders: state.ordersById.values(),
+      drivers: state.driversById.values(),
     });
   }, [state.driversById, state.ordersById]);
 

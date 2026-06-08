@@ -8,11 +8,13 @@ import {
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { notFound } from 'next/navigation';
 import { DriverGovernanceActions } from './driver-governance-actions';
+import { DriverOperationsPanel } from '../driver-operations-panel';
 import {
   buildComplianceSubject,
   type ComplianceDocumentRow,
 } from '../../compliance/compliance-model';
 import { CompliancePanel } from '../../compliance/compliance-panel';
+import { getOpsDriverOperationsSummary } from '@/lib/driver-operations';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +63,11 @@ async function getDriverComplianceSubject(driverId: string, ownerName: string, o
   });
 }
 
+async function getDriverOperationsData(driverId: string) {
+  const adminClient = createAdminClient() as any;
+  return getOpsDriverOperationsSummary(adminClient, driverId);
+}
+
 export default async function DriverDetailPage({
   params,
 }: {
@@ -74,11 +81,14 @@ export default async function DriverDetailPage({
   }
 
   const driverName = [driver.first_name, driver.last_name].filter(Boolean).join(' ');
-  const complianceSubject = await getDriverComplianceSubject(
-    driver.id,
-    driverName || 'Unknown Driver',
-    driver.status
-  );
+  const [complianceSubject, operationsSummary] = await Promise.all([
+    getDriverComplianceSubject(
+      driver.id,
+      driverName || 'Unknown Driver',
+      driver.status
+    ),
+    getDriverOperationsData(driver.id),
+  ]);
 
   return (
     <DashboardLayout>
@@ -117,6 +127,10 @@ export default async function DriverDetailPage({
             </Badge>
           </div>
         </div>
+
+        {operationsSummary && (
+          <DriverOperationsPanel summary={operationsSummary} />
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="border-border bg-surface p-6 lg:col-span-2">

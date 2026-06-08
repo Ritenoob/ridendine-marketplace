@@ -386,11 +386,26 @@ export class PlatformWorkflowEngine {
     actor: ActorContext,
     reason?: string
   ): Promise<OperationResult> {
+    const auditReason = reason?.trim();
     const driver = await getDriverById(this.client, driverId);
     if (!driver) {
       return {
         success: false,
         error: { code: 'NOT_FOUND', message: 'Driver profile not found' },
+      };
+    }
+
+    const requiresReason =
+      nextStatus === 'rejected' ||
+      nextStatus === 'suspended' ||
+      (driver.status === 'suspended' && nextStatus === 'approved');
+    if (requiresReason && !auditReason) {
+      return {
+        success: false,
+        error: {
+          code: 'REASON_REQUIRED',
+          message: 'A governance reason is required for this driver action',
+        },
       };
     }
 
@@ -409,14 +424,14 @@ export class PlatformWorkflowEngine {
       actor,
       beforeState: { status: driver.status },
       afterState: { status: nextStatus },
-      reason,
+      reason: auditReason,
     });
 
     this.eventEmitter.emit(
       'driver.status_changed' as DomainEventType,
       'driver',
       driverId,
-      { previousStatus: driver.status, nextStatus, reason: reason ?? null },
+      { previousStatus: driver.status, nextStatus, reason: auditReason ?? null },
       actor
     );
 
@@ -427,7 +442,7 @@ export class PlatformWorkflowEngine {
         message: this.getDriverGovernanceMessage(
           nextStatus,
           `${updatedDriver.first_name} ${updatedDriver.last_name}`,
-          reason
+          auditReason
         ),
         data: {
           driver_id: driverId,
