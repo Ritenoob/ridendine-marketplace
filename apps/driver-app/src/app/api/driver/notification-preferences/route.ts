@@ -19,6 +19,18 @@ type QueryResult<T> = {
   error: { message?: string; code?: string } | null;
 };
 
+function isMissingPreferenceTableError(error: QueryResult<unknown>['error']) {
+  const code = error?.code ?? '';
+  const message = (error?.message ?? '').toLowerCase();
+
+  return (
+    code === '42P01' ||
+    code === 'PGRST205' ||
+    (message.includes('driver_notification_preferences') &&
+      (message.includes('does not exist') || message.includes('schema cache')))
+  );
+}
+
 function buildDefaultPreferences(): DriverNotificationPreferencesInput {
   return Object.fromEntries(
     driverNotificationEvents.map((event) => [event, { email: true, sms: true }])
@@ -57,6 +69,14 @@ export async function GET() {
       .maybeSingle()) as QueryResult<PreferenceRow>;
 
     if (result.error && result.error.code !== 'PGRST116') {
+      if (isMissingPreferenceTableError(result.error)) {
+        return successResponse({
+          preferences: buildDefaultPreferences(),
+          source: 'default',
+          persistence: 'unavailable',
+        });
+      }
+
       return errorResponse('PREFERENCES_QUERY_ERROR', result.error.message ?? 'Could not load preferences', 500);
     }
 

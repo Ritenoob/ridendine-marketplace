@@ -101,6 +101,27 @@ describe('/api/driver/notification-preferences', () => {
     expect(mockMaybeSingle).toHaveBeenCalledTimes(1);
   });
 
+  it('returns default preferences when the database preferences table is not available', async () => {
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: null,
+      error: {
+        code: 'PGRST205',
+        message: "Could not find the table 'public.driver_notification_preferences' in the schema cache",
+      },
+    });
+
+    const { GET } = await getRoute();
+    const response = await GET();
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.data).toMatchObject({
+      preferences: defaultPreferences,
+      source: 'default',
+      persistence: 'unavailable',
+    });
+  });
+
   it('rejects unknown notification events or channels', async () => {
     const { PATCH } = await getRoute();
     const response = await PATCH(
