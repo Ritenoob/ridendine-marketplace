@@ -4,7 +4,7 @@
 
 import '@testing-library/jest-dom';
 import React from 'react';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import DriverDashboard from '../app/components/DriverDashboard';
 import { useLocationTracker } from '@/hooks/use-location-tracker';
 
@@ -103,9 +103,39 @@ function readinessSummary(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function mockDashboardFetch(summary: Record<string, unknown>) {
+function shiftSummary(overrides: Record<string, unknown> = {}) {
+  return {
+    driverId: 'driver-1',
+    presenceStatus: 'offline',
+    currentShiftId: null,
+    isOnShift: false,
+    shiftStartedAt: null,
+    shiftEndedAt: null,
+    lastLocationAt: null,
+    activeDeliveryCount: 0,
+    activeDeliveries: [],
+    currentShift: null,
+    today: {
+      completedDeliveries: 0,
+      earnings: 0,
+    },
+    ...overrides,
+  };
+}
+
+function mockDashboardFetch(
+  summary: Record<string, unknown>,
+  shift: Record<string, unknown> = shiftSummary({ presenceStatus: summary.presenceStatus })
+) {
   global.fetch = jest.fn((input: RequestInfo | URL) => {
     const url = String(input);
+
+    if (url.includes('/api/driver/shift')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ success: true, data: shift }),
+      });
+    }
 
     if (url.includes('/api/driver/readiness')) {
       return Promise.resolve({
@@ -196,6 +226,117 @@ describe('DriverDashboard — no active deliveries empty state', () => {
     expect(screen.getByRole('button', { name: /open delivery workflow/i })).toBeInTheDocument();
   });
 
+  it('starts a driver shift from the primary work action', async () => {
+    const startedShift = shiftSummary({
+      presenceStatus: 'online',
+      currentShiftId: 'shift-1',
+      isOnShift: true,
+      shiftStartedAt: '2026-06-08T18:15:00.000Z',
+    });
+
+    global.fetch = jest.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.includes('/api/driver/shift') && init?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: startedShift }),
+        } as Response);
+      }
+
+      if (url.includes('/api/driver/shift')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: shiftSummary() }),
+        } as Response);
+      }
+
+      if (url.includes('/api/driver/readiness')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: readinessSummary({ presenceStatus: 'online' }) }),
+        } as Response);
+      }
+
+      if (url.includes('/api/driver/presence')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: { presence: { status: 'offline' } } }),
+        } as Response);
+      }
+
+      if (url.includes('/api/earnings')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: { today: { count: 0, earnings: 0 } } }),
+        } as Response);
+      }
+
+      return Promise.resolve({
+        ok: false,
+        json: async () => ({}),
+      } as Response);
+    }) as jest.Mock;
+
+    render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[]} />);
+
+    const startButtons = await screen.findAllByRole('button', { name: /start shift/i });
+    fireEvent.click(startButtons[0]);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/driver/shift',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+    expect(await screen.findByRole('button', { name: /end shift/i })).toBeInTheDocument();
+  });
+
+  it('shows an end shift action when the driver is already on shift', async () => {
+    mockDashboardFetch(
+      readinessSummary({ presenceStatus: 'online' }),
+      shiftSummary({
+        presenceStatus: 'online',
+        currentShiftId: 'shift-1',
+        isOnShift: true,
+        shiftStartedAt: '2026-06-08T18:15:00.000Z',
+      })
+    );
+
+    render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[]} />);
+
+    expect(await screen.findByRole('button', { name: /end shift/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/on shift/i).length).toBeGreaterThan(0);
+  });
+
+  it('blocks ending a shift while an active delivery is in progress', async () => {
+    mockDashboardFetch(
+      readinessSummary({ presenceStatus: 'online', activeDeliveryCount: 1 }),
+      shiftSummary({
+        presenceStatus: 'online',
+        currentShiftId: 'shift-1',
+        isOnShift: true,
+        shiftStartedAt: '2026-06-08T18:15:00.000Z',
+        activeDeliveryCount: 1,
+      })
+    );
+    const delivery = {
+      id: 'del-1',
+      pickup_address: '1 King St W',
+      dropoff_address: '100 Queen St E',
+      distance_km: 3.2,
+      driver_payout: '8.50',
+      status: 'en_route_to_pickup' as const,
+    };
+
+    render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[delivery as any]} />);
+
+    expect(
+      await screen.findByText(/complete active deliveries before ending your shift/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /end shift/i })).toBeDisabled();
+  });
+
   it('renders the ready-to-work panel with the exact dispatch blocker and retry location action', async () => {
     const startTracking = jest.fn();
     mockUseLocationTracker.mockReturnValue({
@@ -227,7 +368,7 @@ describe('DriverDashboard — no active deliveries empty state', () => {
       await screen.findByText('Driver GPS is stale and must refresh before dispatch.')
     ).toBeInTheDocument();
     expect(screen.getByText('Approved')).toBeInTheDocument();
-    expect(screen.getAllByText('Online').length).toBeGreaterThan(0);
+    expect(screen.getByText(/presence online/i)).toBeInTheDocument();
 
     const retryButton = screen.getByRole('button', { name: /retry location/i });
     fireEvent.click(retryButton);
@@ -265,7 +406,16 @@ describe('DriverDashboard — no active deliveries empty state', () => {
   });
 
   it('warns before the driver tries to go offline during an active delivery', async () => {
-    mockDashboardFetch(readinessSummary({ activeDeliveryCount: 1 }));
+    mockDashboardFetch(
+      readinessSummary({ presenceStatus: 'online', activeDeliveryCount: 1 }),
+      shiftSummary({
+        presenceStatus: 'online',
+        currentShiftId: 'shift-1',
+        isOnShift: true,
+        shiftStartedAt: '2026-06-08T18:15:00.000Z',
+        activeDeliveryCount: 1,
+      })
+    );
     const delivery = {
       id: 'del-1',
       pickup_address: '1 King St W',
@@ -278,7 +428,7 @@ describe('DriverDashboard — no active deliveries empty state', () => {
     render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[delivery as any]} />);
 
     expect(
-      await screen.findByText(/going offline during an active delivery can delay the customer/i)
+      await screen.findByText(/complete active deliveries before ending your shift/i)
     ).toBeInTheDocument();
   });
 
@@ -305,10 +455,25 @@ describe('DriverDashboard — no active deliveries empty state', () => {
     global.fetch = jest.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
-      if (url.includes('/api/driver/presence') && init?.method === 'PATCH') {
+      if (url.includes('/api/driver/shift') && init?.method === 'POST') {
         return Promise.resolve({
           ok: true,
-          json: async () => ({ success: true, data: { presence: { status: 'online' } } }),
+          json: async () => ({
+            success: true,
+            data: shiftSummary({
+              presenceStatus: 'online',
+              currentShiftId: 'shift-1',
+              isOnShift: true,
+              shiftStartedAt: '2026-06-08T18:15:00.000Z',
+            }),
+          }),
+        } as Response);
+      }
+
+      if (url.includes('/api/driver/shift')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: shiftSummary() }),
         } as Response);
       }
 
@@ -340,21 +505,21 @@ describe('DriverDashboard — no active deliveries empty state', () => {
     render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[]} />);
 
     fireEvent.click(screen.getAllByTestId('driver-online-toggle')[0]);
-    expect(await screen.findByRole('button', { name: 'Go Offline' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'End shift' })).toBeInTheDocument();
 
     await act(async () => {
       toggleReadiness.resolve();
       await toggleReadiness.promise;
     });
 
-    expect(screen.getByRole('button', { name: 'Go Offline' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'End shift' })).toBeInTheDocument();
 
     await act(async () => {
       initialReadiness.resolve();
       await initialReadiness.promise;
     });
 
-    expect(screen.getByRole('button', { name: 'Go Offline' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'End shift' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Dispatch ready' })).toBeInTheDocument();
   });
 });

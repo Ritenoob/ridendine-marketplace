@@ -65,6 +65,7 @@ function installOpsData(overrides: {
   documents?: Record<string, unknown>[];
   payoutAccount?: Record<string, unknown> | null;
   platformAccount?: Record<string, unknown> | null;
+  shift?: Record<string, unknown> | null;
 } = {}) {
   const now = new Date();
   const freshLocation = new Date(now.getTime() - 30_000).toISOString();
@@ -87,6 +88,7 @@ function installOpsData(overrides: {
     driver_presence: singleResult(
       overrides.presence ?? {
         status: 'online',
+        current_shift_id: 'shift-1',
         last_location_at: freshLocation,
         last_location_update: freshLocation,
         updated_at: freshLocation,
@@ -149,6 +151,16 @@ function installOpsData(overrides: {
         pending_payout_cents: 2200,
         currency: 'CAD',
         updated_at: now.toISOString(),
+      }
+    ),
+    driver_shifts: singleResult(
+      overrides.shift ?? {
+        id: 'shift-1',
+        started_at: new Date(now.getTime() - 90 * 60_000).toISOString(),
+        ended_at: null,
+        total_deliveries: 3,
+        total_earnings: 41.25,
+        total_distance_km: 22.4,
       }
     ),
   };
@@ -225,5 +237,14 @@ describe('GET /api/drivers/[id]/operations', () => {
     expect(body.data.payout.accountStatus).toBe('active');
     expect(body.data.payout.availableBalanceCents).toBe(12550);
     expect(body.data.payout.currency).toBe('CAD');
+    expect(body.data.shift).toMatchObject({
+      isOnShift: true,
+      currentShiftId: 'shift-1',
+      endedAt: null,
+      durationMinutes: 90,
+      totalDeliveries: 3,
+      totalEarnings: 41.25,
+      totalDistanceKm: 22.4,
+    });
   });
 });

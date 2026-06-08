@@ -25,39 +25,105 @@ type ShiftFixture = {
   presence: Record<string, unknown> | null;
   activeDeliveries: Record<string, unknown>[];
   shift: Record<string, unknown> | null;
+  insertedShift?: Record<string, unknown> | null;
+  endedShift?: Record<string, unknown> | null;
+  upsertedPresence?: Record<string, unknown> | null;
   presenceError?: Record<string, unknown> | null;
   activeDeliveriesError?: Record<string, unknown> | null;
   shiftError?: Record<string, unknown> | null;
+  insertShiftError?: Record<string, unknown> | null;
+  updateShiftError?: Record<string, unknown> | null;
+  upsertPresenceError?: Record<string, unknown> | null;
 };
 
-function resultChain(result: { data: unknown; error: unknown }) {
+const dbWrites = {
+  insertShift: jest.fn(),
+  updateShift: jest.fn(),
+  upsertPresence: jest.fn(),
+};
+
+function tableResultChain(
+  table: string,
+  fixture: ShiftFixture
+) {
+  let mutation: 'insert' | 'update' | 'upsert' | null = null;
+  let mutationPayload: unknown;
+
+  function readResult() {
+    if (table === 'driver_presence') {
+      return { data: fixture.presence, error: fixture.presenceError ?? null };
+    }
+
+    if (table === 'deliveries') {
+      return { data: fixture.activeDeliveries, error: fixture.activeDeliveriesError ?? null };
+    }
+
+    if (table === 'driver_shifts') {
+      return { data: fixture.shift, error: fixture.shiftError ?? null };
+    }
+
+    return { data: null, error: null };
+  }
+
+  function singleResult() {
+    if (table === 'driver_shifts' && mutation === 'insert') {
+      return {
+        data: fixture.insertedShift ?? fixture.shift,
+        error: fixture.insertShiftError ?? null,
+      };
+    }
+
+    if (table === 'driver_shifts' && mutation === 'update') {
+      return {
+        data: fixture.endedShift ?? fixture.shift,
+        error: fixture.updateShiftError ?? null,
+      };
+    }
+
+    if (table === 'driver_presence' && mutation === 'upsert') {
+      return {
+        data: fixture.upsertedPresence ?? mutationPayload,
+        error: fixture.upsertPresenceError ?? null,
+      };
+    }
+
+    return readResult();
+  }
+
   const chain: Record<string, jest.Mock> & PromiseLike<{ data: unknown; error: unknown }> = {
     select: jest.fn(() => chain),
     eq: jest.fn(() => chain),
+    is: jest.fn(() => chain),
     in: jest.fn(() => chain),
     order: jest.fn(() => chain),
-    maybeSingle: jest.fn(() => Promise.resolve(result)),
-    single: jest.fn(() => Promise.resolve(result)),
-    then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
+    insert: jest.fn((payload: unknown) => {
+      mutation = 'insert';
+      mutationPayload = payload;
+      dbWrites.insertShift(payload);
+      return chain;
+    }),
+    update: jest.fn((payload: unknown) => {
+      mutation = 'update';
+      mutationPayload = payload;
+      dbWrites.updateShift(payload);
+      return chain;
+    }),
+    upsert: jest.fn((payload: unknown, options?: unknown) => {
+      mutation = 'upsert';
+      mutationPayload = payload;
+      dbWrites.upsertPresence(payload, options);
+      return chain;
+    }),
+    maybeSingle: jest.fn(() => Promise.resolve(readResult())),
+    single: jest.fn(() => Promise.resolve(singleResult())),
+    then: (resolve, reject) => Promise.resolve(readResult()).then(resolve, reject),
   };
   return chain;
 }
 
 function mockDb(fixture: ShiftFixture) {
   mockFrom.mockImplementation((table: string) => {
-    if (table === 'driver_presence') {
-      return resultChain({ data: fixture.presence, error: fixture.presenceError ?? null });
-    }
-
-    if (table === 'deliveries') {
-      return resultChain({ data: fixture.activeDeliveries, error: fixture.activeDeliveriesError ?? null });
-    }
-
-    if (table === 'driver_shifts') {
-      return resultChain({ data: fixture.shift, error: fixture.shiftError ?? null });
-    }
-
-    return resultChain({ data: null, error: null });
+    return tableResultChain(table, fixture);
   });
 }
 
@@ -65,6 +131,9 @@ describe('GET /api/driver/shift', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
+    dbWrites.insertShift.mockClear();
+    dbWrites.updateShift.mockClear();
+    dbWrites.upsertPresence.mockClear();
     jest.useFakeTimers().setSystemTime(new Date('2026-06-08T18:15:00.000Z'));
     mockGetDriverActorContext.mockResolvedValue({
       driverId: 'driver-1',
@@ -211,6 +280,173 @@ describe('GET /api/driver/shift', () => {
     expect(json.error).toMatchObject({
       code: 'SHIFT_QUERY_ERROR',
       message: expect.stringContaining('shift'),
+    });
+  });
+
+  it('starts a new shift and links driver presence online', async () => {
+    mockGetDeliveryHistory.mockResolvedValueOnce([]);
+    mockDb({
+      presence: {
+        driver_id: 'driver-1',
+        status: 'offline',
+        current_shift_id: null,
+        last_location_at: null,
+        last_location_update: null,
+      },
+      shift: null,
+      insertedShift: {
+        id: 'shift-started',
+        started_at: '2026-06-08T18:15:00.000Z',
+        ended_at: null,
+        total_deliveries: 0,
+        total_earnings: 0,
+        total_distance_km: null,
+      },
+      upsertedPresence: {
+        driver_id: 'driver-1',
+        status: 'online',
+        current_shift_id: 'shift-started',
+        last_location_at: null,
+        last_location_update: null,
+      },
+      activeDeliveries: [],
+    });
+
+    const route = await import('../app/api/driver/shift/route');
+    expect(route.POST).toEqual(expect.any(Function));
+
+    const response = await route.POST();
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(dbWrites.insertShift).toHaveBeenCalledWith(
+      expect.objectContaining({
+        driver_id: 'driver-1',
+      })
+    );
+    expect(dbWrites.upsertPresence).toHaveBeenCalledWith(
+      expect.objectContaining({
+        driver_id: 'driver-1',
+        status: 'online',
+        current_shift_id: 'shift-started',
+      }),
+      { onConflict: 'driver_id' }
+    );
+    expect(json.data).toMatchObject({
+      driverId: 'driver-1',
+      presenceStatus: 'online',
+      currentShiftId: 'shift-started',
+      isOnShift: true,
+      shiftStartedAt: '2026-06-08T18:15:00.000Z',
+      activeDeliveryCount: 0,
+      currentShift: {
+        totalDeliveries: 0,
+        totalEarnings: 0,
+        totalDistanceKm: null,
+      },
+    });
+  });
+
+  it('returns the existing open shift instead of creating a duplicate', async () => {
+    const { POST } = await import('../app/api/driver/shift/route');
+    expect(POST).toEqual(expect.any(Function));
+
+    const response = await POST();
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(dbWrites.insertShift).not.toHaveBeenCalled();
+    expect(json.data).toMatchObject({
+      currentShiftId: 'shift-1',
+      isOnShift: true,
+      shiftStartedAt: '2026-06-08T16:00:00.000Z',
+    });
+  });
+
+  it('blocks ending a shift while active deliveries are still assigned', async () => {
+    const route = await import('../app/api/driver/shift/route');
+    expect(route.DELETE).toEqual(expect.any(Function));
+
+    const response = await route.DELETE();
+    const json = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(json.error).toMatchObject({
+      code: 'ACTIVE_DELIVERY_BLOCK',
+      message: expect.stringContaining('active delivery'),
+    });
+    expect(dbWrites.updateShift).not.toHaveBeenCalled();
+    expect(dbWrites.upsertPresence).not.toHaveBeenCalled();
+  });
+
+  it('ends an open shift and clears driver presence', async () => {
+    mockGetDeliveryHistory.mockResolvedValueOnce([]);
+    mockDb({
+      presence: {
+        driver_id: 'driver-1',
+        status: 'online',
+        current_shift_id: 'shift-1',
+        last_location_at: '2026-06-08T18:14:30.000Z',
+        last_location_update: null,
+      },
+      shift: {
+        id: 'shift-1',
+        started_at: '2026-06-08T16:00:00.000Z',
+        ended_at: null,
+        total_deliveries: 2,
+        total_earnings: 27.75,
+        total_distance_km: 18.2,
+      },
+      endedShift: {
+        id: 'shift-1',
+        started_at: '2026-06-08T16:00:00.000Z',
+        ended_at: '2026-06-08T18:15:00.000Z',
+        total_deliveries: 2,
+        total_earnings: 27.75,
+        total_distance_km: 18.2,
+      },
+      upsertedPresence: {
+        driver_id: 'driver-1',
+        status: 'offline',
+        current_shift_id: null,
+        last_location_at: '2026-06-08T18:14:30.000Z',
+        last_location_update: null,
+      },
+      activeDeliveries: [],
+    });
+
+    const { DELETE } = await import('../app/api/driver/shift/route');
+    expect(DELETE).toEqual(expect.any(Function));
+
+    const response = await DELETE();
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(dbWrites.updateShift).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ended_at: '2026-06-08T18:15:00.000Z',
+      })
+    );
+    expect(dbWrites.upsertPresence).toHaveBeenCalledWith(
+      expect.objectContaining({
+        driver_id: 'driver-1',
+        status: 'offline',
+        current_shift_id: null,
+      }),
+      { onConflict: 'driver_id' }
+    );
+    expect(json.data).toMatchObject({
+      driverId: 'driver-1',
+      presenceStatus: 'offline',
+      currentShiftId: null,
+      isOnShift: false,
+      shiftStartedAt: '2026-06-08T16:00:00.000Z',
+      shiftEndedAt: '2026-06-08T18:15:00.000Z',
+      currentShift: {
+        totalDeliveries: 2,
+        totalEarnings: 27.75,
+        totalDistanceKm: 18.2,
+      },
     });
   });
 });

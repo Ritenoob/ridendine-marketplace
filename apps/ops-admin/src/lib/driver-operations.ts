@@ -73,6 +73,16 @@ export type OpsDriverOperationsSummary = {
     currency: string;
     instantPayoutsEnabled: boolean;
   };
+  shift: {
+    isOnShift: boolean;
+    currentShiftId: string | null;
+    startedAt: string | null;
+    endedAt: string | null;
+    durationMinutes: number | null;
+    totalDeliveries: number;
+    totalEarnings: number;
+    totalDistanceKm: number | null;
+  };
 };
 
 type QueryError = { message?: string; code?: string } | null;
@@ -111,6 +121,33 @@ function normalizeOrderNumber(value: unknown): string | null {
   return typeof order?.order_number === 'string' ? order.order_number : null;
 }
 
+function stringValue(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function numberValue(value: unknown): number {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function nullableNumberValue(value: unknown): number | null {
+  if (value == null) return null;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function durationMinutes(startedAt: string | null, endedAt: string | null, now: Date): number | null {
+  if (!startedAt) return null;
+
+  const start = Date.parse(startedAt);
+  const end = endedAt ? Date.parse(endedAt) : now.getTime();
+
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+
+  return Math.max(0, Math.round((end - start) / 60_000));
+}
+
 export async function getOpsDriverOperationsSummary(
   client: any,
   driverId: string,
@@ -132,7 +169,7 @@ export async function getOpsDriverOperationsSummary(
       .maybeSingle() as Promise<QueryResult<Record<string, unknown>>>,
     client
       .from('driver_presence')
-      .select('status, last_location_at, last_location_update, updated_at, current_lat, current_lng, last_location_lat, last_location_lng')
+      .select('status, current_shift_id, last_location_at, last_location_update, updated_at, current_lat, current_lng, last_location_lat, last_location_lng')
       .eq('driver_id', driverId)
       .maybeSingle() as Promise<QueryResult<Record<string, unknown>>>,
     client
@@ -185,6 +222,21 @@ export async function getOpsDriverOperationsSummary(
   const payoutAccount = payoutAccountResult.data;
   const platformAccount = platformAccountResult.data;
   const presenceStatus = normalizeStatus(presence?.status) || 'offline';
+  const currentShiftId = stringValue(presence?.current_shift_id);
+  const shiftResult = currentShiftId
+    ? await client
+        .from('driver_shifts')
+        .select('id, started_at, ended_at, total_deliveries, total_earnings, total_distance_km')
+        .eq('id', currentShiftId)
+        .eq('driver_id', driverId)
+        .maybeSingle() as QueryResult<Record<string, unknown>>
+    : ({ data: null, error: null } satisfies QueryResult<Record<string, unknown>>);
+
+  throwIfError(shiftResult, 'driver shift');
+
+  const shift = shiftResult.data;
+  const shiftStartedAt = stringValue(shift?.started_at);
+  const shiftEndedAt = stringValue(shift?.ended_at);
   const lastLocationAt =
     (presence?.last_location_update as string | null | undefined) ??
     (presence?.last_location_at as string | null | undefined) ??
@@ -255,6 +307,16 @@ export async function getOpsDriverOperationsSummary(
       pendingPayoutCents: Number(platformAccount?.pending_payout_cents ?? 0),
       currency: (platformAccount?.currency as string | null) ?? 'CAD',
       instantPayoutsEnabled: Boolean(driver.instant_payouts_enabled),
+    },
+    shift: {
+      isOnShift: Boolean(currentShiftId && shift && !shiftEndedAt),
+      currentShiftId,
+      startedAt: shiftStartedAt,
+      endedAt: shiftEndedAt,
+      durationMinutes: durationMinutes(shiftStartedAt, shiftEndedAt, now),
+      totalDeliveries: numberValue(shift?.total_deliveries),
+      totalEarnings: numberValue(shift?.total_earnings),
+      totalDistanceKm: nullableNumberValue(shift?.total_distance_km),
     },
   };
 }

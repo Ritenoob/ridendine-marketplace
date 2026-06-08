@@ -32,11 +32,13 @@ describe('driver-app smoke wiring', () => {
     expect(earningsPage.length).toBeGreaterThan(100);
   });
 
-  it('dashboard hydrates presence from API and avoids fake hours', () => {
+  it('dashboard hydrates presence and shift state from APIs and avoids fake hours', () => {
     const src = read('app/components/DriverDashboard.tsx');
     expect(src).toContain("fetch('/api/driver/presence')");
+    expect(src).toContain("fetch('/api/driver/shift')");
+    expect(src).toContain("method: isOnShift ? 'DELETE' : 'POST'");
     expect(src).toContain('todayStats.hours === null');
-    expect(src).toContain('Unable to update your online status right now');
+    expect(src).toContain('Unable to update your shift right now');
   });
 
   it('delivery detail surfaces safe error messaging for action failures', () => {

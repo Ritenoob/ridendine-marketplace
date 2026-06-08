@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@ridendine/auth';
 import type { Driver, Delivery } from '@ridendine/db';
-import type { DriverOperationsSummary } from '@ridendine/types';
+import type { DriverOperationsSummary, DriverShiftOperationsSummary } from '@ridendine/types';
 import { OfferAlert } from '@/components/offer-alert';
 import { useLocationTracker } from '@/hooks/use-location-tracker';
 
@@ -75,6 +75,19 @@ function parseReadinessSummary(json: unknown): DriverOperationsSummary | null {
     : null;
 }
 
+function parseShiftSummary(json: unknown): DriverShiftOperationsSummary | null {
+  if (!json || typeof json !== 'object') return null;
+
+  const root = json as Record<string, unknown>;
+  const payload = root.success === true && root.data && typeof root.data === 'object'
+    ? (root.data as Record<string, unknown>)
+    : root;
+
+  return typeof payload.isOnShift === 'boolean'
+    ? (payload as unknown as DriverShiftOperationsSummary)
+    : null;
+}
+
 function formatGpsFreshness(
   serverLastLocationAt: string | null | undefined,
   clientLastPostedAt: string | null | undefined,
@@ -137,6 +150,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
   const [statusError, setStatusError] = useState<string | null>(null);
   const [presenceLoading, setPresenceLoading] = useState(true);
   const [readinessSummary, setReadinessSummary] = useState<DriverOperationsSummary | null>(null);
+  const [shiftSummary, setShiftSummary] = useState<DriverShiftOperationsSummary | null>(null);
   const dashboardRequestIdRef = useRef(0);
 
   const handleSignOut = async () => {
@@ -170,6 +184,21 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
     []
   );
 
+  const applyShiftSummary = useCallback((summary: DriverShiftOperationsSummary) => {
+    setShiftSummary(summary);
+    setIsOnline(summary.presenceStatus === 'online' || summary.presenceStatus === 'busy');
+    setReadinessSummary((current) =>
+      current
+        ? {
+            ...current,
+            presenceStatus: summary.presenceStatus,
+            activeDeliveryCount: summary.activeDeliveryCount,
+            lastLocationAt: summary.lastLocationAt ?? current.lastLocationAt,
+          }
+        : current
+    );
+  }, []);
+
   const refreshReadiness = useCallback(async (
     expectedPresenceStatus?: DriverOperationsSummary['presenceStatus']
   ) => {
@@ -189,35 +218,39 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
     applyReadinessSummary(summary, expectedPresenceStatus);
   }, [applyReadinessSummary]);
 
-  const toggleOnlineStatus = async () => {
+  const toggleShiftStatus = async () => {
+    const isOnShift = Boolean(shiftSummary?.isOnShift);
+    const activeDeliveryCount = readinessSummary?.activeDeliveryCount ?? shiftSummary?.activeDeliveryCount ?? activeDeliveries.length;
+
+    if (isOnShift && activeDeliveryCount > 0) {
+      setStatusError('Complete active deliveries before ending your shift.');
+      return;
+    }
+
     setIsTogglingStatus(true);
     setStatusError(null);
     try {
-      const newStatus = isOnline ? 'offline' : 'online';
-      const response = await fetch('/api/driver/presence', {
-        method: 'PATCH',
+      const response = await fetch('/api/driver/shift', {
+        method: isOnShift ? 'DELETE' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
       });
 
       const json = await response.json();
       if (!response.ok || !json.success) {
-        throw new Error(json.error || 'Failed to update status');
+        throw new Error(json.error?.message || json.error || 'Failed to update shift');
       }
-      setIsOnline(newStatus === 'online');
+
+      const summary = parseShiftSummary(json);
+      if (!summary) {
+        throw new Error('Shift response was incomplete');
+      }
+
+      applyShiftSummary(summary);
       setPresenceLoading(false);
-      setReadinessSummary((summary) =>
-        summary
-          ? {
-              ...summary,
-              presenceStatus: newStatus,
-            }
-          : summary
-      );
-      void refreshReadiness(newStatus);
+      void refreshReadiness(summary.presenceStatus);
     } catch (error) {
-      console.error('Error toggling status:', error instanceof Error ? error.message : 'unknown');
-      setStatusError('Unable to update your online status right now. Please try again.');
+      console.error('Error updating shift:', error instanceof Error ? error.message : 'unknown');
+      setStatusError('Unable to update your shift right now. Please try again.');
     } finally {
       setIsTogglingStatus(false);
     }
@@ -235,10 +268,11 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
       dashboardRequestIdRef.current = requestId;
 
       try {
-        const [presenceResponse, earningsResponse, readinessResponse] = await Promise.all([
+        const [presenceResponse, earningsResponse, readinessResponse, shiftResponse] = await Promise.all([
           fetch('/api/driver/presence'),
           fetch('/api/earnings'),
           fetch('/api/driver/readiness'),
+          fetch('/api/driver/shift'),
         ]);
 
         if (requestId !== dashboardRequestIdRef.current) return;
@@ -272,6 +306,16 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
             applyReadinessSummary(summary);
           }
         }
+
+        if (shiftResponse.ok) {
+          const shiftJson = await shiftResponse.json();
+          if (requestId !== dashboardRequestIdRef.current) return;
+
+          const summary = parseShiftSummary(shiftJson);
+          if (summary) {
+            applyShiftSummary(summary);
+          }
+        }
       } catch {
         // Keep defaults on error
       } finally {
@@ -281,10 +325,11 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
       }
     }
     hydrateDashboard();
-  }, [applyReadinessSummary]);
+  }, [applyReadinessSummary, applyShiftSummary]);
 
   const readiness = readinessSummary?.readiness;
   const readinessPriority = readiness?.priority ?? 'idle';
+  const isOnShift = Boolean(shiftSummary?.isOnShift);
   const approvalLabel = formatStatusLabel(readinessSummary?.approvalStatus ?? driver.status);
   const onlineStateLabel = formatStatusLabel(
     readinessSummary?.presenceStatus ?? (isOnline ? 'online' : 'offline')
@@ -303,13 +348,17 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
     locationTracker.locationError,
     isOnline
   );
-  const showOfflineActiveDeliveryRisk = isOnline && activeDeliveryCount > 0;
+  const showShiftEndBlock = isOnShift && activeDeliveryCount > 0;
   const dispatchText =
     readiness?.status === 'ready'
       ? 'Dispatch ready'
       : readiness?.detail ?? 'Checking driver requirements...';
   const readinessTitle =
     readiness?.status === 'ready' ? 'Dispatch ready' : readiness?.label ?? 'Checking readiness';
+  const shiftActionLabel = isTogglingStatus
+    ? isOnShift ? 'Ending...' : 'Starting...'
+    : isOnShift ? 'End shift' : 'Start shift';
+  const shiftStatusLabel = presenceLoading ? 'Loading...' : isOnShift ? 'On shift' : 'Off shift';
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-24">
@@ -389,8 +438,13 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
               <p className="mt-1 text-sm font-semibold text-text">{approvalLabel}</p>
             </div>
             <div className="rounded-xl bg-surfaceMuted px-3 py-2">
-              <p className="text-xs font-medium text-textMuted">Online state</p>
-              <p className="mt-1 text-sm font-semibold text-text">{onlineStateLabel}</p>
+              <p className="text-xs font-medium text-textMuted">Shift state</p>
+              <p className="mt-1 text-sm font-semibold text-text">
+                {isOnShift ? 'On shift' : 'Off shift'}
+              </p>
+              <p className="mt-0.5 text-[11px] text-textSubtle">
+                Presence {onlineStateLabel}
+              </p>
             </div>
             <div className="rounded-xl bg-surfaceMuted px-3 py-2">
               <p className="text-xs font-medium text-textMuted">GPS freshness</p>
@@ -410,9 +464,9 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
             <p className="mt-3 text-sm font-medium text-danger">{locationTracker.locationError}</p>
           )}
 
-          {showOfflineActiveDeliveryRisk && (
+          {showShiftEndBlock && (
             <p className="mt-3 rounded-xl border border-warning/30 bg-warningSoft px-3 py-2 text-sm font-medium text-warning">
-              Going offline during an active delivery can delay the customer and alert Ops.
+              Complete active deliveries before ending your shift.
             </p>
           )}
 
@@ -429,39 +483,39 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
         </section>
       </div>
 
-      {/* Online/Offline Toggle */}
+      {/* Shift Toggle */}
       <div
         className={`px-5 py-5 transition-colors duration-300 ${
-          isOnline
+          isOnShift
             ? 'bg-gradient-to-r from-success to-success'
             : 'bg-gradient-to-r from-surfaceMuted to-borderStrong'
         }`}
       >
         <div className="flex items-center justify-between">
           <div className="text-white">
-            <p className="text-sm font-medium opacity-80">Driver Status</p>
+            <p className="text-sm font-medium opacity-80">Driver Shift</p>
             <div className="mt-1 flex items-center gap-2">
               <span
                 className={`inline-block h-2.5 w-2.5 rounded-full ${
-                  isOnline ? 'bg-white animate-pulse' : 'bg-white/50'
+                  isOnShift ? 'bg-white animate-pulse' : 'bg-white/50'
                 }`}
               />
               <p className="text-2xl font-bold tracking-tight">
-                {presenceLoading ? 'Loading...' : isOnline ? 'Online' : 'Offline'}
+                {shiftStatusLabel}
               </p>
             </div>
           </div>
           <button
             data-testid="driver-online-toggle"
-            onClick={toggleOnlineStatus}
-            disabled={isTogglingStatus}
+            onClick={toggleShiftStatus}
+            disabled={isTogglingStatus || showShiftEndBlock}
             className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition-all disabled:opacity-60 ${
-              isOnline
+              isOnShift
                 ? 'bg-white/20 text-white hover:bg-white/30'
                 : 'bg-white text-text hover:bg-surfaceMuted'
             }`}
           >
-            {isTogglingStatus ? 'Updating...' : isOnline ? 'Go Offline' : 'Go Online'}
+            {shiftActionLabel}
           </button>
         </div>
       </div>
@@ -492,7 +546,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
       </div>
 
       {/* Active Delivery Card */}
-      {currentDelivery && isOnline && (
+      {currentDelivery && (isOnShift || isOnline) && (
         <div className="px-4 pt-4">
           <div className="rounded-2xl border-2 border-primary bg-white p-5 shadow-md">
             <div className="flex items-center justify-between mb-4">
@@ -565,7 +619,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
       )}
 
       {/* Waiting state */}
-      {isOnline && !currentDelivery && (
+      {isOnShift && !currentDelivery && (
         <div className="px-4 pt-4">
           <div className="rounded-2xl bg-white p-8 shadow-sm border border-divider text-center">
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-successSoft">
@@ -573,7 +627,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-text">You&apos;re Online!</h3>
+            <h3 className="text-lg font-bold text-text">You&apos;re On Shift!</h3>
             <p className="mt-2 text-sm text-textMuted">
               You are in the offer queue. Keep this app open; new offers will appear here with a countdown.
             </p>
@@ -582,7 +636,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
       )}
 
       {/* Offline state */}
-      {!isOnline && (
+      {!isOnShift && (
         <div className="px-4 pt-4">
           <div className="rounded-2xl bg-white p-8 shadow-sm border border-divider text-center">
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-surfaceMuted">
@@ -590,16 +644,17 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-text">You&apos;re Offline</h3>
+            <h3 className="text-lg font-bold text-text">You&apos;re Off Shift</h3>
             <p className="mt-2 text-sm text-textMuted">
               Go online when you are ready to receive offers. Keep this app open while you wait.
             </p>
             <button
               data-testid="driver-online-toggle"
-              onClick={toggleOnlineStatus}
+              onClick={toggleShiftStatus}
+              disabled={isTogglingStatus}
               className="mt-4 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primaryHover"
             >
-              Go Online
+              {shiftActionLabel}
             </button>
           </div>
         </div>

@@ -5,6 +5,19 @@ function fmtCents(cents: number, currency = 'CAD'): string {
   return `$${(cents / 100).toFixed(2)} ${currency}`;
 }
 
+function fmtDuration(minutes: number | null): string {
+  if (minutes == null) return 'Not active';
+  if (minutes < 60) return `${minutes} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder === 0 ? `${hours} hr` : `${hours} hr ${remainder} min`;
+}
+
+function fmtDistance(km: number | null): string {
+  return km == null ? 'Not recorded' : `${km.toFixed(1)} km`;
+}
+
 function readinessClass(priority: OpsDriverOperationsSummary['readiness']['priority']) {
   if (priority === 'success') return 'bg-success/20 text-success';
   if (priority === 'warning') return 'bg-warning/20 text-warning';
@@ -32,7 +45,7 @@ export function DriverOperationsPanel({ summary }: { summary: OpsDriverOperation
           </Badge>
         </div>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        <div className="mt-5 grid gap-4 sm:grid-cols-4">
           <div className="rounded-lg border border-border bg-surface p-4">
             <p className="text-sm text-textMuted">Presence</p>
             <p className="mt-1 text-xl font-semibold capitalize text-white">
@@ -53,6 +66,15 @@ export function DriverOperationsPanel({ summary }: { summary: OpsDriverOperation
             <p className="mt-1 text-2xl font-semibold text-white">
               {summary.openExceptionCount}
             </p>
+          </div>
+          <div className="rounded-lg border border-border bg-surface p-4">
+            <p className="text-sm text-textMuted">Shift</p>
+            <p className="mt-1 text-xl font-semibold text-white">
+              {summary.shift.isOnShift ? 'On shift' : 'Off shift'}
+            </p>
+            <span className={`mt-2 inline-flex rounded-full px-2 py-1 text-xs ${summary.shift.isOnShift ? 'bg-success/20 text-success' : 'bg-surfaceMuted text-textSubtle'}`}>
+              {fmtDuration(summary.shift.durationMinutes)}
+            </span>
           </div>
         </div>
 
@@ -107,6 +129,14 @@ export function DriverOperationsPanel({ summary }: { summary: OpsDriverOperation
               {summary.compliance.expiredDocuments} expired
             </p>
           </div>
+          <div>
+            <p className="text-sm text-textMuted">Current shift totals</p>
+            <p className="mt-1 text-sm text-textSubtle">
+              {summary.shift.totalDeliveries} deliveries,{' '}
+              {fmtCents(Math.round(summary.shift.totalEarnings * 100), summary.payout.currency)},{' '}
+              {fmtDistance(summary.shift.totalDistanceKm)}
+            </p>
+          </div>
         </div>
       </Card>
     </div>
@@ -124,6 +154,9 @@ export function DriverOperationsListBadges({ summary }: { summary: OpsDriverOper
       </Badge>
       <Badge className="bg-danger/15 px-2 py-0.5 text-[10px] text-danger">
         {summary.openExceptionCount} exceptions
+      </Badge>
+      <Badge className="bg-success/15 px-2 py-0.5 text-[10px] text-success">
+        {summary.shift.isOnShift ? 'On shift' : 'Off shift'}
       </Badge>
       <Badge className="bg-surfaceMuted px-2 py-0.5 text-[10px] text-textSubtle">
         Payout {summary.payout.accountStatus}

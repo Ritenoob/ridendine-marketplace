@@ -1,6 +1,6 @@
 # Driver Operations Expansion Results
 
-Status: Phase 9 complete; pushed, deployed, CI verified, and production smoke verified
+Status: Phase 10 implemented locally; full local verification passed; remote proof pending
 Started: 2026-06-07
 Current update: 2026-06-08
 Scope: Driver app delivery operations, earnings clarity, approval/compliance readiness, and Ops-connected driver operations.
@@ -17,6 +17,8 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 | 6 | Driver notification preferences moved from local-only settings to DB-backed API. |
 | 7 | Ops driver operations command surface added. |
 | 8 | Driver approval and compliance enforcement added to login, readiness, dispatch context, matching, Ops operations, and live board. |
+| 9 | Driver shift summary, runtime contracts, production smoke additions, and notification preference fallback completed. |
+| 10 | Driver shift start/end lifecycle, dashboard shift controls, and Ops shift visibility implemented locally. |
 
 ## Phase 9 Scope
 
@@ -28,6 +30,16 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 | Production smoke | Added Driver authenticated routes to broad production smoke and an Ops sample-driver operations probe for `/api/drivers/{sample}/operations`. The Ops probe prefers `RIDENDINE_SAMPLE_DRIVER_ID` and otherwise discovers a driver id from `/api/drivers`. |
 | Cross-app documentation | Updated `docs/CROSS_APP_CONTRACTS.md` with Driver read APIs, readiness-to-dispatch mapping, Driver vs Ops visibility, and Ops driver operations endpoint. |
 | Launch checklist | Added release gate T17 and Part 14 smoke rows for Driver operations and Ops sample driver operations. |
+
+## Phase 10 Scope
+
+| Area | Current result |
+|---|---|
+| Driver shift start | Added `POST /api/driver/shift` for approved drivers. It creates an open `driver_shifts` row when needed, links `driver_presence.current_shift_id`, moves presence online, and returns the existing shift summary contract. Re-starting while already on shift returns the current open shift instead of creating a duplicate. |
+| Driver shift end | Added `DELETE /api/driver/shift`. It blocks ending with active deliveries, closes the open shift with `ended_at`, clears `driver_presence.current_shift_id`, moves presence offline, and returns a closed-shift summary. |
+| Driver dashboard | Replaced the primary work action with `Start shift` / `End shift`, hydrated `/api/driver/shift`, preserved readiness/GPS/active-delivery behavior, and disabled ending while active work exists. |
+| Ops visibility | Added current shift state, duration, totals, and list badges to Ops driver operations using `driver_presence.current_shift_id` and `driver_shifts`. |
+| Planning records | Added `docs/superpowers/specs/2026-06-08-driver-shift-lifecycle-design.md` and `docs/superpowers/plans/2026-06-08-driver-shift-lifecycle.md`; Obsidian Phase 10 record is in progress. |
 
 ## Verified So Far
 
@@ -53,6 +65,30 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 | Vercel deployments | Passed; production deployments are `READY` on commit `489412ef7dfece41b6e947db2d0a41cb3bcd093c`: Web `dpl_6AYvgxNvnMzmnYiqqZ7PxM7tP1Nz`, Chef `dpl_J5bG7M3cHXWDAEzxZFqmB3URc7Ui`, Driver `dpl_AnkmbFDECAek6D7myTJ5aKAWULDZ`, Ops `dpl_4mxGLoEzHrBRWS1k8W3NHduKycxV`. |
 | Post-deploy runtime contracts | Passed; `pnpm smoke:prod:contracts -- --require-auth` validated seeded authenticated Customer/Chef/Driver/Ops JSON contracts, including Driver `/api/driver/notification-preferences` returning `200`. |
 | Post-deploy production smoke | Passed; `pnpm smoke:prod` checked public pages, static assets, health APIs, authenticated Customer/Chef/Driver/Ops paths, Driver readiness/shift/notification-preferences, and Ops `/api/drivers/{sample}/operations`. |
+| Phase 10 Driver shift route red test | Failed before implementation because `POST` and `DELETE` were not exported from `/api/driver/shift`. |
+| Phase 10 Driver shift route focused test | Passed; `driver-shift-route.test.ts` reported 8/8 tests passing after start/end implementation. |
+| Phase 10 Ops shift contract red test | Failed before implementation because `/api/drivers/{id}/operations` did not return `shift`. |
+| Phase 10 Ops driver operations focused test | Passed; `driver-operations-route.test.ts` reported 4/4 tests passing after shift summary mapping. |
+| Phase 10 dashboard red test | Failed before implementation because the dashboard still exposed online/offline presence actions instead of shift actions. |
+| Phase 10 dashboard focused test | Passed; `driver-dashboard-empty-state.test.tsx` reported 11/11 tests passing after shift controls. Existing React `act(...)` warning remains non-failing. |
+| Phase 10 focused combined tests | Passed; Driver focused tests reported 19/19 and Ops focused tests reported 4/4. |
+| Phase 10 app typechecks | Passed; `@ridendine/driver-app` and `@ridendine/ops-admin` typechecks completed successfully. |
+| Phase 10 full lint | Passed; `pnpm lint` completed 4/4 app lint tasks. |
+| Phase 10 full typecheck | Passed; `pnpm typecheck` completed 13/13 package/app tasks. |
+| Phase 10 full tests | Passed; `pnpm test` completed package/app tests including Engine 922/922, Driver app 133/133, Ops Admin 297/297, and Web 292/292. Existing React/console warning noise remains non-failing. |
+| Phase 10 production build | Passed; `pnpm build` completed all four production app builds and listed Driver `/api/driver/shift`. |
+| Phase 10 wiring gate | Passed; `pnpm test:wiring-fixes` reported known wiring checks 20/20 and smoke/audit Node tests 49/49. |
+| Phase 10 guard audit | Passed; `pnpm audit:guards` scanned 123 routes, allowlisted 14, and reported 0 unguarded state-changing routes. |
+| Phase 10 whitespace check | Passed; `git diff --check` exited 0. |
+
+## Phase 10 Remote Gates
+
+| Gate | Current status |
+|---|---|
+| Repo packaging | Pending Phase 10 implementation commit. |
+| GitHub CI | Pending push and workflow completion. |
+| Vercel deploy | Pending production deployments for the Phase 10 commit. |
+| Post-deploy production smoke | Pending production-safe read/contract smoke after Vercel is ready. |
 
 ## Completed Remote Gates
 
@@ -65,10 +101,10 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 
 ## Known Risks
 
-- `GET /api/driver/shift` is a read-only summary over existing presence, shift, delivery, and delivery-history data. It does not create or close shifts; that remains a future operations workflow if the business wants explicit clock-in/clock-out records.
+- Phase 10 adds live shift mutations. Production smoke should continue using read-only shift probes unless a dedicated disposable driver fixture is created for safe start/end mutation proof.
 - `GET /api/driver/notification-preferences` can read through a missing live preferences table by returning defaults, but persisted preference changes still require applying `supabase/migrations/00044_driver_notification_preferences.sql`.
 - Full live non-admin Ops role proof remains outside this driver phase unless dedicated non-admin credentials are configured.
 
 ## Rollback Path
 
-- Revert the Phase 9 commit to remove the shift summary endpoint, Driver/Ops smoke coverage additions, and documentation updates. Existing Driver readiness, offers, earnings, deliveries, notification preferences, and Ops operations from Phases 1-8 remain independent.
+- Revert the Phase 10 implementation commit to restore the previous read-only shift summary and presence-only dashboard toggle. Phase 9 read contracts can remain independent if rollback is scoped to the lifecycle changes.

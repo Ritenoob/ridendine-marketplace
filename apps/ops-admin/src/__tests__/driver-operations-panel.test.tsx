@@ -83,6 +83,16 @@ const summary = {
     currency: 'CAD',
     instantPayoutsEnabled: true,
   },
+  shift: {
+    isOnShift: true,
+    currentShiftId: 'shift-1',
+    startedAt: '2026-06-08T00:00:00.000Z',
+    endedAt: null,
+    durationMinutes: 75,
+    totalDeliveries: 3,
+    totalEarnings: 41.25,
+    totalDistanceKm: 22.4,
+  },
 };
 
 describe('DriverOperationsPanel', () => {
@@ -98,6 +108,10 @@ describe('DriverOperationsPanel', () => {
     expect(screen.getByText('Compliance open items')).toBeInTheDocument();
     expect(screen.getByText('$125.50 CAD')).toBeInTheDocument();
     expect(screen.getByText(/payout account is active/i)).toBeInTheDocument();
+    expect(screen.getByText('Shift')).toBeInTheDocument();
+    expect(screen.getAllByText('On shift').length).toBeGreaterThan(0);
+    expect(screen.getByText('1 hr 15 min')).toBeInTheDocument();
+    expect(screen.getByText(/3 deliveries, \$41\.25 CAD, 22\.4 km/i)).toBeInTheDocument();
   });
 });
 
@@ -108,6 +122,7 @@ describe('DriverOperationsListBadges', () => {
     expect(screen.getByText('Not dispatchable')).toBeInTheDocument();
     expect(screen.getByText('1 active')).toBeInTheDocument();
     expect(screen.getByText('2 exceptions')).toBeInTheDocument();
+    expect(screen.getByText('On shift')).toBeInTheDocument();
     expect(screen.getByText('Payout active')).toBeInTheDocument();
   });
 });
