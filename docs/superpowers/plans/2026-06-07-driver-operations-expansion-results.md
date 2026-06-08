@@ -1,6 +1,6 @@
 # Driver Operations Expansion Results
 
-Status: Phase 10 implemented locally; full local verification passed; remote proof pending
+Status: Phase 10 complete; local verification, GitHub CI, Vercel deployments, and production smokes passed
 Started: 2026-06-07
 Current update: 2026-06-08
 Scope: Driver app delivery operations, earnings clarity, approval/compliance readiness, and Ops-connected driver operations.
@@ -85,10 +85,10 @@ Scope: Driver app delivery operations, earnings clarity, approval/compliance rea
 
 | Gate | Current status |
 |---|---|
-| Repo packaging | Pending Phase 10 implementation commit. |
-| GitHub CI | Pending push and workflow completion. |
-| Vercel deploy | Pending production deployments for the Phase 10 commit. |
-| Post-deploy production smoke | Pending production-safe read/contract smoke after Vercel is ready. |
+| Repo packaging | Completed; commit `d80efecdef269016776bd79b3d91c15fa5c3b33d` pushed to `origin/master`. |
+| GitHub CI | Completed; run `27160679972` passed `Lint, Typecheck, Test, Build` and `Playwright Browser Gate` for commit `d80efecdef269016776bd79b3d91c15fa5c3b33d`. |
+| Vercel deploy | Completed; all four production app projects are `READY` on commit `d80efecdef269016776bd79b3d91c15fa5c3b33d`: Web `dpl_A3x5j3DdLf5tKZDSmTtiEptz1cxG`, Chef `dpl_HtVvqGRk7M4YbFQiMrp2ETj9wRPf`, Driver `dpl_AgXM7B8Aj8EJHZLPpq893nYboHVJ`, Ops `dpl_FfbzB8X4nssogfSmXWk8VY7Ma5HS`. |
+| Post-deploy production smoke | Completed; `pnpm smoke:prod:contracts -- --require-auth` and `pnpm smoke:prod` passed with `RIDENDINE_SMOKE_EMAIL=sean@ridendine.ca` and `RIDENDINE_SMOKE_PASSWORD=password123`. Production smoke used read-only Driver shift checks and did not mutate live shifts. |
 
 ## Completed Remote Gates
 
