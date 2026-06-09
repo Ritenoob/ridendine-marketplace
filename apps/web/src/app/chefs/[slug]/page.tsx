@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { Header } from '@/components/layout/header';
 import { StorefrontHeader } from '@/components/storefront/storefront-header';
 import { StorefrontMenu } from '@/components/storefront/storefront-menu';
+import { StorefrontTrustPanel } from '@/components/storefront/storefront-trust-panel';
 import { createServerClient, getStorefrontBySlug, getMenuItemsByStorefront } from '@ridendine/db';
 import { ReviewsList } from '@/components/reviews/reviews-list';
 
@@ -109,6 +110,7 @@ export default async function ChefPage({ params }: ChefPageProps) {
 
       <main>
         <StorefrontHeader storefront={storefrontData} />
+        <StorefrontTrustPanel storefront={storefrontData} />
 
         <div className="container py-8">
           <StorefrontMenu
@@ -119,7 +121,7 @@ export default async function ChefPage({ params }: ChefPageProps) {
           />
         </div>
 
-        <div className="container py-8">
+        <div id="reviews" className="container scroll-mt-24 py-8">
           <h2 className="mb-4 text-xl font-bold text-text">Customer Reviews</h2>
           <ReviewsList storefrontId={storefront.id} />
         </div>

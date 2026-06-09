@@ -34,6 +34,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reorderError, setReorderError] = useState<string | null>(null);
   const [reorderingId, setReorderingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -80,40 +81,26 @@ export default function OrdersPage() {
   }, [user, authLoading]);
 
   const handleReorder = useCallback(async (order: Order) => {
-    if (!order.storefront?.id || !order.items?.length) return;
+    if (!order.storefront?.id) return;
     setReorderingId(order.id);
-    const omitted: string[] = [];
+    setReorderError(null);
 
-    for (const item of order.items) {
-      if (!item.menu_item?.id) continue;
-      try {
-        const res = await fetch('/api/cart', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            storefrontId: order.storefront.id,
-            menuItemId: item.menu_item.id,
-            quantity: item.quantity,
-          }),
-        });
-        if (!res.ok) {
-          omitted.push(item.menu_item.name ?? item.menu_item.id);
-        }
-      } catch {
-        omitted.push(item.menu_item.name ?? item.menu_item.id);
+    try {
+      const res = await fetch(`/api/orders/${order.id}/reorder`, {
+        method: 'POST',
+      });
+      const json = await res.json().catch(() => null) as { success?: boolean; error?: string } | null;
+      if (!res.ok || !json?.success) {
+        setReorderError(json?.error || 'Unable to reorder right now');
+        return;
       }
+
+      router.push(`/cart?storefrontId=${order.storefront.id}`);
+    } catch {
+      setReorderError('Unable to reorder right now');
+    } finally {
+      setReorderingId(null);
     }
-
-    setReorderingId(null);
-
-    if (omitted.length > 0 && omitted.length < order.items.length) {
-      alert(`Some items are no longer available and were skipped:\n• ${omitted.join('\n• ')}`);
-    } else if (omitted.length > 0 && omitted.length >= order.items.length) {
-      alert('None of the items from this order are currently available.');
-      return;
-    }
-
-    router.push(`/checkout?storefrontId=${order.storefront.id}`);
   }, [router]);
 
   const formatDate = (dateString: string) => {
@@ -161,6 +148,11 @@ export default function OrdersPage() {
           </Card>
         ) : (
           <div className="mt-8 space-y-4">
+            {reorderError && (
+              <Card className="p-4">
+                <p className="text-sm text-danger">{reorderError}</p>
+              </Card>
+            )}
             {orders.map((order) => {
               const workflow = buildCustomerOrderWorkflow({
                 id: order.id,

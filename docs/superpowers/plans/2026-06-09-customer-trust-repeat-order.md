@@ -34,20 +34,20 @@
 - Create: `apps/web/src/lib/storefront-trust.ts`
 - Add: `apps/web/__tests__/customer/storefront-trust-helpers.test.ts`
 
-- [ ] Write failing tests for delivery ETA formatting:
+- [x] Write failing tests for delivery ETA formatting:
 
 ```ts
 expect(formatStorefrontDeliveryEta(15, 35)).toBe('30-55 min delivery');
 ```
 
-- [ ] Write failing tests for rating confidence copy:
+- [x] Write failing tests for rating confidence copy:
 
 ```ts
 expect(formatStorefrontRating(4.7, 18)).toBe('4.7 from 18 reviews');
 expect(formatStorefrontRating(null, 0)).toBe('New chef on RideNDine');
 ```
 
-- [ ] Write failing tests for trust highlights:
+- [x] Write failing tests for trust highlights:
 
 ```ts
 const highlights = buildStorefrontTrustHighlights({
@@ -66,9 +66,9 @@ expect(highlights.map((item) => item.label)).toEqual([
 ]);
 ```
 
-- [ ] Run `corepack pnpm --filter @ridendine/web test -- storefront-trust-helpers.test.ts --runInBand` and confirm the helper module is missing.
-- [ ] Implement the helper module with exported `formatStorefrontDeliveryEta`, `formatStorefrontRating`, `buildStorefrontTrustHighlights`, `formatFavoriteRating`, and `mapFavoriteStorefront`.
-- [ ] Rerun the focused helper test and confirm it passes.
+- [x] Run `corepack pnpm --filter @ridendine/web test -- storefront-trust-helpers.test.ts --runInBand` and confirm the helper module is missing.
+- [x] Implement the helper module with exported `formatStorefrontDeliveryEta`, `formatStorefrontRating`, `buildStorefrontTrustHighlights`, `formatFavoriteRating`, and `mapFavoriteStorefront`.
+- [x] Rerun the focused helper test and confirm it passes.
 
 ### Task 2: Storefront Trust Panel And Actions
 
@@ -80,15 +80,15 @@ expect(highlights.map((item) => item.label)).toEqual([
 - Modify: `apps/web/src/components/storefront/storefront-header.tsx`
 - Modify: `apps/web/src/app/chefs/[slug]/page.tsx`
 
-- [ ] Write failing tests proving the trust panel renders approved chef, rating, timing, secure checkout copy, and a link to `#reviews`.
-- [ ] Write failing tests proving the favorite button loads current `/api/favorites` state and toggles `/api/favorites` on click.
-- [ ] Write failing tests proving a `401` favorite response shows sign-in-required copy.
-- [ ] Run focused tests and confirm component modules are missing or behavior is absent.
-- [ ] Implement `StorefrontTrustPanel` using helper output and existing warm UI tokens.
-- [ ] Implement `StorefrontActions` as a client component with favorite and share buttons.
-- [ ] Update `StorefrontHeader` to receive `id` and `slug` and render `StorefrontActions`.
-- [ ] Update `/chefs/[slug]` to pass `id`, `slug`, render `StorefrontTrustPanel`, and wrap the reviews block with `id="reviews"`.
-- [ ] Rerun focused tests and confirm they pass.
+- [x] Write failing tests proving the trust panel renders approved chef, rating, timing, secure checkout copy, and a link to `#reviews`.
+- [x] Write failing tests proving the favorite button loads current `/api/favorites` state and toggles `/api/favorites` on click.
+- [x] Write failing tests proving a `401` favorite response shows sign-in-required copy.
+- [x] Run focused tests and confirm component modules are missing or behavior is absent.
+- [x] Implement `StorefrontTrustPanel` using helper output and existing warm UI tokens.
+- [x] Implement `StorefrontActions` as a client component with favorite and share buttons.
+- [x] Update `StorefrontHeader` to receive `id` and `slug` and render `StorefrontActions`.
+- [x] Update `/chefs/[slug]` to pass `id`, `slug`, render `StorefrontTrustPanel`, and wrap the reviews block with `id="reviews"`.
+- [x] Rerun focused tests and confirm they pass.
 
 ### Task 3: Favorites Page
 
@@ -96,12 +96,12 @@ expect(highlights.map((item) => item.label)).toEqual([
 - Modify: `apps/web/src/app/account/favorites/page.tsx`
 - Add: `apps/web/__tests__/customer/favorites-page.test.tsx`
 
-- [ ] Write failing tests proving signed-in customers fetch `/api/favorites`.
-- [ ] Write failing tests proving saved storefront cards render name, cuisines, rating, and menu link.
-- [ ] Write failing tests proving remove calls `POST /api/favorites` and removes the card from the page.
-- [ ] Run focused favorites tests and confirm current page only shows the empty/help state.
-- [ ] Implement favorites loading, error, empty, list, and remove states.
-- [ ] Rerun focused favorites tests and confirm they pass.
+- [x] Write failing tests proving signed-in customers fetch `/api/favorites`.
+- [x] Write failing tests proving saved storefront cards render name, cuisines, rating, and menu link.
+- [x] Write failing tests proving remove calls `POST /api/favorites` and removes the card from the page.
+- [x] Run focused favorites tests and confirm current page only shows the empty/help state.
+- [x] Implement favorites loading, error, empty, list, and remove states.
+- [x] Rerun focused favorites tests and confirm they pass.
 
 ### Task 4: Order History Reorder Continuity
 
@@ -109,49 +109,49 @@ expect(highlights.map((item) => item.label)).toEqual([
 - Modify: `apps/web/src/app/account/orders/page.tsx`
 - Add: `apps/web/__tests__/customer/order-history-reorder.test.tsx`
 
-- [ ] Write failing tests proving the Reorder button calls `/api/orders/order-1/reorder`.
-- [ ] Write failing tests proving success routes to `/cart?storefrontId=sf-1`.
-- [ ] Write failing tests proving a failed reorder shows a readable error and does not navigate.
-- [ ] Run focused order history tests and confirm the current implementation posts directly to `/api/cart`.
-- [ ] Replace browser-side cart rebuilding with the reorder endpoint.
-- [ ] Rerun focused order history tests and confirm they pass.
+- [x] Write failing tests proving the Reorder button calls `/api/orders/order-1/reorder`.
+- [x] Write failing tests proving success routes to `/cart?storefrontId=sf-1`.
+- [x] Write failing tests proving a failed reorder shows a readable error and does not navigate.
+- [x] Run focused order history tests and confirm the current implementation posts directly to `/api/cart`.
+- [x] Replace browser-side cart rebuilding with the reorder endpoint.
+- [x] Rerun focused order history tests and confirm they pass.
 
 ### Task 5: Verification And Push
 
 **Files:**
 - All files above.
 
-- [ ] Run focused Phase 4 tests:
+- [x] Run focused Phase 4 tests:
 
 ```bash
 corepack pnpm --filter @ridendine/web test -- storefront-trust-helpers.test.ts storefront-actions.test.tsx storefront-trust-panel.test.tsx favorites-page.test.tsx order-history-reorder.test.tsx --runInBand
 ```
 
-- [ ] Run full customer web tests:
+- [x] Run full customer web tests:
 
 ```bash
 corepack pnpm --filter @ridendine/web test -- --runInBand
 ```
 
-- [ ] Run customer typecheck:
+- [x] Run customer typecheck:
 
 ```bash
 corepack pnpm --filter @ridendine/web typecheck
 ```
 
-- [ ] Run customer lint:
+- [x] Run customer lint:
 
 ```bash
 corepack pnpm --filter @ridendine/web lint
 ```
 
-- [ ] Run customer production build:
+- [x] Run customer production build:
 
 ```bash
 corepack pnpm --filter @ridendine/web build
 ```
 
-- [ ] Run diff check:
+- [x] Run diff check:
 
 ```bash
 git diff --check
