@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@ridendine/ui';
+import { resolveDriverRedirectTarget } from './redirect-target';
 
 export default function DriverLoginPage() {
   const searchParams = useSearchParams();
@@ -35,8 +36,8 @@ export default function DriverLoginPage() {
         return;
       }
 
-      const redirect = searchParams.get('redirect');
-      window.location.assign(redirect || '/');
+      const redirect = resolveDriverRedirectTarget(searchParams.get('redirect'));
+      window.location.assign(redirect);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed');
     } finally {

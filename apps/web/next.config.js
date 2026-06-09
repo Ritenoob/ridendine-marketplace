@@ -19,6 +19,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
   },
   eslint: {
@@ -37,7 +41,7 @@ const nextConfig = {
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: *.supabase.co; font-src 'self'; connect-src 'self' *.supabase.co api.stripe.com *.sentry.io; frame-src js.stripe.com; object-src 'none'; base-uri 'self'",
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' js.stripe.com va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: *.supabase.co images.unsplash.com; font-src 'self'; connect-src 'self' *.supabase.co api.stripe.com *.sentry.io vitals.vercel-insights.com *.vercel-insights.com; frame-src js.stripe.com; object-src 'none'; base-uri 'self'",
           },
         ],
       },

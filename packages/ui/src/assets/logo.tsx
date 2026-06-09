@@ -20,14 +20,15 @@ const ICON_VIEWBOX = '0 0 48 48';
  *
  * Variants:
  *   - "wordmark" (default): inline SVG of the "RideNDine" wordmark in brand colors.
- *     "Ride" + "N" render in primary orange, "Dine" in accent teal.
- *   - "icon": compact RD monogram fallback. Replace with the official vector
- *     pin+scooter mark when a clean SVG export is available.
+ *     "Ride" + "N" render in accent teal, "Dine" in primary orange.
+ *   - "icon": official compact app icon asset wrapped in SVG to keep sizing
+ *     consistent for current callers.
  */
 export function Logo({
   variant = 'wordmark',
   height = 32,
   title = 'RideNDine',
+  width,
   ...svgProps
 }: LogoProps) {
   if (variant === 'icon') {
@@ -36,33 +37,21 @@ export function Logo({
         xmlns="http://www.w3.org/2000/svg"
         viewBox={ICON_VIEWBOX}
         height={height}
+        width={width ?? height}
         role={title ? 'img' : 'presentation'}
         aria-label={title || undefined}
         aria-hidden={title ? undefined : true}
         {...svgProps}
       >
         {title ? <title>{title}</title> : null}
-        <rect
-          x={2}
-          y={2}
-          width={44}
-          height={44}
-          rx={12}
-          fill={ridendineTokens.colors.primary}
+        <image
+          href="/logo-icon.png"
+          x={0}
+          y={0}
+          width={48}
+          height={48}
+          preserveAspectRatio="xMidYMid meet"
         />
-        <text
-          x={24}
-          y={32}
-          textAnchor="middle"
-          fontFamily={ridendineTokens.typography.display}
-          fontSize={22}
-          fontWeight={800}
-          fill={ridendineTokens.colors.primaryFg}
-          letterSpacing="-0.02em"
-        >
-          R
-        </text>
-        <circle cx={36} cy={36} r={6} fill={ridendineTokens.colors.accent} />
       </svg>
     );
   }
@@ -72,6 +61,7 @@ export function Logo({
       xmlns="http://www.w3.org/2000/svg"
       viewBox={WORDMARK_VIEWBOX}
       height={height}
+      width={width ?? Math.round(height * (220 / 48))}
       role={title ? 'img' : 'presentation'}
       aria-label={title || undefined}
       aria-hidden={title ? undefined : true}
@@ -84,10 +74,10 @@ export function Logo({
         fontFamily={ridendineTokens.typography.display}
         fontSize={34}
         fontWeight={800}
-        letterSpacing="-0.025em"
+        letterSpacing={0}
       >
-        <tspan fill={ridendineTokens.colors.primary}>RideN</tspan>
-        <tspan fill={ridendineTokens.colors.accent}>Dine</tspan>
+        <tspan fill={ridendineTokens.colors.accent}>RideN</tspan>
+        <tspan fill={ridendineTokens.colors.primary}>Dine</tspan>
       </text>
     </svg>
   );

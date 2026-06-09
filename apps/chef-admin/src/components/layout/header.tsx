@@ -29,11 +29,11 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-sticky flex h-16 items-center justify-between border-b border-border bg-surface px-4 lg:px-6">
+      <header className="sticky top-0 z-sticky flex h-16 w-full min-w-0 items-center justify-between gap-2 sm:gap-4 border-b border-border bg-surface px-3 sm:px-4 lg:px-6">
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="rounded-md p-2 text-textMuted transition-colors hover:bg-surfaceMuted focus-visible:outline-none focus-visible:shadow-focus lg:hidden"
+          className="shrink-0 rounded-md p-2 text-textMuted transition-colors hover:bg-surfaceMuted focus-visible:outline-none focus-visible:shadow-focus lg:hidden"
           aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileMenuOpen}
         >
@@ -49,10 +49,10 @@ export function Header() {
         {/* Logo for mobile */}
         <Link
           href="/dashboard"
-          className="inline-flex items-center rounded-sm focus-visible:outline-none focus-visible:shadow-focus lg:hidden"
+          className="inline-flex shrink-0 items-center rounded-sm focus-visible:outline-none focus-visible:shadow-focus lg:hidden"
           aria-label="Chef dashboard — home"
         >
-          <Logo height={28} />
+          <Logo height={28} variant="icon" />
         </Link>
 
         {/* Desktop title */}
@@ -61,7 +61,7 @@ export function Header() {
           <Badge tone="success">Online</Badge>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex max-w-[calc(100vw-7rem)] shrink-0 items-center gap-2 sm:gap-4 overflow-hidden lg:max-w-none">
           <button
             type="button"
             className="relative rounded-md p-2 transition-colors hover:bg-surfaceMuted focus-visible:outline-none focus-visible:shadow-focus"
@@ -73,7 +73,7 @@ export function Header() {
             <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <Avatar
               src={user?.user_metadata?.avatar_url}
               alt={user?.email || ''}

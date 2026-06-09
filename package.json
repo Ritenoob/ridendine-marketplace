@@ -46,6 +46,7 @@
     "smoke:ops-export-audit": "node scripts/smoke/ops-export-audit-smoke.cjs",
     "smoke:proof-actions": "node scripts/smoke/runtime-proof-action-smoke.cjs",
     "smoke:sample-fixtures": "node scripts/smoke/runtime-sample-fixtures.cjs",
+    "smoke:responsive": "node scripts/smoke/responsive-production-smoke.cjs",
     "audit:ops-authz": "node scripts/audit/high-risk-ops-authz-contracts.cjs",
     "audit:ops-negative-authz": "node scripts/audit/high-risk-ops-negative-authz.cjs",
     "audit:sean-super-admin": "node scripts/audit/sean-super-admin-fixture.cjs",
