@@ -12,7 +12,7 @@ const TARGETS = [
     label: 'Customer web',
     url: 'https://ridendine.ca/',
     auth: false,
-    requiredHeading: 'Home-Cooked Meals, Delivered Fresh',
+    requiredHeading: 'Find chef-made meals near you.',
   },
   {
     label: 'Ops admin',

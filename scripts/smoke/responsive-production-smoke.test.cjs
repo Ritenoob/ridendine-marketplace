@@ -29,6 +29,13 @@ test('driver target uses the real home route instead of missing dashboard route'
   assert.notEqual(driver.url.includes('%2Fdashboard'), true);
 });
 
+test('customer target verifies the ordering-first hero headline', () => {
+  const customer = smoke.TARGETS.find((target) => target.label === 'Customer web');
+
+  assert.ok(customer);
+  assert.equal(customer.requiredHeading, 'Find chef-made meals near you.');
+});
+
 test('decorative overflow is ignored only when the page itself does not scroll horizontally', () => {
   assert.equal(
     smoke.isMeaningfulOverflow({

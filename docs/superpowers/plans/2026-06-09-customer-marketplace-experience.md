@@ -67,13 +67,15 @@
 - All files above.
 
 - [x] Run focused customer tests.
+- [x] Run full customer web test suite.
 - [x] Run `corepack pnpm --filter @ridendine/web typecheck`.
 - [x] Run `corepack pnpm --filter @ridendine/web lint`.
 - [x] Run `corepack pnpm --filter @ridendine/web build`.
-- [ ] Run `corepack pnpm smoke:responsive`.
-- [ ] Commit Phase 1.
-- [ ] Push to GitHub.
-- [ ] Verify Vercel status checks for all four apps.
+- [x] Run responsive smoke script unit tests.
+- [x] Run `corepack pnpm smoke:responsive`.
+- [x] Commit Phase 1.
+- [x] Push to GitHub.
+- [x] Verify Vercel status checks for all four apps.
 
 ---
 
