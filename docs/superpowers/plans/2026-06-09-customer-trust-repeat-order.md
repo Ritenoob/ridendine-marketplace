@@ -157,10 +157,10 @@ corepack pnpm --filter @ridendine/web build
 git diff --check
 ```
 
-- [ ] Commit Phase 4 implementation.
-- [ ] Push to GitHub.
-- [ ] Verify Vercel status checks for all four apps.
-- [ ] Run `corepack pnpm smoke:responsive`.
+- [x] Commit Phase 4 implementation.
+- [x] Push to GitHub.
+- [x] Verify Vercel status checks for all four apps.
+- [x] Run `corepack pnpm smoke:responsive`.
 
 ---
 
@@ -170,3 +170,4 @@ git diff --check
 - Scope control: no schema, payment, checkout, dispatch, chef, driver, or ops changes.
 - Placeholder scan: no TBD/TODO items.
 - Risk control: existing APIs remain source of truth for favorites and reorder.
+- Verification note: responsive production smoke initially exposed cross-target console attribution in the smoke harness; `scripts/smoke/responsive-production-smoke.cjs` now isolates each app target in a fresh page, with a Node regression test and regenerated 91-page wiring records.
