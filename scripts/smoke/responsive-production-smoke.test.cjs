@@ -52,3 +52,84 @@ test('decorative overflow is ignored only when the page itself does not scroll h
     true,
   );
 });
+
+test('responsive smoke isolates each target in a fresh page', async () => {
+  const playwright = require('@playwright/test');
+  const originalLaunch = playwright.chromium.launch;
+  let newPageCount = 0;
+
+  class FakePage {
+    constructor(viewport) {
+      this.currentUrl = 'about:blank';
+      this.viewport = viewport;
+    }
+
+    removeAllListeners() {}
+
+    on() {}
+
+    async goto(url) {
+      this.currentUrl = url;
+    }
+
+    async waitForLoadState() {}
+
+    async waitForTimeout() {}
+
+    locator() {
+      return {
+        count: async () => 0,
+        fill: async () => {},
+      };
+    }
+
+    getByText() {
+      return {
+        waitFor: async () => {},
+      };
+    }
+
+    async evaluate() {
+      return {
+        url: this.currentUrl,
+        title: 'Smoke Test',
+        viewportWidth: this.viewport.width,
+        scrollWidth: this.viewport.width,
+        overflowPx: 0,
+        overflowElements: [],
+        headings: smoke.TARGETS.map((target) => target.requiredHeading).filter(Boolean),
+        visibleButtons: 0,
+        visibleNavLinks: 0,
+      };
+    }
+
+    url() {
+      return this.currentUrl;
+    }
+
+    async close() {}
+  }
+
+  const fakeBrowser = {
+    async newContext({ viewport }) {
+      return {
+        async newPage() {
+          newPageCount += 1;
+          return new FakePage(viewport);
+        },
+        async close() {},
+      };
+    },
+    async close() {},
+  };
+
+  playwright.chromium.launch = async () => fakeBrowser;
+
+  try {
+    await smoke.runResponsiveSmoke();
+  } finally {
+    playwright.chromium.launch = originalLaunch;
+  }
+
+  assert.equal(newPageCount, smoke.TARGETS.length * Object.keys(smoke.VIEWPORTS).length);
+});

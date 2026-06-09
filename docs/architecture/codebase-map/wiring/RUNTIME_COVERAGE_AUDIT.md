@@ -1,6 +1,6 @@
 # Runtime Coverage Audit
 
-Generated: 2026-06-08T13:50:36.996Z
+Generated: 2026-06-09T18:46:59.042Z
 
 This Phase 17 coverage inventory maps every discovered app page and API route file to the runtime, live-role, non-admin role, high-risk authorization, and Phase 18/19 classification contracts that currently exercise, document, or classify it. Structural uncovered rows mean a surface has no classification or contract. Proof gaps mean a surface is classified but still lacks runtime/live/static proof coverage.
 
@@ -8,7 +8,7 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 
 | Surface | Total discovered | Structurally covered | Structural gaps | Proof covered | Proof gaps |
 |---|---:|---:|---:|---:|---:|
-| Pages | 90 | 90 | 0 | 89 | 1 |
+| Pages | 91 | 91 | 0 | 90 | 1 |
 | API route files | 124 | 124 | 0 | 124 | 0 |
 
 ## Contract Source Counts
@@ -23,9 +23,9 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | runtime-api-classification | 124 |
 | runtime-authenticated-json | 18 |
 | runtime-page-auth-intent | 17 |
-| runtime-page-classification | 90 |
+| runtime-page-classification | 91 |
 | runtime-proof-action-api | 118 |
-| runtime-proof-action-page | 76 |
+| runtime-proof-action-page | 77 |
 | runtime-public-json | 7 |
 | runtime-sample-fixture | 18 |
 
@@ -83,6 +83,7 @@ This Phase 17 coverage inventory maps every discovered app page and API route fi
 | Driver App | `/` | `apps/driver-app/src/app/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Driver App | `/auth/login` | `apps/driver-app/src/app/auth/login/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Driver App | `/auth/signup` | `apps/driver-app/src/app/auth/signup/page.tsx` | runtime-page-classification, runtime-proof-action-page |
+| Driver App | `/dashboard` | `apps/driver-app/src/app/dashboard/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Driver App | `/delivery/[id]` | `apps/driver-app/src/app/delivery/[id]/page.tsx` | runtime-page-classification, runtime-sample-fixture |
 | Driver App | `/earnings` | `apps/driver-app/src/app/earnings/page.tsx` | runtime-page-classification, runtime-proof-action-page |
 | Driver App | `/history` | `apps/driver-app/src/app/history/page.tsx` | runtime-page-classification, runtime-proof-action-page |

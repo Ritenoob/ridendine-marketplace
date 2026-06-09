@@ -8,7 +8,7 @@ test('classifies every discovered page surface with auth intent', () => {
   const { collectSurfaceClassifications } = require('./runtime-surface-classification.cjs');
   const summary = collectSurfaceClassifications({ root: repoRoot });
 
-  assert.equal(summary.pages.length, 90);
+  assert.equal(summary.pages.length, 91);
   assert.equal(summary.pages.every((page) => page.classification.kind === 'page'), true);
   assert.equal(
     summary.pages.find((page) => page.app === 'customer' && page.route === '/account').classification.authIntent,
@@ -22,7 +22,7 @@ test('classifies every discovered page surface with auth intent', () => {
     summary.pages.find((page) => page.app === 'ops' && page.route === '/dashboard').classification.authIntent,
     'protected'
   );
-  assert.equal(summary.pageTotals.classified, 90);
+  assert.equal(summary.pageTotals.classified, 91);
   assert.deepEqual(summary.failures, []);
 });
 
@@ -59,6 +59,6 @@ test('generates markdown docs with page and API classification sections', () => 
   assert.ok(markdown.includes('# Runtime Surface Classification'));
   assert.ok(markdown.includes('## Page Surface Classification'));
   assert.ok(markdown.includes('## API Route Handler Classification'));
-  assert.ok(markdown.includes('| Pages | 90 | 90 | 0 |'));
+  assert.ok(markdown.includes('| Pages | 91 | 91 | 0 |'));
   assert.ok(markdown.includes('| API route handlers | 124 | 124 | 0 |'));
 });

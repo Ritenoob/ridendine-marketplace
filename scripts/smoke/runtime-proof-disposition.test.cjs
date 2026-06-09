@@ -8,8 +8,8 @@ test('dispositions every remaining page proof gap', () => {
   const { collectProofDisposition } = require('./runtime-proof-disposition.cjs');
   const summary = collectProofDisposition({ root: repoRoot });
 
-  assert.equal(summary.pageTotals.total, 90);
-  assert.equal(summary.pageTotals.proofCovered, 89);
+  assert.equal(summary.pageTotals.total, 91);
+  assert.equal(summary.pageTotals.proofCovered, 90);
   assert.equal(summary.pageTotals.dispositionedGaps, 1);
   assert.equal(summary.pageTotals.unresolved, 0);
 
@@ -70,7 +70,7 @@ test('generates markdown proof disposition docs with zero unresolved gaps', () =
   const markdown = generateMarkdown(collectProofDisposition({ root: repoRoot }));
 
   assert.ok(markdown.includes('# Runtime Proof Disposition'));
-  assert.ok(markdown.includes('| Pages | 90 | 89 | 1 | 1 | 0 |'));
+  assert.ok(markdown.includes('| Pages | 91 | 90 | 1 | 1 | 0 |'));
   assert.ok(markdown.includes('| API route handlers | 124 | 124 | 0 | 0 | 0 |'));
   assert.ok(markdown.includes('## Page Proof Gap Disposition'));
   assert.ok(markdown.includes('## API Proof Gap Disposition'));

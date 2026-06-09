@@ -1,6 +1,6 @@
 # Runtime Surface Classification
 
-Generated: 2026-06-08T13:50:36.481Z
+Generated: 2026-06-09T18:46:44.520Z
 
 This Phase 18/19 classification inventory records the intended auth, guard, method, mutation-risk, and smoke-bucket treatment for every discovered app page and route handler. It is structural coverage, not a claim that every dynamic or mutating route is safe to exercise against production.
 
@@ -8,7 +8,7 @@ This Phase 18/19 classification inventory records the intended auth, guard, meth
 
 | Surface | Total discovered | Classified | Unclassified |
 |---|---:|---:|---:|
-| Pages | 90 | 90 | 0 |
+| Pages | 91 | 91 | 0 |
 | API route handlers | 124 | 124 | 0 |
 
 ## Page Surface Classification
@@ -58,6 +58,7 @@ This Phase 18/19 classification inventory records the intended auth, guard, meth
 | Driver App | `/` | `apps/driver-app/src/app/page.tsx` | protected | login-guard | Application workspace page that requires an authenticated app user or redirects to login. |
 | Driver App | `/auth/login` | `apps/driver-app/src/app/auth/login/page.tsx` | public-auth-entry | public-html | Public authentication entry page that creates or recovers a session. |
 | Driver App | `/auth/signup` | `apps/driver-app/src/app/auth/signup/page.tsx` | public-auth-entry | public-html | Public authentication entry page that creates or recovers a session. |
+| Driver App | `/dashboard` | `apps/driver-app/src/app/dashboard/page.tsx` | protected | login-guard | Application workspace page that requires an authenticated app user or redirects to login. |
 | Driver App | `/delivery/[id]` | `apps/driver-app/src/app/delivery/[id]/page.tsx` | protected | login-guard | Application workspace page that requires an authenticated app user or redirects to login. |
 | Driver App | `/earnings` | `apps/driver-app/src/app/earnings/page.tsx` | protected | login-guard | Application workspace page that requires an authenticated app user or redirects to login. |
 | Driver App | `/history` | `apps/driver-app/src/app/history/page.tsx` | protected | login-guard | Application workspace page that requires an authenticated app user or redirects to login. |
@@ -171,7 +172,7 @@ This Phase 18/19 classification inventory records the intended auth, guard, meth
 | Driver App | `/api/driver/notification-preferences` | `apps/driver-app/src/app/api/driver/notification-preferences/route.ts` | GET, PATCH | protected-session | mixed | medium | authenticated-read |
 | Driver App | `/api/driver/presence` | `apps/driver-app/src/app/api/driver/presence/route.ts` | GET, PATCH | protected-session | mixed | medium | authenticated-read |
 | Driver App | `/api/driver/readiness` | `apps/driver-app/src/app/api/driver/readiness/route.ts` | GET | protected-session | read-only | low | authenticated-read |
-| Driver App | `/api/driver/shift` | `apps/driver-app/src/app/api/driver/shift/route.ts` | GET | protected-session | read-only | low | authenticated-read |
+| Driver App | `/api/driver/shift` | `apps/driver-app/src/app/api/driver/shift/route.ts` | GET, POST, DELETE | protected-session | mixed | medium | authenticated-read |
 | Driver App | `/api/earnings` | `apps/driver-app/src/app/api/earnings/route.ts` | GET | protected-session | read-only | low | authenticated-read |
 | Driver App | `/api/health` | `apps/driver-app/src/app/api/health/route.ts` | GET | public-read | read-only | low | public-json |
 | Driver App | `/api/location` | `apps/driver-app/src/app/api/location/route.ts` | POST | protected-session | mutating | medium | negative-authz-contract-only |

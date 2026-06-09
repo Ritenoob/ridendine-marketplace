@@ -196,26 +196,29 @@ async function runResponsiveSmoke(options = {}) {
         viewport,
         serviceWorkers: 'block',
       });
-      const page = await context.newPage();
 
       for (const target of TARGETS) {
+        const page = await context.newPage();
         const consoleErrors = [];
-        page.removeAllListeners('console');
         page.on('console', (message) => {
           if (message.type() === 'error') consoleErrors.push(message.text().slice(0, 240));
         });
 
-        await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-        await waitForSettledPage(page, 1500);
-        const login = await loginIfNeeded(page, target, credentials);
-        if (target.requiredHeading) {
-          await page
-            .getByText(target.requiredHeading, { exact: false })
-            .waitFor({ state: 'visible', timeout: 8000 })
-            .catch(() => {});
+        try {
+          await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+          await waitForSettledPage(page, 1500);
+          const login = await loginIfNeeded(page, target, credentials);
+          if (target.requiredHeading) {
+            await page
+              .getByText(target.requiredHeading, { exact: false })
+              .waitFor({ state: 'visible', timeout: 8000 })
+              .catch(() => {});
+          }
+          const audit = await auditCurrentPage(page);
+          results.push(evaluateAudit(target, viewportName, login, audit, consoleErrors));
+        } finally {
+          await page.close().catch(() => {});
         }
-        const audit = await auditCurrentPage(page);
-        results.push(evaluateAudit(target, viewportName, login, audit, consoleErrors));
       }
 
       await context.close();
