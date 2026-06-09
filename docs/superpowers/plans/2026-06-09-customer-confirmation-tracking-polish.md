@@ -115,16 +115,16 @@ corepack pnpm --filter @ridendine/web build
 git diff --check
 ```
 
-- [ ] Commit the confirmation/tracking polish.
-- [ ] Push to GitHub.
-- [ ] Verify all four Vercel deployments are green for the pushed SHA.
-- [ ] Run:
+- [x] Commit the confirmation/tracking polish.
+- [x] Push to GitHub.
+- [x] Verify all four Vercel deployments are green for the pushed SHA.
+- [x] Run:
 
 ```bash
 corepack pnpm smoke:responsive
 ```
 
-- [ ] Browser spot-check a deployed confirmation URL if an authenticated order session is available; otherwise record the login/permission state honestly and rely on focused tests plus production gates for loaded-order UI proof.
+- [x] Browser spot-check attempted; in-app browser URL policy blocked the deployed confirmation URL, so loaded-order UI is verified by focused tests plus production gates.
 
 ---
 
