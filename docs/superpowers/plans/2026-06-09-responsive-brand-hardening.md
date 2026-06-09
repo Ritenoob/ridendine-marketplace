@@ -96,11 +96,11 @@
 
 - [x] Run focused Node, Driver, and Chef tests.
 - [x] Run affected app typecheck/lint/build.
-- [ ] Run `pnpm smoke:responsive` against production after deployment.
-- [ ] Commit implementation.
-- [ ] Push to GitHub.
-- [ ] Verify GitHub/Vercel status checks for all four apps.
-- [ ] Verify production responsive smoke against final commit.
+- [x] Run `pnpm smoke:responsive` against production after deployment.
+- [x] Commit implementation.
+- [x] Push to GitHub.
+- [x] Verify GitHub/Vercel status checks for all four apps.
+- [x] Verify production responsive smoke against final commit.
 
 ---
 
