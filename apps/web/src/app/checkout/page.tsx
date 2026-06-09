@@ -11,7 +11,9 @@ import { StripePaymentForm } from '@/components/checkout/stripe-payment-form';
 import { CheckoutSkeleton } from '@/components/checkout/checkout-skeleton';
 import { DeliveryTimePicker } from '@/components/checkout/delivery-time-picker';
 import { SavedCardSelector } from '@/components/checkout/saved-card-selector';
+import { CheckoutProgress } from '@/components/checkout/checkout-progress';
 import { orderConfirmationPath } from '@/lib/customer-ordering';
+import { formatCartCurrency } from '@/lib/cart-summary';
 import { useEta } from '@/hooks/use-eta';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -351,12 +353,13 @@ function CheckoutContent() {
       breakdown.tax +
       breakdown.tip -
       breakdown.discount
-    : null;
+    : 0;
 
   return (
     <>
     <main className="container py-8">
       <h1 className="font-display text-2xl font-bold tracking-tight text-text">Checkout</h1>
+      <CheckoutProgress activeStep={checkoutStep} className="mt-4" />
 
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -528,7 +531,7 @@ function CheckoutContent() {
                         <p className="font-medium text-text">{item.name}</p>
                         <p className="text-sm text-textMuted">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-medium text-text">${Number(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-medium text-text">{formatCartCurrency(item.price * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
@@ -594,21 +597,21 @@ function CheckoutContent() {
                   <div className="flex justify-between text-sm">
                     <span className="text-textMuted">Subtotal (cart)</span>
                     <span className="text-text">
-                      ${Number(cartSubtotal).toFixed(2)}
+                      {formatCartCurrency(cartSubtotal)}
                     </span>
                   </div>
                   {tipDollars() > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-textMuted">Tip (your selection)</span>
                       <span className="text-text">
-                        ${Number(tipDollars()).toFixed(2)}
+                        {formatCartCurrency(tipDollars())}
                       </span>
                     </div>
                   )}
                   {promoDiscount > 0 && (
                     <div className="flex justify-between text-sm text-success">
                       <span>Promo ({promoCode})</span>
-                      <span>-${promoDiscount.toFixed(2)}</span>
+                      <span>-{formatCartCurrency(promoDiscount)}</span>
                     </div>
                   )}
                   <p className="pt-2 text-xs leading-relaxed text-textMuted">
@@ -621,7 +624,7 @@ function CheckoutContent() {
                   <div className="flex justify-between text-sm">
                     <span className="text-textMuted">Subtotal</span>
                     <span className="text-text">
-                      ${Number(breakdown.subtotal).toFixed(2)}
+                      {formatCartCurrency(breakdown.subtotal)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -634,7 +637,7 @@ function CheckoutContent() {
                       )}
                     </span>
                     <span className="text-text">
-                      ${Number(breakdown.deliveryFee).toFixed(2)}
+                      {formatCartCurrency(breakdown.deliveryFee)}
                     </span>
                   </div>
                   {breakdown.surgeActive && breakdown.surgeMultiplier !== undefined && (
@@ -648,34 +651,34 @@ function CheckoutContent() {
                   <div className="flex justify-between text-sm">
                     <span className="text-textMuted">Service fee</span>
                     <span className="text-text">
-                      ${Number(breakdown.serviceFee).toFixed(2)}
+                      {formatCartCurrency(breakdown.serviceFee)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-textMuted">Tax</span>
                     <span className="text-text">
-                      ${Number(breakdown.tax).toFixed(2)}
+                      {formatCartCurrency(breakdown.tax)}
                     </span>
                   </div>
                   {breakdown.tip > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-textMuted">Tip</span>
                       <span className="text-text">
-                        ${Number(breakdown.tip).toFixed(2)}
+                        {formatCartCurrency(breakdown.tip)}
                       </span>
                     </div>
                   )}
                   {breakdown.discount > 0 && (
                     <div className="flex justify-between text-sm text-success">
                       <span>Discount</span>
-                      <span>-${Number(breakdown.discount).toFixed(2)}</span>
+                      <span>-{formatCartCurrency(breakdown.discount)}</span>
                     </div>
                   )}
                   <div className="border-t border-divider pt-2">
                     <div className="flex justify-between text-lg font-semibold">
                       <span className="text-text">Total</span>
                       <span className="text-primary">
-                        ${Number(paymentTotal).toFixed(2)}
+                        {formatCartCurrency(paymentTotal)}
                       </span>
                     </div>
                   </div>
@@ -717,7 +720,7 @@ function CheckoutContent() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs text-textMuted">Subtotal</p>
-            <p className="font-semibold text-text">${cartSubtotal.toFixed(2)}</p>
+            <p className="font-semibold text-text">{formatCartCurrency(cartSubtotal)}</p>
           </div>
           <Button
             variant="primary"

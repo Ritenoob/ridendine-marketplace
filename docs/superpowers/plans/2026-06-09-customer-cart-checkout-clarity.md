@@ -29,13 +29,13 @@
 - Create: `apps/web/__tests__/customer/cart-summary-helpers.test.ts`
 - Create: `apps/web/src/lib/cart-summary.ts`
 
-- [ ] Write failing tests for subtotal and item count calculations.
-- [ ] Write failing tests for line total and currency formatting.
-- [ ] Write failing tests for checkout href generation.
-- [ ] Write failing tests for cart fee disclosure copy.
-- [ ] Run `corepack pnpm --filter @ridendine/web test -- cart-summary-helpers.test.ts --runInBand` and confirm the helper module is missing.
-- [ ] Implement `cart-summary.ts`.
-- [ ] Rerun the focused helper test and confirm it passes.
+- [x] Write failing tests for subtotal and item count calculations.
+- [x] Write failing tests for line total and currency formatting.
+- [x] Write failing tests for checkout href generation.
+- [x] Write failing tests for cart fee disclosure copy.
+- [x] Run `corepack pnpm --filter @ridendine/web test -- cart-summary-helpers.test.ts --runInBand` and confirm the helper module is missing.
+- [x] Implement `cart-summary.ts`.
+- [x] Rerun the focused helper test and confirm it passes.
 
 ### Task 2: Cart Page UI Tests
 
@@ -43,14 +43,14 @@
 - Add: `apps/web/__tests__/customer/cart-checkout-clarity.test.tsx`
 - Modify: `apps/web/src/app/cart/page.tsx`
 
-- [ ] Mock `useCart`, `next/navigation`, `next/link`, and `@ridendine/ui` using the existing customer test style.
-- [ ] Write failing tests that cart summary shows “Cart subtotal”.
-- [ ] Write failing tests that the cart page does not show hardcoded “Delivery fee”, “Service fee”, “HST”, or final “Total”.
-- [ ] Write failing tests that the mobile sticky bar says “Subtotal”.
-- [ ] Write failing tests for the checkout fee disclosure copy.
-- [ ] Run `corepack pnpm --filter @ridendine/web test -- cart-checkout-clarity.test.tsx --runInBand` and confirm the intended failures.
-- [ ] Update `cart/page.tsx` to use shared helpers and subtotal-only messaging.
-- [ ] Rerun the focused cart UI test and confirm it passes.
+- [x] Mock `useCart`, `next/navigation`, `next/link`, and `@ridendine/ui` using the existing customer test style.
+- [x] Write failing tests that cart summary shows “Cart subtotal”.
+- [x] Write failing tests that the cart page does not show hardcoded “Delivery fee”, “Service fee”, “HST”, or final “Total”.
+- [x] Write failing tests that the mobile sticky bar says “Subtotal”.
+- [x] Write failing tests for the checkout fee disclosure copy.
+- [x] Run `corepack pnpm --filter @ridendine/web test -- cart-checkout-clarity.test.tsx --runInBand` and confirm the intended failures.
+- [x] Update `cart/page.tsx` to use shared helpers and subtotal-only messaging.
+- [x] Rerun the focused cart UI test and confirm it passes.
 
 ### Task 3: Checkout Progress Component
 
@@ -59,24 +59,24 @@
 - Add: `apps/web/__tests__/checkout/checkout-progress.test.tsx`
 - Modify: `apps/web/src/app/checkout/page.tsx`
 
-- [ ] Write failing tests for “Delivery details” and “Secure payment” step labels.
-- [ ] Write failing tests that the active step uses `aria-current="step"`.
-- [ ] Run `corepack pnpm --filter @ridendine/web test -- checkout-progress.test.tsx --runInBand` and confirm the component module is missing.
-- [ ] Implement `CheckoutProgress`.
-- [ ] Render `CheckoutProgress activeStep={checkoutStep}` near the checkout heading.
-- [ ] Rerun the focused progress test and confirm it passes.
+- [x] Write failing tests for “Delivery details” and “Secure payment” step labels.
+- [x] Write failing tests that the active step uses `aria-current="step"`.
+- [x] Run `corepack pnpm --filter @ridendine/web test -- checkout-progress.test.tsx --runInBand` and confirm the component module is missing.
+- [x] Implement `CheckoutProgress`.
+- [x] Render `CheckoutProgress activeStep={checkoutStep}` near the checkout heading.
+- [x] Rerun the focused progress test and confirm it passes.
 
 ### Task 4: Verification And Push
 
 **Files:**
 - All files above.
 
-- [ ] Run focused Phase 3 tests.
-- [ ] Run full customer web tests.
-- [ ] Run `corepack pnpm --filter @ridendine/web typecheck`.
-- [ ] Run `corepack pnpm --filter @ridendine/web lint`.
-- [ ] Run `corepack pnpm --filter @ridendine/web build`.
-- [ ] Run `git diff --check`.
+- [x] Run focused Phase 3 tests.
+- [x] Run full customer web tests.
+- [x] Run `corepack pnpm --filter @ridendine/web typecheck`.
+- [x] Run `corepack pnpm --filter @ridendine/web lint`.
+- [x] Run `corepack pnpm --filter @ridendine/web build`.
+- [x] Run `git diff --check`.
 - [ ] Commit Phase 3 implementation.
 - [ ] Push to GitHub.
 - [ ] Verify Vercel status checks for all four apps.

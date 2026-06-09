@@ -6,6 +6,14 @@ import Link from 'next/link';
 import { Header } from '@/components/layout/header';
 import { Button, Card, EmptyState } from '@ridendine/ui';
 import { useCart } from '@/contexts/cart-context';
+import {
+  CART_FEE_DISCLOSURE,
+  calculateCartItemCount,
+  calculateCartLineTotal,
+  calculateCartSubtotal,
+  checkoutHrefForStorefront,
+  formatCartCurrency,
+} from '@/lib/cart-summary';
 
 export default function CartPage() {
   const searchParams = useSearchParams();
@@ -21,12 +29,9 @@ export default function CartPage() {
   }, [storefrontIdParam, storefrontId, fetchCart]);
 
   const cartItems = cart?.items ?? [];
-  // Prices are stored as decimals (e.g. 18.99), not cents
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryFee = cartItems.length > 0 ? 5.00 : 0;
-  const serviceFee = Math.round(subtotal * 0.08 * 100) / 100;
-  const tax = Math.round((subtotal + serviceFee) * 0.13 * 100) / 100;
-  const total = subtotal + deliveryFee + serviceFee + tax;
+  const subtotal = calculateCartSubtotal(cartItems);
+  const itemCount = calculateCartItemCount(cartItems);
+  const checkoutHref = checkoutHrefForStorefront(cart?.storefront_id ?? storefrontIdParam ?? storefrontId);
 
   const handleDecrement = (itemId: string, currentQty: number) => {
     if (currentQty <= 1) {
@@ -105,7 +110,7 @@ export default function CartPage() {
                       <div>
                         <h3 className="font-medium text-text">{item.name}</h3>
                         <p className="text-sm text-textMuted">
-                          ${Number(item.price).toFixed(2)} each
+                          {formatCartCurrency(item.price)} each
                         </p>
                         {item.special_instructions && (
                           <p className="mt-1 text-xs text-textSubtle">
@@ -139,7 +144,7 @@ export default function CartPage() {
                         </button>
                       </div>
                       <span className="min-w-[64px] text-right font-semibold text-text">
-                        ${Number(item.price * item.quantity).toFixed(2)}
+                        {formatCartCurrency(calculateCartLineTotal(item))}
                       </span>
                       <button
                         type="button"
@@ -163,32 +168,22 @@ export default function CartPage() {
                 <h2 className="font-semibold text-text">Order Summary</h2>
                 <div className="mt-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-textMuted">Subtotal</span>
-                    <span className="text-text">${Number(subtotal).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-textMuted">Delivery fee</span>
-                    <span className="text-text">${Number(deliveryFee).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-textMuted">Service fee (8%)</span>
-                    <span className="text-text">${Number(serviceFee).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-textMuted">HST (13%)</span>
-                    <span className="text-text">${Number(tax).toFixed(2)}</span>
+                    <span className="text-textMuted">Items</span>
+                    <span className="text-text">{itemCount}</span>
                   </div>
                   <div className="border-t border-divider pt-3">
                     <div className="flex justify-between text-lg font-bold">
-                      <span className="text-text">Total</span>
-                      <span className="text-primary">${Number(total).toFixed(2)}</span>
+                      <span className="text-text">Cart subtotal</span>
+                      <span className="text-primary">{formatCartCurrency(subtotal)}</span>
                     </div>
-                    <p className="mt-1 text-xs text-textSubtle">Includes HST</p>
+                    <p className="mt-2 rounded-md bg-primarySoft px-3 py-2 text-xs leading-relaxed text-textMuted">
+                      {CART_FEE_DISCLOSURE}
+                    </p>
                   </div>
                 </div>
-                <Link href={`/checkout?storefrontId=${cart?.storefront_id}`} className="mt-4 block">
+                <Link href={checkoutHref} className="mt-4 block">
                   <Button variant="primary" size="lg" fullWidth>
-                    Proceed to Checkout →
+                    Proceed to Checkout
                   </Button>
                 </Link>
                 <Link href="/chefs" className="mt-2 block w-full text-center text-sm text-textMuted transition-colors hover:text-primary">
@@ -208,10 +203,11 @@ export default function CartPage() {
         >
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs text-textMuted">Total</p>
-              <p className="font-semibold text-text">${total.toFixed(2)}</p>
+              <p className="text-xs text-textMuted">Subtotal</p>
+              <p className="font-semibold text-text">{formatCartCurrency(subtotal)}</p>
+              <p className="max-w-[12rem] truncate text-xs text-textSubtle">{CART_FEE_DISCLOSURE}</p>
             </div>
-            <Link href={`/checkout?storefrontId=${cart?.storefront_id}`} className="flex-1">
+            <Link href={checkoutHref} className="flex-1">
               <Button variant="primary" size="lg" fullWidth>
                 Proceed to Checkout
               </Button>
