@@ -1,44 +1,32 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createServerClient, getActiveStorefronts, searchStorefronts } from '@ridendine/db';
-import type { StorefrontSortBy, ChefAvailabilityRow } from '@ridendine/db';
+import type { ChefAvailabilityRow } from '@ridendine/db';
 import { Badge, Card } from '@ridendine/ui';
+import {
+  hasActiveDiscoveryFilters,
+  isChefOpenNow,
+  normalizeStorefrontSort,
+} from '@/lib/discovery';
 
 interface ChefsListProps {
   search?: string;
   cuisines?: string[];
   minRating?: number;
   sortBy?: string;
+  openNow?: boolean;
 }
 
-function isOpenNow(availability?: ChefAvailabilityRow[]): boolean {
-  if (!availability || availability.length === 0) return false;
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const todaySlots = availability.filter((a) => a.day_of_week === dayOfWeek && a.is_available);
-  if (todaySlots.length === 0) return false;
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  return todaySlots.some((slot) => {
-    const [openH, openM] = slot.start_time.split(':').map(Number);
-    const [closeH, closeM] = slot.end_time.split(':').map(Number);
-    const openMinutes = (openH ?? 0) * 60 + (openM ?? 0);
-    const closeMinutes = (closeH ?? 0) * 60 + (closeM ?? 0);
-    return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
-  });
-}
-
-const hasActiveFilters = (
-  search?: string,
-  cuisines?: string[],
-  minRating?: number,
-  sortBy?: string,
-): boolean =>
-  Boolean(search || (cuisines && cuisines.length > 0) || minRating || (sortBy && sortBy !== 'default'));
-
-export async function ChefsList({ search, cuisines, minRating, sortBy = 'default' }: ChefsListProps = {}) {
+export async function ChefsList({
+  search,
+  cuisines,
+  minRating,
+  sortBy = 'default',
+  openNow = false,
+}: ChefsListProps = {}) {
   const cookieStore = await cookies();
   const supabase = createServerClient(cookieStore);
-  const sort = (sortBy as StorefrontSortBy) || 'default';
+  const sort = normalizeStorefrontSort(sortBy);
 
   let chefs: Awaited<ReturnType<typeof getActiveStorefronts>> = [];
 
@@ -56,11 +44,15 @@ export async function ChefsList({ search, cuisines, minRating, sortBy = 'default
     if (minRating) {
       chefs = chefs.filter((c) => (c.average_rating ?? 0) >= minRating);
     }
+
+    if (openNow) {
+      chefs = chefs.filter((chef) => isChefOpenNow(chef.chef_availability as ChefAvailabilityRow[] | undefined));
+    }
   } catch (error) {
     console.error('Failed to fetch chefs:', error);
   }
 
-  const filtersActive = hasActiveFilters(search, cuisines, minRating, sortBy);
+  const filtersActive = hasActiveDiscoveryFilters({ search, cuisines, minRating, sortBy: sort, openNow });
 
   if (chefs.length === 0) {
     return (
@@ -125,7 +117,7 @@ export async function ChefsList({ search, cuisines, minRating, sortBy = 'default
                   Featured
                 </div>
               )}
-              {isOpenNow(chef.chef_availability) ? (
+              {isChefOpenNow(chef.chef_availability as ChefAvailabilityRow[] | undefined) ? (
                 <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-success px-2.5 py-1 text-xs font-semibold text-white shadow">
                   <span className="h-1.5 w-1.5 rounded-full bg-white" aria-hidden="true" />
                   Open

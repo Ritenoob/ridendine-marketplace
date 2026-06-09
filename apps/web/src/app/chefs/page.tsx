@@ -45,7 +45,13 @@ function ChefsLoadingSkeleton() {
 export default async function ChefsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; cuisine?: string | string[]; rating?: string; sort?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    cuisine?: string | string[];
+    rating?: string;
+    sort?: string;
+    openNow?: string;
+  }>;
 }) {
   const params = await searchParams;
   const cuisines = params.cuisine
@@ -53,6 +59,7 @@ export default async function ChefsPage({
     : [];
   const minRating = params.rating ? parseFloat(params.rating) : undefined;
   const sortBy = params.sort || 'default';
+  const openNow = params.openNow === 'true';
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,7 +94,13 @@ export default async function ChefsPage({
 
           <div className="min-w-0 flex-1">
             <Suspense fallback={<ChefsLoadingSkeleton />}>
-              <ChefsList search={params.search} cuisines={cuisines} minRating={minRating} sortBy={sortBy} />
+              <ChefsList
+                search={params.search}
+                cuisines={cuisines}
+                minRating={minRating}
+                sortBy={sortBy}
+                openNow={openNow}
+              />
             </Suspense>
           </div>
         </div>

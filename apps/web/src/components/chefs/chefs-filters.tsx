@@ -11,6 +11,7 @@ const cuisineTypes = [
 
 const sortOptions = [
   { value: 'default', label: 'Featured' },
+  { value: 'fastest', label: 'Fastest Delivery' },
   { value: 'rating', label: 'Highest Rated' },
   { value: 'popular', label: 'Most Popular' },
   { value: 'newest', label: 'Newest' },
@@ -26,6 +27,7 @@ export function ChefsFilters() {
   );
   const [minRating, setMinRating] = useState(searchParams.get('rating') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'default');
+  const [openNow, setOpenNow] = useState(searchParams.get('openNow') === 'true');
 
   const applyFilters = () => {
     const params = new URLSearchParams();
@@ -33,6 +35,7 @@ export function ChefsFilters() {
     selectedCuisines.forEach((c) => params.append('cuisine', c));
     if (minRating) params.set('rating', minRating);
     if (sortBy && sortBy !== 'default') params.set('sort', sortBy);
+    if (openNow) params.set('openNow', 'true');
     router.push(`/chefs?${params.toString()}`);
   };
 
@@ -41,6 +44,7 @@ export function ChefsFilters() {
     setSelectedCuisines([]);
     setMinRating('');
     setSortBy('default');
+    setOpenNow(false);
     router.push('/chefs');
   };
 
@@ -75,6 +79,22 @@ export function ChefsFilters() {
             </option>
           ))}
         </Select>
+      </div>
+
+      <div className="mt-6">
+        <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-surfaceMuted px-3 py-2">
+          <span>
+            <span className="block text-sm font-medium text-text">Open now</span>
+            <span className="block text-xs text-textMuted">Show chefs taking orders today</span>
+          </span>
+          <input
+            type="checkbox"
+            aria-label="Open now"
+            checked={openNow}
+            onChange={(e) => setOpenNow(e.target.checked)}
+            className="h-4 w-4 rounded border-border text-primary accent-primary focus-visible:shadow-focus focus-visible:outline-none"
+          />
+        </label>
       </div>
 
       <div className="mt-6">

@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button, Card, Logo } from '@ridendine/ui';
 import { Header } from '@/components/layout/header';
 import { FeaturedChefs } from '@/components/home/featured-chefs';
 import { ScrollRevealSection } from '@/components/home/scroll-reveal-section';
+import { CustomerMarketplaceHero } from '@/components/home/customer-marketplace-hero';
 import { createAdminClient } from '@ridendine/db';
 
 // Opt out of static generation due to auth context requirements
@@ -66,69 +66,7 @@ export default async function HomePage() {
         (any future expiry, any CVC). No real money will be charged.
       </div>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden py-16 sm:py-24">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
-        </div>
-
-        <div className="container relative">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-8 flex justify-center">
-              <Image
-                src="/logo.png"
-                alt="RideNDine"
-                width={200}
-                height={260}
-                className="h-auto w-40 sm:w-48"
-                priority
-              />
-            </div>
-
-            <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight text-text sm:text-5xl md:text-6xl">
-              Home-Cooked Meals,{' '}
-              <span className="text-primary">Delivered Fresh</span>
-            </h1>
-            <p className="mt-6 text-lg leading-relaxed text-textMuted sm:text-xl">
-              Discover authentic, home-cooked meals from talented local chefs in Hamilton.
-              Support home chefs while enjoying delicious food delivered right to your door.
-            </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/chefs">
-                <Button variant="primary" size="lg" className="sm:w-auto w-full">
-                  Browse Chefs
-                </Button>
-              </Link>
-              <Link href="/auth/signup?role=chef">
-                <Button variant="secondary" size="lg" className="sm:w-auto w-full">
-                  Become a Chef
-                </Button>
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div className="mt-12 grid grid-cols-3 gap-6 border-t border-divider pt-10">
-              <div>
-                <p className="font-display text-3xl font-extrabold text-primary">
-                  {activeChefs > 0 ? activeChefs : '—'}
-                </p>
-                <p className="mt-1 text-sm text-textMuted">Local Chefs</p>
-              </div>
-              <div>
-                <p className="font-display text-3xl font-extrabold text-primary">
-                  {liveMenuItems > 0 ? `${liveMenuItems}+` : '—'}
-                </p>
-                <p className="mt-1 text-sm text-textMuted">Unique Dishes</p>
-              </div>
-              <div>
-                <p className="font-display text-3xl font-extrabold text-primary">Hamilton</p>
-                <p className="mt-1 text-sm text-textMuted">Serving Area</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <CustomerMarketplaceHero activeChefs={activeChefs} liveMenuItems={liveMenuItems} />
 
       {/* How It Works */}
       <section className="py-20 bg-surfaceSubtle">

@@ -20,7 +20,7 @@ export interface StorefrontWithChef extends ChefStorefront {
   chef_availability?: ChefAvailabilityRow[];
 }
 
-export type StorefrontSortBy = 'rating' | 'newest' | 'popular' | 'default';
+export type StorefrontSortBy = 'rating' | 'newest' | 'popular' | 'fastest' | 'default';
 
 export async function getActiveStorefronts(
   client: SupabaseClient,
@@ -74,6 +74,11 @@ export async function getActiveStorefronts(
       break;
     case 'popular':
       query = query.order('total_orders', { ascending: false, nullsFirst: false });
+      break;
+    case 'fastest':
+      query = query
+        .order('estimated_prep_time_min', { ascending: true, nullsFirst: false })
+        .order('estimated_prep_time_max', { ascending: true, nullsFirst: false });
       break;
     case 'rating':
       query = query.order('average_rating', { ascending: false, nullsFirst: false });
@@ -219,6 +224,11 @@ export async function searchStorefronts(
       break;
     case 'popular':
       q = q.order('total_orders', { ascending: false, nullsFirst: false });
+      break;
+    case 'fastest':
+      q = q
+        .order('estimated_prep_time_min', { ascending: true, nullsFirst: false })
+        .order('estimated_prep_time_max', { ascending: true, nullsFirst: false });
       break;
     case 'rating':
       q = q.order('average_rating', { ascending: false, nullsFirst: false });
