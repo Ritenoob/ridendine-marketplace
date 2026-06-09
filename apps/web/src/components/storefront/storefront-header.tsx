@@ -41,18 +41,14 @@ export function StorefrontHeader({ storefront }: StorefrontHeaderProps) {
   return (
     <div className="border-b border-border bg-surface">
       {/* Cover */}
-      <div
-        className="relative h-48 overflow-hidden bg-primarySoft md:h-64"
-        style={
-          storefront.coverImageUrl
-            ? {
-                backgroundImage: `url(${storefront.coverImageUrl})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }
-            : undefined
-        }
-      >
+      <div className="relative aspect-[16/9] min-h-[220px] max-h-[360px] w-full overflow-hidden bg-primarySoft md:min-h-[280px]">
+        {storefront.coverImageUrl && (
+          <img
+            src={storefront.coverImageUrl}
+            alt={`${storefront.name} cover`}
+            className="h-full w-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-text/30 to-transparent" />
       </div>
 

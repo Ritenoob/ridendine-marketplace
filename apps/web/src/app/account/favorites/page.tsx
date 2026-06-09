@@ -29,10 +29,15 @@ function FavoriteCard({
 }) {
   return (
     <Card padding="none" className="overflow-hidden">
-      <div
-        className="h-28 bg-primarySoft bg-cover bg-center"
-        style={favorite.coverImageUrl ? { backgroundImage: `url(${favorite.coverImageUrl})` } : undefined}
-      />
+      <div className="aspect-[16/9] overflow-hidden bg-primarySoft">
+        {favorite.coverImageUrl && (
+          <img
+            src={favorite.coverImageUrl}
+            alt={`${favorite.name} cover`}
+            className="h-full w-full object-cover"
+          />
+        )}
+      </div>
       <div className="p-5">
         <div className="flex items-start gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary text-lg font-bold text-primaryFg">

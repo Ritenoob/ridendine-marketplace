@@ -35,19 +35,19 @@
 - Add: `apps/web/__tests__/customer/storefront-image-layout.test.tsx`
 - Add: `apps/chef-admin/src/__tests__/storefront-image-layout.test.tsx`
 
-- [ ] Write failing customer tests proving featured chef cover images render as `<img>` elements inside an `aspect-[16/9]` frame with `object-cover`.
-- [ ] Write failing customer tests proving storefront header cover images render inside an `aspect-[16/9]` mobile-safe hero with `object-cover`.
-- [ ] Write failing customer tests proving favorites cards use an `aspect-[16/9]` image frame.
-- [ ] Write failing chef tests proving storefront logo guidance says `Recommended 512 x 512 px`.
-- [ ] Write failing chef tests proving storefront cover guidance says `Recommended 1600 x 900 px` and the preview frame uses `aspect-[16/9]`.
-- [ ] Run:
+- [x] Write failing customer tests proving featured chef cover images render as `<img>` elements inside an `aspect-[16/9]` frame with `object-cover`.
+- [x] Write failing customer tests proving storefront header cover images render inside an `aspect-[16/9]` mobile-safe hero with `object-cover`.
+- [x] Write failing customer tests proving favorites cards use an `aspect-[16/9]` image frame.
+- [x] Write failing chef tests proving storefront logo guidance says `Recommended 512 x 512 px`.
+- [x] Write failing chef tests proving storefront cover guidance says `Recommended 1600 x 900 px` and the preview frame uses `aspect-[16/9]`.
+- [x] Run:
 
 ```bash
 corepack pnpm --filter @ridendine/web test -- storefront-image-layout.test.tsx --runInBand
 corepack pnpm --filter @ridendine/chef-admin test -- storefront-image-layout.test.tsx --runInBand
 ```
 
-- [ ] Confirm the tests fail before implementation.
+- [x] Confirm the tests fail before implementation.
 
 ### Task 2: Storefront Image Sizing Implementation
 
@@ -57,13 +57,13 @@ corepack pnpm --filter @ridendine/chef-admin test -- storefront-image-layout.tes
 - Modify: `apps/web/src/app/account/favorites/page.tsx`
 - Modify: `apps/chef-admin/src/components/storefront/storefront-form.tsx`
 
-- [ ] Replace featured-chef background images with real `<img>` elements.
-- [ ] Add `aspect-[16/9]`, `overflow-hidden`, and `object-cover` to featured chef cover frames.
-- [ ] Update storefront header hero to use an `aspect-[16/9]` image frame with responsive max height.
-- [ ] Update favorites cover frames to use `aspect-[16/9]` with real images.
-- [ ] Update chef logo preview with `h-20 w-20` and square guidance.
-- [ ] Update chef cover preview with `aspect-[16/9]`, responsive max height, and `1600 x 900` guidance.
-- [ ] Rerun both image layout test files and confirm they pass.
+- [x] Replace featured-chef background images with real `<img>` elements.
+- [x] Add `aspect-[16/9]`, `overflow-hidden`, and `object-cover` to featured chef cover frames.
+- [x] Update storefront header hero to use an `aspect-[16/9]` image frame with responsive max height.
+- [x] Update favorites cover frames to use `aspect-[16/9]` with real images.
+- [x] Update chef logo preview with `h-20 w-20` and square guidance.
+- [x] Update chef cover preview with `aspect-[16/9]`, responsive max height, and `1600 x 900` guidance.
+- [x] Rerun both image layout test files and confirm they pass.
 
 ### Task 3: Customer Order Support Helpers
 
@@ -71,7 +71,7 @@ corepack pnpm --filter @ridendine/chef-admin test -- storefront-image-layout.tes
 - Create: `apps/web/src/lib/order-support.ts`
 - Add: `apps/web/__tests__/customer/order-support-helpers.test.ts`
 
-- [ ] Write failing tests for:
+- [x] Write failing tests for:
 
 ```ts
 expect(buildOrderSupportHref('RD-1001')).toBe('/contact?orderNumber=RD-1001&subject=Help%20with%20order%20RD-1001');
@@ -79,15 +79,15 @@ expect(canReviewOrder('delivered', 'delivered')).toBe(true);
 expect(canReorderOrder('completed', null)).toBe(true);
 ```
 
-- [ ] Run:
+- [x] Run:
 
 ```bash
 corepack pnpm --filter @ridendine/web test -- order-support-helpers.test.ts --runInBand
 ```
 
-- [ ] Confirm helper module is missing.
-- [ ] Implement `buildOrderSupportHref`, `canReviewOrder`, and `canReorderOrder`.
-- [ ] Rerun helper tests and confirm they pass.
+- [x] Confirm helper module is missing.
+- [x] Implement `buildOrderSupportHref`, `canReviewOrder`, and `canReorderOrder`.
+- [x] Rerun helper tests and confirm they pass.
 
 ### Task 4: Contact Prefill
 
@@ -95,17 +95,17 @@ corepack pnpm --filter @ridendine/web test -- order-support-helpers.test.ts --ru
 - Modify: `apps/web/src/app/contact/page.tsx`
 - Add: `apps/web/__tests__/customer/contact-prefill.test.tsx`
 
-- [ ] Write failing tests proving `/contact?orderNumber=RD-1001&subject=Help%20with%20order%20RD-1001` pre-fills order number and subject fields.
-- [ ] Write failing tests proving a normal `/contact` render keeps blank order and subject fields.
-- [ ] Run:
+- [x] Write failing tests proving `/contact?orderNumber=RD-1001&subject=Help%20with%20order%20RD-1001` pre-fills order number and subject fields.
+- [x] Write failing tests proving a normal `/contact` render keeps blank order and subject fields.
+- [x] Run:
 
 ```bash
 corepack pnpm --filter @ridendine/web test -- contact-prefill.test.tsx --runInBand
 ```
 
-- [ ] Confirm current contact page ignores query params.
-- [ ] Use `useSearchParams` to initialize `orderNumber` and `subject`.
-- [ ] Rerun contact tests and confirm they pass.
+- [x] Confirm current contact page ignores query params.
+- [x] Use `useSearchParams` to initialize `orderNumber` and `subject`.
+- [x] Rerun contact tests and confirm they pass.
 
 ### Task 5: Order Action Panel
 
@@ -114,44 +114,44 @@ corepack pnpm --filter @ridendine/web test -- contact-prefill.test.tsx --runInBa
 - Add: `apps/web/__tests__/customer/order-action-panel.test.tsx`
 - Modify: `apps/web/src/app/orders/[id]/confirmation/page.tsx`
 
-- [ ] Write failing tests proving the panel renders order number, storefront name, support link, and continue browsing link.
-- [ ] Write failing tests proving delivered/completed orders show review and reorder actions.
-- [ ] Run:
+- [x] Write failing tests proving the panel renders order number, storefront name, support link, and continue browsing link.
+- [x] Write failing tests proving delivered/completed orders show review and reorder actions.
+- [x] Run:
 
 ```bash
 corepack pnpm --filter @ridendine/web test -- order-action-panel.test.tsx --runInBand
 ```
 
-- [ ] Confirm component is missing.
-- [ ] Implement `OrderActionPanel` using the helper functions.
-- [ ] Render it on the confirmation page below the confirmation banner and before/near the live tracker.
-- [ ] Rerun action panel tests and existing live tracker tests.
+- [x] Confirm component is missing.
+- [x] Implement `OrderActionPanel` using the helper functions.
+- [x] Render it on the confirmation page below the confirmation banner and before/near the live tracker.
+- [x] Rerun action panel tests and existing live tracker tests.
 
 ### Task 6: Verification And Push
 
 **Files:**
 - All files above.
 
-- [ ] Run focused Phase 5 tests:
+- [x] Run focused Phase 5 tests:
 
 ```bash
 corepack pnpm --filter @ridendine/web test -- storefront-image-layout.test.tsx order-support-helpers.test.ts contact-prefill.test.tsx order-action-panel.test.tsx live-order-tracker.test.tsx --runInBand
 corepack pnpm --filter @ridendine/chef-admin test -- storefront-image-layout.test.tsx --runInBand
 ```
 
-- [ ] Run full customer web tests:
+- [x] Run full customer web tests:
 
 ```bash
 corepack pnpm --filter @ridendine/web test -- --runInBand
 ```
 
-- [ ] Run chef admin tests:
+- [x] Run chef admin tests:
 
 ```bash
 corepack pnpm --filter @ridendine/chef-admin test -- --runInBand
 ```
 
-- [ ] Run typecheck, lint, and build for touched apps:
+- [x] Run typecheck, lint, and build for touched apps:
 
 ```bash
 corepack pnpm --filter @ridendine/web typecheck
@@ -162,7 +162,7 @@ corepack pnpm --filter @ridendine/chef-admin lint
 corepack pnpm --filter @ridendine/chef-admin build
 ```
 
-- [ ] Run:
+- [x] Run:
 
 ```bash
 git diff --check

@@ -207,12 +207,13 @@ export function StorefrontForm({ storefront: initialStorefront }: StorefrontForm
           <div className="mt-4 space-y-4">
             <div>
               <label className="block text-sm font-medium text-text">Logo</label>
+              <p className="mt-1 text-xs text-textMuted">Recommended 512 x 512 px</p>
               <div className="mt-2 flex items-center gap-4">
                 <div className="h-20 w-20 overflow-hidden rounded-full bg-surfaceMuted">
                   {storefront.logo_url ? (
                     <img
                       src={storefront.logo_url}
-                      alt="Logo"
+                      alt={`${storefront.name} logo`}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -228,11 +229,12 @@ export function StorefrontForm({ storefront: initialStorefront }: StorefrontForm
             </div>
             <div>
               <label className="block text-sm font-medium text-text">Cover Image</label>
-              <div className="mt-2 h-32 overflow-hidden rounded-lg bg-surfaceMuted">
+              <p className="mt-1 text-xs text-textMuted">Recommended 1600 x 900 px</p>
+              <div className="mt-2 aspect-[16/9] max-h-72 overflow-hidden rounded-lg bg-surfaceMuted">
                 {storefront.cover_image_url ? (
                   <img
                     src={storefront.cover_image_url}
-                    alt="Cover"
+                    alt={`${storefront.name} cover`}
                     className="h-full w-full object-cover"
                   />
                 ) : (

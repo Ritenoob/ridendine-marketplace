@@ -1,15 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/header';
 import { Card, Button, Input, Textarea } from '@ridendine/ui';
 
 export default function ContactPage() {
+  const searchParams = useSearchParams();
+  const initialOrderNumber = searchParams.get('orderNumber') ?? '';
+  const initialSubject = searchParams.get('subject') ?? '';
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    orderNumber: '',
-    subject: '',
+    orderNumber: initialOrderNumber,
+    subject: initialSubject,
     message: '',
   });
   const [submitting, setSubmitting] = useState(false);

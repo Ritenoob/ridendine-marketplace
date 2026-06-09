@@ -6,6 +6,7 @@ import { Button, Card } from '@ridendine/ui';
 import { Header } from '@/components/layout/header';
 import { LiveOrderTracker } from '@/components/tracking/live-order-tracker';
 import { ReviewForm } from '@/components/reviews/review-form';
+import { OrderActionPanel } from '@/components/orders/order-action-panel';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -135,6 +136,13 @@ export default async function OrderConfirmationPage({ params }: Props) {
             </div>
           </Card>
 
+          <OrderActionPanel
+            orderNumber={typedOrder.order_number}
+            storefrontName={storefrontName}
+            status={typedOrder.status}
+            publicStage={typedOrder.public_stage ?? null}
+          />
+
           {/* Live tracker */}
           <LiveOrderTracker
             orderId={typedOrder.id}
@@ -164,7 +172,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
           {(typedOrder.public_stage === 'delivered' ||
             typedOrder.status === 'delivered' ||
             typedOrder.status === 'completed') && (
-            <div className="mt-6">
+            <div id="review" className="mt-6 scroll-mt-24">
               <ReviewForm orderId={typedOrder.id} />
             </div>
           )}

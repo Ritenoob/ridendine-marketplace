@@ -49,18 +49,14 @@ export async function FeaturedChefs({ limit = 6 }: FeaturedChefsProps) {
         <Link key={chef.id} href={`/chefs/${chef.slug}`} className="group block">
           <Card elevated interactive padding="none" className="h-full overflow-hidden">
             {/* Cover */}
-            <div
-              className="relative h-40 overflow-hidden bg-primarySoft"
-              style={
-                chef.cover_image_url
-                  ? {
-                      backgroundImage: `url(${chef.cover_image_url})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }
-                  : undefined
-              }
-            >
+            <div className="relative aspect-[16/9] overflow-hidden bg-primarySoft">
+              {chef.cover_image_url && (
+                <img
+                  src={chef.cover_image_url}
+                  alt={`${chef.name} cover`}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-text/20 to-transparent" />
             </div>
 
