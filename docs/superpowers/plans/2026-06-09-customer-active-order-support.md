@@ -169,10 +169,11 @@ git diff --check
 corepack pnpm smoke:responsive
 ```
 
-- [ ] Commit Phase 5 implementation.
-- [ ] Push to GitHub.
-- [ ] Verify Vercel status checks for all four apps.
-- [ ] Run final production responsive smoke after Vercel is green.
+- [x] Commit Phase 5 implementation.
+- [x] Push to GitHub.
+- [x] Verify Vercel status checks for all four apps.
+- [x] Run final production responsive smoke after Vercel is green.
+- [x] Run production browser spot-checks for customer chef-card images and chef storefront image guidance/previews.
 
 ---
 
