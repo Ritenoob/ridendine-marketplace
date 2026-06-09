@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 
 jest.mock('next/link', () => ({
   __esModule: true,
@@ -56,7 +56,7 @@ const menuItems = [
     name: 'Butter Chicken',
     description: 'Creamy tomato curry',
     price: 18.99,
-    image_url: null,
+    image_url: 'https://example.com/butter-chicken.jpg',
     is_available: true,
     is_featured: true,
     dietary_tags: ['Gluten-free'],
@@ -192,5 +192,23 @@ describe('StorefrontMenu Phase 2 customer ordering experience', () => {
 
     expect(screen.getAllByText(/\$6\.01 away from checkout/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('button', { name: /checkout/i })).toBeDisabled();
+  });
+
+  it('frames the menu as a clear order-start workspace with real dish photos', () => {
+    renderMenu(cartWithMinimumGap);
+
+    const orderHeading = screen.getByRole('heading', { name: /start your order/i });
+    const orderPanel = orderHeading.closest('[data-testid="card"]') as HTMLElement;
+
+    expect(orderHeading).toBeInTheDocument();
+    expect(within(orderPanel).getByText('3 dishes')).toBeInTheDocument();
+    expect(within(orderPanel).getByText('Min. $25.00')).toBeInTheDocument();
+    expect(within(orderPanel).getByText('1 in cart')).toBeInTheDocument();
+
+    const dishImage = screen.getAllByAltText('Butter Chicken')[0];
+    expect(dishImage).toHaveAttribute('src', 'https://example.com/butter-chicken.jpg');
+    expect(dishImage).toHaveClass('h-full', 'w-full', 'object-cover');
+    expect(dishImage.parentElement).toHaveClass('aspect-square');
+    expect(dishImage.parentElement).not.toHaveClass('bg-cover');
   });
 });

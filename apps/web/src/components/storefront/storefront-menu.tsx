@@ -57,9 +57,9 @@ function minimumOrderText(progress: MinimumOrderProgress): string {
   return `${formatMenuPrice(progress.remaining)} away from checkout`;
 }
 
-function ImagePlaceholder({ className = 'h-24 w-24' }: { className?: string }) {
+function ImagePlaceholder({ className = '' }: { className?: string }) {
   return (
-    <div className={`flex flex-shrink-0 items-center justify-center rounded-md bg-primarySoft ${className}`}>
+    <div className={`flex h-full w-full items-center justify-center bg-primarySoft ${className}`}>
       <svg className="h-8 w-8 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
@@ -83,34 +83,26 @@ function MenuItemCard({
   compact?: boolean;
 }) {
   const isAdding = addingItemId === item.id;
+  const imageFrameSize = compact ? 'h-24 w-24 sm:h-28 sm:w-28' : 'h-28 w-28 sm:h-32 sm:w-32';
+  const cardGridColumns = compact
+    ? 'grid-cols-[minmax(0,1fr)_6rem] sm:grid-cols-[minmax(0,1fr)_7rem]'
+    : 'grid-cols-[minmax(0,1fr)_7rem] sm:grid-cols-[minmax(0,1fr)_8rem]';
 
   return (
     <Card
       padding="sm"
-      className={`group relative flex gap-4 transition-shadow hover:shadow-md ${
+      className={`group grid ${cardGridColumns} gap-3 overflow-hidden transition-shadow hover:shadow-md ${
         !item.is_available ? 'opacity-60' : ''
       }`}
     >
-      {item.is_featured && (
-        <div className="absolute right-3 top-3 rounded-sm bg-primary px-2 py-0.5 text-xs font-bold text-primaryFg shadow">
-          Featured
-        </div>
-      )}
-
-      {item.image_url ? (
-        <div
-          className={`${compact ? 'h-20 w-20' : 'h-24 w-24'} flex-shrink-0 overflow-hidden rounded-md bg-cover bg-center`}
-          style={{ backgroundImage: `url(${item.image_url})` }}
-          role="img"
-          aria-label={item.name}
-        />
-      ) : (
-        <ImagePlaceholder className={compact ? 'h-20 w-20' : 'h-24 w-24'} />
-      )}
-
       <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-3 pr-16">
+        <div className="flex flex-wrap items-start gap-2">
           <h3 className="font-semibold leading-tight text-text">{item.name}</h3>
+          {item.is_featured && (
+            <span className="rounded-sm bg-primary px-2 py-0.5 text-xs font-bold text-primaryFg">
+              Featured
+            </span>
+          )}
           {cartQuantity > 0 && (
             <span className="shrink-0 rounded-sm bg-accentSoft px-2 py-0.5 text-xs font-semibold text-accent">
               {cartQuantity} in cart
@@ -171,6 +163,19 @@ function MenuItemCard({
           )}
         </div>
       </div>
+
+      <div className={`${imageFrameSize} aspect-square justify-self-end overflow-hidden rounded-lg bg-primarySoft`}>
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <ImagePlaceholder />
+        )}
+      </div>
     </Card>
   );
 }
@@ -226,6 +231,8 @@ export function StorefrontMenu({
   const visibleCategories = useMemo(() => groupMenuItemsByCategory(visibleMenuItems), [visibleMenuItems]);
   const featuredItems = visibleMenuItems.filter((item) => item.is_featured).slice(0, 4);
   const hasActiveFilters = searchQuery.trim().length > 0 || selectedDietaryTags.length > 0;
+  const minimumOrderLabel = minOrderAmount > 0 ? `Min. ${formatMenuPrice(minOrderAmount)}` : 'No minimum';
+  const cartCountLabel = `${itemCount} in cart`;
 
   const handleAddToCart = async (item: MenuItem) => {
     setAddingItemId(item.id);
@@ -273,8 +280,35 @@ export function StorefrontMenu({
   return (
     <div className="grid gap-8 lg:grid-cols-3">
       <div className="space-y-8 lg:col-span-2">
-        <Card padding="md" className="bg-surface">
-          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <Card padding="md" className="border border-border bg-surface shadow-sm">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+            <div>
+              <p className="text-xs font-bold uppercase text-primary">Order menu</p>
+              <h2 id="storefront-order-heading" className="mt-1 text-xl font-bold text-text">
+                Start your order
+              </h2>
+              <p className="mt-1 text-sm text-textMuted">
+                Fresh dishes from {storefrontName}
+              </p>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[24rem]">
+              <div className="rounded-md border border-border bg-background px-3 py-2">
+                <p className="text-xs font-medium text-textSubtle">Menu</p>
+                <p className="text-sm font-bold text-text">{menuItems.length} dishes</p>
+              </div>
+              <div className="rounded-md border border-border bg-background px-3 py-2">
+                <p className="text-xs font-medium text-textSubtle">Minimum</p>
+                <p className="text-sm font-bold text-text">{minimumOrderLabel}</p>
+              </div>
+              <div className="rounded-md border border-border bg-background px-3 py-2">
+                <p className="text-xs font-medium text-textSubtle">Cart</p>
+                <p className="text-sm font-bold text-text">{cartCountLabel}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
             <div>
               <label className="sr-only" htmlFor="storefront-menu-search">
                 Search this menu
@@ -295,7 +329,7 @@ export function StorefrontMenu({
             </div>
 
             <div className="rounded-md bg-primarySoft px-3 py-2 text-sm font-medium text-primary">
-              {menuItems.length} dishes from {storefrontName}
+              {visibleMenuItems.length} showing
             </div>
           </div>
 
