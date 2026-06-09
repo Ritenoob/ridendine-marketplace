@@ -109,6 +109,27 @@ const TIP_OPTIONS = [
 
 const DEFAULT_TIP_PERCENT = 18;
 
+const CHECKOUT_TRUST_CUES = [
+  {
+    title: 'Delivery details first',
+    description: 'Confirm address, timing, driver tip, and order notes.',
+  },
+  {
+    title: 'Server-confirmed fees',
+    description: 'Delivery, service fees, tax, promos, and total are locked next.',
+  },
+  {
+    title: 'Secure Stripe payment',
+    description: 'Payment is collected only after RideNDine confirms the order total.',
+  },
+];
+
+const CHECKOUT_CONFIDENCE_ITEMS = [
+  'Cart subtotal shown now',
+  'Fees lock before payment',
+  'Edit before payment',
+];
+
 function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -357,9 +378,30 @@ function CheckoutContent() {
 
   return (
     <>
-    <main className="container py-8">
+      <main className="container py-8">
       <h1 className="font-display text-2xl font-bold tracking-tight text-text">Checkout</h1>
       <CheckoutProgress activeStep={checkoutStep} className="mt-4" />
+
+      <Card className="mt-4" padding="lg">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-primary">Final review</p>
+            <h2 className="mt-1 text-xl font-bold text-text">Finish your order</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-textMuted">
+              Review delivery details first. RideNDine confirms fees and total before secure
+              Stripe payment starts.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[520px]">
+            {CHECKOUT_TRUST_CUES.map((cue) => (
+              <div key={cue.title} className="rounded-lg border border-border bg-surfaceMuted p-3">
+                <p className="text-sm font-semibold text-text">{cue.title}</p>
+                <p className="mt-1 text-xs leading-relaxed text-textMuted">{cue.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -541,6 +583,13 @@ function CheckoutContent() {
             /* Payment Step */
             <Card padding="lg">
               <h2 className="mb-6 font-semibold text-text">Payment Details</h2>
+              <div className="mb-5 rounded-lg border border-success/30 bg-successSoft px-4 py-3">
+                <h3 className="text-sm font-bold text-text">Secure payment with confirmed total</h3>
+                <p className="mt-1 text-sm leading-relaxed text-textMuted">
+                  RideNDine has locked delivery, service fees, tax, promos, tip, and total.
+                  Stripe securely handles the card step.
+                </p>
+              </div>
               {clientSecret && (
                 <Elements
                   stripe={stripePromise}
@@ -591,6 +640,19 @@ function CheckoutContent() {
                 <span className="text-sm text-text">Est. delivery: <strong>~30–45 min</strong></span>
               )}
             </div>
+            {checkoutStep === 'details' && (
+              <div className="mt-4 rounded-lg border border-border bg-surfaceMuted p-3">
+                <h3 className="text-sm font-bold text-text">Checkout confidence</h3>
+                <ul className="mt-2 space-y-1 text-sm text-textMuted">
+                  {CHECKOUT_CONFIDENCE_ITEMS.map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="mt-4 space-y-2">
               {checkoutStep === 'details' && !hasApiBreakdown ? (
                 <>
@@ -721,6 +783,7 @@ function CheckoutContent() {
           <div>
             <p className="text-xs text-textMuted">Subtotal</p>
             <p className="font-semibold text-text">{formatCartCurrency(cartSubtotal)}</p>
+            <p className="text-xs text-textSubtle">Fees confirmed next</p>
           </div>
           <Button
             variant="primary"
