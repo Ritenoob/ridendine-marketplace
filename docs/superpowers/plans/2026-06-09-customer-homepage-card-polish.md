@@ -69,16 +69,16 @@ corepack pnpm --filter @ridendine/web build
 git diff --check
 ```
 
-- [ ] Commit the Phase 6 customer card polish.
-- [ ] Push to GitHub.
-- [ ] Verify Vercel status checks for all four apps on the final SHA.
-- [ ] Run:
+- [x] Commit the Phase 6 customer card polish.
+- [x] Push to GitHub.
+- [x] Verify Vercel status checks for all four apps on the final SHA.
+- [x] Run:
 
 ```bash
 corepack pnpm smoke:responsive
 ```
 
-- [ ] Browser spot-check the live customer homepage cards after Vercel is green.
+- [x] Browser spot-check the live customer homepage cards after Vercel is green.
 
 ---
 
