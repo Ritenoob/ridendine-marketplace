@@ -69,16 +69,16 @@ corepack pnpm --filter @ridendine/web build
 git diff --check
 ```
 
-- [ ] Commit the storefront hero polish.
-- [ ] Push to GitHub.
-- [ ] Verify all four Vercel deployments are green for the final SHA.
-- [ ] Run:
+- [x] Commit the storefront hero polish.
+- [x] Push to GitHub.
+- [x] Verify all four Vercel deployments are green for the pushed SHA.
+- [x] Run:
 
 ```bash
 corepack pnpm smoke:responsive
 ```
 
-- [ ] Browser spot-check `https://ridendine.ca/chefs/every-bite-yum#reviews`.
+- [x] Browser spot-check `https://ridendine.ca/chefs/every-bite-yum#reviews`.
 
 ---
 
