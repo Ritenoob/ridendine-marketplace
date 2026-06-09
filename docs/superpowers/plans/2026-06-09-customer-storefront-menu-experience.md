@@ -78,10 +78,10 @@
 - [x] Run `corepack pnpm --filter @ridendine/web lint`.
 - [x] Run `corepack pnpm --filter @ridendine/web build`.
 - [x] Run `git diff --check`.
-- [ ] Commit Phase 2.
-- [ ] Push to GitHub.
-- [ ] Verify Vercel status checks for all four apps.
-- [ ] Run `corepack pnpm smoke:responsive`.
+- [x] Commit Phase 2.
+- [x] Push to GitHub.
+- [x] Verify Vercel status checks for all four apps.
+- [x] Run `corepack pnpm smoke:responsive`.
 
 ---
 
