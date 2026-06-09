@@ -80,16 +80,16 @@ corepack pnpm --filter @ridendine/web build
 git diff --check
 ```
 
-- [ ] Commit the checkout polish.
-- [ ] Push to GitHub.
-- [ ] Verify all four Vercel deployments are green for the pushed SHA.
-- [ ] Run:
+- [x] Commit the checkout polish.
+- [x] Push to GitHub.
+- [x] Verify all four Vercel deployments are green for the pushed SHA.
+- [x] Run:
 
 ```bash
 corepack pnpm smoke:responsive
 ```
 
-- [ ] Browser spot-check `https://ridendine.ca/checkout?storefrontId=sf-1`; if the session has no active checkout cart, record the empty/redirect state honestly and rely on focused tests plus production gates for loaded-cart UI proof.
+- [x] Browser spot-check `https://ridendine.ca/checkout?storefrontId=sf-1`; current browser session redirected to login with no horizontal overflow, so loaded-cart checkout UI is verified by focused tests plus production gates.
 
 ---
 
