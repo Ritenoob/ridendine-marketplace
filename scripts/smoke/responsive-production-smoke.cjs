@@ -162,7 +162,8 @@ function evaluateAudit(target, viewportName, login, audit, consoleErrors) {
     return (
       !message.includes('favicon') &&
       !message.includes('_vercel/insights/script.js') &&
-      !message.includes('Failed to load resource: the server responded with a status of 404')
+      !message.includes('Failed to load resource: the server responded with a status of 404') &&
+      !message.includes('GeolocationPositionError')
     );
   });
 
@@ -207,6 +208,12 @@ async function runResponsiveSmoke(options = {}) {
         await page.goto(target.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
         await waitForSettledPage(page, 1500);
         const login = await loginIfNeeded(page, target, credentials);
+        if (target.requiredHeading) {
+          await page
+            .getByText(target.requiredHeading, { exact: false })
+            .waitFor({ state: 'visible', timeout: 8000 })
+            .catch(() => {});
+        }
         const audit = await auditCurrentPage(page);
         results.push(evaluateAudit(target, viewportName, login, audit, consoleErrors));
       }

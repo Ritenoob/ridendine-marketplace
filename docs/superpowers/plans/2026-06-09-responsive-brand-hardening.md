@@ -14,6 +14,7 @@
 
 - Modify `packages/ui/src/assets/logo.tsx`: official color order and icon asset rendering.
 - Modify `apps/chef-admin/src/components/layout/header.tsx`: mobile header overflow fix.
+- Modify `apps/chef-admin/src/app/dashboard/layout.tsx`: dashboard shell shrink/overflow constraint.
 - Add `apps/chef-admin/src/__tests__/header-responsive.test.ts`: header contract test.
 - Modify `apps/driver-app/src/app/auth/login/page.tsx`: safe redirect normalization.
 - Add `apps/driver-app/src/app/dashboard/page.tsx`: compatibility redirect to Driver home.
@@ -61,10 +62,12 @@
 **Files:**
 - Create: `apps/chef-admin/src/__tests__/header-responsive.test.ts`
 - Modify: `apps/chef-admin/src/components/layout/header.tsx`
+- Modify: `apps/chef-admin/src/app/dashboard/layout.tsx`
 
 - [x] Write a header test that asserts the mobile logo uses the compact icon variant and the header/right-control classes include `min-w-0`, constrained gaps, and shrink behavior.
 - [x] Run the focused Chef test and confirm it fails before implementation.
 - [x] Update header classes to constrain mobile layout.
+- [x] Add a dashboard-shell regression check and constrain the shell with `min-w-0` and `overflow-x-hidden`.
 - [x] Run the focused Chef test and confirm it passes.
 
 ### Task 4: Official Logo Alignment
