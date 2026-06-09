@@ -7,6 +7,7 @@ import { Header } from '@/components/layout/header';
 import { LiveOrderTracker } from '@/components/tracking/live-order-tracker';
 import { ReviewForm } from '@/components/reviews/review-form';
 import { OrderActionPanel } from '@/components/orders/order-action-panel';
+import { OrderConfirmationHero } from '@/components/orders/order-confirmation-hero';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -115,26 +116,13 @@ export default async function OrderConfirmationPage({ params }: Props) {
 
       <main className="container py-8">
         <div className="mx-auto max-w-2xl space-y-6">
-          {/* Confirmation banner */}
-          <Card padding="lg" elevated className="flex items-center gap-4">
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-successSoft">
-              <svg className="h-7 w-7 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="font-display text-xl font-bold tracking-tight text-text">Order Confirmed!</h1>
-              <p className="text-sm text-textMuted">
-                Thank you for your order. Total:{' '}
-                <span className="font-semibold text-primary">
-                  ${Number(typedOrder.total).toFixed(2)}
-                </span>
-              </p>
-              <p className="mt-1 text-xs text-textSubtle">
-                A confirmation email has been sent to your address.
-              </p>
-            </div>
-          </Card>
+          <OrderConfirmationHero
+            orderNumber={typedOrder.order_number}
+            total={Number(typedOrder.total)}
+            storefrontName={storefrontName}
+            estimatedDeliveryMinutes={estimatedDeliveryMinutes}
+            driverFirstName={driverFirstName}
+          />
 
           <OrderActionPanel
             orderNumber={typedOrder.order_number}

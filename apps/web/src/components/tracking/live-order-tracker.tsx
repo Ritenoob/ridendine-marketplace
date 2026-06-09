@@ -44,6 +44,21 @@ const PUBLIC_STEPS = [
   { key: 'delivered', label: 'Delivered' },
 ] as const;
 
+const LIVE_UPDATE_POINTS = [
+  {
+    label: 'Kitchen progress',
+    detail: 'Chef acceptance, prep, and ready-for-pickup status stay visible here.',
+  },
+  {
+    label: 'Driver handoff',
+    detail: 'Pickup, route progress, and ETA appear when delivery is underway.',
+  },
+  {
+    label: 'Support ready',
+    detail: 'Use order support if anything looks off while the order moves forward.',
+  },
+];
+
 const LEGACY_TO_PUBLIC: Record<string, string> = {
   pending: 'placed',
   checkout_pending: 'placed',
@@ -383,6 +398,24 @@ export function LiveOrderTracker({
           <p className="text-xs text-textMuted">Connecting to live updates…</p>
         </Card>
       )}
+      <Card className="border-border bg-surface p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-primary">Live order updates</p>
+            <p className="mt-1 text-sm leading-relaxed text-textMuted">
+              This page stays connected as the kitchen and delivery team move your order forward.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:min-w-[360px]">
+            {LIVE_UPDATE_POINTS.map((point) => (
+              <div key={point.label} className="rounded-md border border-border bg-surfaceMuted px-3 py-2">
+                <p className="text-sm font-semibold text-text">{point.label}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-textMuted">{point.detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
       <Card className="overflow-hidden" padding="none">
         <div className="bg-accent p-6 text-white">
           <p className="text-sm font-medium opacity-80">Order #{orderNumber}</p>

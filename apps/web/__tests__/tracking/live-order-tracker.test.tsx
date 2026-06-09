@@ -109,6 +109,15 @@ describe('LiveOrderTracker', () => {
     expect(screen.getAllByText('Delivered').length).toBeGreaterThanOrEqual(1);
   });
 
+  it('explains that live updates stay connected to kitchen and driver progress', () => {
+    render(<LiveOrderTracker {...defaultProps} />);
+
+    expect(screen.getByText('Live order updates')).toBeInTheDocument();
+    expect(screen.getByText('Kitchen progress')).toBeInTheDocument();
+    expect(screen.getByText('Driver handoff')).toBeInTheDocument();
+    expect(screen.getByText('Support ready')).toBeInTheDocument();
+  });
+
   it('shows cancelled terminal copy', () => {
     mockUseOrderStream.mockImplementation(() => ({
       ...streamBase,
