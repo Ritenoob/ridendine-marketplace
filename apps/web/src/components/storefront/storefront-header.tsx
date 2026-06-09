@@ -41,15 +41,17 @@ export function StorefrontHeader({ storefront }: StorefrontHeaderProps) {
   return (
     <div className="border-b border-border bg-surface">
       {/* Cover */}
-      <div className="relative aspect-[16/9] min-h-[220px] max-h-[360px] w-full overflow-hidden bg-primarySoft md:min-h-[280px]">
-        {storefront.coverImageUrl && (
-          <img
-            src={storefront.coverImageUrl}
-            alt={`${storefront.name} cover`}
-            className="h-full w-full object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-text/30 to-transparent" />
+      <div className="container py-4 sm:py-6">
+        <div className="relative aspect-[16/9] max-h-[560px] overflow-hidden rounded-2xl bg-primarySoft shadow-sm">
+          {storefront.coverImageUrl && (
+            <img
+              src={storefront.coverImageUrl}
+              alt={`${storefront.name} cover`}
+              className="h-full w-full object-cover"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-text/30 to-transparent" />
+        </div>
       </div>
 
       <div className="container">

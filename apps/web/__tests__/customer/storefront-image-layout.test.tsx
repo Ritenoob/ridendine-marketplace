@@ -153,8 +153,12 @@ describe('customer storefront image layout', () => {
     render(<StorefrontHeader storefront={storefront} />);
 
     const image = screen.getByAltText('Every Bite Yum cover');
+    const frame = image.parentElement;
+
     expect(image).toHaveClass('h-full', 'w-full', 'object-cover');
-    expect(image.parentElement).toHaveClass('aspect-[16/9]');
+    expect(frame).toHaveClass('aspect-[16/9]');
+    expect(frame).not.toHaveClass('max-h-[360px]');
+    expect(frame?.parentElement).toHaveClass('container');
   });
 
   it('renders favorite storefront covers in stable 16:9 frames', async () => {
