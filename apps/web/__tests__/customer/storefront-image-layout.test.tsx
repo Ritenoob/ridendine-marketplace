@@ -132,6 +132,23 @@ describe('customer storefront image layout', () => {
     expect(image.parentElement).toHaveClass('aspect-[16/9]');
   });
 
+  it('renders featured chef card identity below the cover without a clipped overlap', async () => {
+    mockGetActiveStorefronts.mockResolvedValue([storefrontRow]);
+
+    render(await FeaturedChefs({ limit: 3 }));
+
+    const coverImage = screen.getByAltText('Every Bite Yum cover');
+    const cardBody = coverImage.parentElement?.nextElementSibling as HTMLElement | null;
+    const logo = screen.getByAltText('Every Bite Yum logo');
+    const bodyClassNames = Array.from(cardBody?.querySelectorAll('[class]') ?? [])
+      .map((element) => element.getAttribute('class') ?? '')
+      .flatMap((className) => className.split(/\s+/));
+
+    expect(cardBody).toHaveClass('p-4');
+    expect(cardBody).toContainElement(logo);
+    expect(bodyClassNames).not.toContain('-mt-12');
+  });
+
   it('renders storefront header covers in a stable 16:9 hero frame', () => {
     render(<StorefrontHeader storefront={storefront} />);
 

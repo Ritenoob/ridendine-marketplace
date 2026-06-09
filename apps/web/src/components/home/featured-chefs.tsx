@@ -61,25 +61,39 @@ export async function FeaturedChefs({ limit = 6 }: FeaturedChefsProps) {
             </div>
 
             <div className="p-4">
-              <div className="-mt-12 mb-3 flex items-end justify-between">
-                {/* Avatar */}
-                <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border-4 border-surface bg-primary text-xl font-bold text-primaryFg shadow-md">
-                  {chef.logo_url ? (
-                    <img
-                      src={chef.logo_url}
-                      alt={chef.name}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    chef.name.charAt(0)
-                  )}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  {/* Avatar */}
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-primary text-lg font-bold text-primaryFg shadow-sm">
+                    {chef.logo_url ? (
+                      <img
+                        src={chef.logo_url}
+                        alt={`${chef.name} logo`}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      chef.name.charAt(0)
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3 className="truncate font-bold text-text transition-colors group-hover:text-primary">
+                      {chef.name}
+                    </h3>
+                    <p className="mt-0.5 truncate text-sm text-textMuted">
+                      by{' '}
+                      <span className="font-medium text-text">
+                        {chef.chef_profiles?.display_name || 'Chef'}
+                      </span>
+                    </p>
+                  </div>
                 </div>
 
                 {/* Rating */}
-                <div className="flex items-center gap-1 rounded-full border border-border bg-surface px-2 py-1 shadow-sm">
+                <div className="flex shrink-0 items-center gap-1 rounded-full border border-border bg-surface px-2 py-1 shadow-sm">
                   <svg className="h-3.5 w-3.5 text-warning" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
@@ -92,18 +106,8 @@ export async function FeaturedChefs({ limit = 6 }: FeaturedChefsProps) {
                 </div>
               </div>
 
-              <h3 className="font-bold text-text transition-colors group-hover:text-primary">
-                {chef.name}
-              </h3>
-              <p className="text-sm text-textMuted">
-                by{' '}
-                <span className="font-medium text-text">
-                  {chef.chef_profiles?.display_name || 'Chef'}
-                </span>
-              </p>
-
               {chef.cuisine_types && chef.cuisine_types.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-3 flex flex-wrap gap-1">
                   {chef.cuisine_types.slice(0, 3).map((cuisine) => (
                     <Badge key={cuisine} tone="accent" size="sm">
                       {cuisine}
