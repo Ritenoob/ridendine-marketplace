@@ -71,16 +71,16 @@ corepack pnpm --filter @ridendine/web build
 git diff --check
 ```
 
-- [ ] Commit the cart handoff polish.
-- [ ] Push to GitHub.
-- [ ] Verify all four Vercel deployments are green for the pushed SHA.
-- [ ] Run:
+- [x] Commit the cart handoff polish.
+- [x] Push to GitHub.
+- [x] Verify all four Vercel deployments are green for the pushed SHA.
+- [x] Run:
 
 ```bash
 corepack pnpm smoke:responsive
 ```
 
-- [ ] Browser spot-check `https://ridendine.ca/cart?storefrontId=sf-1` when authenticated session data is available; otherwise verify homepage smoke and deployed code.
+- [x] Browser spot-check `https://ridendine.ca/cart?storefrontId=sf-1`; deployed route loaded cleanly with no horizontal overflow, current browser session had an empty cart, and the filled-cart handoff is covered by focused tests plus production smoke.
 
 ---
 
