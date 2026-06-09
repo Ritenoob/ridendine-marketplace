@@ -111,7 +111,12 @@ export default async function ChefPage({ params }: ChefPageProps) {
         <StorefrontHeader storefront={storefrontData} />
 
         <div className="container py-8">
-          <StorefrontMenu storefrontId={storefront.id} menuItems={menuItems} />
+          <StorefrontMenu
+            storefrontId={storefront.id}
+            storefrontName={storefrontData.name}
+            minOrderAmount={storefrontData.minOrderAmount}
+            menuItems={menuItems}
+          />
         </div>
 
         <div className="container py-8">
