@@ -115,4 +115,15 @@ describe('CartPage checkout clarity', () => {
     expect(bar.textContent).toMatch(/Subtotal/i);
     expect(bar.textContent).not.toMatch(/^Total/);
   });
+
+  it('frames the cart as a review handoff before checkout', () => {
+    render(<CartPage />);
+
+    expect(screen.getByRole('heading', { name: /review your order/i })).toBeInTheDocument();
+    expect(screen.getByText('3 items')).toBeInTheDocument();
+    expect(screen.getByText('Checkout confidence')).toBeInTheDocument();
+    expect(screen.getByText('Secure payment')).toBeInTheDocument();
+    expect(screen.getByText('Fees confirmed at checkout')).toBeInTheDocument();
+    expect(screen.getByText('Edit until payment')).toBeInTheDocument();
+  });
 });

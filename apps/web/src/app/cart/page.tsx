@@ -88,26 +88,41 @@ export default function CartPage() {
             {/* Cart Items */}
             <div className="lg:col-span-2">
               <Card>
+                <div className="border-b border-divider pb-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase text-primary">Cart review</p>
+                      <h2 className="mt-1 text-xl font-bold text-text">Review your order</h2>
+                      <p className="mt-1 text-sm text-textMuted">
+                        Check your dishes before checkout confirms fees and payment.
+                      </p>
+                    </div>
+                    <span className="w-fit rounded-md bg-primarySoft px-3 py-2 text-sm font-semibold text-primary">
+                      {itemCount} items
+                    </span>
+                  </div>
+                </div>
+
                 {cartItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between border-b border-divider py-4 last:border-0"
+                    className="grid gap-4 border-b border-divider py-4 last:border-0 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex min-w-0 items-center gap-4">
                       {item.image_url ? (
                         <img
                           src={item.image_url}
                           alt={item.name}
-                          className="h-16 w-16 rounded-md object-cover"
+                          className="h-16 w-16 flex-shrink-0 rounded-md object-cover"
                         />
                       ) : (
-                        <div className="flex h-16 w-16 items-center justify-center rounded-md bg-primarySoft">
+                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-md bg-primarySoft">
                           <svg className="h-6 w-6 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                         </div>
                       )}
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="font-medium text-text">{item.name}</h3>
                         <p className="text-sm text-textMuted">
                           {formatCartCurrency(item.price)} each
@@ -119,7 +134,7 @@ export default function CartPage() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 md:justify-end md:gap-4">
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -179,6 +194,23 @@ export default function CartPage() {
                     <p className="mt-2 rounded-md bg-primarySoft px-3 py-2 text-xs leading-relaxed text-textMuted">
                       {CART_FEE_DISCLOSURE}
                     </p>
+                  </div>
+                </div>
+                <div className="mt-4 rounded-md border border-border bg-background p-3">
+                  <h3 className="text-sm font-bold text-text">Checkout confidence</h3>
+                  <div className="mt-3 grid gap-2 text-sm text-textMuted">
+                    <div className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
+                      <span>Secure payment</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
+                      <span>Fees confirmed at checkout</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
+                      <span>Edit until payment</span>
+                    </div>
                   </div>
                 </div>
                 <Link href={checkoutHref} className="mt-4 block">
