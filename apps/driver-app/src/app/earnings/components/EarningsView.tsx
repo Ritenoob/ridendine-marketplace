@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Card, Badge, Button } from '@ridendine/ui';
 import type { Delivery } from '@ridendine/db';
+import { formatCurrency } from '@ridendine/utils';
 
 interface EarningsViewProps {
   deliveries: Delivery[];
@@ -189,12 +190,9 @@ export default function EarningsView({
   },
 }: EarningsViewProps) {
   const displayCurrency = normalizeCurrency(currency);
-  const formatMoney = (amount: number) =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: displayCurrency,
-      currencyDisplay: 'symbol',
-    }).format(amount);
+  // Delivery payout amounts are dollars; *Cents props are divided by 100 at
+  // call sites. en-US locale is intentional (renders "CA$" for CAD).
+  const formatMoney = (amount: number) => formatCurrency(amount, displayCurrency, 'en-US');
   const weeklyEarnings = getWeeklyEarnings(deliveries);
   const todayDeliveries = getTodayDeliveries(deliveries);
   const breakdown = getEarningsBreakdown(deliveries);

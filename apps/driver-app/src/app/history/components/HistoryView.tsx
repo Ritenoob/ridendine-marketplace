@@ -2,6 +2,7 @@
 
 import { Badge, Card } from '@ridendine/ui';
 import type { Delivery } from '@ridendine/db';
+import { formatCurrency } from '@ridendine/utils';
 
 interface HistoryViewProps {
   deliveries: Delivery[];
@@ -22,12 +23,9 @@ function getNumericValue(value: DeliveryAmount) {
   return 0;
 }
 
+// deliveries.driver_payout is dollars. en-US locale is intentional (renders "CA$").
 function formatMoney(amount: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'CAD',
-    currencyDisplay: 'symbol',
-  }).format(amount);
+  return formatCurrency(amount, 'CAD', 'en-US');
 }
 
 function formatDistance(distanceKm: DeliveryAmount) {

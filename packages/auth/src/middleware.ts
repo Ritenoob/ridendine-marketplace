@@ -100,9 +100,12 @@ export function createAuthMiddleware(config: AuthMiddlewareConfig) {
 
     const { supabase, response } = createSupabaseMiddlewareClient(request);
 
+    // SECURITY: use getUser() — it verifies the JWT against the Supabase Auth
+    // server. getSession() only decodes the cookie locally, which a client can
+    // spoof; it must never be the basis of the protect/redirect decision.
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
     const isAuthRoute = authRoutes
@@ -119,15 +122,15 @@ export function createAuthMiddleware(config: AuthMiddlewareConfig) {
       needsAuth = !isPublicRoute;
     }
 
-    // Redirect to login if accessing protected route without session
-    if (needsAuth && !session) {
+    // Redirect to login if accessing protected route without a verified user
+    if (needsAuth && !user) {
       const redirectUrl = new URL(loginRoute, request.url);
       redirectUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(redirectUrl);
     }
 
     // Redirect authenticated users away from auth pages
-    if (isAuthRoute && session) {
+    if (isAuthRoute && user) {
       return NextResponse.redirect(new URL(authenticatedRedirect, request.url));
     }
 

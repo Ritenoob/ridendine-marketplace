@@ -5,6 +5,7 @@
 
 import type { NextRequest } from 'next/server';
 import { createAdminClient, type SupabaseClient } from '@ridendine/db';
+import { driverDeliveryPatchSchema } from '@ridendine/validation';
 import {
   getEngine,
   getDriverActorContext,
@@ -125,17 +126,25 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json();
-    const { action, status, proofUrl, notes } = body;
+    const parsed = driverDeliveryPatchSchema.safeParse(body);
+    if (!parsed.success) {
+      return errorResponse(
+        'VALIDATION_ERROR',
+        parsed.error.issues[0]?.message || 'Invalid delivery payload',
+        400
+      );
+    }
+    const { action, status, proofUrl, notes, attemptId, reason } = parsed.data;
 
     const engine = getEngine();
     const { actor, driverId } = driverContext;
 
     // Handle assignment attempt responses (accept/decline offer)
     if (action === 'accept_offer') {
-      if (!body.attemptId) {
+      if (!attemptId) {
         return errorResponse('MISSING_ATTEMPT', 'Attempt ID is required');
       }
-      const result = await engine.dispatch.acceptOffer(body.attemptId, actor);
+      const result = await engine.dispatch.acceptOffer(attemptId, actor);
       if (!result.success) {
         return errorResponse(result.error!.code, result.error!.message);
       }
@@ -143,12 +152,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     if (action === 'decline_offer') {
-      if (!body.attemptId) {
+      if (!attemptId) {
         return errorResponse('MISSING_ATTEMPT', 'Attempt ID is required');
       }
       const result = await engine.dispatch.declineOffer(
-        body.attemptId,
-        body.reason || 'Driver declined',
+        attemptId,
+        reason || 'Driver declined',
         actor
       );
       if (!result.success) {
@@ -165,7 +174,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // Handle status updates
     if (action === 'update_status' || status) {
-      const newStatus = status || body.newStatus;
+      const newStatus = status || parsed.data.newStatus;
 
       const validStatuses = [
         'en_route_to_pickup',

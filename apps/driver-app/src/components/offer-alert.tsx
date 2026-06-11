@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button, type LiveIndicatorStatus } from '@ridendine/ui';
 import { createBrowserClient } from '@ridendine/db';
+import { formatCurrency } from '@ridendine/utils';
 
 interface DeliveryOffer {
   id: string;
@@ -94,8 +95,9 @@ function mapBroadcastToOffer(payload: Record<string, unknown>): DeliveryOffer | 
   };
 }
 
+// Offer payout/tip amounts are dollars (deliveries.driver_payout / orders.tip).
 function formatMoney(value: number) {
-  return `$${value.toFixed(2)}`;
+  return formatCurrency(value);
 }
 
 function formatRouteTime(seconds: number | null) {

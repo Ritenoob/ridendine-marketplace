@@ -11,6 +11,7 @@ import {
   getMenuItemsByStorefront,
   type SupabaseClient,
 } from '@ridendine/db';
+import { routeCreateMenuItemSchema } from '@ridendine/validation';
 import {
   getEngine,
   getChefActorContext,
@@ -55,6 +56,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = routeCreateMenuItemSchema.safeParse(body);
+    if (!parsed.success) {
+      return errorResponse(
+        'VALIDATION_ERROR',
+        parsed.error.issues[0]?.message || 'Invalid menu item payload',
+        400
+      );
+    }
+
     const {
       name,
       description,
@@ -63,18 +73,13 @@ export async function POST(request: NextRequest) {
       image_url,
       is_available,
       is_featured,
-      is_sold_out,
-      daily_limit,
-      daily_sold,
-      restock_at,
       sort_order,
       dietary_tags,
       prep_time_minutes,
-    } = body;
-
-    if (!name || price === undefined || !category_id) {
-      return errorResponse('MISSING_FIELDS', 'Required fields: name, price, category_id');
-    }
+    } = parsed.data;
+    // Stock fields are not covered by routeCreateMenuItemSchema; read them
+    // from the raw body as before.
+    const { is_sold_out, daily_limit, daily_sold, restock_at } = body;
 
     const adminClient = createAdminClient() as unknown as SupabaseClient;
     const engine = getEngine();

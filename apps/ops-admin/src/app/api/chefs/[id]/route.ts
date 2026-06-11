@@ -4,6 +4,7 @@ import {
   RATE_LIMIT_POLICIES,
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
+import { chefPatchSchema } from '@ridendine/validation';
 import {
   finalizeOpsActor,
   getOpsActorContext,
@@ -20,7 +21,6 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
     const actor = await getOpsActorContext();
     const opsActor = finalizeOpsActor(actor, guardPlatformApi(actor, 'chefs_governance'));
     if (opsActor instanceof Response) return opsActor;
@@ -33,6 +33,15 @@ export async function PATCH(
       routeKey: 'PATCH:/api/chefs/[id]',
     });
     if (!limit.allowed) return rateLimitPolicyResponse(limit);
+
+    const parsed = chefPatchSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    const body = parsed.data;
 
     const action = body.action ?? (
       body.status === 'approved'

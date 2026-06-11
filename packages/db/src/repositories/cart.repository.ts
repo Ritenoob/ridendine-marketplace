@@ -4,6 +4,16 @@ import type { Tables } from '../generated/database.types';
 export type Cart = Tables<'carts'>;
 export type CartItem = Tables<'cart_items'>;
 
+export type CartItemWithMenuItem = Omit<CartItem, 'selected_options'> & {
+  // Stored as JSONB; consumers (e.g. apps/web checkout quote) narrow it to
+  // their structured option shape, so keep it open here.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  selected_options: any;
+  menu_items: Tables<'menu_items'> | null;
+};
+
+export type CartWithItems = Cart & { cart_items: CartItemWithMenuItem[] };
+
 export async function getCartByCustomer(
   client: SupabaseClient,
   customerId: string,
@@ -28,7 +38,7 @@ export async function getCartWithItems(
   client: SupabaseClient,
   customerId: string,
   storefrontId: string
-) {
+): Promise<CartWithItems | null> {
   const { data, error } = await client
     .from('carts')
     .select(`

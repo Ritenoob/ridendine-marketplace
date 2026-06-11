@@ -42,8 +42,10 @@ for await (const file of glob('apps/*/src/app/api/**/route.ts')) {
     continue;
   }
   const src = readFileSync(file, 'utf8');
-  const hasStateful = STATEFUL_METHODS.some(m =>
-    new RegExp(`export\\s+(async\\s+)?function\\s+${m}\\b`).test(src)
+  const hasStateful = STATEFUL_METHODS.some(
+    m =>
+      new RegExp(`export\\s+(async\\s+)?function\\s+${m}\\b`).test(src) ||
+      new RegExp(`export\\s+const\\s+${m}\\s*=`).test(src)
   );
   if (!hasStateful) continue;
   const hasGuard = APPROVED_GUARDS.some(g => src.includes(g));

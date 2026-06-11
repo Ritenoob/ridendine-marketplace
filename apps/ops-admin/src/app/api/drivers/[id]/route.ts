@@ -4,6 +4,7 @@ import {
   RATE_LIMIT_POLICIES,
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
+import { driverPatchSchema } from '@ridendine/validation';
 import {
   finalizeOpsActor,
   getEngine,
@@ -33,13 +34,14 @@ export async function PATCH(
     if (!limit.allowed) return rateLimitPolicyResponse(limit);
 
     const { id } = await params;
-    const body = await request.json();
+    const parsed = driverPatchSchema.safeParse(await request.json());
 
-    if (body.status) {
+    if (parsed.success) {
+      const body = parsed.data;
       const engine = getEngine();
       const result = await engine.platform.updateDriverGovernance(
         id,
-        body.status,
+        body.status as Parameters<typeof engine.platform.updateDriverGovernance>[1],
         opsActor,
         body.reason
       );

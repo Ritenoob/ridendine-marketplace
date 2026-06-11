@@ -5,6 +5,7 @@ import {
   RATE_LIMIT_POLICIES,
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
+import { orderPatchSchema } from '@ridendine/validation';
 import {
   finalizeOpsActor,
   getEngine,
@@ -61,7 +62,14 @@ export async function PATCH(
     if (!limit.allowed) return rateLimitPolicyResponse(limit);
 
     const { id } = await params;
-    const body = await request.json();
+    const parsed = orderPatchSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    const body = parsed.data;
     const engine = getEngine();
 
     if (body.status) {

@@ -64,6 +64,10 @@ export class EtaService {
 
     if (!pickup || !dropoff) return;
 
+    // Customer-facing initial ETA must include kitchen prep time, not just the
+    // drive leg — otherwise the promise time is ~20 minutes too optimistic.
+    const prepSeconds = (await this.loadPrepMinutes(order.storefront_id as string)) * 60;
+
     const route = await this.provider.route(pickup, dropoff);
     await this.db
       .from('deliveries')
@@ -71,7 +75,7 @@ export class EtaService {
         route_to_dropoff_polyline: route.polyline,
         route_to_dropoff_meters: Math.round(route.meters),
         route_to_dropoff_seconds: Math.round(route.seconds),
-        eta_dropoff_at: addSecondsIso(route.seconds),
+        eta_dropoff_at: addSecondsIso(prepSeconds + route.seconds),
         routing_provider: PROVIDER_TAG,
         routing_computed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -129,6 +133,7 @@ export class EtaService {
         route_to_dropoff_polyline: dropPoly,
         route_to_dropoff_meters: dropMeters,
         route_to_dropoff_seconds: dropSeconds,
+        route_progress_pct: 0,
         eta_dropoff_at: addSecondsIso(totalToDropoff),
         routing_provider: PROVIDER_TAG,
         routing_computed_at: new Date().toISOString(),
@@ -177,18 +182,28 @@ export class EtaService {
   ): Promise<{ progressPct: number; remainingSeconds: number; etaDropoffAt: Date }> {
     const { data: row } = await this.db
       .from('deliveries')
-      .select('route_to_dropoff_polyline, route_to_dropoff_seconds')
+      .select('route_to_dropoff_polyline, route_to_dropoff_seconds, route_progress_pct')
       .eq('id', deliveryId)
       .maybeSingle();
 
     const poly = (row?.route_to_dropoff_polyline as string | null) ?? '';
-    const totalSeconds =
+    const storedSeconds =
       typeof row?.route_to_dropoff_seconds === 'number' && row.route_to_dropoff_seconds > 0
         ? row.route_to_dropoff_seconds
         : 0;
+    const prevPctRaw = Number(row?.route_progress_pct ?? 0);
+    const prevPct = Number.isFinite(prevPctRaw) ? Math.min(Math.max(prevPctRaw, 0), 100) : 0;
+
+    // `route_to_dropoff_seconds` stores the REMAINING seconds from the previous
+    // ping, while `computeProgressPct` measures ABSOLUTE progress against the
+    // original polyline. Reconstruct the immutable leg-duration baseline from
+    // the stored remaining time and the previously stored progress so each ping
+    // computes remaining = original × (1 − p), not original × (1−p1)·(1−p2)·…
+    const baselineSeconds =
+      prevPct > 0 && prevPct < 100 ? storedSeconds / (1 - prevPct / 100) : storedSeconds;
 
     const progressPct = computeProgressPct(driverPos, poly);
-    const remainingSeconds = estimateRemainingSeconds(progressPct, totalSeconds);
+    const remainingSeconds = estimateRemainingSeconds(progressPct, baselineSeconds);
     const etaDropoffAt = new Date(Date.now() + remainingSeconds * 1000);
 
     await this.db
@@ -336,6 +351,24 @@ export class EtaService {
       .maybeSingle();
 
     return toPoint(kitchen?.lat, kitchen?.lng);
+  }
+
+  /** Midpoint of the storefront's estimated prep window, in minutes (default 20). */
+  private async loadPrepMinutes(storefrontId: string): Promise<number> {
+    try {
+      const { data: sf } = await this.db
+        .from('chef_storefronts')
+        .select('estimated_prep_time_min, estimated_prep_time_max')
+        .eq('id', storefrontId)
+        .maybeSingle();
+
+      const prepMin = typeof sf?.estimated_prep_time_min === 'number' ? sf.estimated_prep_time_min : null;
+      const prepMax = typeof sf?.estimated_prep_time_max === 'number' ? sf.estimated_prep_time_max : null;
+      if (prepMin !== null && prepMax !== null) return Math.round((prepMin + prepMax) / 2);
+      return DEFAULT_PREP_MINUTES;
+    } catch {
+      return DEFAULT_PREP_MINUTES;
+    }
   }
 
   private async loadAddressPoint(addressId: string): Promise<Point | null> {

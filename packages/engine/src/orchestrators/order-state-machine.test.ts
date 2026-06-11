@@ -42,7 +42,7 @@ describe('Order State Machine', () => {
       ];
 
       for (const [from, to] of lifecycle) {
-        expect(isValidOrderTransition(from, to)).toBe(true);
+        expect(isValidOrderTransition(from!, to!)).toBe(true);
       }
     });
 
@@ -195,7 +195,7 @@ describe('Delivery State Machine', () => {
       ];
 
       for (const [from, to] of lifecycle) {
-        expect(isValidDeliveryTransition(from, to)).toBe(true);
+        expect(isValidDeliveryTransition(from!, to!)).toBe(true);
       }
     });
 
@@ -257,7 +257,7 @@ describe('Payout State Machine', () => {
       ];
 
       for (const [from, to] of lifecycle) {
-        expect(isValidPayoutTransition(from, to)).toBe(true);
+        expect(isValidPayoutTransition(from!, to!)).toBe(true);
       }
     });
 

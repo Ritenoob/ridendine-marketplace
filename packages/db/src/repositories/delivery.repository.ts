@@ -174,12 +174,20 @@ export async function getPendingDeliveries(
 
 export async function listOpsDeliveries(
   client: SupabaseClient,
-  options: { status?: string } = {}
+  options: { status?: string; page?: number; limit?: number } = {}
 ): Promise<OpsDeliveryListItem[]> {
+  // Bounded + paginated (mirrors listOpsOrders) — PostgREST silently truncates
+  // unbounded queries at 1000 rows, which corrupted the ops view.
+  const page = options.page ?? 1;
+  const limit = options.limit ?? 100;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
   let query = client
     .from('deliveries')
     .select('*, orders(order_number, total), drivers(first_name, last_name)')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(from, to);
 
   if (options.status) {
     query = query.eq('status', options.status);
@@ -188,7 +196,7 @@ export async function listOpsDeliveries(
   const { data, error } = await query;
 
   if (error) throw error;
-  return (data ?? []) as unknown as OpsDeliveryListItem[];
+  return data ?? [];
 }
 
 export async function getOpsDeliveryDetail(
@@ -238,7 +246,7 @@ export async function getOpsDeliveryDetail(
   const trackingEvents = await getDeliveryTrackingEvents(client, deliveryId);
 
   return {
-    ...(data as unknown as Omit<OpsDeliveryDetail, 'tracking_events'>),
+    ...data,
     tracking_events: trackingEvents,
   };
 }

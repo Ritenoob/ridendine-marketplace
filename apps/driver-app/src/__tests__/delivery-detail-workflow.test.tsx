@@ -16,6 +16,9 @@ jest.mock('next/navigation', () => ({
 }));
 
 jest.mock('@ridendine/ui', () => ({
+  // Keep real non-component exports (e.g. DELIVERY_STATUS_LABELS) while
+  // stubbing the components below.
+  ...jest.requireActual('@ridendine/ui'),
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
   ),
@@ -63,6 +66,7 @@ const deliveryFixture = {
   distance_km: 3.4,
   delivery_fee: 6.25,
   driver_payout: 8.5,
+  pickup_phone: '555-0202',
 };
 
 const orderFixture = {
@@ -367,5 +371,28 @@ describe('DeliveryDetail workflow clarity', () => {
 
     expect(screen.queryByRole('button', { name: 'Call Restaurant' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Call Customer' })).toBeInTheDocument();
+  });
+
+  it('hides call buttons when no phone number is available', () => {
+    const { unmount } = render(
+      <DeliveryDetail
+        delivery={{ ...deliveryFixture, status: 'en_route_to_pickup', pickup_phone: null } as any}
+        order={orderFixture}
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: 'Call Restaurant' })).not.toBeInTheDocument();
+    expect(screen.getByText(/no restaurant phone number on file/i)).toBeInTheDocument();
+    unmount();
+
+    render(
+      <DeliveryDetail
+        delivery={{ ...deliveryFixture, status: 'picked_up' } as any}
+        order={{ ...orderFixture, customer_phone: null }}
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: 'Call Customer' })).not.toBeInTheDocument();
+    expect(screen.getByText(/no customer phone number on file/i)).toBeInTheDocument();
   });
 });

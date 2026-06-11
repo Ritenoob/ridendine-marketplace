@@ -150,9 +150,29 @@ export class DriverMatchingService {
       };
       if (!presence) continue;
 
+      // Pickup is considered valid when both coords are finite numbers.
+      // (0, 0) — "null island" — is kept as a sentinel for "no pickup point",
+      // but an individual coordinate of exactly 0 is valid.
+      const hasPickupPoint =
+        Number.isFinite(pickupLat) && Number.isFinite(pickupLng) && !(pickupLat === 0 && pickupLng === 0);
+
       let distance = 0;
-      if (filterByLocation && pickupLat && pickupLng && presence.current_lat && presence.current_lng) {
-        distance = haversineKm(presence.current_lat, presence.current_lng, pickupLat, pickupLng);
+      if (filterByLocation && hasPickupPoint) {
+        const driverLat = presence.current_lat;
+        const driverLng = presence.current_lng;
+        // Drivers with missing/invalid coordinates are NOT eligible when we are
+        // filtering by location — previously a falsy check let them bypass the
+        // radius filter and score as distance 0 (best candidate). An explicit
+        // null/undefined test also keeps a legitimate coordinate of 0 valid.
+        if (
+          driverLat == null ||
+          driverLng == null ||
+          !Number.isFinite(driverLat) ||
+          !Number.isFinite(driverLng)
+        ) {
+          continue;
+        }
+        distance = haversineKm(driverLat, driverLng, pickupLat, pickupLng);
         if (distance > maxRadiusKm) continue;
       }
 

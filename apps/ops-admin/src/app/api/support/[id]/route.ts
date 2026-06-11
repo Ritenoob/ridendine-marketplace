@@ -5,6 +5,7 @@ import {
   updateSupportTicket,
   type SupabaseClient,
 } from '@ridendine/db';
+import { supportPatchSchema } from '@ridendine/validation';
 import { ActorRole } from '@ridendine/types';
 import {
   finalizeOpsActor,
@@ -26,7 +27,15 @@ export async function PATCH(
     if (opsActor instanceof Response) return opsActor;
 
     const { id } = await params;
-    const body = await request.json();
+    const parsedBody = supportPatchSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return errorResponse(
+        'VALIDATION_ERROR',
+        parsedBody.error.issues[0]?.message || 'Invalid support ticket payload',
+        400
+      );
+    }
+    const body = parsedBody.data;
     const supabase = createAdminClient() as unknown as SupabaseClient;
     const engine = getEngine();
 

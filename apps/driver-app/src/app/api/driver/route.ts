@@ -5,6 +5,7 @@ import {
   type Driver,
   type SupabaseClient,
 } from '@ridendine/db';
+import { driverUpdateSchema } from '@ridendine/validation';
 import { getDriverActorContext, errorResponse, successResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -42,7 +43,18 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { first_name, last_name, phone, profile_image_url, instant_payouts_enabled } = body;
+    const parsed = driverUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return errorResponse(
+        'VALIDATION_ERROR',
+        parsed.error.issues[0]?.message || 'Invalid driver payload',
+        400
+      );
+    }
+    const { first_name, last_name, phone, profile_image_url } = parsed.data;
+    // instant_payouts_enabled is not covered by driverUpdateSchema; read it
+    // from the raw body as before.
+    const { instant_payouts_enabled } = body;
 
     const updates: Partial<Driver> = {};
     if (first_name !== undefined) updates.first_name = first_name;

@@ -15,6 +15,7 @@ import {
 } from '../../compliance/compliance-model';
 import { CompliancePanel } from '../../compliance/compliance-panel';
 import { getOpsDriverOperationsSummary } from '@/lib/driver-operations';
+import { formatCurrency } from '@ridendine/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,8 +32,9 @@ const presenceColors: Record<string, string> = {
   busy: 'bg-primary',
 };
 
+// Driver earnings/payouts are dollars (sum of deliveries.driver_payout).
 function formatMoney(value: number | null | undefined) {
-  return `$${(value ?? 0).toFixed(2)}`;
+  return formatCurrency(value ?? 0);
 }
 
 function formatTimestamp(value: string | null | undefined) {

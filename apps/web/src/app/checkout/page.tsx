@@ -151,6 +151,9 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const promoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Sequences promo validation requests so a slow response for an earlier
+  // keystroke can never overwrite the result of a later one.
+  const promoRequestIdRef = useRef(0);
 
   // Stripe state
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -241,6 +244,7 @@ function CheckoutContent() {
   }, [showCustomTip, customTip, tipPercent, tip, cartSubtotal]);
 
   const validatePromo = useCallback(async (code: string) => {
+    const requestId = ++promoRequestIdRef.current;
     if (!code.trim()) {
       setPromoStatus('idle');
       setPromoMessage('');
@@ -252,6 +256,7 @@ function CheckoutContent() {
         `/api/promos/validate?code=${encodeURIComponent(code)}&subtotal=${cartSubtotal}`
       );
       const json = await res.json();
+      if (requestId !== promoRequestIdRef.current) return; // stale response — newer input exists
       if (json.success) {
         setPromoStatus('valid');
         setPromoMessage(`${json.data.discountType === 'percentage' ? `${json.data.discountValue}% off` : `$${json.data.discountAmount.toFixed(2)} off`} applied`);
@@ -262,6 +267,7 @@ function CheckoutContent() {
         setPromoDiscount(0);
       }
     } catch {
+      if (requestId !== promoRequestIdRef.current) return; // stale response — newer input exists
       setPromoStatus('invalid');
       setPromoMessage('Could not validate promo code');
       setPromoDiscount(0);
@@ -269,6 +275,9 @@ function CheckoutContent() {
   }, [cartSubtotal]);
 
   const handlePromoChange = useCallback((value: string) => {
+    // Invalidate any in-flight validation for older input immediately, so a
+    // late response cannot overwrite the reset below before the debounce fires.
+    promoRequestIdRef.current += 1;
     setPromoCode(value.toUpperCase());
     setPromoStatus('idle');
     setPromoMessage('');

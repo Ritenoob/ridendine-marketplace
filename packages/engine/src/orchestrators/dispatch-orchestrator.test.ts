@@ -270,6 +270,54 @@ describe('DispatchOrchestrator', () => {
       expect(data.status).toBe('pending');
       expect(offerManagement.offerToNextDriver).toHaveBeenCalledWith(delivery.id, SYS_ACTOR);
     });
+
+    it('recovers from a unique-violation race (23505) by returning the existing delivery', async () => {
+      const order = makeOrder();
+      const existingDelivery = makeDelivery({ id: 'existing-delivery-id' });
+
+      const { orchestrator, offerManagement, sla } = createOrchestrator((table) => {
+        if (table === 'orders') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: order, error: null }),
+              }),
+            }),
+            update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+          };
+        }
+        if (table === 'deliveries') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                // Pre-insert existence check: no delivery yet (race window).
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+                // Post-23505 recovery fetch returns the winner's row.
+                maybeSingle: vi.fn().mockResolvedValue({ data: existingDelivery, error: null }),
+              }),
+            }),
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { code: '23505', message: 'duplicate key value violates unique constraint "deliveries_order_id_key"' },
+                }),
+              }),
+            }),
+          };
+        }
+        return makeChain();
+      });
+
+      const result = await orchestrator.requestDispatch(ORDER_ID, SYS_ACTOR);
+
+      expect(result.success).toBe(true);
+      const data = expectOk(result);
+      expect(data.id).toBe('existing-delivery-id');
+      // The losing request must not re-trigger offers or SLA timers.
+      expect(offerManagement.offerToNextDriver).not.toHaveBeenCalled();
+      expect(sla.startTimer).not.toHaveBeenCalled();
+    });
   });
 
   describe('manualAssign', () => {

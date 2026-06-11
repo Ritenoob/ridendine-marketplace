@@ -55,7 +55,7 @@ describe('checkChefAcceptanceTimeout', () => {
     const result = await checkChefAcceptanceTimeout(client, 5);
 
     expect(result).toHaveLength(1);
-    const v = result[0];
+    const v = result[0]!;
     expect(v.entityType).toBe('order');
     expect(v.entityId).toBe('ord-1');
     expect(v.violationType).toBe('chef_acceptance_timeout');
@@ -98,7 +98,7 @@ describe('checkDriverAssignmentTimeout', () => {
     const result = await checkDriverAssignmentTimeout(client, 10);
 
     expect(result).toHaveLength(1);
-    const v = result[0];
+    const v = result[0]!;
     expect(v.entityType).toBe('delivery');
     expect(v.entityId).toBe('del-1');
     expect(v.violationType).toBe('driver_assignment_timeout');
@@ -130,7 +130,7 @@ describe('checkPickupDelay', () => {
     const result = await checkPickupDelay(client, 25);
 
     expect(result).toHaveLength(1);
-    const v = result[0];
+    const v = result[0]!;
     expect(v.entityType).toBe('delivery');
     expect(v.entityId).toBe('del-2');
     expect(v.violationType).toBe('pickup_delay');
@@ -162,7 +162,7 @@ describe('checkDeliveryDelay', () => {
     const result = await checkDeliveryDelay(client, 35);
 
     expect(result).toHaveLength(1);
-    const v = result[0];
+    const v = result[0]!;
     expect(v.entityType).toBe('delivery');
     expect(v.entityId).toBe('del-3');
     expect(v.violationType).toBe('delivery_delay');
@@ -183,7 +183,7 @@ describe('checkDeliveryDelay', () => {
     const client = buildClient(rows);
     const result = await checkDeliveryDelay(client, 35);
 
-    expect(result[0].details).toMatchObject({ status: 'en_route_to_dropoff' });
+    expect(result[0]!.details).toMatchObject({ status: 'en_route_to_dropoff' });
   });
 });
 
@@ -204,7 +204,7 @@ describe('checkStalePreparingOrders', () => {
     const result = await checkStalePreparingOrders(client, 45);
 
     expect(result).toHaveLength(1);
-    const v = result[0];
+    const v = result[0]!;
     expect(v.entityType).toBe('order');
     expect(v.entityId).toBe('ord-3');
     expect(v.violationType).toBe('stale_preparing_order');

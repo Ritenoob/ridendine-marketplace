@@ -5,12 +5,11 @@ import { FinanceSubnav } from '../_components/FinanceSubnav';
 import { FinanceAccessDenied } from '../_components/FinanceAccessDenied';
 import { FinanceActions } from '../finance-actions';
 import { FINANCE_PAGE_ROLES } from '../_lib/roles';
+// Pending refund exposure is dollars; the auto-review threshold is cents
+// (formatted via formatCurrencyFromCents).
+import { formatCurrency, formatCurrencyFromCents } from '@ridendine/utils';
 
 export const dynamic = 'force-dynamic';
-
-function formatCurrency(amount: number): string {
-  return `$${amount.toFixed(2)}`;
-}
 
 export default async function FinanceRefundsPage() {
   const actor = await getOpsActorContext();
@@ -55,7 +54,7 @@ export default async function FinanceRefundsPage() {
           />
           <KpiTile
             label="Auto-Review Threshold"
-            value={formatCurrency(threshold / 100)}
+            value={formatCurrencyFromCents(threshold)}
             className="border-border bg-surface"
           />
         </div>

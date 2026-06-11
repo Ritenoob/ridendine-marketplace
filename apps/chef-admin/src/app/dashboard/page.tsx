@@ -8,6 +8,8 @@ import {
   getMenuCategoriesByStorefront,
 } from '@ridendine/db';
 import type { Tables } from '@ridendine/db';
+import { formatCurrency } from '@ridendine/utils';
+import { ORDER_STATUS_BADGE_CLASSES } from '@ridendine/ui';
 import {
   AlertTriangle,
   Banknote,
@@ -44,20 +46,18 @@ type ChefProfile = Pick<Tables<'chef_profiles'>, 'id' | 'display_name' | 'status
 
 const ACTIVE_ORDER_STATUSES = ['pending', 'accepted', 'preparing', 'ready_for_pickup'];
 const ACTION_ORDER_STATUSES = ['pending', 'accepted', 'preparing'];
+// Statuses where the order's revenue has genuinely been earned by the chef.
+const EARNED_ORDER_STATUSES = ['delivered', 'completed'];
 
-const STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-warningSoft text-warning border border-warning/30',
-  accepted: 'bg-infoSoft text-info border border-info/30',
-  preparing: 'bg-infoSoft text-info border border-info/30',
-  ready_for_pickup: 'bg-successSoft text-success border border-success/30',
-  picked_up: 'bg-accentSoft text-accent border border-accent/30',
-  delivered: 'bg-surfaceMuted text-text border border-border',
-  cancelled: 'bg-dangerSoft text-danger border border-danger/30',
-  rejected: 'bg-dangerSoft text-danger border border-danger/30',
-};
+// Customer marketplace base URL for storefront preview links. Falls back to
+// the production domain when the env var is not configured.
+const WEB_BASE_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://ridendine.ca').replace(/\/+$/, '');
 
+const STATUS_STYLES = ORDER_STATUS_BADGE_CLASSES;
+
+// Order totals are dollars (platform convention) — format via shared util.
 function money(value: number | null | undefined) {
-  return `$${Number(value || 0).toFixed(2)}`;
+  return formatCurrency(Number(value || 0));
 }
 
 function formatStatus(status: string) {
@@ -154,14 +154,59 @@ async function getDashboardData(storefrontId: string) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  let allOrders: OrderRow[] = [];
+  let recentOrders: OrderRow[] = [];
+  let activeOrders: OrderRow[] = [];
   let menuItems: MenuItemRow[] = [];
   let menuCategories: Awaited<ReturnType<typeof getMenuCategoriesByStorefront>> = [];
 
   try {
-    allOrders = (await getOrdersByStorefront(supabase as any, storefrontId)) as OrderRow[];
+    recentOrders = (await getOrdersByStorefront(supabase as any, storefrontId, { limit: 8 })) as OrderRow[];
   } catch {
-    allOrders = [];
+    recentOrders = [];
+  }
+
+  // Open/working orders only — small set, filtered server-side.
+  try {
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('storefront_id', storefrontId)
+      .in('status', ACTIVE_ORDER_STATUSES)
+      .order('created_at', { ascending: false });
+    activeOrders = (data ?? []) as OrderRow[];
+  } catch {
+    activeOrders = [];
+  }
+
+  // Revenue: only genuinely-earned orders within the current month window,
+  // filtered in the query instead of fetching the storefront's full history.
+  type EarnedOrderRow = { total: number | null; created_at: string; payment_status: string | null };
+  let earnedMonthOrders: EarnedOrderRow[] = [];
+  try {
+    const { data } = await supabase
+      .from('orders')
+      .select('total, created_at, payment_status')
+      .eq('storefront_id', storefrontId)
+      .gte('created_at', monthStart.toISOString())
+      .in('status', EARNED_ORDER_STATUSES);
+    earnedMonthOrders = ((data ?? []) as EarnedOrderRow[]).filter(
+      (order) => order.payment_status == null || order.payment_status === 'completed'
+    );
+  } catch {
+    earnedMonthOrders = [];
+  }
+
+  // Order volume today (all statuses) — count only, no row transfer.
+  let todayOrderCount = 0;
+  try {
+    const { count } = await supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('storefront_id', storefrontId)
+      .gte('created_at', today.toISOString());
+    todayOrderCount = count ?? 0;
+  } catch {
+    todayOrderCount = 0;
   }
 
   try {
@@ -172,9 +217,8 @@ async function getDashboardData(storefrontId: string) {
     menuCategories = [];
   }
 
-  const recentOrders = allOrders.slice(0, 8);
-  const actionOrders = allOrders.filter((order) => ACTION_ORDER_STATUSES.includes(order.status)).slice(0, 6);
-  const prepOrders = allOrders
+  const actionOrders = activeOrders.filter((order) => ACTION_ORDER_STATUSES.includes(order.status)).slice(0, 6);
+  const prepOrders = activeOrders
     .filter((order) => ['accepted', 'preparing', 'ready_for_pickup'].includes(order.status))
     .slice()
     .sort((a, b) => Date.parse(a.estimated_ready_at ?? a.created_at) - Date.parse(b.estimated_ready_at ?? b.created_at))
@@ -195,13 +239,11 @@ async function getDashboardData(storefrontId: string) {
     }
   }
 
-  const activeOrders = allOrders.filter((order) => ACTIVE_ORDER_STATUSES.includes(order.status));
-  const readyOrders = allOrders.filter((order) => order.status === 'ready_for_pickup');
+  const readyOrders = activeOrders.filter((order) => order.status === 'ready_for_pickup');
   const lateOrders = activeOrders.filter((order) => order.estimated_ready_at && Date.parse(order.estimated_ready_at) < Date.now());
-  const todayOrders = allOrders.filter((order) => new Date(order.created_at) >= today);
-  const monthOrders = allOrders.filter((order) => new Date(order.created_at) >= monthStart);
-  const todayRevenue = todayOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
-  const monthRevenue = monthOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const earnedTodayOrders = earnedMonthOrders.filter((order) => new Date(order.created_at) >= today);
+  const todayRevenue = earnedTodayOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const monthRevenue = earnedMonthOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
   const withCustomer = (order: OrderRow): OrderRow => ({
     ...order,
     customer: customers.find((customer) => customer.id === order.customer_id) ?? null,
@@ -221,11 +263,11 @@ async function getDashboardData(storefrontId: string) {
       actionOrders: actionOrders.length,
       readyOrders: readyOrders.length,
       lateOrders: lateOrders.length,
-      todayOrders: todayOrders.length,
+      todayOrders: todayOrderCount,
       todayRevenue,
-      monthOrders: monthOrders.length,
+      monthOrders: earnedMonthOrders.length,
       monthRevenue,
-      averageTicket: todayOrders.length ? todayRevenue / todayOrders.length : 0,
+      averageTicket: earnedTodayOrders.length ? todayRevenue / earnedTodayOrders.length : 0,
     },
     recentOrders: recentOrders.map(withCustomer),
     actionOrders: actionOrders.map(withCustomer),
@@ -486,7 +528,7 @@ export default async function DashboardPage() {
               <CalendarClock className="mr-2 h-4 w-4" />
               Hours
             </Link>
-            <Link href={`https://ridendine.ca/chefs/${storefront.slug}`} className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-semibold text-text hover:border-primary/40">
+            <Link href={`${WEB_BASE_URL}/chefs/${storefront.slug}`} className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-semibold text-text hover:border-primary/40">
               <Eye className="mr-2 h-4 w-4" />
               Preview
             </Link>
@@ -688,7 +730,7 @@ export default async function DashboardPage() {
               { label: 'Update kitchen hours', href: '/dashboard/availability', icon: CalendarClock },
               { label: 'Improve storefront photos', href: '/dashboard/storefront', icon: Image },
               { label: 'Open payout center', href: '/dashboard/payouts', icon: Banknote },
-              { label: 'Preview customer storefront', href: `https://ridendine.ca/chefs/${storefront.slug}`, icon: Eye },
+              { label: 'Preview customer storefront', href: `${WEB_BASE_URL}/chefs/${storefront.slug}`, icon: Eye },
             ].map((tool) => {
               const Icon = tool.icon;
               return (

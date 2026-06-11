@@ -1,6 +1,6 @@
 # High-Risk Ops Authorization Contracts
 
-Generated: 2026-06-07T17:15:23.052Z
+Generated: 2026-06-11T04:46:27.507Z
 
 This generated audit documents static authorization contracts for high-risk Ops/control-plane routes. It does not change route behavior; it fails if a route drops its expected actor context, capability guard, processor token validation, Stripe signature validation, or internal command-center gate.
 
@@ -31,7 +31,7 @@ This generated audit documents static authorization contracts for high-risk Ops/
 | PASS | Cron wrapper | `/api/cron/payouts-chef-preview` | `apps/ops-admin/src/app/api/cron/payouts-chef-preview/route.ts` | GET, POST | validateEngineProcessorHeaders, run(request) |
 | PASS | Cron wrapper | `/api/cron/payouts-driver-preview` | `apps/ops-admin/src/app/api/cron/payouts-driver-preview/route.ts` | GET, POST | validateEngineProcessorHeaders, run(request) |
 | PASS | Cron wrapper | `/api/cron/reconciliation-daily` | `apps/ops-admin/src/app/api/cron/reconciliation-daily/route.ts` | GET, POST | validateEngineProcessorHeaders, run(request) |
-| PASS | Cron wrapper | `/api/cron/sla-tick` | `apps/ops-admin/src/app/api/cron/sla-tick/route.ts` | GET, POST | validateEngineProcessorHeaders, run(request) |
+| PASS | Cron wrapper | `/api/cron/sla-tick` | `apps/ops-admin/src/app/api/cron/sla-tick/route.ts` | POST | validateEngineProcessorHeaders, run(request) |
 | PASS | Internal command center | `/api/internal/command-center/change-requests` | `apps/ops-admin/src/app/api/internal/command-center/change-requests/route.ts` | GET, POST, PATCH | INTERNAL_COMMAND_CENTER_ENABLED, getOpsActorContext, guardPlatformApi, team_manage, guardCommandCenter() |
 | PASS | Order refund | `/api/orders/[id]/refund` | `apps/ops-admin/src/app/api/orders/[id]/refund/route.ts` | POST | getOpsActorContext, guardPlatformApi, finance_refunds_sensitive |
 | PASS | Stripe finance webhook | `/api/stripe/webhook` | `apps/ops-admin/src/app/api/stripe/webhook/route.ts` | POST | stripe-signature, webhooks.constructEvent, webhookSecret |

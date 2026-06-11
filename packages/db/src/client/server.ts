@@ -1,5 +1,6 @@
 import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
 import type { Database } from '../database.merged';
+import type { SupabaseClient } from './types';
 
 type CookieStore = {
   get: (name: string) => { value: string } | undefined;
@@ -19,8 +20,7 @@ type CookieToSet = {
  * Requires cookies to be passed for session management.
  * This client respects RLS policies.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createServerClient(cookieStore: CookieStore): any {
+export function createServerClient(cookieStore: CookieStore): SupabaseClient {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -28,7 +28,7 @@ export function createServerClient(cookieStore: CookieStore): any {
     throw new Error('Missing Supabase environment variables');
   }
 
-  return createSupabaseServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const client = createSupabaseServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         if (typeof cookieStore.getAll === 'function') {
@@ -47,4 +47,11 @@ export function createServerClient(cookieStore: CookieStore): any {
       },
     },
   });
+
+  // @supabase/ssr@0.5.x still declares its return type with supabase-js's old
+  // three-slot generic signature (Database, SchemaName, Schema), while
+  // supabase-js >= 2.49 moved to (Database, SchemaNameOrClientOptions, ...).
+  // The runtime object is a plain supabase-js client, so this cast only
+  // realigns the generic parameters — it does not loosen row typing.
+  return client as unknown as SupabaseClient;
 }

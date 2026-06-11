@@ -6,6 +6,7 @@ import {
   RATE_LIMIT_POLICIES,
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
+import { loginSchema } from '@ridendine/validation';
 import { getDriverAppPlatformRole } from '@/lib/platform-access';
 
 export async function POST(request: Request) {
@@ -19,15 +20,18 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const email = typeof body.email === 'string' ? body.email.trim() : '';
-    const password = typeof body.password === 'string' ? body.password : '';
-
-    if (!email || !password) {
+    const parsed = loginSchema.safeParse(
+      body && typeof body === 'object'
+        ? { ...body, email: typeof body.email === 'string' ? body.email.trim() : body.email }
+        : body
+    );
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: parsed.error.issues[0]?.message || 'Email and password are required' },
         { status: 400 }
       );
     }
+    const { email, password } = parsed.data;
 
     const cookieStore = await cookies();
     const supabase = createServerClient(cookieStore);

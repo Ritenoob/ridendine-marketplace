@@ -74,6 +74,11 @@ export interface CreateOrderInput {
   specialInstructions?: string;
 }
 
+/** Round a dollar amount to 2 decimals (cents). */
+function roundMoney(amount: number): number {
+  return Math.round(amount * 100) / 100;
+}
+
 // ==========================================
 // ORDER CREATION SERVICE
 // ==========================================
@@ -88,6 +93,27 @@ export class OrderCreationService {
     private readonly eta?: EtaService,
     private readonly taxConfig?: TaxConfigService,
   ) {}
+
+  /**
+   * Compensating delete for a partially created order (no transactional RPC
+   * yet). Failures must not mask the original error, but they are surfaced to
+   * logs so orphaned draft orders can be cleaned up by ops.
+   */
+  private async compensateOrderInsert(orderId: string): Promise<void> {
+    try {
+      const { error } = await this.client.from('orders').delete().eq('id', orderId);
+      if (error) {
+        console.error(
+          `[order-creation] compensating delete failed for order ${orderId}: ${error.message} — orphaned draft order requires manual cleanup`,
+        );
+      }
+    } catch (err) {
+      console.error(
+        `[order-creation] compensating delete threw for order ${orderId}:`,
+        err,
+      );
+    }
+  }
 
   /** Best-effort ETA refresh; never throws to callers. */
   private async runEtaBestEffort(fn: (eta: EtaService) => Promise<void>): Promise<void> {
@@ -122,6 +148,20 @@ export class OrderCreationService {
       return {
         success: false,
         error: { code: 'INVALID_ITEMS', message: 'Failed to fetch menu items' },
+      };
+    }
+
+    // Fail loudly when any requested menu item does not exist — silently
+    // dropping it would charge the customer for fewer items than they ordered.
+    const foundIds = new Set(menuItems.map((m) => m.id as string));
+    const missingIds = [...new Set(input.items.map((i) => i.menuItemId).filter((id) => !foundIds.has(id)))];
+    if (missingIds.length > 0) {
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_ITEMS',
+          message: `Menu item(s) not found: ${missingIds.join(', ')}`,
+        },
       };
     }
 
@@ -180,12 +220,15 @@ export class OrderCreationService {
     const rates = this.taxConfig
       ? await this.taxConfig.getTaxRates()
       : { hstRate: HST_RATE, serviceFeePercent: SERVICE_FEE_PERCENT };
+    // Round money values to 2 decimals — float sums like 35.190000000000005
+    // must not land in orders.subtotal / orders.total.
+    subtotal = roundMoney(subtotal);
     const deliveryFee = BASE_DELIVERY_FEE / 100;
-    const serviceFee = Math.round(subtotal * (rates.serviceFeePercent / 100) * 100) / 100;
+    const serviceFee = roundMoney(subtotal * (rates.serviceFeePercent / 100));
     const taxableAmount = subtotal + serviceFee + deliveryFee;
-    const tax = Math.round(taxableAmount * (rates.hstRate / 100) * 100) / 100;
+    const tax = roundMoney(taxableAmount * (rates.hstRate / 100));
     const tip = input.tip || 0;
-    const total = subtotal + deliveryFee + serviceFee + tax + tip;
+    const total = roundMoney(subtotal + deliveryFee + serviceFee + tax + tip);
 
     const orderNumber = `RD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
@@ -230,7 +273,7 @@ export class OrderCreationService {
     const itemsError = insertedItemsResult.error;
 
     if (itemsError) {
-      await this.client.from('orders').delete().eq('id', order.id);
+      await this.compensateOrderInsert(order.id as string);
       return {
         success: false,
         error: { code: 'ITEMS_FAILED', message: 'Failed to create order items' },
@@ -242,6 +285,19 @@ export class OrderCreationService {
         id: string;
         menu_item_id: string;
       }>;
+
+      // Map each ORIGINAL input index to its inserted order_items row.
+      // insertedItems is positionally aligned with orderItems (the rows we
+      // inserted); orderItems carries input_index back to input.items. Never
+      // index insertedItems directly by the input index.
+      const insertedIdByInputIndex = new Map<number, string>();
+      for (const [position, meta] of orderItems.entries()) {
+        const insertedItem = insertedItems[position];
+        if (insertedItem?.id && insertedItem.menu_item_id === meta.menu_item_id) {
+          insertedIdByInputIndex.set(meta.input_index, insertedItem.id);
+        }
+      }
+
       const modifierRows: Array<{
         order_item_id: string;
         option_name: string;
@@ -252,9 +308,9 @@ export class OrderCreationService {
       for (const [index, inputItem] of input.items.entries()) {
         const modifiers = inputItem.modifiers ?? [];
         if (modifiers.length === 0) continue;
-        const insertedItem = insertedItems[index];
-        if (!insertedItem?.id) {
-          await this.client.from('orders').delete().eq('id', order.id);
+        const insertedItemId = insertedIdByInputIndex.get(index);
+        if (!insertedItemId) {
+          await this.compensateOrderInsert(order.id as string);
           return {
             success: false,
             error: { code: 'ITEMS_FAILED', message: 'Failed to create order item modifier snapshot' },
@@ -263,7 +319,7 @@ export class OrderCreationService {
 
         for (const modifier of modifiers) {
           modifierRows.push({
-            order_item_id: insertedItem.id,
+            order_item_id: insertedItemId,
             option_name: modifier.optionName ?? modifier.optionId,
             value_name: modifier.valueName ?? modifier.valueId,
             price_adjustment: modifier.priceAdjustment,
@@ -276,7 +332,7 @@ export class OrderCreationService {
           .from('order_item_modifiers')
           .insert(modifierRows);
         if (modifiersError) {
-          await this.client.from('orders').delete().eq('id', order.id);
+          await this.compensateOrderInsert(order.id as string);
           return {
             success: false,
             error: { code: 'ITEMS_FAILED', message: 'Failed to create order item modifiers' },

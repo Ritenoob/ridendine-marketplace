@@ -5,22 +5,8 @@ import { priceSchema, ratingSchema } from './common';
 // ORDER VALIDATION SCHEMAS
 // ==========================================
 
-export const createOrderSchema = z.object({
-  storefrontId: z.string().uuid(),
-  deliveryAddressId: z.string().uuid(),
-  items: z.array(z.object({
-    menuItemId: z.string().uuid(),
-    quantity: z.number().int().min(1).max(99),
-    specialInstructions: z.string().max(500).nullable().optional(),
-    selectedOptions: z.array(z.object({
-      optionId: z.string().uuid(),
-      valueId: z.string().uuid(),
-    })).optional(),
-  })).min(1, 'At least one item is required'),
-  specialInstructions: z.string().max(1000).nullable().optional(),
-  tip: priceSchema.default(0),
-  promoCode: z.string().max(50).nullable().optional(),
-});
+// NOTE: createOrderSchema was removed — it had no callers anywhere in the
+// repo (order creation goes through checkoutSchema in customer.ts).
 
 export const updateOrderStatusSchema = z.object({
   status: z.enum([
@@ -62,7 +48,6 @@ export const customerOrderActionSchema = z.object({
 });
 
 // Type exports
-export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
 export type CreateReviewInput = z.infer<typeof createReviewSchema>;
 export type ChefRespondToReviewInput = z.infer<typeof chefRespondToReviewSchema>;

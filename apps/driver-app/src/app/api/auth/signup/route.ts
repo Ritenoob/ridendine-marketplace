@@ -12,17 +12,7 @@ import {
   RATE_LIMIT_POLICIES,
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
-
-function validateDriverSignupBody(body: Record<string, unknown>) {
-  const { firstName, lastName, email, phone, password } = body;
-  if (!firstName || !lastName || !email || !phone || !password) {
-    return 'All fields are required';
-  }
-  if (typeof password === 'string' && password.length < 8) {
-    return 'Password must be at least 8 characters';
-  }
-  return null;
-}
+import { signupSchema } from '@ridendine/validation';
 
 async function createDriverPresence(adminClient: SupabaseClient, driverId: string) {
   await (adminClient as any)
@@ -96,19 +86,24 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const validationError = validateDriverSignupBody(body);
-    if (validationError) {
-      return NextResponse.json({ error: validationError }, { status: 400 });
+    const parsed = signupSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'All fields are required' },
+        { status: 400 }
+      );
     }
-
-    const { firstName, lastName, email, phone, password, vehicleType } = body as {
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      password: string;
-      vehicleType?: string;
-    };
+    const { firstName, lastName, email, password } = parsed.data;
+    // Drivers must provide a phone number (optional in the shared signupSchema).
+    const phone = parsed.data.phone;
+    if (!phone) {
+      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+    }
+    // vehicleType is not covered by signupSchema; read it from the raw body.
+    const vehicleType =
+      typeof (body as { vehicleType?: unknown }).vehicleType === 'string'
+        ? ((body as { vehicleType: string }).vehicleType)
+        : undefined;
 
     const cookieStore = await cookies();
     const supabase = createServerClient(cookieStore) as unknown as SupabaseClient;

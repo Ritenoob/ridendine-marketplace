@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import { Card, Badge, Button, LiveIndicator, type LiveIndicatorStatus } from '@ridendine/ui';
+import { Card, Badge, Button, LiveIndicator, ORDER_STATUS_LABELS, type LiveIndicatorStatus } from '@ridendine/ui';
 import { chefStorefrontOrdersChannel, createBrowserClient, parseOrdersRealtimeRow } from '@ridendine/db';
+import { formatCurrency } from '@ridendine/utils';
 import { OrderToast, type ToastMsg } from './order-toast';
 
 interface Order {
@@ -69,16 +70,7 @@ interface OrdersListProps {
 
 const ACCEPT_TIMEOUT_MS = 8 * 60 * 1000; // 8 minutes
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'Pending',
-  accepted: 'Accepted',
-  preparing: 'Preparing',
-  ready_for_pickup: 'Ready for pickup',
-  rejected: 'Rejected',
-  expired: 'Expired',
-  cancelled: 'Cancelled',
-  delivered: 'Delivered',
-};
+const STATUS_LABELS = ORDER_STATUS_LABELS;
 
 const KITCHEN_WORKFLOW: Record<
   string,
@@ -110,8 +102,9 @@ const KITCHEN_WORKFLOW: Record<
   },
 };
 
+// Order amounts (line totals, fees, tax, tip, total) are dollars.
 function money(value: number | null | undefined) {
-  return `$${Number(value ?? 0).toFixed(2)}`;
+  return formatCurrency(Number(value ?? 0));
 }
 
 function formatStatus(status: string | null | undefined) {
@@ -141,8 +134,19 @@ function getReadyTiming(order: Order) {
   return 'Ready time not set';
 }
 
-function CountdownTimer({ createdAt, onExpire }: { createdAt: string; onExpire: () => void }) {
+function CountdownTimer({
+  createdAt,
+  orderId,
+  onExpire,
+}: {
+  createdAt: string;
+  orderId: string;
+  onExpire: (orderId: string) => void;
+}) {
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  // Ensure this timer only fires its expiry callback once, even if the
+  // interval keeps ticking after the deadline has passed.
+  const firedRef = useRef(false);
 
   useEffect(() => {
     const orderTime = new Date(createdAt).getTime();
@@ -152,7 +156,10 @@ function CountdownTimer({ createdAt, onExpire }: { createdAt: string; onExpire: 
       const remaining = deadline - Date.now();
       if (remaining <= 0) {
         setTimeLeft(0);
-        onExpire();
+        if (!firedRef.current) {
+          firedRef.current = true;
+          onExpire(orderId);
+        }
       } else {
         setTimeLeft(remaining);
       }
@@ -162,7 +169,7 @@ function CountdownTimer({ createdAt, onExpire }: { createdAt: string; onExpire: 
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [createdAt, onExpire]);
+  }, [createdAt, orderId, onExpire]);
 
   const minutes = Math.floor(timeLeft / 60000);
   const seconds = Math.floor((timeLeft % 60000) / 1000);
@@ -183,8 +190,11 @@ function CountdownTimer({ createdAt, onExpire }: { createdAt: string; onExpire: 
 export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
   const [filter, setFilter] = useState<string>('all');
   const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [loading, setLoading] = useState(false);
+  const [pendingOrderIds, setPendingOrderIds] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
+  // Orders for which the auto-expiry reject PATCH has already been sent in
+  // this tab — guards against duplicate fires across re-renders.
+  const expiredOrderIdsRef = useRef<Set<string>>(new Set());
   const [playSound, setPlaySound] = useState(false);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [realtimeStatus, setRealtimeStatus] = useState<LiveIndicatorStatus>('connecting');
@@ -295,19 +305,48 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
   }, [initialOrders]);
 
   const handleOrderExpire = useCallback(async (orderId: string) => {
-    // Auto-reject timed-out orders using the protected API action contract.
-    await fetch(`/api/orders/${orderId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'reject',
-        reason: 'other',
-        notes: 'Auto-rejected after acceptance timeout',
-      }),
-    });
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: 'rejected' } : o))
-    );
+    // Fire the auto-reject at most once per order per tab.
+    if (expiredOrderIdsRef.current.has(orderId)) return;
+    expiredOrderIdsRef.current.add(orderId);
+
+    try {
+      // Auto-reject timed-out orders using the protected API action contract.
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reject',
+          reason: 'other',
+          notes: 'Auto-rejected after acceptance timeout',
+        }),
+      });
+
+      if (!response.ok) {
+        // The server refused (e.g. the chef accepted just in time, or a
+        // server-side expiry already ran). Leave local state alone and let
+        // realtime updates reconcile the true status.
+        return;
+      }
+
+      const json = await response.json().catch(() => null);
+      const updatedOrder =
+        json?.data?.order ??
+        json?.data?.updatedOrder ??
+        json?.order ??
+        json?.updatedOrder ??
+        null;
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? updatedOrder
+              ? { ...o, ...updatedOrder }
+              : { ...o, status: 'rejected' }
+            : o
+        )
+      );
+    } catch {
+      // Network failure — keep current state; realtime will reconcile.
+    }
   }, []);
 
   const filteredOrders = filter === 'all'
@@ -329,7 +368,7 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
     orderId: string,
     payload: { action?: string; status?: string; reason?: string; notes?: string }
   ) => {
-    setLoading(true);
+    setPendingOrderIds((prev) => ({ ...prev, [orderId]: true }));
     setError(null);
 
     try {
@@ -365,7 +404,11 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setLoading(false);
+      setPendingOrderIds((prev) => {
+        const next = { ...prev };
+        delete next[orderId];
+        return next;
+      });
     }
   };
 
@@ -474,7 +517,8 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
                         <span className="text-primary">Accept in:</span>
                         <CountdownTimer
                           createdAt={order.created_at}
-                          onExpire={() => handleOrderExpire(order.id)}
+                          orderId={order.id}
+                          onExpire={handleOrderExpire}
                         />
                       </div>
                     )}
@@ -601,14 +645,14 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
                         variant="destructive"
                         size="sm"
                         onClick={() => handleReject(order.id)}
-                        disabled={loading}
+                        disabled={Boolean(pendingOrderIds[order.id])}
                       >
                         Reject
                       </Button>
                       <Button
                         size="sm"
                         onClick={() => handleAccept(order.id)}
-                        disabled={loading}
+                        disabled={Boolean(pendingOrderIds[order.id])}
                       >
                         Accept
                       </Button>
@@ -618,18 +662,18 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
                     <Button
                       size="sm"
                       onClick={() => handlePreparing(order.id)}
-                      disabled={loading}
+                      disabled={Boolean(pendingOrderIds[order.id])}
                     >
-                      Start Preparing
+                      {pendingOrderIds[order.id] ? 'Updating...' : 'Start Preparing'}
                     </Button>
                   )}
                   {order.status === 'preparing' && (
                     <Button
                       size="sm"
                       onClick={() => handleReady(order.id)}
-                      disabled={loading}
+                      disabled={Boolean(pendingOrderIds[order.id])}
                     >
-                      Mark Ready
+                      {pendingOrderIds[order.id] ? 'Updating...' : 'Mark Ready'}
                     </Button>
                   )}
                   {order.status === 'ready_for_pickup' && (

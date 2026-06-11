@@ -16,7 +16,9 @@ export function OrderStatusActions({
   allowedActions,
 }: OrderStatusActionsProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  // Track which specific action is in flight so one click does not disable
+  // and relabel every action button.
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -58,7 +60,7 @@ export function OrderStatusActions({
     .filter((item): item is { action: string; config: { apiAction: string; label: string; success: string; className: string } } => Boolean(item.config));
 
   const handleAction = async (action: string, successMessage: string) => {
-    setLoading(true);
+    setPendingAction(action);
     setError('');
     setSuccess('');
 
@@ -80,7 +82,7 @@ export function OrderStatusActions({
     } catch {
       setError('Failed to update order');
     } finally {
-      setLoading(false);
+      setPendingAction(null);
     }
   };
 
@@ -121,10 +123,10 @@ export function OrderStatusActions({
               <button
                 key={action}
                 onClick={() => handleAction(config.apiAction, config.success)}
-                disabled={loading}
+                disabled={pendingAction !== null}
                 className={`px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${config.className}`}
               >
-                {loading ? 'Updating...' : config.label}
+                {pendingAction === config.apiAction ? 'Updating...' : config.label}
               </button>
             ))}
           </div>

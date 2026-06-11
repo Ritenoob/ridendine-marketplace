@@ -11,6 +11,10 @@ import {
   type SupabaseClient,
 } from '@ridendine/db';
 import {
+  routeCreateStorefrontSchema,
+  routeUpdateStorefrontSchema,
+} from '@ridendine/validation';
+import {
   getEngine,
   getChefActorContext,
   getChefBasicContext,
@@ -91,6 +95,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsedBody = routeCreateStorefrontSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return errorResponse(
+        'VALIDATION_ERROR',
+        parsedBody.error.issues[0]?.message || 'Invalid storefront payload',
+        400
+      );
+    }
     const {
       name,
       description,
@@ -98,7 +110,7 @@ export async function POST(request: NextRequest) {
       min_order_amount,
       estimated_prep_time_min,
       estimated_prep_time_max,
-    } = body;
+    } = parsedBody.data;
 
     // Validate required fields
     if (!name || name.trim().length === 0) {
@@ -210,6 +222,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsedBody = routeUpdateStorefrontSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return errorResponse(
+        'VALIDATION_ERROR',
+        parsedBody.error.issues[0]?.message || 'Invalid storefront payload',
+        400
+      );
+    }
     const {
       name,
       description,
@@ -218,9 +238,9 @@ export async function PATCH(request: NextRequest) {
       estimated_prep_time_min,
       estimated_prep_time_max,
       accepting_orders,
-    } = body;
+    } = parsedBody.data;
 
-    if ('is_active' in body) {
+    if (body && typeof body === 'object' && 'is_active' in body) {
       return errorResponse(
         'FORBIDDEN_FIELD',
         'Storefront publication is governed by ops-admin. Chefs cannot change marketplace visibility.'

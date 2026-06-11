@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Card } from '@ridendine/ui';
 import type { Driver } from '@ridendine/db';
+import { formatCurrencyFromCents } from '@ridendine/utils';
 import { NotificationPreferences } from '@/components/settings/notification-preferences';
 
 type Props = {
@@ -25,13 +26,6 @@ function normalizeCurrency(currency: string): string {
   }
 }
 
-function formatMoney(amount: number, currency: string) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    currencyDisplay: 'symbol',
-  }).format(amount);
-}
 
 function SummaryCard({
   label,
@@ -60,7 +54,9 @@ export default function SettingsClient({ driver, balanceCents, currency = 'CAD' 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const balance = formatMoney(balanceCents / 100, displayCurrency);
+  // balanceCents is a ledger amount in cents. en-US locale is intentional
+  // (renders "CA$" for CAD).
+  const balance = formatCurrencyFromCents(balanceCents, displayCurrency, 'en-US');
   const payoutState = enabled ? 'Available' : 'Off';
 
   async function saveToggle(next: boolean) {

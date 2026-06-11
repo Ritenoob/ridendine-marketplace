@@ -125,20 +125,24 @@ export async function getOrdersByCustomer(
 export async function getOrdersByStorefront(
   client: SupabaseClient,
   storefrontId: string,
-  options: { status?: string; limit?: number } = {}
+  options: { status?: string; page?: number; limit?: number } = {}
 ): Promise<Order[]> {
+  // Always bound the result set — PostgREST silently truncates unbounded
+  // queries at 1000 rows, so an explicit limit + range keeps paging honest.
+  const page = options.page ?? 1;
+  const limit = options.limit ?? 500;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
   let query = client
     .from('orders')
     .select('*')
     .eq('storefront_id', storefrontId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(from, to);
 
   if (options.status) {
     query = query.eq('status', options.status);
-  }
-
-  if (options.limit) {
-    query = query.limit(options.limit);
   }
 
   const { data, error } = await query;
@@ -185,7 +189,7 @@ export async function listOpsOrders(
 
   if (countError) throw countError;
   if (error) throw error;
-  return { items: (data ?? []) as unknown as OpsOrderListItem[], total: count ?? 0 };
+  return { items: data ?? [], total: count ?? 0 };
 }
 
 export async function getOpsOrderDetail(
@@ -264,6 +268,20 @@ export class InvalidOrderTransitionError extends Error {
   }
 }
 
+/**
+ * Thrown when the order's status changed between the transition validation
+ * read and the conditional UPDATE (lost the optimistic-concurrency race).
+ * Callers can catch this specifically and retry or surface a conflict.
+ */
+export class OrderTransitionConflictError extends Error {
+  constructor(orderId: string, expectedStatus: string, attemptedStatus: string) {
+    super(
+      `Order ${orderId} status changed concurrently: expected '${expectedStatus}' while transitioning to '${attemptedStatus}'`
+    );
+    this.name = 'OrderTransitionConflictError';
+  }
+}
+
 const VALID_ORDER_TRANSITIONS: Record<string, string[]> = {
   pending:          ['accepted', 'rejected', 'cancelled'],
   scheduled:        ['accepted', 'cancelled'],
@@ -310,15 +328,24 @@ export async function updateOrderStatus(
     updates.actual_ready_at = new Date().toISOString();
   }
 
+  // Optimistic concurrency: only update if the status is still the one we
+  // validated against (closes the read-validate-update TOCTOU race).
   const { data, error } = await client
     .from('orders')
     .update(updates)
     .eq('id', id)
-    .select()
-    .single();
+    .eq('status', currentStatus)
+    .select();
 
   if (error) throw error;
-  return data;
+
+  const updated = (data as Order[] | null)?.[0];
+  if (!updated) {
+    // 0 affected rows — someone else transitioned the order first.
+    throw new OrderTransitionConflictError(id, currentStatus, status);
+  }
+
+  return updated;
 }
 
 export async function getActiveOrdersForChef(

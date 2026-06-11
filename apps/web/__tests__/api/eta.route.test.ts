@@ -5,9 +5,23 @@
 import type { PreOrderEta } from '@ridendine/routing';
 
 const mockEstimatePreOrder = jest.fn<Promise<PreOrderEta>, [string, string]>();
+const mockGetCustomerActorContext = jest.fn();
+const mockAddressMaybeSingle = jest.fn();
 
 jest.mock('@ridendine/db', () => ({
-  createAdminClient: jest.fn(() => ({})),
+  createAdminClient: jest.fn(() => ({
+    from: (table: string) => {
+      if (table === 'customer_addresses') {
+        const chain = {
+          select: () => chain,
+          eq: () => chain,
+          maybeSingle: () => mockAddressMaybeSingle(),
+        };
+        return chain;
+      }
+      return {};
+    },
+  })),
 }));
 
 jest.mock('@ridendine/routing', () => ({
@@ -17,10 +31,19 @@ jest.mock('@ridendine/routing', () => ({
   })),
 }));
 
+jest.mock('@/lib/engine', () => ({
+  getCustomerActorContext: () => mockGetCustomerActorContext(),
+}));
+
 describe('GET /api/eta', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
+    mockGetCustomerActorContext.mockResolvedValue({
+      customerId: 'cust-1',
+      actor: { userId: 'user-1', role: 'customer', entityId: 'cust-1' },
+    });
+    mockAddressMaybeSingle.mockResolvedValue({ data: { id: 'addr1' }, error: null });
   });
 
   it('returns 400 when storefrontId is missing', async () => {
@@ -41,6 +64,32 @@ describe('GET /api/eta', () => {
 
     expect(response.status).toBe(400);
     expect(body.error).toBeDefined();
+  });
+
+  it('returns 401 when there is no authenticated customer session', async () => {
+    mockGetCustomerActorContext.mockResolvedValue(null);
+
+    const { GET } = await import('../../src/app/api/eta/route');
+    const req = new Request('http://localhost/api/eta?storefrontId=sf1&addressId=addr1');
+    const response = await GET(req);
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.error).toBeDefined();
+    expect(mockEstimatePreOrder).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 when the address does not belong to the caller', async () => {
+    mockAddressMaybeSingle.mockResolvedValue({ data: null, error: null });
+
+    const { GET } = await import('../../src/app/api/eta/route');
+    const req = new Request('http://localhost/api/eta?storefrontId=sf1&addressId=someone-elses');
+    const response = await GET(req);
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBeDefined();
+    expect(mockEstimatePreOrder).not.toHaveBeenCalled();
   });
 
   it('returns ETA data when both params are provided', async () => {

@@ -7,12 +7,14 @@ import {
 } from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { notFound } from 'next/navigation';
+import { formatCurrency } from '@ridendine/utils';
 import { CustomerActions } from './customer-actions';
 
 export const dynamic = 'force-dynamic';
 
+// Customer spend / order totals are dollars.
 function formatMoney(value: number | null | undefined) {
-  return `$${(value ?? 0).toFixed(2)}`;
+  return formatCurrency(value ?? 0);
 }
 
 async function getCustomerPageData(customerId: string) {

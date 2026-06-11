@@ -136,7 +136,7 @@ export async function listOpsCustomers(
 
   if (countError) throw countError;
   if (error) throw error;
-  return { items: (data ?? []) as unknown as OpsCustomerListItem[], total: count ?? 0 };
+  return { items: data ?? [], total: count ?? 0 };
 }
 
 export async function getOpsCustomerDetail(

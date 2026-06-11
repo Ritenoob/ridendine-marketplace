@@ -130,10 +130,12 @@ export async function incrementPromoCodeUsage(
   });
 
   if (error) {
+    // NOTE: supabase-js has no `.raw()`; this legacy fallback is preserved
+    // as-is (it throws if ever reached) rather than silently changing behavior.
     const { error: updateError } = await client
       .from('promo_codes')
       .update({
-        usage_count: (client as any).raw('usage_count + 1'),
+        usage_count: (client as unknown as { raw: (expr: string) => number }).raw('usage_count + 1'),
         updated_at: new Date().toISOString(),
       })
       .eq('id', promoId);

@@ -1,6 +1,9 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getEngine, getOpsActorContext, hasRequiredRole } from '@/lib/engine';
 import { KpiTile, PageHeader, EmptyState } from '@ridendine/ui';
+// Finance summary/liability amounts are dollars; ledger rows are cents
+// (formatted via formatCurrencyFromCents).
+import { formatCurrency, formatCurrencyFromCents } from '@ridendine/utils';
 import { FinanceActions } from './finance-actions';
 import { PayoutActions } from './payout-actions';
 import { FinanceSubnav } from './_components/FinanceSubnav';
@@ -8,10 +11,6 @@ import { FinanceAccessDenied } from './_components/FinanceAccessDenied';
 import { FINANCE_PAGE_ROLES } from './_lib/roles';
 
 export const dynamic = 'force-dynamic';
-
-function formatCurrency(amount: number): string {
-  return `$${amount.toFixed(2)}`;
-}
 
 type LedgerEntry = {
   id: string;
@@ -93,7 +92,7 @@ function LedgerTable({ rows }: { rows: LedgerEntry[] }) {
               </td>
               <td className="py-3 pr-4 text-xs text-textSubtle">{row.description ?? 'No description'}</td>
               <td className="py-3 text-right font-medium text-success">
-                {formatCurrency(row.amountCents / 100)}
+                {formatCurrencyFromCents(row.amountCents)}
               </td>
             </tr>
           ))}

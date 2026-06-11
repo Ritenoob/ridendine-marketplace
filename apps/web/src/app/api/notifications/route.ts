@@ -1,9 +1,10 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@ridendine/db';
+import { createNotificationSchema, updateNotificationSchema } from '@ridendine/validation';
 import { getCustomerActorContext } from '@ridendine/engine/server';
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const cookieStore = await cookies();
     const supabase = createServerClient(cookieStore);
@@ -32,7 +33,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     const ctx = await getCustomerActorContext();
     if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -46,7 +47,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, message, type, action_url, user_id } = body;
+    const parsed = createNotificationSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Invalid notification payload' },
+        { status: 400 }
+      );
+    }
+    const { title, message, type, action_url, user_id } = parsed.data;
 
     // Allow creating notifications for self or (if admin) for others
     const targetUserId = user_id || user.id;
@@ -90,7 +98,14 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { notification_id, read } = body;
+    const parsed = updateNotificationSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Invalid notification payload' },
+        { status: 400 }
+      );
+    }
+    const { notification_id, read } = parsed.data;
 
     if (notification_id) {
       // Mark specific notification as read

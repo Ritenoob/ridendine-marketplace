@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import type { Driver, Delivery } from '@ridendine/db';
 import type { DriverOperationsSummary, DriverShiftOperationsSummary } from '@ridendine/types';
+import { DELIVERY_STATUS_LABELS } from '@ridendine/ui';
+import { formatCurrency } from '@ridendine/utils';
 import { OfferAlert } from '@/components/offer-alert';
 import { useLocationTracker } from '@/hooks/use-location-tracker';
 
@@ -24,16 +26,6 @@ type DashboardOffer = {
   orderNumber: string | null;
   storefrontName: string | null;
   expiresAt: string | null;
-};
-
-const DELIVERY_STATUS_LABELS: Record<string, string> = {
-  assigned: 'Assigned',
-  accepted: 'Accepted',
-  en_route_to_pickup: 'En route to pickup',
-  arrived_at_pickup: 'At restaurant',
-  picked_up: 'Picked up',
-  en_route_to_dropoff: 'En route to customer',
-  arrived_at_dropoff: 'At customer',
 };
 
 function formatDeliveryStatus(status?: string | null) {
@@ -165,9 +157,11 @@ function parseOffersPayload(json: unknown): DashboardOffer[] {
     .filter((offer): offer is DashboardOffer => offer !== null);
 }
 
+// Driver earnings/payout amounts from the earnings + offers APIs are dollars
+// (deliveries.driver_payout); only fields explicitly suffixed *Cents are cents.
 function formatMoney(value: number | null | undefined) {
   if (typeof value !== 'number' || !Number.isFinite(value)) return 'Not available';
-  return `$${value.toFixed(2)}`;
+  return formatCurrency(value);
 }
 
 function formatDistance(value: number | null | undefined) {
@@ -300,6 +294,33 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
           }
         : current
     );
+  }, []);
+
+  const refreshOffers = useCallback(async () => {
+    const requestId = dashboardRequestIdRef.current + 1;
+    dashboardRequestIdRef.current = requestId;
+
+    try {
+      const offersResponse = await fetch('/api/offers');
+      if (requestId !== dashboardRequestIdRef.current) return;
+
+      if (!offersResponse.ok) {
+        setPendingOffers([]);
+        setOffersError('Offer queue unavailable');
+        return;
+      }
+
+      const offersJson = await offersResponse.json();
+      if (requestId !== dashboardRequestIdRef.current) return;
+
+      setPendingOffers(parseOffersPayload(offersJson));
+      setOffersError(null);
+    } catch {
+      if (requestId === dashboardRequestIdRef.current) {
+        setPendingOffers([]);
+        setOffersError('Offer queue unavailable');
+      }
+    }
   }, []);
 
   const refreshReadiness = useCallback(async (
@@ -440,6 +461,16 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
     }
     hydrateDashboard();
   }, [applyReadinessSummary, applyShiftSummary]);
+
+  // Keep the pending-offer queue fresh: the initial hydrate only runs once on
+  // mount, so poll the durable offer queue periodically. Stale responses are
+  // discarded via the shared request-id pattern inside refreshOffers.
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void refreshOffers();
+    }, 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [refreshOffers]);
 
   useEffect(() => {
     setNowMs(Date.now());
@@ -595,7 +626,8 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
               </span>
             </div>
 
-            {currentDelivery && (isOnShift || isOnline) && (
+            {/* Always show a live delivery, even if shift/presence state says offline */}
+            {currentDelivery && (
               <div className="mt-5 rounded-2xl border-2 border-primary bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-base font-bold text-text">Active Delivery</h3>
@@ -632,7 +664,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
                   <div className="text-right">
                     <p className="text-xs text-textMuted">Earnings</p>
                     <p className="text-xl font-bold text-success">
-                      ${Number(currentDelivery.driver_payout).toFixed(2)}
+                      {formatCurrency(Number(currentDelivery.driver_payout))}
                     </p>
                   </div>
                 </div>
@@ -731,7 +763,7 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
               <p className="mt-1 text-sm font-semibold text-text">
                 {activeDeliveryCount === 0
                   ? 'None active'
-                  : `${activeDeliveryCount} active delivery${activeDeliveryCount === 1 ? '' : 'ies'}`}
+                  : `${activeDeliveryCount} active ${activeDeliveryCount === 1 ? 'delivery' : 'deliveries'}`}
               </p>
             </div>
           </div>

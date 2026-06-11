@@ -86,6 +86,78 @@ function deriveIdempotencyKey(
   }).slice(0, 64);
 }
 
+const IDEMPOTENCY_COLUMNS =
+  'id, request_hash, status, response_payload, order_id, payment_intent_id, created_at, updated_at';
+
+/**
+ * A 'processing' row older than this window is considered abandoned (e.g. the
+ * server crashed mid-checkout before flipping it to completed/failed) and may
+ * be reclaimed by a retry. Genuine concurrent duplicates always have a fresh
+ * timestamp and still get IDEMPOTENCY_CONFLICT.
+ */
+const IDEMPOTENCY_PROCESSING_STALE_MS = 2 * 60 * 1000;
+
+interface IdempotencyRow {
+  id: string;
+  request_hash: string;
+  status: 'processing' | 'completed' | 'failed';
+  response_payload: unknown;
+  order_id: string | null;
+  payment_intent_id: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+function isStaleProcessingRow(row: IdempotencyRow): boolean {
+  if (row.status !== 'processing') return false;
+  const claimedAt = row.updated_at ?? row.created_at;
+  // Without a timestamp we cannot prove staleness — treat as an active claim.
+  if (!claimedAt) return false;
+  return Date.now() - new Date(claimedAt).getTime() > IDEMPOTENCY_PROCESSING_STALE_MS;
+}
+
+/**
+ * Atomically re-claim a stale 'processing' row. The conditional update
+ * (status still 'processing' AND still older than the staleness cutoff)
+ * ensures only one concurrent retry wins the reclaim.
+ */
+async function reclaimStaleIdempotencyRow(
+  adminClient: SupabaseClient,
+  rowId: string
+): Promise<IdempotencyRow | null> {
+  const staleBefore = new Date(Date.now() - IDEMPOTENCY_PROCESSING_STALE_MS).toISOString();
+  const result = await (adminClient as any)
+    .from('checkout_idempotency_keys')
+    .update({
+      status: 'processing',
+      last_error: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', rowId)
+    .eq('status', 'processing')
+    .lt('updated_at', staleBefore)
+    .select(IDEMPOTENCY_COLUMNS)
+    .maybeSingle();
+
+  if (result.error) return null;
+  return (result.data as IdempotencyRow) ?? null;
+}
+
+async function markIdempotencyRecordFailed(
+  adminClient: SupabaseClient,
+  rowId: string,
+  lastError: string
+): Promise<void> {
+  await (adminClient as any)
+    .from('checkout_idempotency_keys')
+    .update({
+      status: 'failed',
+      last_error: lastError.slice(0, 500),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', rowId);
+}
+
 async function upsertCheckoutIdempotencyRecord(
   adminClient: SupabaseClient,
   params: {
@@ -98,14 +170,14 @@ async function upsertCheckoutIdempotencyRecord(
 
   const existingResult = await idemClient
     .from('checkout_idempotency_keys')
-    .select('id, request_hash, status, response_payload, order_id, payment_intent_id')
+    .select(IDEMPOTENCY_COLUMNS)
     .eq('customer_id', params.customerId)
     .eq('idempotency_key', params.idempotencyKey)
     .maybeSingle();
 
   const existing = existingResult.data;
   if (existing) {
-    return { row: existing, created: false };
+    return { row: existing as IdempotencyRow, created: false };
   }
 
   const insertResult = await idemClient
@@ -116,24 +188,40 @@ async function upsertCheckoutIdempotencyRecord(
       request_hash: params.requestHash,
       status: 'processing',
     })
-    .select('id, request_hash, status, response_payload, order_id, payment_intent_id')
+    .select(IDEMPOTENCY_COLUMNS)
     .single();
 
   if (insertResult.error?.code === '23505') {
     const retryResult = await idemClient
       .from('checkout_idempotency_keys')
-      .select('id, request_hash, status, response_payload, order_id, payment_intent_id')
+      .select(IDEMPOTENCY_COLUMNS)
       .eq('customer_id', params.customerId)
       .eq('idempotency_key', params.idempotencyKey)
       .maybeSingle();
-    return { row: retryResult.data, created: false };
+    return { row: retryResult.data as IdempotencyRow | null, created: false };
   }
 
   if (insertResult.error) {
     throw insertResult.error;
   }
 
-  return { row: insertResult.data, created: true };
+  return { row: insertResult.data as IdempotencyRow, created: true };
+}
+
+/**
+ * Non-throwing checkout failure that still must mark the idempotency row
+ * 'failed' (and cancel any created order) before responding. Thrown so every
+ * failure path funnels through the single catch-side cleanup.
+ */
+class CheckoutFailure extends Error {
+  constructor(
+    public readonly code: string,
+    public readonly publicMessage: string,
+    public readonly status: number = 400
+  ) {
+    super(publicMessage);
+    this.name = 'CheckoutFailure';
+  }
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -290,7 +378,16 @@ export async function POST(request: Request): Promise<Response> {
       return successResponse(idemRecord.row.response_payload as CheckoutResponsePayload);
     }
     if (idemRecord.row.status === 'processing' && !idemRecord.created) {
-      return errorResponse('IDEMPOTENCY_CONFLICT', 'Checkout request already in progress', 409);
+      // Crash recovery: a 'processing' row abandoned past the staleness window
+      // (server died before flipping it to completed/failed) can be reclaimed.
+      // Fresh rows are genuine concurrent duplicates and still conflict.
+      const reclaimed = isStaleProcessingRow(idemRecord.row)
+        ? await reclaimStaleIdempotencyRow(adminClient, idemRecord.row.id)
+        : null;
+      if (!reclaimed) {
+        return errorResponse('IDEMPOTENCY_CONFLICT', 'Checkout request already in progress', 409);
+      }
+      idemRecord.row = reclaimed;
     }
 
     assertStripeConfigured();
@@ -312,7 +409,13 @@ export async function POST(request: Request): Promise<Response> {
       );
 
       if (!orderResult.success) {
-        return errorResponse(orderResult.error!.code, orderResult.error!.message);
+        // Thrown (not returned) so the catch below marks the idempotency row
+        // 'failed' — otherwise it stays 'processing' and retries 409 forever.
+        throw new CheckoutFailure(
+          orderResult.error!.code,
+          orderResult.error!.message,
+          400
+        );
       }
 
       const order = orderResult.data!;
@@ -340,7 +443,9 @@ export async function POST(request: Request): Promise<Response> {
         .eq('id', order.id);
 
       if (syncTotalError) {
-        return errorResponse('INTERNAL_ERROR', 'Failed to sync order record', 500);
+        // Thrown so the catch below cancels the just-created order (otherwise
+        // orphaned) and marks the idempotency row 'failed'.
+        throw new CheckoutFailure('INTERNAL_ERROR', 'Failed to sync order record', 500);
       }
 
       // NOTE: Delivery record is created by dispatch engine when chef marks order ready
@@ -423,27 +528,38 @@ export async function POST(request: Request): Promise<Response> {
         .eq('id', idemRecord.row.id);
 
       return successResponse(responsePayload);
-    } catch (paymentError) {
+    } catch (checkoutError) {
+      // Single cleanup path for EVERY failure after the idempotency claim:
+      // cancel any created order, then mark the row 'failed' so the customer's
+      // retry is not stuck behind a permanent 'processing' 409.
       if (createdOrderId) {
-        await engine.orders.cancelOrder({
-          orderId: createdOrderId,
-          actorId: customerContext.actor.userId,
-          actorType: customerContext.actor.role,
-          actorRole: customerContext.actor.role,
-          reason: 'payment_failed',
-          notes: 'Checkout payment initialization failed',
-          actor: customerContext.actor,
-        });
+        try {
+          await engine.orders.cancelOrder({
+            orderId: createdOrderId,
+            actorId: customerContext.actor.userId,
+            actorType: customerContext.actor.role,
+            actorRole: customerContext.actor.role,
+            reason: 'payment_failed',
+            notes:
+              checkoutError instanceof CheckoutFailure
+                ? `Checkout failed after order creation: ${checkoutError.code}`
+                : 'Checkout payment initialization failed',
+            actor: customerContext.actor,
+          });
+        } catch (cancelError) {
+          // Never let order-cancel cleanup prevent releasing the idempotency row.
+          console.error('Checkout cleanup: failed to cancel orphan order', cancelError);
+        }
       }
-      await (adminClient as any)
-        .from('checkout_idempotency_keys')
-        .update({
-          status: 'failed',
-          last_error: paymentError instanceof Error ? paymentError.message.slice(0, 500) : 'payment_failed',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', idemRecord.row.id);
+      await markIdempotencyRecordFailed(
+        adminClient,
+        idemRecord.row.id,
+        checkoutError instanceof Error ? checkoutError.message : 'payment_failed'
+      );
 
+      if (checkoutError instanceof CheckoutFailure) {
+        return errorResponse(checkoutError.code, checkoutError.publicMessage, checkoutError.status);
+      }
       return errorResponse('PAYMENT_FAILED', 'Unable to initialize payment for checkout', 500);
     }
   } catch (error) {

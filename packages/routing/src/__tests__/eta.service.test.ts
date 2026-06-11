@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { EtaService } from '../eta.service';
+import { encodePolyline } from '../polyline';
 import type { RoutingProvider } from '../provider';
 import type { Point, Route } from '../types';
 
@@ -275,7 +276,9 @@ describe('EtaService', () => {
     } as unknown as SupabaseClient;
 
     const eta = new EtaService(provider, db);
+    const before = Date.now();
     await eta.computeInitial('o1');
+    const after = Date.now();
 
     expect(updates[0]).toMatchObject({
       route_to_dropoff_polyline: 'qqq',
@@ -284,6 +287,13 @@ describe('EtaService', () => {
       routing_provider: 'osrm',
     });
     expect(updates[0]?.eta_dropoff_at).toBeDefined();
+
+    // Initial customer ETA must include prep time (default 20 min) + drive time
+    // (600 s), not just the drive leg.
+    const etaMs = new Date(updates[0]!.eta_dropoff_at as string).getTime();
+    const expectedSeconds = 20 * 60 + 600;
+    expect(etaMs).toBeGreaterThanOrEqual(before + (expectedSeconds - 2) * 1000);
+    expect(etaMs).toBeLessThanOrEqual(after + (expectedSeconds + 2) * 1000);
   });
 
   it('rankDrivers sorts by ascending seconds', async () => {
@@ -321,5 +331,134 @@ describe('EtaService', () => {
       { driverId: 'c', point: { lat: 3, lng: 3 } },
     ]);
     expect(ranked.map((r) => r.driverId).join(',')).toBe('b,a,c');
+  });
+
+  it('rankDrivers pushes unreachable (Infinity) candidates to the end', async () => {
+    const provider: RoutingProvider = {
+      id: 'osrm',
+      async route() {
+        throw new Error('unused');
+      },
+      async matrix(sources: Point[]) {
+        return {
+          sources: [...sources],
+          targets: [{ lat: 0, lng: 0 }],
+          durations: [[Number.POSITIVE_INFINITY], [50]],
+        };
+      },
+    };
+
+    const db = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: { pickup_lat: 43, pickup_lng: -79 },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    } as unknown as SupabaseClient;
+
+    const eta = new EtaService(provider, db);
+    const ranked = await eta.rankDrivers('d1', [
+      { driverId: 'unreachable', point: { lat: 1, lng: 1 } },
+      { driverId: 'reachable', point: { lat: 2, lng: 2 } },
+    ]);
+    expect(ranked[0]!.driverId).toBe('reachable');
+    expect(ranked[0]!.seconds).toBe(50);
+    expect(ranked[1]!.driverId).toBe('unreachable');
+    expect(ranked[1]!.seconds).toBe(Number.MAX_SAFE_INTEGER);
+  });
+});
+
+describe('EtaService.refreshFromDriverPing', () => {
+  // Straight north-south route so progress percentages are exact.
+  const routePoints = [
+    { lat: 0, lng: 0 },
+    { lat: 0.1, lng: 0 },
+  ];
+  const poly = encodePolyline(routePoints);
+
+  function makePingDb(rows: Array<Record<string, unknown>>) {
+    let selectIdx = 0;
+    const updates: Record<string, unknown>[] = [];
+    const db = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({ data: rows[Math.min(selectIdx++, rows.length - 1)], error: null }),
+          }),
+        }),
+        update: (payload: Record<string, unknown>) => {
+          updates.push(payload);
+          return { eq: () => Promise.resolve({ error: null }) };
+        },
+      }),
+    } as unknown as SupabaseClient;
+    return { db, updates };
+  }
+
+  const noopProvider: RoutingProvider = {
+    id: 'osrm',
+    async route() {
+      throw new Error('unused');
+    },
+    async matrix() {
+      throw new Error('unused');
+    },
+  };
+
+  it('does not collapse the ETA across successive pings (remaining = original × (1 − p))', async () => {
+    const originalSeconds = 600;
+
+    // Ping 1: driver at 50% of the route; stored row is the original baseline.
+    const { db: db1, updates: updates1 } = makePingDb([
+      { route_to_dropoff_polyline: poly, route_to_dropoff_seconds: originalSeconds, route_progress_pct: 0 },
+    ]);
+    const eta1 = new EtaService(noopProvider, db1);
+    const r1 = await eta1.refreshFromDriverPing('d1', { lat: 0.05, lng: 0 });
+
+    expect(r1.progressPct).toBeCloseTo(50, 0);
+    expect(Math.abs(r1.remainingSeconds - 300)).toBeLessThanOrEqual(3);
+    expect(updates1[0]?.route_to_dropoff_seconds).toBe(r1.remainingSeconds);
+
+    // Ping 2: driver at 75% of the route; the DB row now holds the *remaining*
+    // seconds and progress written by ping 1. Remaining must be 600 × 0.25 = 150,
+    // NOT 600 × 0.5 × 0.25 = 75 (the old multiplicative-decay bug).
+    const { db: db2 } = makePingDb([
+      {
+        route_to_dropoff_polyline: poly,
+        route_to_dropoff_seconds: r1.remainingSeconds,
+        route_progress_pct: r1.progressPct,
+      },
+    ]);
+    const eta2 = new EtaService(noopProvider, db2);
+    const r2 = await eta2.refreshFromDriverPing('d1', { lat: 0.075, lng: 0 });
+
+    expect(r2.progressPct).toBeCloseTo(75, 0);
+    expect(Math.abs(r2.remainingSeconds - 150)).toBeLessThanOrEqual(5);
+    // Regression guard: the buggy multiplicative decay produced ~75 s here.
+    expect(r2.remainingSeconds).toBeGreaterThan(100);
+  });
+
+  it('repeated pings from the same position do not decay the ETA', async () => {
+    const { db, updates } = makePingDb([
+      { route_to_dropoff_polyline: poly, route_to_dropoff_seconds: 600, route_progress_pct: 0 },
+      { route_to_dropoff_polyline: poly, route_to_dropoff_seconds: 300, route_progress_pct: 50 },
+      { route_to_dropoff_polyline: poly, route_to_dropoff_seconds: 300, route_progress_pct: 50 },
+    ]);
+    const eta = new EtaService(noopProvider, db);
+
+    const pos = { lat: 0.05, lng: 0 };
+    const r1 = await eta.refreshFromDriverPing('d1', pos);
+    const r2 = await eta.refreshFromDriverPing('d1', pos);
+    const r3 = await eta.refreshFromDriverPing('d1', pos);
+
+    expect(Math.abs(r1.remainingSeconds - 300)).toBeLessThanOrEqual(3);
+    expect(Math.abs(r2.remainingSeconds - 300)).toBeLessThanOrEqual(3);
+    expect(Math.abs(r3.remainingSeconds - 300)).toBeLessThanOrEqual(3);
+    expect(updates.length).toBe(3);
   });
 });

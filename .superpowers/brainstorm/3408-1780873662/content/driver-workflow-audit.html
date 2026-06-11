@@ -1,0 +1,60 @@
+<h2>Driver App Review: Current Workflow and Upgrade Lanes</h2>
+<p class="subtitle">This visual maps what the Driver app already has, then highlights the operational areas that need stronger tooling.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Current Driver Flow</div>
+  <div class="mockup-body">
+    <div style="display:grid;grid-template-columns:repeat(7,minmax(100px,1fr));gap:10px;align-items:stretch">
+      <div class="placeholder" style="border-left:4px solid #64748b">Login<br><small>auth/login</small></div>
+      <div class="placeholder" style="border-left:4px solid #f97316">Online toggle<br><small>presence</small></div>
+      <div class="placeholder" style="border-left:4px solid #f97316">Offer alert<br><small>accept/decline</small></div>
+      <div class="placeholder" style="border-left:4px solid #22c55e">Pickup route<br><small>maps + status</small></div>
+      <div class="placeholder" style="border-left:4px solid #22c55e">Pickup proof<br><small>photo upload</small></div>
+      <div class="placeholder" style="border-left:4px solid #22c55e">Dropoff route<br><small>tracking + ETA</small></div>
+      <div class="placeholder" style="border-left:4px solid #22c55e">Complete<br><small>photo/signature</small></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Upgrade Lanes</h3>
+  <div class="options" data-multiselect>
+    <div class="option" data-choice="shift" onclick="toggleSelect(this)">
+      <div class="letter">1</div>
+      <div class="content">
+        <h3>Shift Readiness</h3>
+        <p>Make online/offline smarter: location permission, payout status, approval, active delivery warnings, safety status, and availability confidence.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="offers" onclick="toggleSelect(this)">
+      <div class="letter">2</div>
+      <div class="content">
+        <h3>Offer Decision Support</h3>
+        <p>Show pickup/dropoff distance, payout, ETA, countdown, restaurant name, route risk, and clear accept/decline actions.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="workflow" onclick="toggleSelect(this)">
+      <div class="letter">3</div>
+      <div class="content">
+        <h3>Delivery Workflow</h3>
+        <p>Turn the delivery detail into a task checklist with proof, contact, instructions, navigation, issue reporting, and next-step certainty.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="earnings" onclick="toggleSelect(this)">
+      <div class="letter">4</div>
+      <div class="content">
+        <h3>Earnings and Payout Clarity</h3>
+        <p>Give drivers understandable pay breakdowns, weekly payout timing, instant payout status, tips, bonuses, and adjustments.</p>
+      </div>
+    </div>
+    <div class="option" data-choice="ops" onclick="toggleSelect(this)">
+      <div class="letter">5</div>
+      <div class="content">
+        <h3>Ops Connectivity</h3>
+        <p>Make driver issues, offline risk, location health, ETA drift, and support notes visible to Ops with a clean feedback loop.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle">Click any lanes you think should be first priority. I will keep reviewing the code in parallel and turn this into a phased plan.</p>

@@ -34,6 +34,7 @@ interface MarkEligibleInput {
 
 interface MarkProcessingInput {
   payoutId: string;
+  payeeType: 'chef' | 'driver';
   actorId: string;
 }
 
@@ -68,6 +69,21 @@ function payoutTable(payeeType: 'chef' | 'driver'): string {
   return payeeType === 'chef' ? 'chef_payouts' : 'driver_payouts';
 }
 
+/** orders.* amounts are DOLLAR floats — convert to integer cents before any percentage math. */
+function toCents(dollars: number): number {
+  return Math.round((dollars ?? 0) * 100);
+}
+
+/** Platform fee in cents from a subtotal in cents (mirrors ledger.service.ts). */
+function platformFeeCents(subtotalCents: number): number {
+  return Math.round((subtotalCents * PLATFORM_FEE_PERCENT) / 100);
+}
+
+/** Driver payout in cents from a delivery fee in cents (mirrors ledger.service.ts). */
+function driverPayoutCents(deliveryFeeCents: number): number {
+  return Math.round((deliveryFeeCents * DRIVER_PAYOUT_PERCENT) / 100);
+}
+
 // ---------------------------------------------------------------------------
 // PayoutEngine class
 // ---------------------------------------------------------------------------
@@ -85,11 +101,14 @@ export class PayoutEngine {
 
   async calculateChefPayout(input: { orderId: string }): Promise<ChefPayoutBreakdown> {
     const order = await this.loadOrder(input.orderId);
-    const platformFee = Math.round(order.subtotal * PLATFORM_FEE_PERCENT / 100);
+    // Percentage math in integer cents (orders store dollar floats); results
+    // are returned in dollars with cent precision — NOT rounded to whole dollars.
+    const subtotalCents = toCents(order.subtotal);
+    const feeCents = platformFeeCents(subtotalCents);
     return {
       subtotal: order.subtotal,
-      platformFee,
-      chefGross: order.subtotal - platformFee,
+      platformFee: feeCents / 100,
+      chefGross: (subtotalCents - feeCents) / 100,
     };
   }
 
@@ -99,10 +118,9 @@ export class PayoutEngine {
 
   async calculateDriverEarnings(input: { orderId: string }): Promise<DriverEarningsBreakdown> {
     const order = await this.loadOrder(input.orderId);
-    const driverPayout = Math.round(order.delivery_fee * DRIVER_PAYOUT_PERCENT / 100);
     return {
       deliveryFee: order.delivery_fee,
-      driverPayout,
+      driverPayout: driverPayoutCents(toCents(order.delivery_fee)) / 100,
       tip: order.tip ?? 0,
     };
   }
@@ -136,25 +154,33 @@ export class PayoutEngine {
       return { success: false, error: 'Order has open exceptions blocking payout' };
     }
 
-    // Insert ledger entry
+    // Insert ledger entry — amount in cents (ledger convention; orders store dollars)
     const entryType = payeeType === 'chef' ? 'chef_payable' : 'driver_payable';
+    const amountCents =
+      payeeType === 'chef'
+        ? toCents(order.subtotal) - platformFeeCents(toCents(order.subtotal))
+        : driverPayoutCents(toCents(order.delivery_fee));
+
     const { data: entry, error: insertError } = await this.client
       .from('ledger_entries')
       .insert({
         order_id: orderId,
         entry_type: entryType,
+        amount_cents: amountCents,
         currency: 'CAD',
         entity_type: payeeType,
         entity_id: payeeId,
         description: `${payeeType === 'chef' ? 'Chef' : 'Driver'} payout eligible`,
         created_at: new Date().toISOString(),
-      });
+      })
+      .select('id')
+      .single();
 
     if (insertError) {
       return { success: false, error: insertError.message };
     }
 
-    const entryId = (entry as Record<string, unknown> | null)?.id as string ?? orderId;
+    const entryId = ((entry as Record<string, unknown> | null)?.id as string | undefined) ?? orderId;
     const actor = makeActor(actorId);
 
     // Audit
@@ -183,11 +209,11 @@ export class PayoutEngine {
   // -------------------------------------------------------------------------
 
   async markPayoutProcessing(input: MarkProcessingInput): Promise<{ success: boolean }> {
-    const { payoutId, actorId } = input;
+    const { payoutId, payeeType, actorId } = input;
     const actor = makeActor(actorId);
 
     await this.client
-      .from('chef_payouts')
+      .from(payoutTable(payeeType))
       .update({ status: 'processing', updated_at: new Date().toISOString() })
       .eq('id', payoutId);
 

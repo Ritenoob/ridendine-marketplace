@@ -26,6 +26,9 @@ jest.mock('next/link', () => {
 });
 
 jest.mock('@ridendine/ui', () => ({
+  // Keep real non-component exports (e.g. ORDER_STATUS_LABELS) while stubbing
+  // the components below.
+  ...jest.requireActual('@ridendine/ui'),
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
   ),

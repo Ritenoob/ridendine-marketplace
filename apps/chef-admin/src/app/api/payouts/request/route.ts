@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { payoutRequestSchema } from '@ridendine/validation';
 import { getChefActorContext, getEngine } from '@/lib/engine';
 
 export async function POST(request: Request) {
@@ -9,8 +10,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { amount } = body;
-    const amountCents = Math.round(Number(amount) * 100);
+    const parsed = payoutRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Minimum payout amount is $10' },
+        { status: 400 }
+      );
+    }
+    const amountCents = Math.round(parsed.data.amount * 100);
 
     if (!Number.isInteger(amountCents) || amountCents < 1000) {
       return NextResponse.json(

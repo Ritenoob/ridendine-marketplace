@@ -66,9 +66,7 @@ supabase/.temp/
 .vercel
 .env*.local
 
-.vercel
-.env*.local
-
-graphify-out/cache/
+# Graphify knowledge-graph output (generated; appears in several directories)
+**/graphify-out/
 
 .claude/settings.local.json

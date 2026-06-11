@@ -27,6 +27,12 @@ export interface DispatchScoringRules {
  * Score a driver for dispatch assignment priority.
  * Higher score = more suitable for the next delivery.
  *
+ * NOTE: This is NOT the dispatch-authoritative implementation. The engine's
+ * `calculateDriverAssignmentScore` (packages/engine) is the source of truth
+ * for actual dispatch decisions; this utility exists for display/diagnostic
+ * use (e.g. ops dashboards). If you change scoring behavior, change the
+ * engine implementation — do not let the two drift further apart.
+ *
  * Factors:
  * - Distance from pickup (closer = higher score, max 12pts/km)
  * - Workload penalty (-20 per active delivery)

@@ -7,6 +7,14 @@ export { cn } from './utils';
 export { ridendineTokens } from './tokens';
 export type { RidendineTokens } from './tokens';
 
+// Status display maps (single source of truth for status labels/badge classes)
+export {
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_BADGE_CLASSES,
+  ORDER_STATUS_BG_CLASSES,
+  DELIVERY_STATUS_LABELS,
+} from './status';
+
 // Brand assets
 export { Logo } from './assets/logo';
 export type { LogoProps } from './assets/logo';
@@ -23,8 +31,7 @@ export * from './components/error-state';
 export * from './components/modal';
 export { PasswordStrength } from './components/password-strength';
 export { AuthLayout } from './components/auth-layout';
-export { AddressInput } from './components/address-input';
-export { GlobalError, ErrorBoundary } from './components/error-boundary';
+export { ErrorBoundary } from './components/error-boundary';
 export * from './components/platform';
 export { KpiTile } from './components/kpi-tile';
 export { StatusBadge } from './components/status-badge';
@@ -37,14 +44,6 @@ export type { ToastOptions, ToastVariant } from './components/toast';
 export { LiveIndicator } from './components/live-indicator';
 export type { LiveIndicatorProps, LiveIndicatorStatus } from './components/live-indicator';
 
-// Layout shells — every app's chrome lives in one of these
-export { MarketingShell } from './layouts/marketing-shell';
-export type { MarketingShellProps, MarketingNavItem } from './layouts/marketing-shell';
-export { AppShell } from './layouts/app-shell';
-export type {
-  AppShellProps,
-  AppShellNavItem,
-  AppShellNavGroup,
-} from './layouts/app-shell';
-export { MobileShell } from './layouts/mobile-shell';
-export type { MobileShellProps, MobileTab } from './layouts/mobile-shell';
+// NOTE: the MarketingShell / AppShell / MobileShell layout shells and
+// AddressInput / GlobalError components were removed — no app ever adopted
+// them (each app builds its own chrome in src/app/layout.tsx).

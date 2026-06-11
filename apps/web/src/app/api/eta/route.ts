@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@ridendine/db';
 import { OsrmProvider, EtaService } from '@ridendine/routing';
+import { getCustomerActorContext } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,9 +19,28 @@ export async function GET(req: Request) {
   if (!storefrontId) return badRequest('storefrontId is required');
   if (!addressId) return badRequest('addressId is required');
 
+  // Address-based ETAs are only used by authenticated surfaces (checkout), and
+  // this handler uses the RLS-bypassing admin client — so require a customer
+  // session and verify the address belongs to the caller before computing.
+  const customerContext = await getCustomerActorContext();
+  if (!customerContext) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
+  const db = createAdminClient() as any;
+
+  const { data: address, error: addressError } = await db
+    .from('customer_addresses')
+    .select('id')
+    .eq('id', addressId)
+    .eq('customer_id', customerContext.customerId)
+    .maybeSingle();
+
+  if (addressError || !address) {
+    return NextResponse.json({ error: 'Address not found' }, { status: 404 });
+  }
+
   try {
-     
-    const db = createAdminClient() as any;
     const provider = new OsrmProvider();
     const service = new EtaService(provider, db);
 

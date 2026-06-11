@@ -43,7 +43,7 @@ async function listDriverSupply(
   rules?: PlatformRuleSet
 ): Promise<DriverSupplySnapshot[]> {
   const [driversResult, deliveriesResult, attemptsResult] = await Promise.all([
-    (client
+    client
       .from('drivers')
       .select(`
         id,
@@ -51,15 +51,15 @@ async function listDriverSupply(
         first_name,
         last_name,
         driver_presence(status, current_lat, current_lng)
-      `) as any),
-    (client
+      `),
+    client
       .from('deliveries')
       .select('driver_id, updated_at')
-      .in('status', ['assigned', 'accepted', 'en_route_to_pickup', 'arrived_at_pickup', 'picked_up', 'en_route_to_dropoff', 'arrived_at_dropoff']) as any),
-    (client
+      .in('status', ['assigned', 'accepted', 'en_route_to_pickup', 'arrived_at_pickup', 'picked_up', 'en_route_to_dropoff', 'arrived_at_dropoff']),
+    client
       .from('assignment_attempts')
       .select('driver_id, response')
-      .gte('offered_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) as any),
+      .gte('offered_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
   ]);
 
   if (driversResult.error) throw driversResult.error;
@@ -183,13 +183,13 @@ export async function getOpsDashboardReadModel(
   client: SupabaseClient
 ): Promise<OpsDashboardReadModel> {
   const [statsResult, driverPresenceResult, supportResult, deliveryResult] = await Promise.all([
-    (client.rpc('get_ops_dashboard_stats') as any),
-    (client.from('driver_presence').select('status') as any),
-    (client.from('support_tickets').select('status').not('status', 'in', '(resolved,closed)') as any),
-    (client
+    client.rpc('get_ops_dashboard_stats'),
+    client.from('driver_presence').select('status'),
+    client.from('support_tickets').select('status').not('status', 'in', '(resolved,closed)'),
+    client
       .from('deliveries')
       .select('status, escalated_to_ops')
-      .in('status', ['pending', 'assigned', 'accepted', 'en_route_to_pickup', 'arrived_at_pickup', 'picked_up', 'en_route_to_dropoff', 'arrived_at_dropoff']) as any),
+      .in('status', ['pending', 'assigned', 'accepted', 'en_route_to_pickup', 'arrived_at_pickup', 'picked_up', 'en_route_to_dropoff', 'arrived_at_dropoff']),
   ]);
 
   if (statsResult.error) throw statsResult.error;
@@ -197,7 +197,12 @@ export async function getOpsDashboardReadModel(
   if (supportResult.error) throw supportResult.error;
   if (deliveryResult.error) throw deliveryResult.error;
 
-  const stats = statsResult.data?.[0] ?? {};
+  // get_ops_dashboard_stats (migration 00008) returns pivoted
+  // (stat_name, stat_value) rows; fold them into a keyed record.
+  const stats: Partial<Record<string, number>> = {};
+  for (const row of statsResult.data ?? []) {
+    stats[row.stat_name] = Number(row.stat_value);
+  }
   const driverPresence = driverPresenceResult.data ?? [];
   const deliveries = deliveryResult.data ?? [];
   const driversOnline = driverPresence.filter((row: AnyRow) => row.status === 'online').length;
@@ -250,11 +255,20 @@ export async function getOpsDashboardReadModel(
   };
 }
 
+/**
+ * Upper bound on deliveries loaded into the dispatch command center read model.
+ * PostgREST silently truncates unbounded queries at 1000 rows; an explicit
+ * limit keeps the read model deterministic (oldest active deliveries first).
+ */
+const DISPATCH_COMMAND_CENTER_DELIVERY_LIMIT = 200;
+
 export async function getDispatchCommandCenterReadModel(
   client: SupabaseClient,
-  rules: PlatformRuleSet
+  rules: PlatformRuleSet,
+  options: { limit?: number } = {}
 ): Promise<DispatchCommandCenterReadModel> {
-  const deliveriesResult = await (client
+  const limit = options.limit ?? DISPATCH_COMMAND_CENTER_DELIVERY_LIMIT;
+  const deliveriesResult = await client
     .from('deliveries')
     .select(`
       *,
@@ -267,7 +281,8 @@ export async function getDispatchCommandCenterReadModel(
       driver:drivers(id,first_name,last_name,phone)
     `)
     .in('status', ['pending', 'assigned', 'accepted', 'en_route_to_pickup', 'arrived_at_pickup', 'picked_up', 'en_route_to_dropoff', 'arrived_at_dropoff'])
-    .order('created_at', { ascending: true }) as any);
+    .order('created_at', { ascending: true })
+    .limit(limit);
 
   if (deliveriesResult.error) throw deliveriesResult.error;
   const deliveries = (deliveriesResult.data ?? []) as AnyRow[];
@@ -275,26 +290,26 @@ export async function getDispatchCommandCenterReadModel(
 
   const [attemptsResult, exceptionsResult, globalDriverSupply, expiredOffersResult] = await Promise.all([
     deliveryIds.length
-      ? ((client
+      ? client
           .from('assignment_attempts')
           .select('*')
           .in('delivery_id', deliveryIds)
-          .order('offered_at', { ascending: false }) as any) as Promise<any>)
+          .order('offered_at', { ascending: false })
       : Promise.resolve({ data: [], error: null }),
     deliveryIds.length
-      ? ((client
+      ? client
           .from('order_exceptions')
           .select('delivery_id, exception_type, status, created_at')
           .in('delivery_id', deliveryIds)
           .in('status', ['open', 'acknowledged', 'in_progress', 'escalated'])
-          .order('created_at', { ascending: false }) as any) as Promise<any>)
+          .order('created_at', { ascending: false })
       : Promise.resolve({ data: [], error: null }),
     listDriverSupply(client, undefined, undefined, rules),
-    (client
+    client
       .from('assignment_attempts')
       .select('id')
       .eq('response', 'pending')
-      .lt('expires_at', new Date().toISOString()) as any),
+      .lt('expires_at', new Date().toISOString()),
   ]);
 
   if (attemptsResult.error) throw attemptsResult.error;
@@ -310,6 +325,7 @@ export async function getDispatchCommandCenterReadModel(
 
   const exceptionByDelivery = new Map<string, AnyRow>();
   for (const exception of exceptionsResult.data ?? []) {
+    if (!exception.delivery_id) continue;
     if (!exceptionByDelivery.has(exception.delivery_id)) {
       exceptionByDelivery.set(exception.delivery_id, exception);
     }
@@ -388,7 +404,7 @@ export async function getDeliveryInterventionDetailReadModel(
   client: SupabaseClient,
   deliveryId: string
 ): Promise<DeliveryInterventionDetail | null> {
-  const deliveryResult = await (client
+  const deliveryResult = await client
     .from('deliveries')
     .select(`
       *,
@@ -405,7 +421,7 @@ export async function getDeliveryInterventionDetailReadModel(
       driver:drivers(id,first_name,last_name,phone,status,driver_presence(status))
     `)
     .eq('id', deliveryId)
-    .single() as any);
+    .single();
 
   if (deliveryResult.error) {
     if (deliveryResult.error.code === 'PGRST116') return null;
@@ -415,13 +431,13 @@ export async function getDeliveryInterventionDetailReadModel(
   const delivery = deliveryResult.data as AnyRow;
   const [attemptsResult, exceptionsResult, notesResult, trackingResult, eventsResult, refundResult, payoutResult] =
     await Promise.all([
-      (client.from('assignment_attempts').select('*').eq('delivery_id', deliveryId).order('offered_at', { ascending: false }) as any),
-      (client.from('order_exceptions').select('id, exception_type, status, created_at').eq('delivery_id', deliveryId).order('created_at', { ascending: false }) as any),
-      (client.from('admin_notes').select('id, note, created_at, created_by').eq('entity_type', 'delivery').eq('entity_id', deliveryId).order('created_at', { ascending: false }) as any),
-      (client.from('delivery_tracking_events').select('id, lat, lng, recorded_at').eq('delivery_id', deliveryId).order('recorded_at', { ascending: false }).limit(25) as any),
-      (client.from('delivery_events').select('id, event_type, created_at, event_data').eq('delivery_id', deliveryId).order('created_at', { ascending: false }).limit(25) as any),
-      (client.from('refund_cases').select('approved_amount_cents, requested_amount_cents').eq('order_id', delivery.order?.id ?? '').in('status', ['pending', 'approved', 'processing', 'completed']) as any),
-      (client.from('payout_adjustments').select('id').eq('order_id', delivery.order?.id ?? '').eq('status', 'pending') as any),
+      client.from('assignment_attempts').select('*').eq('delivery_id', deliveryId).order('offered_at', { ascending: false }),
+      client.from('order_exceptions').select('id, exception_type, status, created_at').eq('delivery_id', deliveryId).order('created_at', { ascending: false }),
+      client.from('admin_notes').select('id, note, created_at, created_by').eq('entity_type', 'delivery').eq('entity_id', deliveryId).order('created_at', { ascending: false }),
+      client.from('delivery_tracking_events').select('id, lat, lng, recorded_at').eq('delivery_id', deliveryId).order('recorded_at', { ascending: false }).limit(25),
+      client.from('delivery_events').select('id, event_type, created_at, event_data').eq('delivery_id', deliveryId).order('created_at', { ascending: false }).limit(25),
+      client.from('refund_cases').select('approved_amount_cents, requested_amount_cents').eq('order_id', delivery.order?.id ?? '').in('status', ['pending', 'approved', 'processing', 'completed']),
+      client.from('payout_adjustments').select('id').eq('order_id', delivery.order?.id ?? '').eq('status', 'pending'),
     ]);
 
   for (const result of [attemptsResult, exceptionsResult, notesResult, trackingResult, eventsResult, refundResult, payoutResult]) {

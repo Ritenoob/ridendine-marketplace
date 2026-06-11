@@ -3,23 +3,42 @@
 // ==========================================
 
 /**
- * Format a number as currency
+ * Format a DOLLAR amount as currency.
+ *
+ * Platform convention: app-layer monetary amounts are dollars (CAD).
+ * Pass cents? Use {@link formatCurrencyFromCents} instead.
  */
-export function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(amount / 100); // Assuming amounts are stored in cents
-}
-
-/**
- * Format a number as currency from dollars (not cents)
- */
-export function formatCurrencyFromDollars(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(
+  amount: number,
+  currency = 'CAD',
+  locale = 'en-CA'
+): string {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
   }).format(amount);
+}
+
+/**
+ * Format a CENTS amount as currency (e.g. Stripe amounts).
+ */
+export function formatCurrencyFromCents(
+  cents: number,
+  currency = 'CAD',
+  locale = 'en-CA'
+): string {
+  return formatCurrency(cents / 100, currency, locale);
+}
+
+/**
+ * @deprecated `formatCurrency` now takes dollars directly — use it instead.
+ */
+export function formatCurrencyFromDollars(
+  amount: number,
+  currency = 'CAD',
+  locale = 'en-CA'
+): string {
+  return formatCurrency(amount, currency, locale);
 }
 
 /**

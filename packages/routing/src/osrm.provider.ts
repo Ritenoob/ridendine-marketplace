@@ -109,7 +109,12 @@ export class OsrmProvider implements RoutingProvider {
     return {
       sources: [...sources],
       targets: [...targets],
-      durations: json.durations.map((row) => row.map((v) => (v == null || !Number.isFinite(v) ? 0 : v))),
+      // OSRM returns null for unreachable pairs. Map those to +Infinity (NOT 0)
+      // so consumers' Number.isFinite guards treat them as worst candidates
+      // instead of ranking unreachable drivers as the closest.
+      durations: json.durations.map((row) =>
+        row.map((v) => (v == null || !Number.isFinite(v) ? Number.POSITIVE_INFINITY : v))
+      ),
     };
   }
 

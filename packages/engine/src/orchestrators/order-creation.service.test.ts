@@ -359,6 +359,175 @@ describe('OrderCreationService', () => {
     // apply discount logic — it is stored as-is and no discount is computed.
     // Skip promo discount assertion; document here for future implementation.
 
+    it('fails with INVALID_ITEMS naming the missing ids when a menuItemId does not exist', async () => {
+      const menuItem = makeSingleItem();
+      const order = makeOrder();
+      // Only one of the two requested items exists.
+      const client = createMockClientForCreate([menuItem], order);
+      const service = new OrderCreationService(
+        client as any, events as any, audit as any, sla as any, masterOrder as any
+      );
+
+      const result = await service.createOrder(
+        {
+          customerId: CUSTOMER_ID,
+          storefrontId: STOREFRONT_ID,
+          deliveryAddressId: ADDRESS_ID,
+          items: [
+            { menuItemId: MENU_ITEM_ID, quantity: 1 },
+            { menuItemId: MENU_ITEM_ID_2, quantity: 2 },
+          ],
+        },
+        customerActor,
+      );
+
+      expect(result.success).toBe(false);
+      const err = expectErr(result);
+      expect(err.code).toBe('INVALID_ITEMS');
+      expect(err.message).toContain(MENU_ITEM_ID_2);
+      // No order may be created when an item is missing — nothing silently dropped.
+      expect(client.from).not.toHaveBeenCalledWith('order_items');
+    });
+
+    it('rounds float money sums before inserting the order', async () => {
+      // 3 × 11.73 = 35.190000000000005 in IEEE-754 floats.
+      const menuItem = { ...makeSingleItem(), price: 11.73 };
+      const order = makeOrder();
+      let capturedOrderInsert: Record<string, unknown> | null = null;
+
+      const client = {
+        from: vi.fn((table: string) => {
+          if (table === 'menu_items') {
+            return {
+              select: vi.fn().mockReturnValue({
+                in: vi.fn().mockResolvedValue({ data: [menuItem], error: null }),
+              }),
+            };
+          }
+          if (table === 'orders') {
+            return {
+              insert: vi.fn((payload: Record<string, unknown>) => {
+                capturedOrderInsert = payload;
+                return {
+                  select: vi.fn().mockReturnValue({
+                    single: vi.fn().mockResolvedValue({ data: order, error: null }),
+                  }),
+                };
+              }),
+              delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+            };
+          }
+          const chain = buildChain();
+          chain.insert.mockResolvedValue({ error: null });
+          return chain;
+        }) as ReturnType<typeof vi.fn>,
+      };
+
+      const service = new OrderCreationService(
+        client as any, events as any, audit as any, sla as any, masterOrder as any
+      );
+
+      const result = await service.createOrder(
+        {
+          customerId: CUSTOMER_ID,
+          storefrontId: STOREFRONT_ID,
+          deliveryAddressId: ADDRESS_ID,
+          items: [{ menuItemId: MENU_ITEM_ID, quantity: 3 }],
+        },
+        customerActor,
+      );
+
+      expect(result.success).toBe(true);
+      const inserted = capturedOrderInsert as unknown as Record<string, number>;
+      expect(inserted.subtotal).toBe(35.19);
+      // Every money column must be exactly representable at 2 decimals.
+      for (const key of ['subtotal', 'delivery_fee', 'service_fee', 'tax', 'tip', 'total'] as const) {
+        const value = inserted[key]!;
+        expect(Math.round(value * 100) / 100).toBe(value);
+      }
+    });
+
+    it('attaches modifiers to the matching inserted item, not by raw input position', async () => {
+      const items = [
+        { ...makeSingleItem(), id: MENU_ITEM_ID, price: 10.0 },
+        { id: MENU_ITEM_ID_2, name: 'Naan', price: 3.0, is_available: true, is_sold_out: false, storefront_id: STOREFRONT_ID },
+      ];
+      const order = makeOrder({ subtotal: 15.0 });
+      const modifierInsert = vi.fn().mockResolvedValue({ error: null });
+
+      const client = {
+        from: vi.fn((table: string) => {
+          if (table === 'menu_items') {
+            return {
+              select: vi.fn().mockReturnValue({
+                in: vi.fn().mockResolvedValue({ data: items, error: null }),
+              }),
+            };
+          }
+          if (table === 'orders') {
+            return {
+              insert: vi.fn().mockReturnValue({
+                select: vi.fn().mockReturnValue({
+                  single: vi.fn().mockResolvedValue({ data: order, error: null }),
+                }),
+              }),
+              delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+            };
+          }
+          if (table === 'order_items') {
+            return {
+              insert: vi.fn().mockReturnValue({
+                select: vi.fn().mockResolvedValue({
+                  data: [
+                    { id: 'order-item-1', menu_item_id: MENU_ITEM_ID },
+                    { id: 'order-item-2', menu_item_id: MENU_ITEM_ID_2 },
+                  ],
+                  error: null,
+                }),
+              }),
+            };
+          }
+          if (table === 'order_item_modifiers') {
+            return { insert: modifierInsert };
+          }
+          return buildChain();
+        }) as ReturnType<typeof vi.fn>,
+      };
+
+      const service = new OrderCreationService(
+        client as any, events as any, audit as any, sla as any, masterOrder as any
+      );
+
+      // Only the SECOND input item has modifiers.
+      const result = await service.createOrder(
+        {
+          customerId: CUSTOMER_ID,
+          storefrontId: STOREFRONT_ID,
+          deliveryAddressId: ADDRESS_ID,
+          items: [
+            { menuItemId: MENU_ITEM_ID, quantity: 1 },
+            {
+              menuItemId: MENU_ITEM_ID_2,
+              quantity: 1,
+              modifiers: [
+                { optionId: 'option-1', valueId: 'value-1', optionName: 'Butter', valueName: 'Extra', priceAdjustment: 1.5 },
+              ],
+            },
+          ],
+        },
+        customerActor,
+      );
+
+      expect(result.success).toBe(true);
+      expect(modifierInsert).toHaveBeenCalledWith([
+        expect.objectContaining({
+          order_item_id: 'order-item-2',
+          option_name: 'Butter',
+          value_name: 'Extra',
+        }),
+      ]);
+    });
+
     it('rejects non-customer actor', async () => {
       const client = createMockClientForCreate([], null);
       const service = new OrderCreationService(

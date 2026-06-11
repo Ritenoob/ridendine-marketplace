@@ -1,6 +1,6 @@
 # High-Risk Ops Negative Authorization
 
-Generated: 2026-06-07T17:15:23.542Z
+Generated: 2026-06-11T04:46:27.551Z
 
 This generated audit documents endpoint-level denial expectations for the high-risk Ops/control-plane routes covered by Phase 11. It proves every contracted route method has an explicit negative authorization model for unauthenticated access, denied platform roles, invalid processor tokens, disabled command-center access, or invalid Stripe signatures.
 
@@ -8,9 +8,9 @@ This generated audit documents endpoint-level denial expectations for the high-r
 
 | Metric | Count |
 |---|---:|
-| Phase 11 method rows | 33 |
-| Negative authorization contracts | 33 |
-| Passed contracts | 33 |
+| Phase 11 method rows | 32 |
+| Negative authorization contracts | 32 |
+| Passed contracts | 32 |
 | Failed checks | 0 |
 
 ## Denial Matrix
@@ -43,7 +43,6 @@ This generated audit documents endpoint-level denial expectations for the high-r
 | PASS | Cron wrapper | `POST` | `/api/cron/payouts-driver-preview` | processor | validateEngineProcessorHeaders | 401 via validateEngineProcessorHeaders: missing processor headers, wrong bearer token, wrong x-processor-token |
 | PASS | Cron wrapper | `GET` | `/api/cron/reconciliation-daily` | processor | validateEngineProcessorHeaders | 401 via validateEngineProcessorHeaders: missing processor headers, wrong bearer token, wrong x-processor-token |
 | PASS | Cron wrapper | `POST` | `/api/cron/reconciliation-daily` | processor | validateEngineProcessorHeaders | 401 via validateEngineProcessorHeaders: missing processor headers, wrong bearer token, wrong x-processor-token |
-| PASS | Cron wrapper | `GET` | `/api/cron/sla-tick` | processor | validateEngineProcessorHeaders | 401 via validateEngineProcessorHeaders: missing processor headers, wrong bearer token, wrong x-processor-token |
 | PASS | Cron wrapper | `POST` | `/api/cron/sla-tick` | processor | validateEngineProcessorHeaders | 401 via validateEngineProcessorHeaders: missing processor headers, wrong bearer token, wrong x-processor-token |
 | PASS | Internal command center | `GET` | `/api/internal/command-center/change-requests` | command_center | team_manage | 403 when INTERNAL_COMMAND_CENTER_ENABLED disabled; 401 unauthenticated; 403 denied roles: ops_admin, ops_manager, ops_agent, finance_admin, finance_manager, support_agent, customer, chef_user, driver |
 | PASS | Internal command center | `POST` | `/api/internal/command-center/change-requests` | command_center | team_manage | 403 when INTERNAL_COMMAND_CENTER_ENABLED disabled; 401 unauthenticated; 403 denied roles: ops_admin, ops_manager, ops_agent, finance_admin, finance_manager, support_agent, customer, chef_user, driver |

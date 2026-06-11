@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { opsDeliveryPatchSchema } from '@ridendine/validation';
 import {
   finalizeOpsActor,
   getEngine,
@@ -18,11 +19,11 @@ export async function PATCH(
     if (opsActor instanceof Response) return opsActor;
 
     const { id } = await params;
-    const body = await request.json();
+    const parsed = opsDeliveryPatchSchema.safeParse(await request.json());
     const engine = getEngine();
 
-    if (body.driverId) {
-      const result = await engine.dispatch.manualAssign(id, body.driverId, opsActor);
+    if (parsed.success) {
+      const result = await engine.dispatch.manualAssign(id, parsed.data.driverId, opsActor);
       if (!result.success) {
         return NextResponse.json({ error: result.error?.message || 'Failed to assign driver' }, { status: 400 });
       }

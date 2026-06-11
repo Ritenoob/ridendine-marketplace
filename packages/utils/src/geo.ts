@@ -14,7 +14,14 @@ export function calculateDistanceKm(
   lat2?: number | null,
   lng2?: number | null
 ): number | null {
-  if (!lat1 || !lng1 || !lat2 || !lng2) return null;
+  // Explicit checks: coordinate 0 (equator/prime meridian) is valid.
+  if (
+    lat1 == null || lng1 == null || lat2 == null || lng2 == null ||
+    !Number.isFinite(lat1) || !Number.isFinite(lng1) ||
+    !Number.isFinite(lat2) || !Number.isFinite(lng2)
+  ) {
+    return null;
+  }
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const radius = 6371;
   const dLat = toRad(lat2 - lat1);

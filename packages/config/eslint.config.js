@@ -3,6 +3,51 @@ import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
+// DB-boundary guardrail (CLAUDE.md: "All DB access through @ridendine/db").
+//
+// Flags supabase-style `.from('table')` calls with a string-literal argument
+// in app code, which bypass the @ridendine/db repository layer. Implemented
+// as a tiny inline plugin (rather than another `no-restricted-syntax` entry)
+// because that rule is already used at `error` severity for the brand
+// guardrail, and this boundary check must stay a WARNING (~300 existing
+// violations) so lint remains green while the migration happens.
+const dbBoundaryPlugin = {
+  rules: {
+    'no-raw-supabase-from': {
+      meta: {
+        type: 'suggestion',
+        docs: {
+          description:
+            "Disallow raw supabase `.from('table')` calls outside @ridendine/db",
+        },
+        schema: [],
+        messages: {
+          rawFrom:
+            "Raw supabase `.from('…')` call bypasses the DB boundary. Route data access through a @ridendine/db repository instead.",
+        },
+      },
+      create(context) {
+        return {
+          "CallExpression[callee.property.name='from'][arguments.0.type='Literal']"(
+            node
+          ) {
+            // `Array.from(...)` (and similar static built-ins) are not DB calls.
+            const callee = node.callee;
+            if (
+              callee.object &&
+              callee.object.type === 'Identifier' &&
+              ['Array', 'Buffer', 'Uint8Array', 'Int8Array', 'Float32Array', 'Float64Array'].includes(callee.object.name)
+            ) {
+              return;
+            }
+            context.report({ node, messageId: 'rawFrom' });
+          },
+        };
+      },
+    },
+  },
+};
+
 export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -10,6 +55,7 @@ export default tseslint.config(
     plugins: {
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
+      'db-boundary': dbBoundaryPlugin,
     },
     rules: {
       '@typescript-eslint/no-unused-vars': [
@@ -26,6 +72,10 @@ export default tseslint.config(
       'react/prop-types': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+
+      // WARNING only — see dbBoundaryPlugin above. Must not become 'error'
+      // until the existing raw `.from()` call sites are migrated.
+      'db-boundary/no-raw-supabase-from': 'warn',
 
       // Brand guardrail (design-system migration, Phase 9).
       //

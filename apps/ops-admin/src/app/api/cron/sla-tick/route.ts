@@ -72,10 +72,9 @@ async function run(request: NextRequest) {
   });
 }
 
-export async function GET(request: NextRequest) {
-  return run(request);
-}
-
+// State-changing cron work must not be reachable via GET. POST only —
+// scripts/local-cron.mjs already uses POST (and targets the canonical
+// /api/engine/processors/sla route, not this one).
 export async function POST(request: NextRequest) {
   return run(request);
 }

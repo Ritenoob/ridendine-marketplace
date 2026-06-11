@@ -1,6 +1,7 @@
-import { Card, Badge } from '@ridendine/ui';
+import { Card, Badge, ORDER_STATUS_BG_CLASSES } from '@ridendine/ui';
 import Link from 'next/link';
 import { createAdminClient, getOpsOrderDetail, type SupabaseClient } from '@ridendine/db';
+import { formatCurrency } from '@ridendine/utils';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { notFound } from 'next/navigation';
 import { OrderStatusActions } from './status-actions';
@@ -15,19 +16,11 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-const statusColors: Record<string, string> = {
-  pending: 'bg-warning',
-  accepted: 'bg-info',
-  preparing: 'bg-info',
-  ready_for_pickup: 'bg-infoSoft0',
-  picked_up: 'bg-infoSoft0',
-  delivered: 'bg-success',
-  cancelled: 'bg-danger',
-  refunded: 'bg-surfaceMuted',
-};
+const statusColors = ORDER_STATUS_BG_CLASSES;
 
+// Order amounts (items, fees, tax, tip, payables) are dollars.
 function formatMoney(value: number | null | undefined) {
-  return `$${(value ?? 0).toFixed(2)}`;
+  return formatCurrency(value ?? 0);
 }
 
 function formatTimestamp(value: string | null | undefined) {

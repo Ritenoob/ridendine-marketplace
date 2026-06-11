@@ -69,5 +69,5 @@ pnpm db:generate      # Generate Supabase types
 For detailed platform information, see:
 - `docs/PLATFORM_OVERVIEW.md` - All 56 pages across 4 apps
 - `docs/ORDER_FLOW.md` - Order lifecycle and status workflow
-- `docs/DATABASE_SCHEMA.md` - All 36 Supabase tables
+- `docs/DATABASE_SCHEMA.md` - All Supabase tables (~70 as of 2026-06)
 - `docs/APP_CONNECTIONS.md` - How apps connect and communicate

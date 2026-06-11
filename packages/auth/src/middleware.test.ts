@@ -14,7 +14,7 @@ vi.mock('next/server', () => {
   return { NextResponse };
 });
 
-// Mock @supabase/ssr — default: no session
+// Mock @supabase/ssr — default: no authenticated user
 vi.mock('@supabase/ssr', () => ({
   createServerClient: vi.fn(() => makeSupabaseClient(null)),
 }));
@@ -24,10 +24,15 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createAuthMiddleware } from './middleware';
 
-function makeSupabaseClient(session: unknown) {
+function makeSupabaseClient(user: unknown) {
   return {
     auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session } }),
+      // getUser is the server-verified call the middleware must rely on
+      getUser: vi.fn().mockResolvedValue({ data: { user }, error: null }),
+      // getSession is intentionally still present but must NOT drive auth decisions
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: user ? { user } : null },
+      }),
     },
   };
 }
@@ -50,7 +55,7 @@ describe('createAuthMiddleware', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Restore default: no session
+    // Restore default: no authenticated user
     vi.mocked(createServerClient).mockImplementation(() => makeSupabaseClient(null) as any);
     process.env = { ...originalEnv };
     delete process.env.ALLOW_DEV_AUTOLOGIN;
@@ -185,9 +190,9 @@ describe('createAuthMiddleware', () => {
   // ---- Auth routes — authenticated users redirected away ----
 
   it('redirects authenticated user away from auth routes to authenticatedRedirect', async () => {
-    // Set up a session for this test
+    // Set up a verified user for this test
     vi.mocked(createServerClient).mockImplementation(
-      () => makeSupabaseClient({ user: { id: 'user-abc' } }) as any
+      () => makeSupabaseClient({ id: 'user-abc' }) as any
     );
 
     const middleware = createAuthMiddleware({
@@ -207,7 +212,7 @@ describe('createAuthMiddleware', () => {
 
   it('does not redirect authenticated users away from public API auth routes by default', async () => {
     vi.mocked(createServerClient).mockImplementation(
-      () => makeSupabaseClient({ user: { id: 'user-abc' } }) as any
+      () => makeSupabaseClient({ id: 'user-abc' }) as any
     );
 
     const middleware = createAuthMiddleware({
@@ -221,6 +226,51 @@ describe('createAuthMiddleware', () => {
 
     expect((result as any).type).toBe('next');
     expect(NextResponse.redirect).not.toHaveBeenCalled();
+  });
+
+  // ---- Server-side verification (getUser, not getSession) ----
+
+  it('redirects when getUser returns no user even if a (spoofable) session cookie decodes', async () => {
+    // Simulate a forged cookie: getSession decodes a session locally,
+    // but server-side verification (getUser) rejects it.
+    const client = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: { message: 'invalid JWT' } }),
+        getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: 'forged' } } } }),
+      },
+    };
+    vi.mocked(createServerClient).mockImplementation(() => client as any);
+
+    const middleware = createAuthMiddleware({
+      publicRoutes: ['/auth/login'],
+      loginRoute: '/auth/login',
+    });
+
+    const request = createMockRequest('/dashboard');
+    const result = await middleware(request);
+
+    expect((result as any).type).toBe('redirect');
+    expect((result as any).url).toContain('/auth/login');
+    expect(client.auth.getUser).toHaveBeenCalled();
+  });
+
+  it('uses supabase.auth.getUser for the protect decision on protected routes', async () => {
+    const client = makeSupabaseClient({ id: 'user-abc' });
+    vi.mocked(createServerClient).mockImplementation(() => client as any);
+
+    const middleware = createAuthMiddleware({
+      publicRoutes: ['/auth/login'],
+      loginRoute: '/auth/login',
+    });
+
+    const request = createMockRequest('/dashboard');
+    const result = await middleware(request);
+
+    // Verified user → allowed through
+    expect((result as any).type).toBe('next');
+    expect(client.auth.getUser).toHaveBeenCalled();
+    // The decision must not be based on the locally-decoded session
+    expect(client.auth.getSession).not.toHaveBeenCalled();
   });
 
   // ---- Selective protection mode (protectedRoutes) ----

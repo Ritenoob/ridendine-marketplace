@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { SupabaseClient } from '../client/types';
 import {
   hasCustomerUsedPromo,
   recordPromoUsage,
@@ -78,19 +79,19 @@ function makeClient({
 describe('hasCustomerUsedPromo', () => {
   it('returns false when no usage row exists', async () => {
     const client = makeClient({ usageData: null });
-    const result = await hasCustomerUsedPromo(client as any, 'promo-1', 'cust-1');
+    const result = await hasCustomerUsedPromo(client as unknown as SupabaseClient, 'promo-1', 'cust-1');
     expect(result).toBe(false);
   });
 
   it('returns true when a usage row exists', async () => {
     const client = makeClient({ usageData: { id: 'usage-1' } });
-    const result = await hasCustomerUsedPromo(client as any, 'promo-1', 'cust-1');
+    const result = await hasCustomerUsedPromo(client as unknown as SupabaseClient, 'promo-1', 'cust-1');
     expect(result).toBe(true);
   });
 
   it('queries promo_code_usages with correct promo_id and customer_id', async () => {
     const client = makeClient({ usageData: null });
-    await hasCustomerUsedPromo(client as any, 'promo-abc', 'cust-xyz');
+    await hasCustomerUsedPromo(client as unknown as SupabaseClient, 'promo-abc', 'cust-xyz');
 
     const fromCall = client.from.mock.calls.find((c: string[]) => c[0] === 'promo_code_usages');
     expect(fromCall).toBeDefined();
@@ -105,7 +106,7 @@ describe('recordPromoUsage', () => {
   it('inserts a usage row without throwing on success', async () => {
     const client = makeClient({ insertError: null });
     await expect(
-      recordPromoUsage(client as any, 'promo-1', 'cust-1', 'order-1')
+      recordPromoUsage(client as unknown as SupabaseClient, 'promo-1', 'cust-1', 'order-1')
     ).resolves.toBeUndefined();
   });
 
@@ -113,7 +114,7 @@ describe('recordPromoUsage', () => {
     const uniqueViolation = { code: '23505', message: 'duplicate key' };
     const client = makeClient({ insertError: uniqueViolation });
     await expect(
-      recordPromoUsage(client as any, 'promo-1', 'cust-1', 'order-1')
+      recordPromoUsage(client as unknown as SupabaseClient, 'promo-1', 'cust-1', 'order-1')
     ).resolves.toBeUndefined();
   });
 
@@ -121,7 +122,7 @@ describe('recordPromoUsage', () => {
     const dbError = { code: '23502', message: 'not null violation' };
     const client = makeClient({ insertError: dbError });
     await expect(
-      recordPromoUsage(client as any, 'promo-1', 'cust-1', 'order-1')
+      recordPromoUsage(client as unknown as SupabaseClient, 'promo-1', 'cust-1', 'order-1')
     ).rejects.toEqual(dbError);
   });
 });
@@ -133,14 +134,14 @@ describe('recordPromoUsage', () => {
 describe('validatePromoCode with customerId', () => {
   it('returns invalid when customer has already used the promo', async () => {
     const client = makeClient({ usageData: { id: 'usage-1' } });
-    const result = await validatePromoCode(client as any, 'SAVE10', 5000, 'cust-1');
+    const result = await validatePromoCode(client as unknown as SupabaseClient, 'SAVE10', 5000, 'cust-1');
     expect(result.valid).toBe(false);
     expect(result.error).toBe('You have already used this promo code');
   });
 
   it('returns valid when customer has not used the promo', async () => {
     const client = makeClient({ usageData: null });
-    const result = await validatePromoCode(client as any, 'SAVE10', 5000, 'cust-1');
+    const result = await validatePromoCode(client as unknown as SupabaseClient, 'SAVE10', 5000, 'cust-1');
     expect(result.valid).toBe(true);
     expect(result.promoId).toBe('promo-1');
   });
@@ -148,7 +149,7 @@ describe('validatePromoCode with customerId', () => {
   it('skips per-customer check when customerId is omitted', async () => {
     // usageData is set but no customerId provided – should still pass
     const client = makeClient({ usageData: { id: 'usage-1' } });
-    const result = await validatePromoCode(client as any, 'SAVE10', 5000);
+    const result = await validatePromoCode(client as unknown as SupabaseClient, 'SAVE10', 5000);
     expect(result.valid).toBe(true);
   });
 
@@ -157,7 +158,7 @@ describe('validatePromoCode with customerId', () => {
       promoData: makePromo({ usage_limit: 5, usage_count: 5 }),
       usageData: null,
     });
-    const result = await validatePromoCode(client as any, 'SAVE10', 5000, 'cust-1');
+    const result = await validatePromoCode(client as unknown as SupabaseClient, 'SAVE10', 5000, 'cust-1');
     expect(result.valid).toBe(false);
     expect(result.error).toBe('Promo code has reached its usage limit');
   });

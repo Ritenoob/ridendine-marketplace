@@ -110,104 +110,114 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const body = rawBody.trim() ? JSON.parse(rawBody) : {};
     const { action, ...actionParams } = body;
 
-    const engine = getEngine();
-    const { actor } = chefContext;
-
-    switch (action) {
-      case 'accept': {
-        const result = await engine.orders.acceptOrder(
-          orderId,
-          actionParams.estimatedPrepMinutes || 20,
-          actor
-        );
-        if (!result.success) {
-          return errorResponse(result.error!.code, result.error!.message);
-        }
-        return successResponse(result.data);
-      }
-
-      case 'reject': {
-        if (!actionParams.reason) {
-          return errorResponse('MISSING_REASON', 'Rejection reason is required');
-        }
-        const result = await engine.orders.rejectOrder(
-          orderId,
-          actionParams.reason as OrderRejectReason,
-          actionParams.notes,
-          actor
-        );
-        if (!result.success) {
-          return errorResponse(result.error!.code, result.error!.message);
-        }
-        return successResponse(result.data);
-      }
-
-      case 'start_preparing': {
-        const result = await engine.orders.startPreparing(orderId, actor);
-        if (!result.success) {
-          return errorResponse(result.error!.code, result.error!.message);
-        }
-        return successResponse(result.data);
-      }
-
-      case 'mark_ready': {
-        const result = await engine.platform.markOrderReady(orderId, actor);
-        if (!result.success) {
-          return errorResponse(result.error!.code, result.error!.message);
-        }
-        return successResponse(result.data);
-      }
-
-      case 'update_prep_time': {
-        if (!actionParams.estimatedPrepMinutes) {
-          return errorResponse('MISSING_TIME', 'Estimated prep time is required');
-        }
-        const result = await engine.kitchen.updatePrepTime(
-          orderId,
-          actionParams.estimatedPrepMinutes,
-          actor
-        );
-        if (!result.success) {
-          return errorResponse(result.error!.code, result.error!.message);
-        }
-        return successResponse({ updated: true });
-      }
-
-      // Legacy status-based update for backwards compatibility
-      case undefined: {
-        const { status } = body;
-        if (!status) {
-          return errorResponse('MISSING_ACTION', 'Action or status is required');
-        }
-
-        // Map legacy status to action
-        const statusActionMap: Record<string, string> = {
-          accepted: 'accept',
-          preparing: 'start_preparing',
-          ready_for_pickup: 'mark_ready',
-          rejected: 'reject',
-        };
-
-        const mappedAction = statusActionMap[status];
-        if (!mappedAction) {
-          return errorResponse('INVALID_STATUS', `Invalid status: ${status}`);
-        }
-
-        // Recursive call with mapped action
-        const newBody = { action: mappedAction, ...actionParams };
-        const newRequest = new Request(request.url, {
-          method: 'PATCH',
-          headers: request.headers,
-          body: JSON.stringify(newBody),
-        });
-        return PATCH(newRequest as NextRequest, { params });
-      }
-
-      default:
-        return errorResponse('INVALID_ACTION', `Unknown action: ${action}`);
-    }
+    return applyOrderAction(orderId, action, actionParams, chefContext.actor);
   } catch (error) {
     console.error('Error updating order:', error);
     return errorResponse('INTERNAL_ERROR', 'Internal server error', 500);
+  }
+}
+
+type ChefActor = NonNullable<Awaited<ReturnType<typeof getChefActorContext>>>['actor'];
+
+/**
+ * Shared internal action dispatcher. The legacy status-based fallback calls
+ * this directly instead of re-entering the PATCH route handler, so auth and
+ * the rate limiter run exactly once per request.
+ */
+async function applyOrderAction(
+  orderId: string,
+  action: string | undefined,
+  actionParams: Record<string, any>,
+  actor: ChefActor
+): Promise<Response> {
+  const engine = getEngine();
+
+  switch (action) {
+    case 'accept': {
+      const result = await engine.orders.acceptOrder(
+        orderId,
+        actionParams.estimatedPrepMinutes || 20,
+        actor
+      );
+      if (!result.success) {
+        return errorResponse(result.error!.code, result.error!.message);
+      }
+      return successResponse(result.data);
+    }
+
+    case 'reject': {
+      if (!actionParams.reason) {
+        return errorResponse('MISSING_REASON', 'Rejection reason is required');
+      }
+      const result = await engine.orders.rejectOrder(
+        orderId,
+        actionParams.reason as OrderRejectReason,
+        actionParams.notes,
+        actor
+      );
+      if (!result.success) {
+        return errorResponse(result.error!.code, result.error!.message);
+      }
+      return successResponse(result.data);
+    }
+
+    case 'start_preparing': {
+      const result = await engine.orders.startPreparing(orderId, actor);
+      if (!result.success) {
+        return errorResponse(result.error!.code, result.error!.message);
+      }
+      return successResponse(result.data);
+    }
+
+    case 'mark_ready': {
+      const result = await engine.platform.markOrderReady(orderId, actor);
+      if (!result.success) {
+        return errorResponse(result.error!.code, result.error!.message);
+      }
+      return successResponse(result.data);
+    }
+
+    case 'update_prep_time': {
+      if (!actionParams.estimatedPrepMinutes) {
+        return errorResponse('MISSING_TIME', 'Estimated prep time is required');
+      }
+      const result = await engine.kitchen.updatePrepTime(
+        orderId,
+        actionParams.estimatedPrepMinutes,
+        actor
+      );
+      if (!result.success) {
+        return errorResponse(result.error!.code, result.error!.message);
+      }
+      return successResponse({ updated: true });
+    }
+
+    // Legacy status-based update for backwards compatibility
+    case undefined: {
+      const { status, ...rest } = actionParams;
+      if (!status) {
+        return errorResponse('MISSING_ACTION', 'Action or status is required');
+      }
+
+      // Map legacy status to action
+      const statusActionMap: Record<string, string> = {
+        accepted: 'accept',
+        preparing: 'start_preparing',
+        ready_for_pickup: 'mark_ready',
+        rejected: 'reject',
+      };
+
+      const mappedAction = statusActionMap[status];
+      if (!mappedAction) {
+        return errorResponse('INVALID_STATUS', `Invalid status: ${status}`);
+      }
+
+      // Dispatch the mapped action through the shared internal logic — does
+      // NOT re-run auth or count against the rate limiter a second time.
+      return applyOrderAction(orderId, mappedAction, rest, actor);
+    }
+
+    default:
+      return errorResponse('INVALID_ACTION', `Unknown action: ${action}`);
   }
 }

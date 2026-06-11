@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { AuditAction } from '@ridendine/types';
 import { createAdminClient } from '@ridendine/db';
+import { bankPayoutCommandSchema } from '@ridendine/validation';
 import { getEngine, getOpsActorContext, guardPlatformApi, successResponse, errorResponse, finalizeOpsActor } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,21 @@ export async function POST(request: NextRequest) {
   }
 
   const runType = body.type === 'driver' ? 'driver' : 'chef';
+
+  // Validate against the shared payout-run command schema (execute_chef_run /
+  // execute_driver_run variants) so period bounds must be ISO datetimes.
+  const parsed = bankPayoutCommandSchema.safeParse({
+    action: runType === 'driver' ? 'execute_driver_run' : 'execute_chef_run',
+    periodStart: body.periodStart,
+    periodEnd: body.periodEnd,
+  });
+  if (!parsed.success) {
+    return errorResponse(
+      'INVALID_INPUT',
+      parsed.error.issues[0]?.message || 'Invalid payout run payload',
+      400
+    );
+  }
 
   // C.5 / O2 — refuse to start a second concurrent run for this rail.
   // The migration 00032 partial unique index is the ironclad guard; this is

@@ -1,6 +1,10 @@
 /**
  * TDD: SLA tick cron route
- * Tests for GET/POST /api/cron/sla-tick
+ * Tests for POST /api/cron/sla-tick
+ *
+ * This route is state-changing, so it must only be reachable via POST.
+ * The legacy GET export was removed; scripts/local-cron.mjs uses POST
+ * (and targets the canonical /api/engine/processors/sla route anyway).
  */
 
 jest.mock('@ridendine/db', () => ({
@@ -28,7 +32,8 @@ jest.mock('next/server', () => ({
   },
 }));
 
-import { GET, POST } from '../route';
+import * as route from '../route';
+import { POST } from '../route';
 import { validateEngineProcessorHeaders } from '@ridendine/utils';
 import { NextResponse } from 'next/server';
 
@@ -45,10 +50,16 @@ beforeEach(() => {
 });
 
 describe('GET /api/cron/sla-tick', () => {
+  it('does not export a GET handler (state-changing route is POST-only)', () => {
+    expect((route as Record<string, unknown>).GET).toBeUndefined();
+  });
+});
+
+describe('POST /api/cron/sla-tick', () => {
   it('returns 401 when authorization header is missing', async () => {
     (validateEngineProcessorHeaders as jest.Mock).mockReturnValue(false);
 
-    const res = await GET(makeRequest());
+    const res = await POST(makeRequest());
 
     expect(res.status).toBe(401);
     expect(res.data).toMatchObject({ success: false, error: 'Unauthorized' });
@@ -57,7 +68,7 @@ describe('GET /api/cron/sla-tick', () => {
   it('returns 401 when bearer token is wrong', async () => {
     (validateEngineProcessorHeaders as jest.Mock).mockReturnValue(false);
 
-    const res = await GET(makeRequest({ authorization: 'Bearer wrong-token' }));
+    const res = await POST(makeRequest({ authorization: 'Bearer wrong-token' }));
 
     expect(res.status).toBe(401);
   });
@@ -69,7 +80,7 @@ describe('GET /api/cron/sla-tick', () => {
       breaches: [{ id: 'b1' }, { id: 'b2' }],
     });
 
-    const res = await GET(makeRequest({ authorization: 'Bearer dev-cron-secret' }));
+    const res = await POST(makeRequest({ authorization: 'Bearer dev-cron-secret' }));
 
     expect(res.status).toBe(200);
     expect(mockProcessExpiredTimers).toHaveBeenCalledTimes(1);
@@ -85,26 +96,6 @@ describe('GET /api/cron/sla-tick', () => {
     (validateEngineProcessorHeaders as jest.Mock).mockReturnValue(true);
     mockProcessExpiredTimers.mockRejectedValue(new Error('db error'));
 
-    await expect(GET(makeRequest({ authorization: 'Bearer dev-cron-secret' }))).rejects.toThrow('db error');
-  });
-});
-
-describe('POST /api/cron/sla-tick', () => {
-  it('returns 401 for missing auth', async () => {
-    (validateEngineProcessorHeaders as jest.Mock).mockReturnValue(false);
-
-    const res = await POST(makeRequest());
-
-    expect(res.status).toBe(401);
-  });
-
-  it('returns 200 and calls processExpiredTimers for valid bearer', async () => {
-    (validateEngineProcessorHeaders as jest.Mock).mockReturnValue(true);
-    mockProcessExpiredTimers.mockResolvedValue({ warnings: [], breaches: [] });
-
-    const res = await POST(makeRequest({ authorization: 'Bearer dev-cron-secret' }));
-
-    expect(res.status).toBe(200);
-    expect(mockProcessExpiredTimers).toHaveBeenCalledTimes(1);
+    await expect(POST(makeRequest({ authorization: 'Bearer dev-cron-secret' }))).rejects.toThrow('db error');
   });
 });

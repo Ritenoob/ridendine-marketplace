@@ -153,7 +153,9 @@ export async function listOpsDrivers(
 
   if (countError) throw countError;
   if (error) throw error;
-  return { items: (data ?? []) as unknown as OpsDriverListItem[], total: count ?? 0 };
+  // Cast: DB stores presence status as plain text; the exported interface
+  // narrows it to the known 'offline' | 'online' | 'busy' values.
+  return { items: (data ?? []) as OpsDriverListItem[], total: count ?? 0 };
 }
 
 export async function getOpsDriverDetail(
@@ -206,11 +208,13 @@ export async function getOpsDriverDetail(
 
   if (deliveryStatsError) throw deliveryStatsError;
 
-  const deliveries = (recentDeliveries ?? []) as unknown as OpsDriverDetail['recent_deliveries'];
+  const deliveries = (recentDeliveries ?? []) as OpsDriverDetail['recent_deliveries'];
   const statsRows = (deliveryStats ?? []) as DriverStatsRow[];
 
   return {
-    ...(driver as unknown as Omit<OpsDriverDetail, 'recent_deliveries' | 'stats'>),
+    // Cast: generated driver_presence.last_updated_at is nullable; the
+    // exported interface declares it non-null (pre-existing contract).
+    ...(driver as Omit<OpsDriverDetail, 'recent_deliveries' | 'stats'>),
     recent_deliveries: deliveries,
     stats: {
       completedDeliveries: statsRows.filter(

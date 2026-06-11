@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { Badge, Card } from '@ridendine/ui';
 import { createServerClient } from '@ridendine/db';
+import { formatCurrency } from '@ridendine/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,8 +62,9 @@ type OrderDetail = {
   } | null;
 };
 
+// Order amounts (subtotal, fees, tax, tip, total) are dollars.
 function money(value: number | null | undefined) {
-  return `$${Number(value ?? 0).toFixed(2)}`;
+  return formatCurrency(Number(value ?? 0));
 }
 
 function formatStatus(value: string | null | undefined) {

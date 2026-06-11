@@ -66,20 +66,10 @@ type AdjustmentRow = {
   orders?: { order_number?: string } | Array<{ order_number?: string }> | null;
 };
 
-type LedgerEntityAmountRow = {
-  entity_id: string | null;
-  amount_cents: number | null;
-};
-
-type ChefNameRow = {
+type LiabilitySummaryRow = {
   id: string;
-  display_name: string;
-};
-
-type DriverNameRow = {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
+  name: string | null;
+  amount: number | string | null;
 };
 
 function getRefundOrderNumber(refund: RefundCaseRow): string {
@@ -185,77 +175,37 @@ export async function getRecentLedgerEntries(
   return (data ?? []) as LedgerEntrySummary[];
 }
 
+function mapLiabilitySummaryRows(
+  rows: LiabilitySummaryRow[],
+  fallbackName: string
+): LiabilitySummary[] {
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name ?? fallbackName,
+    amount: Number(row.amount ?? 0),
+  }));
+}
+
 export async function getChefLiabilitySummaries(
   client: SupabaseClient,
   limit = 10
 ): Promise<LiabilitySummary[]> {
-  const { data, error } = await client
-    .from('ledger_entries')
-    .select('entity_id, amount_cents')
-    .eq('entry_type', 'chef_payable');
+  // Aggregation is done in SQL (SUM ... GROUP BY) by a SECURITY DEFINER RPC
+  // (migration 00045) instead of selecting every ledger row and summing in JS.
+  const { data, error } = await client.rpc('get_chef_liability_summaries', { p_limit: limit });
 
   if (error) throw error;
-
-  const totals = new Map<string, number>();
-  for (const row of (data ?? []) as LedgerEntityAmountRow[]) {
-    if (!row.entity_id) continue;
-    totals.set(row.entity_id, (totals.get(row.entity_id) ?? 0) + ((row.amount_cents ?? 0) / 100));
-  }
-
-  const ids = [...totals.keys()];
-  if (ids.length === 0) return [];
-
-  const { data: chefs, error: chefsError } = await client
-    .from('chef_profiles')
-    .select('id, display_name')
-    .in('id', ids);
-
-  if (chefsError) throw chefsError;
-
-  const names = new Map(((chefs ?? []) as ChefNameRow[]).map((chef) => [chef.id, chef.display_name]));
-
-  return ids
-    .map((id) => ({ id, name: names.get(id) ?? 'Unknown Chef', amount: totals.get(id) ?? 0 }))
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, limit);
+  return mapLiabilitySummaryRows((data ?? []) as LiabilitySummaryRow[], 'Unknown Chef');
 }
 
 export async function getDriverLiabilitySummaries(
   client: SupabaseClient,
   limit = 10
 ): Promise<LiabilitySummary[]> {
-  const { data, error } = await client
-    .from('ledger_entries')
-    .select('entity_id, amount_cents')
-    .in('entry_type', ['driver_payable', 'tip_payable']);
+  // Aggregation is done in SQL (SUM ... GROUP BY) by a SECURITY DEFINER RPC
+  // (migration 00045) instead of selecting every ledger row and summing in JS.
+  const { data, error } = await client.rpc('get_driver_liability_summaries', { p_limit: limit });
 
   if (error) throw error;
-
-  const totals = new Map<string, number>();
-  for (const row of (data ?? []) as LedgerEntityAmountRow[]) {
-    if (!row.entity_id) continue;
-    totals.set(row.entity_id, (totals.get(row.entity_id) ?? 0) + ((row.amount_cents ?? 0) / 100));
-  }
-
-  const ids = [...totals.keys()];
-  if (ids.length === 0) return [];
-
-  const { data: drivers, error: driversError } = await client
-    .from('drivers')
-    .select('id, first_name, last_name')
-    .in('id', ids);
-
-  if (driversError) throw driversError;
-
-  const names = new Map(
-    ((drivers ?? []) as DriverNameRow[]).map((driver) => [
-      driver.id,
-      [driver.first_name, driver.last_name].filter(Boolean).join(' ') || 'Unknown Driver',
-    ])
-  );
-
-  return ids
-    .map((id) => ({ id, name: names.get(id) ?? 'Unknown Driver', amount: totals.get(id) ?? 0 }))
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, limit);
+  return mapLiabilitySummaryRows((data ?? []) as LiabilitySummaryRow[], 'Unknown Driver');
 }

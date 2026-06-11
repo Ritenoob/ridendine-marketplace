@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Button } from '@ridendine/ui';
+import { Card, Button, DELIVERY_STATUS_LABELS } from '@ridendine/ui';
 import type { Delivery } from '@ridendine/db';
 import { useLocationTracker } from '@/hooks/use-location-tracker';
 import { RouteMap } from '@/components/map/route-map';
@@ -28,42 +28,44 @@ const ISSUE_OPTIONS: Array<{ value: DeliveryIssueType; label: string }> = [
   { value: 'unable_to_complete', label: 'Unable to complete' },
 ];
 
+// Workflow state machine (focus/guidance) stays local; display labels come
+// from the shared @ridendine/ui status map.
 const WORK_STEPS: Record<
   DeliveryStatus,
   { label: string; focus: 'Pickup' | 'Dropoff'; guidance: string }
 > = {
   assigned: {
-    label: 'Assigned',
+    label: DELIVERY_STATUS_LABELS.assigned!,
     focus: 'Pickup',
     guidance: 'Head to the restaurant and keep the order visible in this app.',
   },
   accepted: {
-    label: 'Accepted',
+    label: DELIVERY_STATUS_LABELS.accepted!,
     focus: 'Pickup',
     guidance: 'Head to the restaurant and keep the order visible in this app.',
   },
   en_route_to_pickup: {
-    label: 'En route to pickup',
+    label: DELIVERY_STATUS_LABELS.en_route_to_pickup!,
     focus: 'Pickup',
     guidance: 'Follow the route to the restaurant, then mark arrival when you are there.',
   },
   arrived_at_pickup: {
-    label: 'At restaurant',
+    label: DELIVERY_STATUS_LABELS.arrived_at_pickup!,
     focus: 'Pickup',
     guidance: 'Confirm the order with the chef and take pickup proof before leaving.',
   },
   picked_up: {
-    label: 'Picked up',
+    label: DELIVERY_STATUS_LABELS.picked_up!,
     focus: 'Dropoff',
     guidance: 'Start customer navigation and keep the package secure.',
   },
   en_route_to_dropoff: {
-    label: 'En route to customer',
+    label: DELIVERY_STATUS_LABELS.en_route_to_dropoff!,
     focus: 'Dropoff',
     guidance: 'Follow the route to the customer and watch for delivery instructions.',
   },
   arrived_at_dropoff: {
-    label: 'At customer',
+    label: DELIVERY_STATUS_LABELS.arrived_at_dropoff!,
     focus: 'Dropoff',
     guidance: 'Capture proof of delivery, collect the optional signature, and complete the delivery.',
   },
@@ -95,6 +97,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
   const [pickupPhoto, setPickupPhoto] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showIssuePanel, setShowIssuePanel] = useState(false);
   const [issueType, setIssueType] = useState<DeliveryIssueType>('chef_delay');
@@ -169,22 +172,22 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
   // Open Google Maps navigation
   const openNavigation = (address: string, lat?: number | null, lng?: number | null) => {
-    let url: string;
-
-    if (lat && lng) {
-      // Use coordinates if available
-      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-    } else {
-      // Fall back to address
-      const encodedAddress = encodeURIComponent(address);
-      url = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}&travelmode=driving`;
-    }
+    // Only trust coordinates when both are finite numbers; otherwise fall
+    // back to the address so deep links never contain "null,null".
+    const hasCoords =
+      typeof lat === 'number' &&
+      Number.isFinite(lat) &&
+      typeof lng === 'number' &&
+      Number.isFinite(lng);
+    const encodedAddress = encodeURIComponent(address);
+    const destination = hasCoords ? `${lat},${lng}` : encodedAddress;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
 
     // Try to open in Google Maps app on mobile
     if (/android/i.test(navigator.userAgent)) {
-      window.location.href = `google.navigation:q=${lat},${lng}`;
+      window.location.href = `google.navigation:q=${destination}`;
     } else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
-      window.location.href = `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving`;
+      window.location.href = `comgooglemaps://?daddr=${destination}&directionsmode=driving`;
       setTimeout(() => {
         window.open(url, '_blank');
       }, 500);
@@ -234,7 +237,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
   const handleAction = async () => {
     const action = getNextAction();
-    if (!action) return;
+    if (!action || isAdvancing) return;
     setErrorMessage(null);
 
     // Intercept pickup confirmation to require photo
@@ -243,17 +246,24 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
       return;
     }
 
-    // If starting navigation, open maps first
-    if (action.nextStatus === 'en_route_to_pickup') {
-      openNavigation(delivery.pickup_address, delivery.pickup_lat, delivery.pickup_lng);
-    } else if (action.nextStatus === 'en_route_to_dropoff') {
-      openNavigation(delivery.dropoff_address, delivery.dropoff_lat, delivery.dropoff_lng);
-    }
+    setIsAdvancing(true);
+    try {
+      // Persist the status change first; only open navigation once the
+      // server has confirmed the update.
+      const updated = await advanceStatus(action.nextStatus);
+      if (!updated) return;
 
-    await advanceStatus(action.nextStatus);
+      if (action.nextStatus === 'en_route_to_pickup') {
+        openNavigation(delivery.pickup_address, delivery.pickup_lat, delivery.pickup_lng);
+      } else if (action.nextStatus === 'en_route_to_dropoff') {
+        openNavigation(delivery.dropoff_address, delivery.dropoff_lat, delivery.dropoff_lng);
+      }
+    } finally {
+      setIsAdvancing(false);
+    }
   };
 
-  const advanceStatus = async (nextStatus: DeliveryStatus) => {
+  const advanceStatus = async (nextStatus: DeliveryStatus): Promise<boolean> => {
     try {
       const response = await fetch(`/api/deliveries/${delivery.id}`, {
         method: 'PATCH',
@@ -268,11 +278,14 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
       setStatus(nextStatus);
       router.refresh();
+      return true;
     } catch (error) {
       console.error('Error updating delivery:', error);
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to update delivery status'
       );
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return false;
     }
   };
 
@@ -647,14 +660,18 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
             <p className="mt-1 text-[14px] leading-relaxed text-[#6b7280]">
               {delivery.pickup_address}
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4 rounded-lg"
-              onClick={() => window.open(`tel:${deliveryWithContact.pickup_phone || ''}`, '_self')}
-            >
-              Call Restaurant
-            </Button>
+            {deliveryWithContact.pickup_phone ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 rounded-lg"
+                onClick={() => window.open(`tel:${deliveryWithContact.pickup_phone}`, '_self')}
+              >
+                Call Restaurant
+              </Button>
+            ) : (
+              <p className="mt-4 text-[13px] text-[#6b7280]">No restaurant phone number on file</p>
+            )}
           </>
         ) : (
           <>
@@ -673,14 +690,18 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
                 </p>
               </div>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4 rounded-lg"
-              onClick={() => window.open(`tel:${order?.customer_phone || ''}`, '_self')}
-            >
-              Call Customer
-            </Button>
+            {order?.customer_phone ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 rounded-lg"
+                onClick={() => window.open(`tel:${order.customer_phone}`, '_self')}
+              >
+                Call Customer
+              </Button>
+            ) : (
+              <p className="mt-4 text-[13px] text-[#6b7280]">No customer phone number on file</p>
+            )}
           </>
         )}
       </Card>
@@ -699,18 +720,24 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
           </Button>
         ) : action ? (
           <Button
-            className="w-full rounded-lg bg-brand-500 py-4 text-[15px] font-semibold hover:bg-brand-600"
+            className="w-full rounded-lg bg-brand-500 py-4 text-[15px] font-semibold hover:bg-brand-600 disabled:opacity-60"
             onClick={handleAction}
+            disabled={isAdvancing}
           >
-            {action.label}
+            {isAdvancing ? 'Updating...' : action.label}
           </Button>
         ) : null}
       </div>
 
       {showPickupModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6">
-            <h2 className="text-xl font-bold text-text">Confirm Pickup</h2>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pickup-modal-title"
+            className="w-full max-w-md rounded-2xl bg-white p-6"
+          >
+            <h2 id="pickup-modal-title" className="text-xl font-bold text-text">Confirm Pickup</h2>
             <p className="mt-1 text-sm text-textMuted">Take a photo of the order to confirm pickup</p>
 
             <input
@@ -767,8 +794,13 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
       {showCompletionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6">
-            <h2 className="text-xl font-bold text-text">Complete Delivery</h2>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="completion-modal-title"
+            className="w-full max-w-md rounded-xl bg-white p-6"
+          >
+            <h2 id="completion-modal-title" className="text-xl font-bold text-text">Complete Delivery</h2>
             <p className="mt-1 text-sm text-textMuted">
               Please take a photo and collect customer signature
             </p>

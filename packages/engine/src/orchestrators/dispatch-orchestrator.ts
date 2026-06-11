@@ -134,6 +134,20 @@ export class DispatchOrchestrator {
       .single();
 
     if (deliveryError || !delivery) {
+      // The check-then-insert above can race: a unique index on
+      // deliveries(order_id) turns the loser's insert into a 23505 unique
+      // violation. Recover by returning the already-created delivery instead
+      // of failing the dispatch (without re-running offers/SLA for it).
+      if (isUniqueViolation(deliveryError)) {
+        const { data: existing } = await this.client
+          .from('deliveries')
+          .select('*')
+          .eq('order_id', orderId)
+          .maybeSingle();
+        if (existing) {
+          return { success: true, data: existing as DeliveryData };
+        }
+      }
       return { success: false, error: { code: 'CREATE_FAILED', message: deliveryError?.message || 'Failed to create delivery' } };
     }
 
@@ -473,6 +487,14 @@ export class DispatchOrchestrator {
 // ==========================================
 // HELPERS
 // ==========================================
+
+/** Postgres unique-violation (23505), as surfaced by Supabase/PostgREST. */
+function isUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as { code?: unknown; message?: unknown };
+  if (err.code === '23505') return true;
+  return typeof err.message === 'string' && err.message.toLowerCase().includes('duplicate key value');
+}
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;

@@ -1,4 +1,5 @@
 import { getCartWithItems, type SupabaseClient } from '@ridendine/db';
+import { roundMoney } from '@/lib/cart-summary';
 import {
   BASE_DELIVERY_FEE,
   calculateDeliveryFee,
@@ -121,9 +122,8 @@ type SelectedOptionInput = {
   price_adjustment?: number;
 };
 
-export function roundMoney(value: number): number {
-  return Math.round(value * 100) / 100;
-}
+// Re-exported so existing consumers (e.g. /api/checkout) keep importing from here.
+export { roundMoney };
 
 function fail(code: string, message: string, status = 400): CheckoutQuoteFailure {
   return { ok: false, error: { code, message, status } };
@@ -233,7 +233,9 @@ export async function buildCheckoutQuote(
     clientTax,
     clientTotal,
   } = input;
-  const tip = Number(input.tip || 0);
+  // Round the tip once on intake: the client may send >2-decimal values, and an
+  // unrounded tip would make the charged total drift from the displayed breakdown.
+  const tip = roundMoney(Number(input.tip) || 0);
 
   const cart = await getCartWithItems(adminClient, customerId, storefrontId);
   if (!cart || !cart.cart_items || cart.cart_items.length === 0) {

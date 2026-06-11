@@ -39,7 +39,7 @@ export async function getMenuItemsByStorefront(
   const { data, error } = await query;
 
   if (error) throw error;
-  return (data ?? []) as unknown as MenuItemWithCategory[];
+  return data ?? [];
 }
 
 export async function getMenuItemById(

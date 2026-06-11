@@ -12,6 +12,7 @@ import {
   updateMenuItem,
   type SupabaseClient,
 } from '@ridendine/db';
+import { routeUpdateMenuItemSchema } from '@ridendine/validation';
 import {
   getEngine,
   getChefActorContext,
@@ -105,6 +106,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json();
+    const parsed = routeUpdateMenuItemSchema.safeParse(body);
+    if (!parsed.success) {
+      return errorResponse(
+        'VALIDATION_ERROR',
+        parsed.error.issues[0]?.message || 'Invalid menu item payload',
+        400
+      );
+    }
     const {
       name,
       description,
@@ -112,15 +121,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       category_id,
       is_available,
       is_featured,
-      is_sold_out,
-      daily_limit,
-      daily_sold,
-      restock_at,
       image_url,
       sort_order,
       dietary_tags,
       prep_time_minutes,
-    } = body;
+    } = parsed.data;
+    // Stock fields are not covered by routeUpdateMenuItemSchema; read them
+    // from the raw body as before.
+    const { is_sold_out, daily_limit, daily_sold, restock_at } = body;
 
     const adminClient = createAdminClient() as unknown as SupabaseClient;
     const engine = getEngine();

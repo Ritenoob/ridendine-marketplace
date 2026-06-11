@@ -3,13 +3,16 @@ import { Badge, Card } from '@ridendine/ui';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getEngine } from '@/lib/engine';
 import { createAdminClient, listOpsDrivers, type SupabaseClient } from '@ridendine/db';
+import { formatCurrency, formatCurrencyFromCents } from '@ridendine/utils';
 import { notFound } from 'next/navigation';
 import { DeliveryActions } from './delivery-actions';
 
 export const dynamic = 'force-dynamic';
 
+// Delivery fee / driver payout are dollars; refund exposure is cents
+// (formatted via formatCurrencyFromCents at the call site).
 function formatMoney(value: number): string {
-  return `$${value.toFixed(2)}`;
+  return formatCurrency(value);
 }
 
 function formatDate(value: string | null | undefined): string {
@@ -129,7 +132,7 @@ export default async function DeliveryDetailPage({
                 <div className="rounded-lg bg-surface p-4">
                   <p className="text-xs uppercase tracking-wide text-textMuted">Refund exposure</p>
                   <p className="mt-2 text-lg font-semibold text-warning">
-                    {formatMoney(detail.payout.refundExposureCents / 100)}
+                    {formatCurrencyFromCents(detail.payout.refundExposureCents)}
                   </p>
                 </div>
               </div>

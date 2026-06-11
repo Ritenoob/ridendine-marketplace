@@ -15,7 +15,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "clean": "turbo clean && rm -rf node_modules",
+    "clean": "turbo clean && node -e \"require('node:fs').rmSync('node_modules',{recursive:true,force:true})\"",
     "db:generate": "turbo db:generate --filter=@ridendine/db",
     "db:migrate": "supabase db push",
     "db:seed": "supabase db seed",
@@ -30,7 +30,6 @@
     "test:smoke": "playwright test --grep @smoke",
     "test:load": "node scripts/load/run-load-smoke.mjs",
     "test:load:dry-run": "node scripts/load/run-load-smoke.mjs --dry-run",
-    "test:load:staging": "node scripts/load/run-load-smoke.mjs",
     "tools:ensure": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/tools/ensure-node-pnpm.ps1",
     "smoke:prod": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/smoke/production-smoke.ps1",
     "release:verify": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/release/verify-release.ps1",
@@ -59,19 +58,12 @@
     "docs:api-guard-snapshot": "powershell -ExecutionPolicy Bypass -File scripts/docs/generate-api-guard-snapshot.ps1",
     "docs:wiring": "node scripts/wiring/generate-wiring-docs.cjs && pnpm smoke:surface-classification -- --write-docs && pnpm smoke:runtime-coverage -- --write-docs && pnpm smoke:proof-disposition -- --write-docs && pnpm smoke:non-admin-role-fixture -- --contracts-only --write-docs && pnpm docs:supabase",
     "docs:supabase": "node scripts/wiring/generate-supabase-diagrams.cjs",
-    "test:wiring-fixes": "node scripts/wiring/verify-known-wiring-fixes.cjs && node --test scripts/smoke/runtime-contract-smoke.test.cjs scripts/smoke/live-role-fixture-smoke.test.cjs scripts/smoke/non-admin-role-fixture-smoke.test.cjs scripts/smoke/runtime-surface-classification.test.cjs scripts/smoke/runtime-coverage-audit.test.cjs scripts/smoke/runtime-proof-disposition.test.cjs scripts/smoke/ops-export-audit-smoke.test.cjs scripts/smoke/runtime-proof-action-smoke.test.cjs scripts/smoke/runtime-sample-fixtures.test.cjs scripts/smoke/driver-shift-mutation-smoke.test.cjs scripts/smoke/production-smoke.test.cjs scripts/smoke/responsive-production-smoke.test.cjs scripts/audit/sean-super-admin-fixture.test.cjs",
+    "test:wiring-fixes": "node scripts/wiring/verify-known-wiring-fixes.cjs && node --test scripts/smoke/runtime-contract-smoke.test.cjs scripts/smoke/live-role-fixture-smoke.test.cjs scripts/smoke/non-admin-role-fixture-smoke.test.cjs scripts/smoke/runtime-surface-classification.test.cjs scripts/smoke/runtime-coverage-audit.test.cjs scripts/smoke/runtime-proof-disposition.test.cjs scripts/smoke/ops-export-audit-smoke.test.cjs scripts/smoke/runtime-proof-action-smoke.test.cjs scripts/smoke/runtime-sample-fixtures.test.cjs scripts/smoke/driver-shift-mutation-smoke.test.cjs scripts/smoke/production-smoke.test.cjs scripts/smoke/responsive-production-smoke.test.cjs scripts/audit/sean-super-admin-fixture.test.cjs scripts/audit/high-risk-ops-authz-contracts.test.cjs scripts/audit/high-risk-ops-negative-authz.test.cjs",
     "audit:guards": "node scripts/audit/check-api-route-guards.mjs",
     "test:e2e:setup": "supabase db reset && pnpm db:seed",
     "test:e2e:lifecycle:fixtures": "node scripts/e2e/verify-lifecycle-fixtures.mjs",
     "test:e2e:lifecycle:reset": "node scripts/e2e/reset-live-fixtures.mjs",
     "test:e2e:lifecycle": "pnpm test:e2e:lifecycle:fixtures && playwright test e2e/lifecycle --project=web-smoke"
-  },
-  "dependencies": {
-    "@sentry/nextjs": "^9.0.0",
-    "lucide-react": "^0.454.0",
-    "next": "^14.2.0",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

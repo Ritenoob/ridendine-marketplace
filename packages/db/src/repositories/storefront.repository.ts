@@ -93,7 +93,7 @@ export async function getActiveStorefronts(
   const { data, error } = await query;
 
   if (error) throw error;
-  return data as unknown as StorefrontWithChef[];
+  return data;
 }
 
 export async function getStorefrontBySlug(
@@ -121,7 +121,7 @@ export async function getStorefrontBySlug(
     throw error;
   }
 
-  return data as unknown as StorefrontWithChef;
+  return data;
 }
 
 export async function getStorefrontById(
@@ -241,5 +241,5 @@ export async function searchStorefronts(
   const { data, error } = await q;
 
   if (error) throw error;
-  return data as unknown as StorefrontWithChef[];
+  return data;
 }

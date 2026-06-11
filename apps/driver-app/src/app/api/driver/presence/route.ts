@@ -5,6 +5,7 @@
 
 import type { NextRequest } from 'next/server';
 import { createAdminClient } from '@ridendine/db';
+import { presencePatchSchema } from '@ridendine/validation';
 import {
   getEngine,
   getDriverActorContext,
@@ -13,8 +14,6 @@ import {
 } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
-
-type DriverPresenceStatus = 'offline' | 'online' | 'busy';
 
 /**
  * GET /api/driver/presence
@@ -65,16 +64,22 @@ export async function PATCH(request: NextRequest) {
       return errorResponse('UNAUTHORIZED', 'Not authenticated or not approved', 401);
     }
 
-    const body = await request.json();
-    const { status } = body;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return errorResponse('INVALID_JSON', 'Expected JSON body', 400);
+    }
 
-    const validStatuses: DriverPresenceStatus[] = ['offline', 'online', 'busy'];
-    if (!status || !validStatuses.includes(status)) {
+    const parsed = presencePatchSchema.safeParse(body);
+    if (!parsed.success) {
       return errorResponse(
-        'INVALID_STATUS',
-        `Status must be one of: ${validStatuses.join(', ')}`
+        'VALIDATION_ERROR',
+        parsed.error.issues[0]?.message || 'Status must be one of: online, offline, busy',
+        400
       );
     }
+    const { status } = parsed.data;
 
     const adminClient = createAdminClient();
     const engine = getEngine();

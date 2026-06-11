@@ -7,6 +7,7 @@ import type { Database as GeneratedDatabase } from './generated/database.types';
 
 type GenPublic = GeneratedDatabase['public'];
 type GenTables = GenPublic['Tables'];
+type GenFunctions = GenPublic['Functions'];
 
 type PlatformAccountsTable = {
   Row: {
@@ -195,10 +196,107 @@ type StripeEventsExtended = Omit<GenTables['stripe_events_processed'], 'Row' | '
   Update: GenTables['stripe_events_processed']['Update'] & { stripe_amount_cents?: number | null };
 };
 
+// Migration 00043 — typegen ran against an older remote DB without this table.
+type PromoCodeUsagesTable = {
+  Row: {
+    id: string;
+    promo_id: string;
+    customer_id: string;
+    order_id: string | null;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    promo_id: string;
+    customer_id: string;
+    order_id?: string | null;
+    created_at?: string;
+  };
+  Update: {
+    id?: string;
+    promo_id?: string;
+    customer_id?: string;
+    order_id?: string | null;
+    created_at?: string;
+  };
+  Relationships: [];
+};
+
+// Migration 00045 — SECURITY DEFINER aggregation RPCs missing from typegen.
+type LiabilitySummaryReturns = Array<{
+  id: string;
+  name: string | null;
+  amount: number;
+}>;
+
+type MergedFunctions = GenFunctions & {
+  get_chef_liability_summaries: {
+    Args: { p_limit?: number };
+    Returns: LiabilitySummaryReturns;
+  };
+  get_driver_liability_summaries: {
+    Args: { p_limit?: number };
+    Returns: LiabilitySummaryReturns;
+  };
+};
+
+// customers.user_id was made nullable by migration 00030 purely so dev/staging
+// seed rows can exist without auth users. Every application-created customer
+// has a user_id, and engine + app code (customers.service, push subscription
+// routes) rely on it being present. Narrow Row to non-null; Insert/Update keep
+// the generated nullable shape so seed-style writes still typecheck.
+type CustomersNarrowed = Omit<GenTables['customers'], 'Row'> & {
+  Row: Omit<GenTables['customers']['Row'], 'user_id'> & { user_id: string };
+};
+
+// packages/engine permissions.service upserts platform_users rows with only
+// (user_id, role, is_active, updated_at) — valid for the update path of the
+// upsert on existing rows. email/name are NOT NULL in the schema but are made
+// optional here so that pre-existing call pattern keeps compiling.
+type PlatformUsersLoosened = Omit<GenTables['platform_users'], 'Insert' | 'Update'> & {
+  Insert: Omit<GenTables['platform_users']['Insert'], 'email' | 'name'> & {
+    email?: string;
+    name?: string;
+  };
+  Update: GenTables['platform_users']['Update'];
+};
+
+// apps/web notifications routes reference legacy alias columns `read` and
+// `action_url` that the canonical schema spells `is_read` / (no equivalent).
+// Kept as optional members for compile compatibility with that pre-existing
+// code path; regenerating after a column-alias migration should remove this.
+type NotificationsWithAliases = {
+  Row: GenTables['notifications']['Row'] & {
+    read?: boolean | null;
+    action_url?: string | null;
+  };
+  // body is NOT NULL in-schema but migration 00010 installed a trigger that
+  // backfills it from `message`, so inserts may omit it.
+  Insert: Omit<GenTables['notifications']['Insert'], 'body'> & {
+    body?: string;
+    read?: boolean | null;
+    action_url?: string | null;
+  };
+  Update: GenTables['notifications']['Update'] & {
+    read?: boolean | null;
+    action_url?: string | null;
+  };
+  Relationships: GenTables['notifications']['Relationships'];
+};
+
 type MergedTables = Omit<
   GenTables,
-  'drivers' | 'chef_payouts' | 'driver_payouts' | 'stripe_events_processed'
+  | 'drivers'
+  | 'chef_payouts'
+  | 'driver_payouts'
+  | 'stripe_events_processed'
+  | 'customers'
+  | 'platform_users'
+  | 'notifications'
 > & {
+  customers: CustomersNarrowed;
+  platform_users: PlatformUsersLoosened;
+  notifications: NotificationsWithAliases;
   drivers: DriversExtended;
   chef_payouts: ChefPayoutsExtended;
   driver_payouts: DriverPayoutsExtended;
@@ -207,10 +305,12 @@ type MergedTables = Omit<
   platform_accounts: PlatformAccountsTable;
   instant_payout_requests: InstantPayoutRequestsTable;
   service_areas: ServiceAreasTable;
+  promo_code_usages: PromoCodeUsagesTable;
 };
 
 export type Database = Omit<GeneratedDatabase, 'public'> & {
-  public: Omit<GenPublic, 'Tables'> & {
+  public: Omit<GenPublic, 'Tables' | 'Functions'> & {
     Tables: MergedTables;
+    Functions: MergedFunctions;
   };
 };

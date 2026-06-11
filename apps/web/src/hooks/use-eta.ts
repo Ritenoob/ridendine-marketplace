@@ -32,7 +32,10 @@ export function useEta(storefrontId: string | null, addressId: string | null): E
     fetch(`/api/eta?storefrontId=${storefrontId}&addressId=${encodeURIComponent(addressId)}`, {
       signal: controller.signal,
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`ETA request failed: ${res.status}`);
+        return res.json();
+      })
       .then((data: EtaResult) => {
         setState({ eta: data, loading: false });
       })

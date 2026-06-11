@@ -8,6 +8,7 @@ import type { NextRequest } from 'next/server';
 import { createAdminClient, createServerClient } from '@ridendine/db';
 import { cookies } from 'next/headers';
 import { checkRateLimit, getClientIp, isUuid, rateLimitResponse } from '@ridendine/utils';
+import { createReviewSchema } from '@ridendine/validation';
 import { getCustomerActorContext } from '@ridendine/engine/server';
 
 export const dynamic = 'force-dynamic';
@@ -31,11 +32,14 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { orderId, rating, comment } = body;
-
-    if (!orderId || typeof orderId !== 'string' || !rating || rating < 1 || rating > 5) {
-      return Response.json({ error: 'orderId and rating (1-5) are required' }, { status: 400 });
+    const parsed = createReviewSchema.safeParse(body);
+    if (!parsed.success) {
+      return Response.json(
+        { error: parsed.error.issues[0]?.message || 'orderId and rating (1-5) are required' },
+        { status: 400 }
+      );
     }
+    const { orderId, rating, comment } = parsed.data;
     if (!isUuid(orderId)) {
       return Response.json({ error: 'Invalid orderId' }, { status: 400 });
     }

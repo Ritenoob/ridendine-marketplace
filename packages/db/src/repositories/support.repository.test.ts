@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { SupabaseClient } from '../client/types';
 import {
   getSupportTicketForCustomer,
   listCustomerSupportTickets,
@@ -41,7 +42,7 @@ describe('listSupportTicketsForSupportAgent', () => {
       return chain;
     });
 
-    const out = await listSupportTicketsForSupportAgent({ from } as any, 'u1');
+    const out = await listSupportTicketsForSupportAgent({ from } as unknown as SupabaseClient, 'u1');
     expect(out.map((t) => t.id).sort()).toEqual(['a', 'b']);
     expect(out[0]?.id).toBe('a');
   });
@@ -54,7 +55,7 @@ describe('customer ticket ownership filters', () => {
     const select = vi.fn().mockReturnValue({ eq, order });
     const from = vi.fn().mockReturnValue({ select });
 
-    await listCustomerSupportTickets({ from } as any, 'cust-123');
+    await listCustomerSupportTickets({ from } as unknown as SupabaseClient, 'cust-123');
     expect(eq).toHaveBeenCalledWith('customer_id', 'cust-123');
   });
 
@@ -64,7 +65,7 @@ describe('customer ticket ownership filters', () => {
     const select = vi.fn().mockReturnValue({ eq, maybeSingle });
     const from = vi.fn().mockReturnValue({ select });
 
-    await getSupportTicketForCustomer({ from } as any, 'ticket-1', 'cust-999');
+    await getSupportTicketForCustomer({ from } as unknown as SupabaseClient, 'ticket-1', 'cust-999');
     expect(eq).toHaveBeenCalledWith('id', 'ticket-1');
     expect(eq).toHaveBeenCalledWith('customer_id', 'cust-999');
   });

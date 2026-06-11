@@ -44,7 +44,10 @@ export const coordinatesSchema = z.object({
   lng: z.number().min(-180).max(180),
 });
 
-export const priceSchema = z.number().min(0, 'Price must be positive');
+export const priceSchema = z
+  .number()
+  .min(0, 'Price must be positive')
+  .max(100000, 'Price exceeds maximum allowed value');
 
 export const ratingSchema = z.number().int().min(1).max(5);
 

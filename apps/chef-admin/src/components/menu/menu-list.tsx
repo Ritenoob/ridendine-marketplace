@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Badge, Button } from '@ridendine/ui';
+// Menu item prices are dollars.
+import { formatCurrency } from '@ridendine/utils';
 import {
   AlertTriangle,
   BarChart3,
@@ -103,13 +105,6 @@ function getItemHealth(item: MenuItem) {
   }
 
   return { label: 'Ready', tone: 'bg-successSoft text-success ring-success/30', detail: 'Customer-ready and operational' };
-}
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('en-CA', {
-    style: 'currency',
-    currency: 'CAD',
-  }).format(value);
 }
 
 export function MenuList({ categories: initialCategories, storefrontName }: MenuListProps) {

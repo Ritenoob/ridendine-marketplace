@@ -154,6 +154,37 @@ function Pagination({
   );
 }
 
+// ── Sorting ───────────────────────────────────────────────────────────────
+
+// Matches ISO-8601 calendar dates with optional time ("2026-06-10", "2026-06-10T12:00:00Z").
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}([T ].*)?$/;
+
+/**
+ * Type-aware comparison: numbers numerically, Dates/ISO-date strings
+ * chronologically, everything else via localeCompare (with numeric collation
+ * so "10" sorts after "9"). Null/undefined sort first.
+ */
+function compareValues(a: unknown, b: unknown): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return -1;
+  if (b == null) return 1;
+
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  if (typeof a === 'boolean' && typeof b === 'boolean') return Number(a) - Number(b);
+  if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime();
+
+  const aStr = String(a);
+  const bStr = String(b);
+
+  if (ISO_DATE_RE.test(aStr) && ISO_DATE_RE.test(bStr)) {
+    const aTime = Date.parse(aStr);
+    const bTime = Date.parse(bStr);
+    if (!Number.isNaN(aTime) && !Number.isNaN(bTime)) return aTime - bTime;
+  }
+
+  return aStr.localeCompare(bStr, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 // ── Main component ────────────────────────────────────────────────────────
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -188,15 +219,17 @@ export function DataTable<TRow>({
   const sortedData = React.useMemo(() => {
     if (!sort) return data;
     return [...data].sort((a, b) => {
-      const aVal = String((a as Record<string, unknown>)[sort.key] ?? '');
-      const bVal = String((b as Record<string, unknown>)[sort.key] ?? '');
-      const cmp = aVal.localeCompare(bVal);
+      const aVal = (a as Record<string, unknown>)[sort.key];
+      const bVal = (b as Record<string, unknown>)[sort.key];
+      const cmp = compareValues(aVal, bVal);
       return sort.direction === 'asc' ? cmp : -cmp;
     });
   }, [data, sort]);
 
   const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize));
-  const paginatedData = sortedData.slice((page - 1) * pageSize, page * pageSize);
+  // Clamp so the table never shows an empty out-of-range page when data shrinks.
+  const currentPage = Math.min(page, totalPages);
+  const paginatedData = sortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const isEmpty = !isLoading && data.length === 0;
 
@@ -217,10 +250,8 @@ export function DataTable<TRow>({
                   scope="col"
                   className={cn(
                     'px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-textMuted',
-                    col.sortable && 'cursor-pointer select-none hover:text-text',
                     col.className,
                   )}
-                  onClick={col.sortable ? () => handleSort(col.key) : undefined}
                   aria-sort={
                     sort?.key === col.key
                       ? sort.direction === 'asc'
@@ -229,12 +260,18 @@ export function DataTable<TRow>({
                       : undefined
                   }
                 >
-                  <span className="flex items-center">
-                    {col.header}
-                    {col.sortable && (
+                  {col.sortable ? (
+                    <button
+                      type="button"
+                      onClick={() => handleSort(col.key)}
+                      className="flex select-none items-center text-xs font-semibold uppercase tracking-wide text-textMuted transition-colors hover:text-text focus:outline-none focus-visible:shadow-focus"
+                    >
+                      {col.header}
                       <SortIcon direction={sort?.key === col.key ? sort.direction : undefined} />
-                    )}
-                  </span>
+                    </button>
+                  ) : (
+                    <span className="flex items-center">{col.header}</span>
+                  )}
                 </th>
               ))}
             </tr>
@@ -272,7 +309,7 @@ export function DataTable<TRow>({
         </table>
       </div>
       <Pagination
-        page={page}
+        page={currentPage}
         totalPages={totalPages}
         totalRows={sortedData.length}
         pageSize={pageSize}

@@ -60,6 +60,20 @@ describe('calculateDistanceKm', () => {
     expect(calculateDistanceKm(43.25, -79.87, null, null)).toBeNull();
   });
 
+  it('treats coordinate 0 as a valid coordinate, not missing', () => {
+    // Null Island to itself — 0 must not be coerced to "missing"
+    expect(calculateDistanceKm(0, 0, 0, 0)).toBeCloseTo(0, 5);
+    // 0 latitude with a real second point yields a finite distance
+    const dist = calculateDistanceKm(0, -79.87, 43.25, -79.87);
+    expect(dist).not.toBeNull();
+    expect(dist).toBeGreaterThan(4000);
+  });
+
+  it('returns null for non-finite coordinates', () => {
+    expect(calculateDistanceKm(Number.NaN, -79.87, 43.25, -79.87)).toBeNull();
+    expect(calculateDistanceKm(43.25, Number.POSITIVE_INFINITY, 43.25, -79.87)).toBeNull();
+  });
+
   it('returns 0 for same point', () => {
     const dist = calculateDistanceKm(43.2557, -79.8711, 43.2557, -79.8711);
     expect(dist).toBeCloseTo(0, 1);

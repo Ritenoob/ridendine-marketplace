@@ -27,8 +27,17 @@
       "cache": false,
       "persistent": true
     },
-    "lint": {},
-    "typecheck": {},
+    "lint": {
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.md", "!**/graphify-out/**"]
+    },
+    "typecheck": {
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.md", "!**/graphify-out/**"],
+      "outputs": ["*.tsbuildinfo"]
+    },
+    "test": {
+      "dependsOn": [],
+      "outputs": []
+    },
     "db:generate": {
       "cache": false,
       "env": [

@@ -16,6 +16,7 @@ import {
   RATE_LIMIT_POLICIES,
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
+import { customerOrderActionSchema } from '@ridendine/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -207,7 +208,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json();
-    const { action, reason, notes } = body;
+    const parsed = customerOrderActionSchema.safeParse(body);
+    if (!parsed.success) {
+      return errorResponse(
+        'VALIDATION_ERROR',
+        parsed.error.issues[0]?.message || 'Invalid order action payload',
+        400
+      );
+    }
+    const { action, reason, notes } = parsed.data;
 
     const engine = getEngine();
 

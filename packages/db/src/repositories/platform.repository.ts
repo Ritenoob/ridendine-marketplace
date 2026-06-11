@@ -130,12 +130,12 @@ function mapPlatformSettings(row: PlatformSettingsRow): PlatformRuleSet {
 export async function getPlatformSettings(
   client: SupabaseClient
 ): Promise<PlatformRuleSet> {
-  const { data, error } = await (client
+  const { data, error } = await client
     .from('platform_settings')
     .select('*')
     .order('updated_at', { ascending: false })
     .limit(1)
-    .single() as any);
+    .single();
 
   if (error) {
     if (shouldFallbackToDefaultPlatformSettings(error)) {
@@ -191,11 +191,12 @@ export async function updatePlatformSettings(
     updated_by: actorUserId,
   };
 
-  const { data, error } = await ((client.from('platform_settings') as any)
+  const { data, error } = await client
+    .from('platform_settings')
     .update(payload)
     .eq('id', targetId)
     .select('*')
-    .single());
+    .single();
 
   if (error) {
     if (shouldFallbackToDefaultPlatformSettings(error)) {

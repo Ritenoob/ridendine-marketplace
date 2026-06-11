@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { createAdminClient, createServerClient } from '@ridendine/db';
 import { cookies } from 'next/headers';
 import { isUuid } from '@ridendine/utils';
+import { addFavoriteSchema } from '@ridendine/validation';
 import { getCustomerActorContext } from '@ridendine/engine/server';
 
 export const dynamic = 'force-dynamic';
@@ -38,10 +39,14 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { storefrontId } = await request.json();
-  if (!storefrontId || typeof storefrontId !== 'string') {
-    return Response.json({ error: 'storefrontId required' }, { status: 400 });
+  const parsed = addFavoriteSchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return Response.json(
+      { error: parsed.error.issues[0]?.message || 'storefrontId required' },
+      { status: 400 }
+    );
   }
+  const { storefrontId } = parsed.data;
   if (!isUuid(storefrontId)) {
     return Response.json({ error: 'Invalid storefrontId' }, { status: 400 });
   }

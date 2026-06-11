@@ -143,7 +143,6 @@ const endpointNegativeContracts = [
   processor('/api/cron/payouts-driver-preview', 'POST', 'Cron wrapper'),
   processor('/api/cron/reconciliation-daily', 'GET', 'Cron wrapper'),
   processor('/api/cron/reconciliation-daily', 'POST', 'Cron wrapper'),
-  processor('/api/cron/sla-tick', 'GET', 'Cron wrapper'),
   processor('/api/cron/sla-tick', 'POST', 'Cron wrapper'),
 
   commandCenter('/api/internal/command-center/change-requests', 'GET'),

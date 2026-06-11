@@ -256,6 +256,36 @@ describe('DriverMatchingService', () => {
     expect(result.map((driver) => driver.id)).toEqual([DRIVER_A_ID]);
   });
 
+  it('findEligibleDrivers excludes drivers with missing coordinates when filtering by location', async () => {
+    const withCoords = makeDriverRow(DRIVER_A_ID, 43.26, -79.87);
+    const noCoords = makeDriverRow(DRIVER_B_ID, 0, 0);
+    (noCoords.driver_presence as Record<string, unknown>).current_lat = null;
+    (noCoords.driver_presence as Record<string, unknown>).current_lng = null;
+
+    const client = buildMockClient([withCoords, noCoords], [], []);
+    const service = new DriverMatchingService(client as any);
+
+    const result = await service.findEligibleDrivers(43.26, -79.87, 10);
+
+    // The driver with null coordinates must NOT slip past the radius filter
+    // (and must not score as distance 0 / best candidate).
+    expect(result.map((d) => d.id)).toEqual([DRIVER_A_ID]);
+  });
+
+  it('findEligibleDrivers treats a legitimate coordinate of exactly 0 as valid', async () => {
+    // Driver on the equator: lat 0 is falsy but valid.
+    const equatorDriver = makeDriverRow(DRIVER_A_ID, 0, -79.87);
+    const client = buildMockClient([equatorDriver], [], []);
+    const service = new DriverMatchingService(client as any);
+
+    const result = await service.findEligibleDrivers(0.01, -79.87, 10);
+
+    expect(result.length).toBe(1);
+    expect(result[0]!.id).toBe(DRIVER_A_ID);
+    // Distance must actually be computed (~1.1 km), not defaulted to 0.
+    expect(result[0]!.distance_km).toBeGreaterThan(0.5);
+  });
+
   describe('selectBestDriver', () => {
     it('returns highest-scoring driver from a 3-driver list', () => {
       const service = new DriverMatchingService({ from: vi.fn() } as any);

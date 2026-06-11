@@ -35,6 +35,23 @@ describe('computeProgressPct', () => {
     expect(p).toBeLessThanOrEqual(100);
     expect(Number.isNaN(p)).toBe(false);
   });
+
+  it('scales lng by cos(lat) when projecting onto a diagonal segment', () => {
+    // Single diagonal segment at ~60°N where 1° of lng covers only ~half the
+    // ground distance of 1° of lat. Without cos(lat) scaling the projection
+    // over-weights the east-west component.
+    const enc = encodePolyline([
+      { lat: 60, lng: 0 },
+      { lat: 60.5, lng: 2 },
+    ]);
+    const p = computeProgressPct({ lat: 60.25, lng: 0.4 }, enc);
+
+    // Equirectangular projection with latScale = cos(60.25°) ≈ 0.4962:
+    //   t = (0.4·s·2·s + 0.25·0.5) / ((2·s)² + 0.5²) ≈ 0.2607  →  ~26%
+    // The unscaled (buggy) projection gives t ≈ 0.2176 (~21.8%).
+    expect(p).toBeGreaterThan(25);
+    expect(p).toBeLessThan(27.5);
+  });
 });
 
 describe('estimateRemainingSeconds', () => {

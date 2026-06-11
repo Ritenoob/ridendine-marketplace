@@ -55,7 +55,13 @@ export const addFavoriteSchema = z.object({
 export const checkoutSchema = z.object({
   storefrontId: z.string().uuid('storefrontId must be a valid UUID'),
   deliveryAddressId: z.string().uuid('deliveryAddressId must be a valid UUID'),
-  tip: z.number().min(0).optional().default(0),
+  tip: z
+    .number()
+    .min(0, 'Tip cannot be negative')
+    .max(500, 'Tip cannot exceed $500')
+    .multipleOf(0.01, 'Tip must be a whole cent amount')
+    .optional()
+    .default(0),
   promoCode: z.string().optional(),
   specialInstructions: z.string().optional(),
   /** ISO timestamp for scheduled delivery. Null / absent means ASAP. */

@@ -90,7 +90,7 @@ export async function getChefWithStorefronts(
     throw error;
   }
 
-  return data as unknown as ChefProfileWithStorefronts;
+  return data;
 }
 
 export async function getChefGovernanceDetail(
@@ -125,7 +125,7 @@ export async function getChefGovernanceDetail(
 
   if (storefrontIds.length === 0) {
     return {
-      ...(chef as unknown as ChefProfile),
+      ...chef,
       chef_storefronts: storefronts,
       order_count: 0,
       total_revenue: 0,
@@ -141,7 +141,7 @@ export async function getChefGovernanceDetail(
   if (ordersError) throw ordersError;
 
   return {
-    ...(chef as unknown as ChefProfile),
+    ...chef,
     chef_storefronts: storefronts,
     order_count: orders?.length ?? 0,
     total_revenue: ((orders ?? []) as DeliveredOrderTotalRow[]).reduce(
@@ -231,7 +231,7 @@ export async function listChefsWithStorefronts(
 
   if (countError) throw countError;
   if (error) throw error;
-  return { items: (data ?? []) as unknown as ChefProfileWithStorefronts[], total: count ?? 0 };
+  return { items: data ?? [], total: count ?? 0 };
 }
 
 export async function approveChef(

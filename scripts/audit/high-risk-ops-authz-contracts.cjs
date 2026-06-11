@@ -150,7 +150,7 @@ const contracts = [
     route: '/api/cron/sla-tick',
     file: 'apps/ops-admin/src/app/api/cron/sla-tick/route.ts',
     tokens: ['validateEngineProcessorHeaders'],
-    methods: [method('GET', ['run(request)']), method('POST', ['run(request)'])],
+    methods: [method('POST', ['run(request)'])],
   },
   {
     area: 'Internal command center',

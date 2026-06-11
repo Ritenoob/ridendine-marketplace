@@ -3,6 +3,7 @@
 // ==========================================
 
 import type { OrderStatus, PaymentStatus } from '../enums';
+import type { PublicOrderStage } from '../public-order-stage';
 
 export interface Order {
   id: string;
@@ -24,6 +25,19 @@ export interface Order {
   actual_ready_at: string | null;
   created_at: string;
   updated_at: string;
+  // Engine / lifecycle columns (orders table in database.types.ts).
+  // Optional so partial selects and legacy literals still typecheck;
+  // nullability mirrors the generated DB types.
+  /** Internal engine state machine status (nullable in DB). */
+  engine_status?: string | null;
+  /** Customer-safe lifecycle projection (NOT NULL in DB). */
+  public_stage?: PublicOrderStage | string;
+  cancellation_reason?: string | null;
+  cancellation_notes?: string | null;
+  cancelled_at?: string | null;
+  cancelled_by?: string | null;
+  prep_started_at?: string | null;
+  exception_count?: number | null;
 }
 
 export interface OrderItem {

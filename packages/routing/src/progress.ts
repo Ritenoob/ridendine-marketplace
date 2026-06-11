@@ -44,21 +44,8 @@ export function snapToRoute(point: Point, routePoints: Point[]): Point {
 }
 
 function closestOnSegment(p: Point, a: Point, b: Point): Point {
-  const ax = a.lng;
-  const ay = a.lat;
-  const bx = b.lng;
-  const by = b.lat;
-  const px = p.lng;
-  const py = p.lat;
-  const abx = bx - ax;
-  const aby = by - ay;
-  const apx = px - ax;
-  const apy = py - ay;
-  const ab2 = abx * abx + aby * aby;
-  if (ab2 === 0) return { lat: ay, lng: ax };
-  let t = (apx * abx + apy * aby) / ab2;
-  t = clamp(t, 0, 1);
-  return { lat: ay + t * aby, lng: ax + t * abx };
+  const t = closestTOnSegment(p, a, b);
+  return { lat: a.lat + t * (b.lat - a.lat), lng: a.lng + t * (b.lng - a.lng) };
 }
 
 /**
@@ -104,11 +91,16 @@ export function computeProgressPct(point: Point, polyline: string): number {
 }
 
 function closestTOnSegment(p: Point, a: Point, b: Point): number {
-  const ax = a.lng;
+  // Project in an equirectangular approximation: one degree of longitude spans
+  // cos(latitude) times the distance of one degree of latitude, so scale the
+  // lng axis by cos(mean lat) — otherwise east-west deltas are over-weighted
+  // (~37% at 43°N) and projections snap to the wrong segment point.
+  const latScale = Math.cos((((a.lat + b.lat + p.lat) / 3) * Math.PI) / 180);
+  const ax = a.lng * latScale;
   const ay = a.lat;
-  const bx = b.lng;
+  const bx = b.lng * latScale;
   const by = b.lat;
-  const px = p.lng;
+  const px = p.lng * latScale;
   const py = p.lat;
   const abx = bx - ax;
   const aby = by - ay;

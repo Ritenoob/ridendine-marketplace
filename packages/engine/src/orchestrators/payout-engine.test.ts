@@ -104,10 +104,32 @@ describe('PayoutEngine.calculateChefPayout', () => {
 
     const result = await engine.calculateChefPayout({ orderId: 'order-1' });
 
-    const expectedPlatformFee = Math.round(40 * PLATFORM_FEE_PERCENT / 100);
+    const expectedPlatformFee = Math.round(4000 * PLATFORM_FEE_PERCENT / 100) / 100;
     expect(result.subtotal).toBe(40);
     expect(result.platformFee).toBe(expectedPlatformFee);
     expect(result.chefGross).toBe(40 - expectedPlatformFee);
+  });
+
+  it('keeps cent precision for non-round subtotals (43.50 → 6.53 fee, not $7)', async () => {
+    const order = {
+      id: 'order-1b',
+      subtotal: 43.5,
+      delivery_fee: 5,
+      service_fee: 3.48,
+      tax: 6.76,
+      tip: 2,
+      total: 60.74,
+    };
+
+    const client = makeSupabase({ orders: { data: order, error: null } });
+    const engine = createPayoutEngine(client as never, mockAudit as never, mockEvents as never);
+
+    const result = await engine.calculateChefPayout({ orderId: 'order-1b' });
+
+    // 4350 cents * 15% = 652.5 → 653 cents = $6.53 (NOT Math.round(6.525) = $7)
+    expect(result.subtotal).toBe(43.5);
+    expect(result.platformFee).toBe(6.53);
+    expect(result.chefGross).toBe(36.97);
   });
 
   it('throws when order is not found', async () => {
@@ -139,10 +161,30 @@ describe('PayoutEngine.calculateDriverEarnings', () => {
 
     const result = await engine.calculateDriverEarnings({ orderId: 'order-2' });
 
-    const expectedPayout = Math.round(8 * DRIVER_PAYOUT_PERCENT / 100);
+    const expectedPayout = Math.round(800 * DRIVER_PAYOUT_PERCENT / 100) / 100;
     expect(result.deliveryFee).toBe(8);
     expect(result.driverPayout).toBe(expectedPayout);
     expect(result.tip).toBe(3);
+  });
+
+  it('keeps cent precision for non-round delivery fees (7.55 → 6.04 payout)', async () => {
+    const order = {
+      id: 'order-2b',
+      subtotal: 30,
+      delivery_fee: 7.55,
+      service_fee: 2.4,
+      tax: 3.9,
+      tip: 0,
+      total: 43.85,
+    };
+
+    const client = makeSupabase({ orders: { data: order, error: null } });
+    const engine = createPayoutEngine(client as never, mockAudit as never, mockEvents as never);
+
+    const result = await engine.calculateDriverEarnings({ orderId: 'order-2b' });
+
+    // 755 cents * 80% = 604 cents = $6.04 (old code: Math.round(6.04) = $6)
+    expect(result.driverPayout).toBe(6.04);
   });
 
   it('returns 0 tip when no tip present', async () => {
@@ -171,9 +213,28 @@ describe('PayoutEngine.calculateDriverEarnings', () => {
 describe('PayoutEngine.markPayoutEligible', () => {
   const validOrder = {
     id: 'order-4',
+    subtotal: 43.5,
+    delivery_fee: 7.55,
+    service_fee: 3.48,
+    tax: 7.09,
+    tip: 2,
+    total: 63.62,
     engine_status: 'completed',
     payment_status: 'completed',
   };
+
+  function makeLedgerInsert(entryId: string, captured?: { payload: unknown }) {
+    return {
+      insert: (payload: unknown) => {
+        if (captured) captured.payload = payload;
+        return {
+          select: () => ({
+            single: () => Promise.resolve({ data: { id: entryId }, error: null }),
+          }),
+        };
+      },
+    };
+  }
 
   it('returns success when order is completed and no open exceptions', async () => {
     // We need a richer mock that handles different table calls
@@ -200,9 +261,7 @@ describe('PayoutEngine.markPayoutEligible', () => {
           };
         }
         if (table === 'ledger_entries') {
-          return {
-            insert: () => Promise.resolve({ data: { id: 'le-1' }, error: null }),
-          };
+          return makeLedgerInsert('le-1');
         }
         if (table === 'audit_logs') {
           return {
@@ -224,10 +283,14 @@ describe('PayoutEngine.markPayoutEligible', () => {
 
     expect(result.success).toBe(true);
     expect(mockAudit.log).toHaveBeenCalledOnce();
+    // Audit and event must reference the REAL ledger entry id, not the order id.
+    expect(mockAudit.log).toHaveBeenCalledWith(
+      expect.objectContaining({ entityType: 'ledger_entry', entityId: 'le-1' })
+    );
     expect(mockEvents.emit).toHaveBeenCalledWith(
       'payout.scheduled',
       'ledger_entry',
-      expect.any(String),
+      'le-1',
       expect.objectContaining({ orderId: 'order-4', payeeType: 'chef' }),
       expect.objectContaining({ userId: 'actor-1' })
     );
@@ -311,8 +374,8 @@ describe('PayoutEngine.markPayoutEligible', () => {
     expect(result.error).toMatch(/open exception/i);
   });
 
-  it('inserts chef_payable entry for chef payeeType', async () => {
-    let capturedInsert: unknown = null;
+  it('inserts chef_payable entry with cent-precise amount for chef payeeType', async () => {
+    const captured: { payload: unknown } = { payload: null };
 
     const client = {
       from: (table: string) => {
@@ -335,12 +398,7 @@ describe('PayoutEngine.markPayoutEligible', () => {
           };
         }
         if (table === 'ledger_entries') {
-          return {
-            insert: (payload: unknown) => {
-              capturedInsert = payload;
-              return Promise.resolve({ data: { id: 'le-2' }, error: null });
-            },
-          };
+          return makeLedgerInsert('le-2', captured);
         }
         return {};
       },
@@ -349,11 +407,16 @@ describe('PayoutEngine.markPayoutEligible', () => {
     const engine = createPayoutEngine(client as never, mockAudit as never, mockEvents as never);
     await engine.markPayoutEligible({ orderId: 'order-4', payeeType: 'chef', payeeId: 'chef-99', actorId: 'a-1' });
 
-    expect((capturedInsert as Record<string, unknown>).entry_type).toBe('chef_payable');
+    const payload = captured.payload as Record<string, unknown>;
+    expect(payload.entry_type).toBe('chef_payable');
+    // subtotal $43.50 → 4350 cents; platform fee 15% = 653 cents; chef = 3697 cents
+    expect(payload.amount_cents).toBe(3697);
+    expect(payload.entity_type).toBe('chef');
+    expect(payload.entity_id).toBe('chef-99');
   });
 
-  it('inserts driver_payable entry for driver payeeType', async () => {
-    let capturedInsert: unknown = null;
+  it('inserts driver_payable entry with cent-precise amount for driver payeeType', async () => {
+    const captured: { payload: unknown } = { payload: null };
 
     const client = {
       from: (table: string) => {
@@ -376,12 +439,7 @@ describe('PayoutEngine.markPayoutEligible', () => {
           };
         }
         if (table === 'ledger_entries') {
-          return {
-            insert: (payload: unknown) => {
-              capturedInsert = payload;
-              return Promise.resolve({ data: { id: 'le-3' }, error: null });
-            },
-          };
+          return makeLedgerInsert('le-3', captured);
         }
         return {};
       },
@@ -390,7 +448,10 @@ describe('PayoutEngine.markPayoutEligible', () => {
     const engine = createPayoutEngine(client as never, mockAudit as never, mockEvents as never);
     await engine.markPayoutEligible({ orderId: 'order-4', payeeType: 'driver', payeeId: 'drv-99', actorId: 'a-1' });
 
-    expect((capturedInsert as Record<string, unknown>).entry_type).toBe('driver_payable');
+    const payload = captured.payload as Record<string, unknown>;
+    expect(payload.entry_type).toBe('driver_payable');
+    // delivery fee $7.55 → 755 cents; driver 80% = 604 cents
+    expect(payload.amount_cents).toBe(604);
   });
 });
 
@@ -413,10 +474,31 @@ describe('PayoutEngine.markPayoutProcessing', () => {
     };
 
     const engine = createPayoutEngine(client as never, mockAudit as never, mockEvents as never);
-    const result = await engine.markPayoutProcessing({ payoutId: 'po-1', actorId: 'a-1' });
+    const result = await engine.markPayoutProcessing({ payoutId: 'po-1', payeeType: 'chef', actorId: 'a-1' });
 
     expect(result.success).toBe(true);
+    expect(updatedTable).toBe('chef_payouts');
     expect(mockAudit.log).toHaveBeenCalledOnce();
+  });
+
+  it('updates driver_payouts for driver payeeType (not hardcoded chef_payouts)', async () => {
+    let updatedTable = '';
+    const client = {
+      from: (table: string) => {
+        updatedTable = table;
+        return {
+          update: () => ({
+            eq: () => Promise.resolve({ data: { id: 'po-1d' }, error: null }),
+          }),
+        };
+      },
+    };
+
+    const engine = createPayoutEngine(client as never, mockAudit as never, mockEvents as never);
+    const result = await engine.markPayoutProcessing({ payoutId: 'po-1d', payeeType: 'driver', actorId: 'a-1' });
+
+    expect(result.success).toBe(true);
+    expect(updatedTable).toBe('driver_payouts');
   });
 });
 

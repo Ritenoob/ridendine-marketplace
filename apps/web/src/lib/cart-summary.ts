@@ -1,3 +1,5 @@
+import { formatCurrency } from '@ridendine/utils';
+
 export const CART_FEE_DISCLOSURE =
   'Delivery, service fees, HST, promos, and payment are confirmed at checkout.';
 
@@ -8,12 +10,14 @@ export interface CartSummaryItem {
   quantity: number;
 }
 
-function roundMoney(value: number): number {
+/** Canonical money rounding for apps/web — round to 2 decimal places. */
+export function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/** Cart prices are dollars — delegate to the shared currency formatter. */
 export function formatCartCurrency(value: number): string {
-  return `$${Number(value).toFixed(2)}`;
+  return formatCurrency(Number(value));
 }
 
 export function calculateCartLineTotal(item: Pick<CartSummaryItem, 'price' | 'quantity'>): number {

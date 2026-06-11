@@ -6,6 +6,7 @@ import {
   type SupabaseClient,
   createAdminClient,
 } from '@ridendine/db';
+import { routeCreateMenuCategorySchema } from '@ridendine/validation';
 import { getChefActorContext } from '@/lib/engine';
 
 export async function GET() {
@@ -33,11 +34,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, sort_order } = body;
-
-    if (!name) {
-      return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
+    const parsed = routeCreateMenuCategorySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Category name is required' },
+        { status: 400 }
+      );
     }
+    const { name, description, sort_order } = parsed.data;
 
     const adminClient = createAdminClient() as unknown as SupabaseClient;
     const category = await createMenuCategory(adminClient, {

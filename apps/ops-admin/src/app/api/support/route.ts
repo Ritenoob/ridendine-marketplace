@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient, getOpsSupportQueue, createSupportTicket, type SupabaseClient } from '@ridendine/db';
+import { supportTicketSchema } from '@ridendine/validation';
 import {
   getOpsActorContext,
   guardPlatformApi,
@@ -36,9 +37,19 @@ export async function POST(request: Request) {
     if (auth instanceof Response) return auth;
 
     const body = await request.json();
+    const parsed = supportTicketSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Invalid support ticket payload' },
+        { status: 400 }
+      );
+    }
     const supabase = createAdminClient() as unknown as SupabaseClient;
 
-    const ticket = await createSupportTicket(supabase, body);
+    const ticket = await createSupportTicket(
+      supabase,
+      parsed.data as Parameters<typeof createSupportTicket>[1]
+    );
     return NextResponse.json({ data: ticket }, { status: 201 });
   } catch {
     return NextResponse.json(

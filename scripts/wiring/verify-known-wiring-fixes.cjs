@@ -96,7 +96,8 @@ const checks = [
     pass: () => {
       const source = read('apps/chef-admin/src/app/dashboard/page.tsx');
       return !source.includes('href={`/chefs/${storefront.slug}`}') &&
-        source.includes('https://ridendine.ca/chefs/${storefront.slug}');
+        source.includes('${WEB_BASE_URL}/chefs/${storefront.slug}') &&
+        source.includes("process.env.NEXT_PUBLIC_APP_URL || 'https://ridendine.ca'");
     },
   },
   {
@@ -216,7 +217,7 @@ const checks = [
         validateNegativeContracts,
       } = require(path.join(root, 'scripts/audit/high-risk-ops-negative-authz.cjs'));
       const result = validateNegativeContracts();
-      return endpointNegativeContracts.length >= 33 &&
+      return endpointNegativeContracts.length >= 32 &&
         result.failures.length === 0 &&
         result.passed === endpointNegativeContracts.length &&
         exists('docs/wiring/HIGH_RISK_OPS_NEGATIVE_AUTHZ.md') &&

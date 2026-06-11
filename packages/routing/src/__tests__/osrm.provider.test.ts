@@ -73,6 +73,43 @@ describe('OsrmProvider', () => {
     expect(calls[0]).toContain('destinations=2');
   });
 
+  it('maps null (unreachable) matrix durations to +Infinity, not 0', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        return new Response(
+          JSON.stringify({
+            code: 'Ok',
+            durations: [
+              [null, 120],
+              [90, null],
+            ],
+          }),
+          { status: 200 }
+        );
+      })
+    );
+
+    const p = new OsrmProvider({ retries: 0 });
+    const m = await p.matrix(
+      [
+        { lat: 43.6, lng: -79.5 },
+        { lat: 43.61, lng: -79.51 },
+      ],
+      [
+        { lat: 43.65, lng: -79.4 },
+        { lat: 43.66, lng: -79.41 },
+      ]
+    );
+
+    expect(m.durations[0]![0]).toBe(Number.POSITIVE_INFINITY);
+    expect(m.durations[0]![1]).toBe(120);
+    expect(m.durations[1]![0]).toBe(90);
+    expect(m.durations[1]![1]).toBe(Number.POSITIVE_INFINITY);
+    // An unreachable driver must never rank as the closest candidate.
+    expect(m.durations[0]![0]).toBeGreaterThan(m.durations[0]![1]!);
+  });
+
   it('retries on 429 then succeeds', async () => {
     let n = 0;
     vi.stubGlobal(

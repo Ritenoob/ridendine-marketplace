@@ -2,6 +2,7 @@ import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient, getChefByUserId, updateChefProfile } from '@ridendine/db';
+import { routeUpdateChefProfileSchema } from '@ridendine/validation';
 import { getChefActorContext } from '@/lib/engine';
 
 export async function GET(_request: NextRequest) {
@@ -38,7 +39,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { display_name, bio, phone, profile_image_url } = body;
+    const parsed = routeUpdateChefProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Invalid profile payload' },
+        { status: 400 }
+      );
+    }
+    const { display_name, bio, phone, profile_image_url } = parsed.data;
 
     const updates: any = {};
     if (display_name !== undefined) updates.display_name = display_name;
