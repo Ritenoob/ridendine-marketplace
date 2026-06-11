@@ -65,6 +65,11 @@
     "test:e2e:lifecycle:reset": "node scripts/e2e/reset-live-fixtures.mjs",
     "test:e2e:lifecycle": "pnpm test:e2e:lifecycle:fixtures && playwright test e2e/lifecycle --project=web-smoke"
   },
+  "dependencies": {
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.55.1",
