@@ -2,8 +2,33 @@
 // Walks apps/*/src/app/api/**/route.ts and fails if any state-changing
 // handler (POST/PATCH/DELETE/PUT) doesn't call an approved guard.
 
-import { readFileSync } from 'node:fs';
-import { glob } from 'node:fs/promises';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+// Node 20-compatible replacement for fs.glob (added in Node 22).
+function* walkRouteFiles(dir) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      yield* walkRouteFiles(full);
+    } else if (entry.isFile() && entry.name === 'route.ts') {
+      yield full;
+    }
+  }
+}
+
+function* findApiRoutes() {
+  for (const app of readdirSync('apps', { withFileTypes: true })) {
+    if (!app.isDirectory()) continue;
+    yield* walkRouteFiles(join('apps', app.name, 'src', 'app', 'api'));
+  }
+}
 
 const APPROVED_GUARDS = [
   'guardPlatformApi',
@@ -34,7 +59,7 @@ let scanned = 0;
 let allowlisted = 0;
 let unguarded = 0;
 
-for await (const file of glob('apps/*/src/app/api/**/route.ts')) {
+for (const file of findApiRoutes()) {
   scanned++;
   const normalized = file.replace(/\\/g, '/');
   if (PUBLIC_ALLOWLIST.some(p => normalized.includes(p))) {
