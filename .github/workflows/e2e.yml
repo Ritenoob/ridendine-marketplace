@@ -13,6 +13,11 @@
 #   own guard pattern), so no Stripe secret is required for a green run. If the
 #   repo defines a STRIPE_SECRET_KEY secret it is passed through and those
 #   tests will run.
+# - The seed/reset commands below run exclusively against the Docker stack
+#   booted by `supabase start` inside this runner; no production credentials
+#   exist in this workflow. The marker on the next line tells the IRR-015
+#   hygiene gate (scripts/verify-prod-data-hygiene.mjs) this is sanctioned.
+# prod-data-hygiene: allow-local-supabase
 name: E2E (Seeded Supabase)
 
 on:
@@ -75,11 +80,15 @@ jobs:
       - name: Start local Supabase stack
         run: supabase start
 
-      - name: Reset database and apply lifecycle seed
+      - name: Reset database (apply migrations)
         run: |
+          set -o pipefail
           # Applies supabase/migrations/* to the freshly started local stack.
-          supabase db reset
+          supabase db reset --debug 2>&1 | tee /tmp/db-reset.log
 
+      - name: Apply lifecycle seed
+        run: |
+          set -o pipefail
           # Seed wiring note: config.toml has no [db.seed] block and the seed
           # lives at supabase/seeds/seed.sql — NOT the CLI default
           # supabase/seed.sql — so `supabase db reset` does not apply it. The
@@ -92,7 +101,16 @@ jobs:
           PGOPTIONS="-c search_path=public,extensions" \
             psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
             -v ON_ERROR_STOP=1 \
-            -f supabase/seeds/seed.sql
+            -f supabase/seeds/seed.sql 2>&1 | tee /tmp/seed.log
+
+      - name: Upload DB step diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-db-diagnostics
+          path: /tmp/*.log
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Write E2E env file
         run: |
