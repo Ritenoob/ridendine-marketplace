@@ -9,7 +9,14 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 function buildCsvRow(row: any): string {
   const values = Object.values(row).map((v: any) => {
-    const str = v == null ? '' : String(v);
+    let str = v == null ? '' : String(v);
+    // Neutralize spreadsheet formula injection: Excel/Sheets execute cells
+    // starting with = + - @ or tab/CR, and customer-supplied text lands here.
+    // Plain numbers (e.g. negative ledger amounts) are exempt — they are data,
+    // not formulas, and the apostrophe would corrupt them.
+    if (/^[=+\-@\t\r]/.test(str) && !/^-?\d+(\.\d+)?$/.test(str)) {
+      str = `'${str}`;
+    }
     return str.includes(',') || str.includes('"') || str.includes('\n')
       ? `"${str.replace(/"/g, '""')}"` : str;
   });

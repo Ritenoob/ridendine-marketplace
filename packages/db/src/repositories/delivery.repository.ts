@@ -123,6 +123,20 @@ export async function updateDeliveryStatus(
   return data;
 }
 
+/**
+ * Thrown when the delivery already had a driver when the conditional
+ * assignment UPDATE landed (lost the optimistic-concurrency race).
+ * Callers can catch this specifically and re-dispatch or surface a conflict.
+ */
+export class DriverAssignmentConflictError extends Error {
+  constructor(deliveryId: string, driverId: string) {
+    super(
+      `Delivery ${deliveryId} was assigned concurrently: could not assign driver ${driverId}`
+    );
+    this.name = 'DriverAssignmentConflictError';
+  }
+}
+
 export async function assignDriver(
   client: SupabaseClient,
   deliveryId: string,
@@ -136,11 +150,18 @@ export async function assignDriver(
       updated_at: new Date().toISOString(),
     })
     .eq('id', deliveryId)
-    .select()
-    .single();
+    .is('driver_id', null)
+    .select();
 
   if (error) throw error;
-  return data;
+
+  const assigned = (data as Delivery[] | null)?.[0];
+  if (!assigned) {
+    // 0 affected rows — another writer assigned a driver first.
+    throw new DriverAssignmentConflictError(deliveryId, driverId);
+  }
+
+  return assigned;
 }
 
 export async function getActiveDeliveriesForDriver(

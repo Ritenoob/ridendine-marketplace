@@ -13,7 +13,7 @@ import { DeliveryTimePicker } from '@/components/checkout/delivery-time-picker';
 import { SavedCardSelector } from '@/components/checkout/saved-card-selector';
 import { CheckoutProgress } from '@/components/checkout/checkout-progress';
 import { orderConfirmationPath } from '@/lib/customer-ordering';
-import { formatCartCurrency } from '@/lib/cart-summary';
+import { calculateCartSubtotal, formatCartCurrency } from '@/lib/cart-summary';
 import { useEta } from '@/hooks/use-eta';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -194,7 +194,7 @@ function CheckoutContent() {
           };
           setCart(loadedCart);
           // Set default 18% tip based on subtotal
-          const sub = items.reduce((s: number, i: CartItem) => s + i.price * i.quantity, 0);
+          const sub = calculateCartSubtotal(items);
           setTip(Math.round(sub * (DEFAULT_TIP_PERCENT / 100) * 100) / 100);
           setTipPercent(DEFAULT_TIP_PERCENT);
         }
@@ -226,9 +226,10 @@ function CheckoutContent() {
     loadData();
   }, [storefrontId, router]);
 
-  /** Cart line total in dollars (matches cart API `unit_price` × qty). */
-  const cartSubtotal =
-    cart?.items.reduce((sum, item) => sum + item.price * item.quantity, 0) ?? 0;
+  /** Cart subtotal in dollars — per-line rounding matches the server quote's
+   * rounding protocol, so the client total can't drift from accumulated
+   * floating-point error and trip the server-side mismatch validation. */
+  const cartSubtotal = cart ? calculateCartSubtotal(cart.items) : 0;
 
   /** Driver tip in dollars for `POST /api/checkout` (engine expects currency units, not cents). */
   const tipDollars = useCallback((): number => {

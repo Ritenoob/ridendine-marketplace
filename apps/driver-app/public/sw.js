@@ -28,8 +28,19 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Skip non-GET requests
+  // Non-GET API requests (status updates, proofs, issue reports): pass
+  // through to the network, but return a consistent offline JSON error
+  // instead of a raw TypeError so page error handling can show a clear
+  // message. Mutations are never cached or replayed.
   if (event.request.method !== 'GET') {
+    if (url.pathname.startsWith('/api/')) {
+      event.respondWith(
+        fetch(event.request).catch(() => new Response(
+          JSON.stringify({ error: 'You appear to be offline. Reconnect and try again.' }),
+          { status: 503, headers: { 'Content-Type': 'application/json' } }
+        ))
+      );
+    }
     return;
   }
 

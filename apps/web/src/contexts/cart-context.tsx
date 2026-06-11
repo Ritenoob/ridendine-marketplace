@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { calculateCartSubtotal } from '@/lib/cart-summary';
 
 interface CartItem {
   id: string;
@@ -73,7 +74,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
           image_url: item.menu_items?.image_url,
         }));
 
-        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        // Per-line rounding keeps the displayed subtotal aligned with the
+        // server quote's rounding protocol (see lib/cart-summary).
+        const subtotal = calculateCartSubtotal(items);
 
         setCart({
           id: cartData.id,

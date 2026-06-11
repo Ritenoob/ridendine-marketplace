@@ -236,33 +236,47 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
             }
           };
 
-          if (payload.eventType === 'INSERT') {
-            const row = parseOrdersRealtimeRow(payload.new);
-            if (!row || row.storefront_id !== storefrontId) return;
-            const newOrder = payload.new as Order;
-            setOrders((prev) => [newOrder, ...prev]);
-            hydrateOrder(newOrder.id).then((fullOrder) => {
-              if (!fullOrder) return;
-              setOrders((prev) => prev.map((order) => order.id === fullOrder.id ? fullOrder : order));
-            });
-            setPlaySound(true);
-            const orderNum = (payload.new as Order).order_number ?? '';
-            const customer = (payload.new as Order).customer;
-            const customerName = customer
-              ? `${customer.first_name} ${customer.last_name}`
-              : 'a customer';
-            addToast(`New order ${orderNum} from ${customerName}`);
-          } else if (payload.eventType === 'UPDATE') {
-            const row = parseOrdersRealtimeRow(payload.new);
-            if (!row || row.storefront_id !== storefrontId) return;
-            const updatedOrder = payload.new as Order;
-            setOrders((prev) =>
-              prev.map((o) => (o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o))
-            );
-            hydrateOrder(updatedOrder.id).then((fullOrder) => {
-              if (!fullOrder) return;
-              setOrders((prev) => prev.map((order) => order.id === fullOrder.id ? { ...order, ...fullOrder } : order));
-            });
+          // A single malformed realtime message must not take down the
+          // subscription — keep the thin row + skip it instead.
+          try {
+            if (payload.eventType === 'INSERT') {
+              const row = parseOrdersRealtimeRow(payload.new);
+              if (!row || row.storefront_id !== storefrontId) return;
+              const newOrder = payload.new as Order;
+              setOrders((prev) => [newOrder, ...prev]);
+              hydrateOrder(newOrder.id)
+                .then((fullOrder) => {
+                  if (!fullOrder) return;
+                  setOrders((prev) => prev.map((order) => order.id === fullOrder.id ? fullOrder : order));
+                })
+                .catch(() => {
+                  // Hydration is best-effort; the thin realtime row stays.
+                });
+              setPlaySound(true);
+              const orderNum = (payload.new as Order).order_number ?? '';
+              const customer = (payload.new as Order).customer;
+              const customerName = customer
+                ? `${customer.first_name} ${customer.last_name}`
+                : 'a customer';
+              addToast(`New order ${orderNum} from ${customerName}`);
+            } else if (payload.eventType === 'UPDATE') {
+              const row = parseOrdersRealtimeRow(payload.new);
+              if (!row || row.storefront_id !== storefrontId) return;
+              const updatedOrder = payload.new as Order;
+              setOrders((prev) =>
+                prev.map((o) => (o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o))
+              );
+              hydrateOrder(updatedOrder.id)
+                .then((fullOrder) => {
+                  if (!fullOrder) return;
+                  setOrders((prev) => prev.map((order) => order.id === fullOrder.id ? { ...order, ...fullOrder } : order));
+                })
+                .catch(() => {
+                  // Hydration is best-effort; the thin realtime row stays.
+                });
+            }
+          } catch (err) {
+            console.error('Failed to process realtime order event', err);
           }
         }
       )
@@ -346,6 +360,8 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
       );
     } catch {
       // Network failure — keep current state; realtime will reconcile.
+      // Allow a later timer fire to retry the auto-reject in this tab.
+      expiredOrderIdsRef.current.delete(orderId);
     }
   }, []);
 

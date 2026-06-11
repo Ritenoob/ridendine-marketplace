@@ -1,0 +1,64 @@
+name: Post-deploy smoke
+
+# Runs the runtime contract smoke (auth-intent pages + protected/public API
+# contracts across all four apps) against the deployed environment:
+#   * automatically when a Vercel deployment reports success,
+#   * on a schedule as a safety net,
+#   * manually via workflow_dispatch (with optional URL overrides for staging).
+#
+# Configure in repo settings:
+#   secrets.RIDENDINE_SMOKE_EMAIL / secrets.RIDENDINE_SMOKE_PASSWORD —
+#     credentials for the authenticated contract checks (without them the
+#     script still validates public + unauthenticated-rejection contracts).
+#   vars.RIDENDINE_CUSTOMER_URL / RIDENDINE_CHEF_URL / RIDENDINE_DRIVER_URL /
+#     RIDENDINE_OPS_URL — optional base-URL overrides; defaults are the
+#     production domains baked into scripts/smoke/runtime-contracts.cjs.
+
+on:
+  deployment_status:
+  schedule:
+    - cron: "30 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      customer_url:
+        description: Customer app base URL (default prod)
+        required: false
+      chef_url:
+        description: Chef app base URL (default prod)
+        required: false
+      driver_url:
+        description: Driver app base URL (default prod)
+        required: false
+      ops_url:
+        description: Ops app base URL (default prod)
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: post-deploy-smoke
+  cancel-in-progress: false
+
+jobs:
+  contract-smoke:
+    name: Runtime contract smoke
+    # For deployment events, only run once the deployment is live.
+    if: github.event_name != 'deployment_status' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Runtime contract smoke
+        env:
+          RIDENDINE_SMOKE_EMAIL: ${{ secrets.RIDENDINE_SMOKE_EMAIL }}
+          RIDENDINE_SMOKE_PASSWORD: ${{ secrets.RIDENDINE_SMOKE_PASSWORD }}
+          RIDENDINE_CUSTOMER_URL: ${{ inputs.customer_url || vars.RIDENDINE_CUSTOMER_URL }}
+          RIDENDINE_CHEF_URL: ${{ inputs.chef_url || vars.RIDENDINE_CHEF_URL }}
+          RIDENDINE_DRIVER_URL: ${{ inputs.driver_url || vars.RIDENDINE_DRIVER_URL }}
+          RIDENDINE_OPS_URL: ${{ inputs.ops_url || vars.RIDENDINE_OPS_URL }}
+        # No pnpm install needed — the smoke script is dependency-free Node.
+        run: node scripts/smoke/runtime-contract-smoke.cjs

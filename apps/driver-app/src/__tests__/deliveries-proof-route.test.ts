@@ -7,6 +7,12 @@ const mockGetDriverActorContext = jest.fn();
 const mockVerifyDriverOwnsDelivery = jest.fn();
 const mockCompleteDeliveredOrder = jest.fn();
 const mockUpdateDeliveryStatus = jest.fn();
+const mockGetDeliveryById = jest.fn();
+
+jest.mock('@ridendine/db', () => ({
+  createAdminClient: () => ({}),
+  getDeliveryById: (...args: unknown[]) => mockGetDeliveryById(...args),
+}));
 
 jest.mock('@/lib/engine', () => ({
   getDriverActorContext: () => mockGetDriverActorContext(),
@@ -41,6 +47,13 @@ describe('POST /api/deliveries/[id]/proof', () => {
     mockVerifyDriverOwnsDelivery.mockResolvedValue(true);
     mockCompleteDeliveredOrder.mockResolvedValue({ success: true, data: { id: 'del-1', status: 'delivered' } });
     mockUpdateDeliveryStatus.mockResolvedValue({ success: true, data: { id: 'del-1', status: 'picked_up' } });
+    mockGetDeliveryById.mockResolvedValue({
+      id: 'del-1',
+      pickup_lat: 43.2601,
+      pickup_lng: -79.8712,
+      dropoff_lat: 43.2601,
+      dropoff_lng: -79.8712,
+    });
   });
 
   it('rejects unauthenticated callers with 401', async () => {
@@ -92,9 +105,43 @@ describe('POST /api/deliveries/[id]/proof', () => {
         signatureUrl: 'https://example.com/signature.jpg',
         lat: 43.2601,
         lng: -79.8712,
+        distanceFromExpectedKm: 0,
       }),
     );
     expect(mockUpdateDeliveryStatus).not.toHaveBeenCalled();
+  });
+
+  it('omits the geofence distance when no coordinates are submitted', async () => {
+    const res = await POST(
+      buildRequest({ eventType: 'dropoff', proofUrl: 'https://example.com/p.jpg' }) as never,
+      params,
+    );
+    expect(res.status).toBe(200);
+    expect(mockGetDeliveryById).not.toHaveBeenCalled();
+    expect(mockCompleteDeliveredOrder).toHaveBeenCalledWith(
+      'del-1',
+      expect.objectContaining({ role: 'driver' }),
+      expect.not.objectContaining({ distanceFromExpectedKm: expect.anything() }),
+    );
+  });
+
+  it('still submits the proof when the geofence lookup fails', async () => {
+    mockGetDeliveryById.mockRejectedValueOnce(new Error('db down'));
+    const res = await POST(
+      buildRequest({
+        eventType: 'dropoff',
+        proofUrl: 'https://example.com/p.jpg',
+        lat: 43.2601,
+        lng: -79.8712,
+      }) as never,
+      params,
+    );
+    expect(res.status).toBe(200);
+    expect(mockCompleteDeliveredOrder).toHaveBeenCalledWith(
+      'del-1',
+      expect.objectContaining({ role: 'driver' }),
+      expect.not.objectContaining({ distanceFromExpectedKm: expect.anything() }),
+    );
   });
 
   it('routes pickup events to updateDeliveryStatus(picked_up) with proof metadata', async () => {

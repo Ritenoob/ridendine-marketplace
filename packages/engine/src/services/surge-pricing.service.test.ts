@@ -75,9 +75,19 @@ describe('calculateSurgeMultiplier', () => {
     expect(calculateSurgeMultiplier(5, 3)).toBeCloseTo(1.25);
   });
 
+  it('returns 1.25x when ratio is exactly 2.0 (boundary — not yet very busy)', () => {
+    // 4 orders / 2 drivers = 2.0; threshold requires ratio > 2
+    expect(calculateSurgeMultiplier(4, 2)).toBe(1.25);
+  });
+
   it('returns 1.5x when ratio > 2.0 (very busy)', () => {
     // 5 orders / 2 drivers = 2.5 — between 2.0 and 3.0
     expect(calculateSurgeMultiplier(5, 2)).toBe(1.5);
+  });
+
+  it('returns 1.5x when ratio is exactly 3.0 (boundary — not yet peak)', () => {
+    // 6 orders / 2 drivers = 3.0; threshold requires ratio > 3
+    expect(calculateSurgeMultiplier(6, 2)).toBe(1.5);
   });
 
   it('returns 2.0x when ratio > 3.0 (peak)', () => {

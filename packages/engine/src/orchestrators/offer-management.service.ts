@@ -315,10 +315,50 @@ export class OfferManagementService {
 
     const now = new Date().toISOString();
 
+    // Claim the delivery FIRST. The conditional UPDATE (driver_id IS NULL) is the
+    // mutex that prevents two concurrent accepts from both assigning the delivery —
+    // the earlier response/expiry checks are only fast-path validation and can race.
+    const { data: claimedRows, error: deliveryError } = await this.client
+      .from('deliveries')
+      .update({ driver_id: attempt.driver_id, status: 'assigned', updated_at: now })
+      .eq('id', attempt.delivery_id)
+      .is('driver_id', null)
+      .select();
+
+    if (deliveryError) {
+      return { success: false, error: { code: 'UPDATE_FAILED', message: deliveryError.message } };
+    }
+
+    let delivery = (claimedRows as DeliveryRow[] | null)?.[0];
+    if (!delivery) {
+      // 0 rows claimed: either another driver won the race, or this is a retry of
+      // an accept that already landed for this driver (treat that as idempotent).
+      const { data: current } = await this.client
+        .from('deliveries')
+        .select('*')
+        .eq('id', attempt.delivery_id)
+        .single();
+
+      if (!current || current.driver_id !== attempt.driver_id) {
+        await this.client
+          .from('assignment_attempts')
+          .update({ response: 'cancelled', responded_at: now })
+          .eq('id', attemptId)
+          .eq('response', 'pending');
+
+        return {
+          success: false,
+          error: { code: 'ASSIGNMENT_CONFLICT', message: 'This delivery has already been assigned to another driver' },
+        };
+      }
+      delivery = current as DeliveryRow;
+    }
+
     await this.client
       .from('assignment_attempts')
       .update({ response: 'accepted', responded_at: now })
-      .eq('id', attemptId);
+      .eq('id', attemptId)
+      .eq('response', 'pending');
 
     await this.client
       .from('assignment_attempts')
@@ -326,17 +366,6 @@ export class OfferManagementService {
       .eq('delivery_id', attempt.delivery_id)
       .eq('response', 'pending')
       .neq('id', attemptId);
-
-    const { data: delivery, error: deliveryError } = await this.client
-      .from('deliveries')
-      .update({ driver_id: attempt.driver_id, status: 'assigned', updated_at: now })
-      .eq('id', attempt.delivery_id)
-      .select()
-      .single();
-
-    if (deliveryError) {
-      return { success: false, error: { code: 'UPDATE_FAILED', message: deliveryError.message } };
-    }
 
     await this.client
       .from('orders')

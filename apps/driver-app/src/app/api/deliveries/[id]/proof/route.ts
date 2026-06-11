@@ -1,5 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { driverDeliveryProofSchema } from '@ridendine/validation';
+import { createAdminClient, getDeliveryById } from '@ridendine/db';
+import { calculateDistanceKm } from '@ridendine/utils';
 import {
   getEngine,
   getDriverActorContext,
@@ -33,6 +35,27 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     );
   }
 
+  // Geofence signal: record how far the submitted proof location is from the
+  // expected pickup/dropoff point. Recorded (not rejected) — GPS drift and
+  // large premises make a hard geofence reject legitimate drivers, but ops
+  // needs the discrepancy in the audit trail to dispute bad proofs.
+  let distanceFromExpectedKm: number | null = null;
+  if (validation.data.lat != null && validation.data.lng != null) {
+    const deliveryRow = await getDeliveryById(createAdminClient(), deliveryId).catch(() => null);
+    if (deliveryRow) {
+      const expectedLat =
+        validation.data.eventType === 'dropoff' ? deliveryRow.dropoff_lat : deliveryRow.pickup_lat;
+      const expectedLng =
+        validation.data.eventType === 'dropoff' ? deliveryRow.dropoff_lng : deliveryRow.pickup_lng;
+      distanceFromExpectedKm = calculateDistanceKm(
+        validation.data.lat,
+        validation.data.lng,
+        expectedLat,
+        expectedLng
+      );
+    }
+  }
+
   const engine = getEngine();
   const metadata = {
     proofUrl: validation.data.proofUrl,
@@ -40,6 +63,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     lat: validation.data.lat,
     lng: validation.data.lng,
     signatureUrl: validation.data.signatureUrl,
+    ...(distanceFromExpectedKm != null
+      ? { distanceFromExpectedKm: Math.round(distanceFromExpectedKm * 1000) / 1000 }
+      : {}),
   };
 
   const result =
