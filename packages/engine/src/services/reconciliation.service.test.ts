@@ -23,6 +23,8 @@ type ReconClientOptions = {
   /** customer_charge_capture row keyed by order_id (fallback path) */
   captureByOrderId?: Record<string, { amount_cents: number } | null>;
   upsertError?: { message: string } | null;
+  /** platform_users row for the resolveManual actor lookup; null = no staff row */
+  staffRow?: { id: string } | null;
 };
 
 function buildClient(opts: ReconClientOptions) {
@@ -77,6 +79,19 @@ function buildClient(opts: ReconClientOptions) {
         };
       }
 
+      if (table === 'platform_users') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: opts.staffRow === undefined ? { id: 'staff-1' } : opts.staffRow,
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+
       if (table === 'stripe_reconciliation') {
         return {
           upsert: vi.fn(async (row: Record<string, unknown>) => {
@@ -108,7 +123,14 @@ describe('ReconciliationService.runDaily', () => {
 
     const summary = await svc.runDaily('2026-05-02T12:34:56Z');
 
-    expect(summary).toEqual({ date: '2026-05-02', examined: 0, matched: 0, unmatched: 0, disputed: 0 });
+    expect(summary).toEqual({
+      date: '2026-05-02',
+      examined: 0,
+      matched: 0,
+      unmatched: 0,
+      disputed: 0,
+      persistFailed: 0,
+    });
     expect(upserts).toHaveLength(0);
   });
 
@@ -118,7 +140,14 @@ describe('ReconciliationService.runDaily', () => {
 
     const summary = await svc.runDaily('2026-05-02');
 
-    expect(summary).toEqual({ date: '2026-05-02', examined: 0, matched: 0, unmatched: 0, disputed: 0 });
+    expect(summary).toEqual({
+      date: '2026-05-02',
+      examined: 0,
+      matched: 0,
+      unmatched: 0,
+      disputed: 0,
+      persistFailed: 0,
+    });
   });
 
   it('upserts unmatched with variance 1 when no ledger rows match', async () => {
@@ -331,7 +360,7 @@ describe('ReconciliationService.runDaily', () => {
     });
   });
 
-  it('counts an event as disputed when the reconciliation upsert fails', async () => {
+  it('counts a persistence failure separately without inflating the dispute count', async () => {
     const { client } = buildClient({
       events: [
         {
@@ -351,10 +380,9 @@ describe('ReconciliationService.runDaily', () => {
     const svc = createReconciliationService(client);
     const summary = await svc.runDaily('2026-05-02');
 
-    // Documents current behavior: the event is counted both as matched (amount
-    // parity held) and disputed (persistence failed), so matched + unmatched +
-    // disputed can exceed examined.
-    expect(summary).toMatchObject({ examined: 1, matched: 1, disputed: 1 });
+    // The event matched on amount parity; the failed write is reported via
+    // persistFailed so matched + unmatched + disputed always equals examined.
+    expect(summary).toMatchObject({ examined: 1, matched: 1, disputed: 0, persistFailed: 1 });
   });
 
   it('aggregates a mixed day of matched, unmatched, and disputed events', async () => {
@@ -397,6 +425,7 @@ describe('ReconciliationService.runDaily', () => {
       matched: 1,
       unmatched: 1,
       disputed: 1,
+      persistFailed: 0,
     });
     expect(upserts).toHaveLength(3);
   });
@@ -423,7 +452,24 @@ describe('ReconciliationService.resolveManual', () => {
     });
     expect(updates[0]!.patch.notes).toContain('Verified against Stripe dashboard');
     expect(updates[0]!.patch.notes).toContain('resolved_by_user=ops-user-1');
+    expect(updates[0]!.patch.resolved_by).toBe('staff-1');
     expect(updates[0]!.patch).not.toHaveProperty('ledger_entry_ids');
+  });
+
+  it('writes resolved_by null when the actor has no platform_users row', async () => {
+    const { client, updates } = buildClient({ staffRow: null });
+    const svc = new ReconciliationService(client);
+
+    const result = await svc.resolveManual({
+      reconId: 'recon-3',
+      actor,
+      notes: 'No staff row',
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(updates[0]!.patch.resolved_by).toBeNull();
+    // The auth uid is still recorded in the free-text note as a fallback.
+    expect(updates[0]!.patch.notes).toContain('resolved_by_user=ops-user-1');
   });
 
   it('attaches ledger entry ids when provided', async () => {

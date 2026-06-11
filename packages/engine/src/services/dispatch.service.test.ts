@@ -513,12 +513,9 @@ describe('dispatchOrder driver selection', () => {
     });
   });
 
-  it('KNOWN BUG (documented): a kitchen at lat 0 (equator) is treated as having no coordinates', async () => {
-    // `if (kitchen.lat && kitchen.lng)` uses truthiness, so a legitimate
-    // coordinate of exactly 0 disables distance sorting and the FIRST online
-    // driver wins even when another driver is far closer. The same falsy-zero
-    // filter applies to drivers (`d.current_lat && d.current_lng`).
-    // Compare with driver-matching.service, which handles 0 correctly.
+  it('treats coordinate 0 (equator) as a valid kitchen location and still sorts by distance', async () => {
+    // Coordinate 0 is a legitimate value; the coordinate checks use explicit
+    // null comparisons, matching driver-matching.service's handling.
     const order = makeOrder({
       chef_storefronts: {
         id: 'storefront-1',
@@ -537,8 +534,8 @@ describe('dispatchOrder driver selection', () => {
 
     const result = await dispatchOrder(client as any, ORDER_ID);
 
-    // Current (buggy) behavior: the far driver listed first is assigned.
-    expect(result.driverId).toBe(DRIVER_B_ID);
+    // The nearer driver wins even though the kitchen sits on the equator.
+    expect(result.driverId).toBe(DRIVER_A_ID);
   });
 });
 

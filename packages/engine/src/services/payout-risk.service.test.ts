@@ -15,10 +15,16 @@ function resultChain(result: { data: unknown; error?: unknown }) {
 }
 
 type TableData = Record<string, unknown>;
+type TableErrors = Record<string, { message: string }>;
 
-function mockClient(tables: TableData) {
+function mockClient(tables: TableData, errors: TableErrors = {}) {
   return {
-    from: vi.fn((table: string) => resultChain({ data: tables[table] ?? null })),
+    from: vi.fn((table: string) =>
+      resultChain({
+        data: errors[table] ? null : tables[table] ?? null,
+        error: errors[table] ?? null,
+      })
+    ),
   } as never;
 }
 
@@ -96,6 +102,28 @@ describe('validateChefPayoutLine', () => {
     });
     const result = await validateChefPayoutLine(client, baseInput);
     expect(result).toMatchObject({ ok: false, code: 'DUPLICATE_PAYOUT' });
+  });
+
+  it('blocks when payout currency does not match the account currency', async () => {
+    const client = mockClient({
+      ...healthyTables,
+      platform_accounts: { balance_cents: 10000, currency: 'usd' },
+    });
+    const result = await validateChefPayoutLine(client, baseInput);
+    expect(result).toMatchObject({ ok: false, code: 'CURRENCY_MISMATCH' });
+  });
+
+  it('fails CLOSED when the duplicate-payout guard query errors', async () => {
+    const client = mockClient(healthyTables, { chef_payouts: { message: 'connection reset' } });
+    const result = await validateChefPayoutLine(client, baseInput);
+    expect(result).toMatchObject({ ok: false, code: 'RISK_CHECK_FAILED' });
+    expect((result as { message: string }).message).toContain('duplicate chef payout guard');
+  });
+
+  it('fails CLOSED when the balance query errors', async () => {
+    const client = mockClient(healthyTables, { platform_accounts: { message: 'timeout' } });
+    const result = await validateChefPayoutLine(client, baseInput);
+    expect(result).toMatchObject({ ok: false, code: 'RISK_CHECK_FAILED' });
   });
 
   it('blocks when the chef has no payout account row at all', async () => {
@@ -198,6 +226,13 @@ describe('validateDriverBatchPayoutLine', () => {
     const client = mockClient({ ...healthyTables, driver_payouts: { id: 'existing' } });
     const result = await validateDriverBatchPayoutLine(client, baseInput);
     expect(result).toMatchObject({ ok: false, code: 'DUPLICATE_PAYOUT' });
+  });
+
+  it('fails CLOSED when the duplicate-payout guard query errors', async () => {
+    const client = mockClient(healthyTables, { driver_payouts: { message: 'connection reset' } });
+    const result = await validateDriverBatchPayoutLine(client, baseInput);
+    expect(result).toMatchObject({ ok: false, code: 'RISK_CHECK_FAILED' });
+    expect((result as { message: string }).message).toContain('duplicate driver payout guard');
   });
 });
 

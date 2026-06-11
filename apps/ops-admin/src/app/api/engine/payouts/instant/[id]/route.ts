@@ -43,7 +43,15 @@ export async function POST(
   });
 
   if (!exec.ok) {
-    return errorResponse('EXECUTE_FAILED', exec.error ?? 'execute failed', 500);
+    // The engine claims the request atomically (pending -> executing), so a
+    // concurrent double-click loses the claim rather than double-paying.
+    // Surface that as a conflict, not a server error.
+    const lostClaim = exec.error === 'Request not pending or already executing';
+    return errorResponse(
+      lostClaim ? 'ALREADY_EXECUTING' : 'EXECUTE_FAILED',
+      exec.error ?? 'execute failed',
+      lostClaim ? 409 : 500
+    );
   }
 
   return successResponse({ executed: true });

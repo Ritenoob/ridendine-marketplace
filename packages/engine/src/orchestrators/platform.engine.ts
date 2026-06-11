@@ -319,11 +319,28 @@ export class PlatformWorkflowEngine {
     actor: ActorContext,
     reason?: string
   ): Promise<OperationResult> {
+    const auditReason = reason?.trim();
     const chef = await getChefById(this.client, chefId);
     if (!chef) {
       return {
         success: false,
         error: { code: 'NOT_FOUND', message: 'Chef profile not found' },
+      };
+    }
+
+    // Mirror updateDriverGovernance: destructive transitions (and lifting a
+    // suspension) are deliberate acts that must carry an audit reason.
+    const requiresReason =
+      nextStatus === 'rejected' ||
+      nextStatus === 'suspended' ||
+      (chef.status === 'suspended' && nextStatus === 'approved');
+    if (requiresReason && !auditReason) {
+      return {
+        success: false,
+        error: {
+          code: 'REASON_REQUIRED',
+          message: 'A governance reason is required for this chef action',
+        },
       };
     }
 

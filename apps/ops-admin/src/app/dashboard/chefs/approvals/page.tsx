@@ -64,11 +64,20 @@ export default function ChefApprovalsPage() {
   }
 
   async function handleAction(id: string, action: 'approve' | 'reject' | 'suspend' | 'unsuspend') {
+    // Destructive transitions (and lifting a suspension) need a confirmed
+    // reason — the engine rejects them without one (REASON_REQUIRED).
+    let reason: string | undefined;
+    if (action !== 'approve') {
+      const input = window.prompt(`${action === 'reject' ? 'Reject' : action === 'suspend' ? 'Suspend' : 'Restore'} this chef?\n\nEnter a reason (required):`);
+      if (input === null) return;
+      reason = input.trim();
+      if (!reason) return;
+    }
     try {
       await fetch(`/api/chefs/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, reason }),
       });
       fetchChefs();
     } catch (error) {

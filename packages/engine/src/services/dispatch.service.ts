@@ -87,11 +87,12 @@ export async function dispatchOrder(
       .limit(10);
 
     if (onlineDrivers && onlineDrivers.length > 0) {
-      // If we have kitchen coordinates, sort by distance
-      if (kitchen.lat && kitchen.lng) {
+      // If we have kitchen coordinates, sort by distance. Explicit null
+      // checks: coordinate 0 (equator/prime meridian) is a valid location.
+      if (kitchen.lat != null && kitchen.lng != null) {
         type DriverWithLocation = { driver_id: string; current_lat: number | null; current_lng: number | null };
         const driversWithDistance = onlineDrivers
-          .filter((d: DriverWithLocation) => d.current_lat && d.current_lng)
+          .filter((d: DriverWithLocation) => d.current_lat != null && d.current_lng != null)
           .map((d: DriverWithLocation) => ({
             ...d,
             distance: calculateDistance(

@@ -14,6 +14,9 @@ export function StorefrontGovernanceActions({
   const [submitting, setSubmitting] = useState<string | null>(null);
 
   async function handleAction(action: 'publish' | 'unpublish') {
+    if (action === 'unpublish' && !window.confirm('Unpublish this storefront? Customers will no longer see it.')) {
+      return;
+    }
     setSubmitting(action);
 
     try {

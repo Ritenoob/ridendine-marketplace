@@ -14,6 +14,9 @@ export type ReconciliationRunSummary = {
   matched: number;
   unmatched: number;
   disputed: number;
+  /** Events whose reconciliation row could not be written — their match
+   * status above is still accurate, but it was not persisted. */
+  persistFailed: number;
 };
 
 export class ReconciliationService {
@@ -37,12 +40,13 @@ export class ReconciliationService {
       .lte('processed_at', end);
 
     if (error || !events) {
-      return { date: day, examined: 0, matched: 0, unmatched: 0, disputed: 0 };
+      return { date: day, examined: 0, matched: 0, unmatched: 0, disputed: 0, persistFailed: 0 };
     }
 
     let matched = 0;
     let unmatched = 0;
     let disputed = 0;
+    let persistFailed = 0;
 
     for (const ev of events) {
       const stripeEventId = ev.stripe_event_id as string;
@@ -140,7 +144,9 @@ export class ReconciliationService {
       );
 
       if (upsertErr) {
-        disputed += 1;
+        // The event was already counted by its match status; a write failure
+        // is a separate problem and must not inflate the dispute count.
+        persistFailed += 1;
       }
     }
 
@@ -150,6 +156,7 @@ export class ReconciliationService {
       matched,
       unmatched,
       disputed,
+      persistFailed,
     };
   }
 
@@ -159,11 +166,20 @@ export class ReconciliationService {
     notes: string;
     ledgerEntryIds?: string[];
   }): Promise<{ ok: boolean; error?: string }> {
+    // resolved_by FKs platform_users(id); actor.userId is the auth uid, so
+    // resolve it to the staff row. The free-text note keeps the auth uid as
+    // a fallback record if the actor has no platform_users row.
+    const { data: staffRow } = await this.client
+      .from('platform_users')
+      .select('id')
+      .eq('user_id', input.actor.userId)
+      .maybeSingle();
+
     const patch: Record<string, unknown> = {
       status: 'manual_resolved',
       notes: `${input.notes} (resolved_by_user=${input.actor.userId})`,
       resolved_at: new Date().toISOString(),
-      resolved_by: null,
+      resolved_by: staffRow?.id ?? null,
       variance_cents: 0,
       variance_flagged: false,
     };

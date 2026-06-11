@@ -198,10 +198,14 @@ export async function GET(request: NextRequest) {
   const csvRows = [headers.join(','), ...rows.map(buildCsvRow)];
 
   // C.6 / O4 — record every successful export so PII access is reviewable.
-  // Fire-and-forget; export still returns to the operator if audit insert fails.
+  // Audit-before-release: if the audit trail cannot be written, the export is
+  // refused — PII must never leave the platform without a reviewable record.
+  // audit.log swallows insert errors and returns null, so gate on the return
+  // value (a thrown error is also caught for completeness).
   const engine = getEngine();
-  void engine.audit
-    .log({
+  let auditEntry = null;
+  try {
+    auditEntry = await engine.audit.log({
       action: AuditAction.EXPORT,
       entityType: 'export',
       entityId: randomUUID(),
@@ -214,10 +218,16 @@ export async function GET(request: NextRequest) {
         period_end: endDate,
         capability,
       },
-    })
-    .catch((err) => {
-      console.error('[export] audit log failed (export still returned):', err);
     });
+  } catch (err) {
+    console.error('[export] audit log threw - export refused:', err);
+  }
+  if (!auditEntry) {
+    return NextResponse.json(
+      { error: 'Export could not be audit-logged and was not released. Try again.' },
+      { status: 503 }
+    );
+  }
 
   return new Response(csvRows.join('\n'), {
     headers: {
