@@ -63,6 +63,25 @@ const client = new Client({
   ssl: { rejectUnauthorized: false }, // Supabase Postgres requires SSL
 });
 
+// DEFINER functions where anon/PUBLIC EXECUTE is intentional (see migration
+// 00046's disposition notes): RLS helper functions are referenced inside
+// row-security policy expressions, which evaluate as the querying role —
+// revoking anon would break public browse queries on policied tables.
+// PostGIS extension functions (st_*) carry PUBLIC EXECUTE by design.
+const DEFINER_GRANT_ALLOWLIST = new Set([
+  'is_ops_admin',
+  'get_chef_id',
+  'get_customer_id',
+  'get_driver_id',
+  'is_platform_staff',
+  'is_finance_staff',
+  'is_support_staff',
+]);
+
+function isAllowlistedDefiner(name) {
+  return DEFINER_GRANT_ALLOWLIST.has(name) || name.startsWith('st_');
+}
+
 let failures = 0;
 
 function pass(msg) {
@@ -126,11 +145,13 @@ async function run() {
        AND (acl.grantee = 0 OR grantee.rolname = 'anon')
      ORDER BY p.proname`
   );
-  if (definer.rows.length === 0) {
-    pass('no DEFINER function grants to anon/PUBLIC');
+  const residual = definer.rows.filter((row) => !isAllowlistedDefiner(row.proname));
+  const allowlisted = definer.rows.length - residual.length;
+  if (residual.length === 0) {
+    pass(`no DEFINER function grants to anon/PUBLIC (${allowlisted} allowlisted)`);
   } else {
-    fail(`${definer.rows.length} residual DEFINER grant(s):`);
-    for (const row of definer.rows) {
+    fail(`${residual.length} residual DEFINER grant(s) (${allowlisted} allowlisted):`);
+    for (const row of residual) {
       const who = row.grantee ?? 'PUBLIC';
       console.error(`        ${row.proname}(${row.args}) -> ${who}`);
     }
