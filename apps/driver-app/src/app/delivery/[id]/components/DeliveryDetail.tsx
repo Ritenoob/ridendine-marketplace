@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect, type FormEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Button, DELIVERY_STATUS_LABELS } from '@ridendine/ui';
 import type { Delivery } from '@ridendine/db';
 import { useLocationTracker } from '@/hooks/use-location-tracker';
 import { RouteMap } from '@/components/map/route-map';
+import { getOfflineOutbox, isOfflineApiError, type OutboxEntry } from '@/lib/offline-outbox';
 
 type DeliveryStatus = 'assigned' | 'accepted' | 'en_route_to_pickup' | 'arrived_at_pickup' | 'picked_up' | 'en_route_to_dropoff' | 'arrived_at_dropoff';
 
@@ -76,6 +77,24 @@ interface DeliveryDetailProps {
   order: DeliveryOrder | null;
 }
 
+// Local status to apply when a queued entry is accepted by the server on
+// replay. Dropoff proofs complete the delivery server-side, so they have no
+// local DeliveryStatus to apply — router.refresh() picks up the new state.
+function statusAfterReplay(entry: OutboxEntry): DeliveryStatus | null {
+  try {
+    const body = JSON.parse(entry.request.body) as Record<string, unknown>;
+    if (entry.kind === 'status' && typeof body.status === 'string') {
+      return body.status as DeliveryStatus;
+    }
+    if (entry.kind === 'proof' && body.eventType === 'pickup') {
+      return 'picked_up';
+    }
+  } catch {
+    // Malformed queue entry — nothing to apply locally.
+  }
+  return null;
+}
+
 interface DeliveryOrder {
   order_number: string;
   special_instructions?: string | null;
@@ -105,6 +124,9 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
   const [isSubmittingIssue, setIsSubmittingIssue] = useState(false);
   const [issueError, setIssueError] = useState<string | null>(null);
   const [issueSuccess, setIssueSuccess] = useState<string | null>(null);
+  const [queuedCount, setQueuedCount] = useState(0);
+  const [pendingSync, setPendingSync] = useState(false);
+  const [syncNotice, setSyncNotice] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pickupFileInputRef = useRef<HTMLInputElement>(null);
@@ -137,6 +159,73 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
       return {};
     }
     return { lat, lng };
+  };
+
+  // ----- Offline outbox: queue mutations that fail offline, replay later -----
+
+  const refreshQueuedCount = useCallback(async () => {
+    try {
+      const entries = await getOfflineOutbox().entriesFor(delivery.id);
+      setQueuedCount(entries.length);
+      if (entries.length === 0) setPendingSync(false);
+    } catch {
+      // IndexedDB unavailable — outbox features are silently disabled.
+    }
+  }, [delivery.id]);
+
+  const replayOutbox = useCallback(async () => {
+    let result;
+    try {
+      result = await getOfflineOutbox().replay();
+    } catch {
+      return;
+    }
+
+    const replayedHere = result.replayed.filter((entry) => entry.deliveryId === delivery.id);
+    for (const entry of replayedHere) {
+      const nextStatus = statusAfterReplay(entry);
+      if (nextStatus) setStatus(nextStatus);
+    }
+    if (replayedHere.length > 0) {
+      setSyncNotice('Your saved actions have been synced.');
+      router.refresh();
+    }
+
+    const droppedHere = result.dropped.filter((item) => item.entry.deliveryId === delivery.id);
+    if (droppedHere.length > 0) {
+      setSyncNotice(
+        `${droppedHere.length === 1 ? 'A saved action' : `${droppedHere.length} saved actions`} could not be applied: ${droppedHere
+          .map((item) => item.message)
+          .join('; ')}`
+      );
+    }
+
+    await refreshQueuedCount();
+  }, [delivery.id, refreshQueuedCount, router]);
+
+  useEffect(() => {
+    void refreshQueuedCount();
+    if (typeof navigator === 'undefined' || navigator.onLine) {
+      void replayOutbox();
+    }
+    const handleOnline = () => {
+      void replayOutbox();
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [refreshQueuedCount, replayOutbox]);
+
+  const queueMutation = async (
+    kind: 'status' | 'proof' | 'issue',
+    request: { url: string; method: string; body: string }
+  ): Promise<boolean> => {
+    try {
+      await getOfflineOutbox().enqueue({ kind, deliveryId: delivery.id, request });
+    } catch {
+      return false; // IndexedDB unavailable — fall back to the normal error path.
+    }
+    await refreshQueuedCount();
+    return true;
   };
 
   const getStatusSteps = () => {
@@ -208,26 +297,50 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
     setIssueError(null);
     setIssueSuccess(null);
 
-    try {
-      const response = await fetch(`/api/deliveries/${delivery.id}/issue`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          issueType,
-          notes: trimmedNotes,
-          ...getLocationMetadata(),
-        }),
-      });
-      const json = await response.json().catch(() => ({}));
+    const request = {
+      url: `/api/deliveries/${delivery.id}/issue`,
+      method: 'POST',
+      body: JSON.stringify({
+        issueType,
+        notes: trimmedNotes,
+        ...getLocationMetadata(),
+      }),
+    };
 
-      if (!response.ok || json.success === false) {
-        throw new Error(json.error || 'Unable to send this issue right now.');
+    try {
+      let response: Response | null = null;
+      try {
+        response = await fetch(request.url, {
+          method: request.method,
+          headers: { 'Content-Type': 'application/json' },
+          body: request.body,
+        });
+      } catch {
+        response = null; // Network-level failure — queue below.
       }
 
-      setIssueSuccess(
-        'Ops has received this issue. Keep working if it is safe, or wait for Ops if this blocks the delivery.'
-      );
-      setIssueNotes('');
+      if (response) {
+        const json = await response.json().catch(() => ({}));
+        if (response.ok && json.success !== false) {
+          setIssueSuccess(
+            'Ops has received this issue. Keep working if it is safe, or wait for Ops if this blocks the delivery.'
+          );
+          setIssueNotes('');
+          return;
+        }
+        if (!isOfflineApiError(response.status, json)) {
+          throw new Error(json.error || 'Unable to send this issue right now.');
+        }
+      }
+
+      if (await queueMutation('issue', request)) {
+        setIssueSuccess(
+          "You're offline — this issue is saved and will be sent to Ops automatically when you reconnect."
+        );
+        setIssueNotes('');
+        return;
+      }
+      throw new Error('Unable to send this issue right now.');
     } catch (error) {
       setIssueError(error instanceof Error ? error.message : 'Unable to send this issue right now.');
     } finally {
@@ -264,21 +377,46 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
   };
 
   const advanceStatus = async (nextStatus: DeliveryStatus): Promise<boolean> => {
-    try {
-      const response = await fetch(`/api/deliveries/${delivery.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: nextStatus }),
-      });
+    const request = {
+      url: `/api/deliveries/${delivery.id}`,
+      method: 'PATCH',
+      body: JSON.stringify({ status: nextStatus }),
+    };
 
-      if (!response.ok) {
-        const json = await response.json();
-        throw new Error(json.error || 'Failed to update delivery status');
+    try {
+      let response: Response | null = null;
+      try {
+        response = await fetch(request.url, {
+          method: request.method,
+          headers: { 'Content-Type': 'application/json' },
+          body: request.body,
+        });
+      } catch {
+        response = null; // Network-level failure — queue below.
       }
 
-      setStatus(nextStatus);
-      router.refresh();
-      return true;
+      if (response) {
+        if (response.ok) {
+          setStatus(nextStatus);
+          router.refresh();
+          return true;
+        }
+        const json = await response.json().catch(() => ({}));
+        if (!isOfflineApiError(response.status, json)) {
+          throw new Error(json.error || 'Failed to update delivery status');
+        }
+      }
+
+      // Offline: queue the status change and show it as pending sync instead
+      // of advancing the local status (the server has not confirmed it yet).
+      if (await queueMutation('status', request)) {
+        setPendingSync(true);
+        setSyncNotice(
+          "You're offline — this update is saved and will sync automatically when you reconnect."
+        );
+        return false;
+      }
+      throw new Error('Failed to update delivery status while offline');
     } catch (error) {
       console.error('Error updating delivery:', error);
       setErrorMessage(
@@ -289,26 +427,72 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
     }
   };
 
+  // Returns the uploaded URL, or null when the upload failed because the
+  // device is offline (network failure or the SW's offline 503). Real server
+  // rejections still throw.
+  const uploadPhotoOrNull = async (
+    dataUrl: string,
+    context: 'pickup' | 'dropoff' | 'signature'
+  ): Promise<string | null> => {
+    let response: Response;
+    try {
+      response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl, context, deliveryId: delivery.id }),
+      });
+    } catch {
+      return null;
+    }
+
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      if (isOfflineApiError(response.status, json)) return null;
+      throw new Error(json.error || 'Upload failed');
+    }
+    if (typeof json.url !== 'string') {
+      throw new Error('Upload failed');
+    }
+    return json.url;
+  };
+
   const submitDeliveryProof = async (
     eventType: 'pickup' | 'dropoff',
     proofUrl: string,
     metadata: { notes?: string; signatureUrl?: string } = {}
-  ) => {
-    const response = await fetch(`/api/deliveries/${delivery.id}/proof`, {
+  ): Promise<'ok' | 'queued'> => {
+    const request = {
+      url: `/api/deliveries/${delivery.id}/proof`,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         eventType,
         proofUrl,
         ...getLocationMetadata(),
         ...metadata,
       }),
-    });
+    };
 
-    if (!response.ok) {
-      const json = await response.json();
-      throw new Error(json.error || 'Failed to submit delivery proof');
+    let response: Response | null = null;
+    try {
+      response = await fetch(request.url, {
+        method: request.method,
+        headers: { 'Content-Type': 'application/json' },
+        body: request.body,
+      });
+    } catch {
+      response = null; // Network-level failure — queue below.
     }
+
+    if (response) {
+      if (response.ok) return 'ok';
+      const json = await response.json().catch(() => ({}));
+      if (!isOfflineApiError(response.status, json)) {
+        throw new Error(json.error || 'Failed to submit delivery proof');
+      }
+    }
+
+    if (await queueMutation('proof', request)) return 'queued';
+    throw new Error('Failed to submit delivery proof while offline');
   };
 
   const handlePickupConfirm = async () => {
@@ -317,26 +501,22 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
     setErrorMessage(null);
 
     try {
-      // Upload photo
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dataUrl: pickupPhoto, context: 'pickup', deliveryId: delivery.id }),
-      });
-      if (!uploadRes.ok) {
-        const json = await uploadRes.json();
-        throw new Error(json.error || 'Upload failed');
-      }
-      const uploadJson = await uploadRes.json();
-      if (typeof uploadJson.url !== 'string') {
-        throw new Error('Upload failed');
-      }
+      // Offline fallback: when the upload cannot reach the server, queue the
+      // proof with the captured data URL itself so the photo is not lost.
+      const uploadedUrl = await uploadPhotoOrNull(pickupPhoto, 'pickup');
+      const proofResult = await submitDeliveryProof('pickup', uploadedUrl ?? pickupPhoto);
 
-      await submitDeliveryProof('pickup', uploadJson.url);
-      setStatus('picked_up');
+      if (proofResult === 'queued') {
+        setPendingSync(true);
+        setSyncNotice(
+          "You're offline — pickup proof is saved and will sync automatically when you reconnect."
+        );
+      } else {
+        setStatus('picked_up');
+        router.refresh();
+      }
       setShowPickupModal(false);
       setPickupPhoto(null);
-      router.refresh();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Failed to confirm pickup');
     } finally {
@@ -449,48 +629,34 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
   };
 
   const handleComplete = async () => {
+    if (!photo) return;
     setIsUploading(true);
     setErrorMessage(null);
 
     try {
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dataUrl: photo, context: 'dropoff', deliveryId: delivery.id }),
-      });
-      if (!uploadRes.ok) {
-        const json = await uploadRes.json();
-        throw new Error(json.error || 'Upload failed');
-      }
-      const uploadJson = await uploadRes.json();
-      const proofUrl = uploadJson.url;
-      if (typeof proofUrl !== 'string') {
-        throw new Error('Upload failed');
-      }
+      // Offline fallback: when an upload cannot reach the server, queue the
+      // proof with the captured data URLs so nothing is lost.
+      const uploadedUrl = await uploadPhotoOrNull(photo, 'dropoff');
 
-      // Upload signature if provided
       let signatureUrl: string | undefined;
       if (signature) {
-        const sigRes = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dataUrl: signature, context: 'signature', deliveryId: delivery.id }),
-        });
-        if (!sigRes.ok) {
-          const json = await sigRes.json();
-          throw new Error(json.error || 'Signature upload failed');
-        }
-        const sigJson = await sigRes.json();
-        if (typeof sigJson.url === 'string') {
-          signatureUrl = sigJson.url;
-        }
+        signatureUrl = (await uploadPhotoOrNull(signature, 'signature')) ?? signature;
       }
 
-      await submitDeliveryProof(
+      const proofResult = await submitDeliveryProof(
         'dropoff',
-        proofUrl,
+        uploadedUrl ?? photo,
         signatureUrl ? { signatureUrl } : {}
       );
+
+      if (proofResult === 'queued') {
+        setPendingSync(true);
+        setSyncNotice(
+          "You're offline — delivery proof is saved and will sync automatically when you reconnect."
+        );
+        setShowCompletionModal(false);
+        return;
+      }
 
       router.push('/');
       router.refresh();
@@ -713,18 +879,19 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
       <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg">
         {status === 'arrived_at_dropoff' ? (
           <Button
-            className="w-full rounded-lg bg-[#22c55e] py-4 text-[15px] font-semibold hover:bg-[#16a34a]"
+            className="w-full rounded-lg bg-[#22c55e] py-4 text-[15px] font-semibold hover:bg-[#16a34a] disabled:opacity-60"
             onClick={() => setShowCompletionModal(true)}
+            disabled={pendingSync}
           >
-            Complete Delivery
+            {pendingSync ? 'Waiting to sync...' : 'Complete Delivery'}
           </Button>
         ) : action ? (
           <Button
             className="w-full rounded-lg bg-brand-500 py-4 text-[15px] font-semibold hover:bg-brand-600 disabled:opacity-60"
             onClick={handleAction}
-            disabled={isAdvancing}
+            disabled={isAdvancing || pendingSync}
           >
-            {isAdvancing ? 'Updating...' : action.label}
+            {pendingSync ? 'Waiting to sync...' : isAdvancing ? 'Updating...' : action.label}
           </Button>
         ) : null}
       </div>
@@ -893,6 +1060,32 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
         <div className="p-4 pb-0">
           <Card className="border border-danger/30 bg-dangerSoft p-3 text-sm text-danger">
             {errorMessage}
+          </Card>
+        </div>
+      )}
+      {(locationTracker.permissionState === 'denied' || locationTracker.locationError) && (
+        <div className="p-4 pb-0">
+          <Card
+            role="alert"
+            className="border border-danger/30 bg-dangerSoft p-3 text-sm font-medium text-danger"
+          >
+            Location tracking is off — customers can&apos;t see your position. Enable location for
+            this site.
+          </Card>
+        </div>
+      )}
+      {queuedCount > 0 && (
+        <div className="p-4 pb-0">
+          <Card className="border border-warning/30 bg-warningSoft p-3 text-sm font-medium text-warning">
+            {queuedCount} action{queuedCount === 1 ? '' : 's'} waiting to sync — will retry
+            automatically when you&apos;re back online.
+          </Card>
+        </div>
+      )}
+      {syncNotice && (
+        <div className="p-4 pb-0">
+          <Card className="border border-info/30 bg-infoSoft p-3 text-sm text-info">
+            {syncNotice}
           </Card>
         </div>
       )}

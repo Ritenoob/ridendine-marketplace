@@ -38,6 +38,8 @@ const DELIVERY_UUID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 /** First deliveries.maybeSingle uses this for ownership check */
 let deliveryOwnerId = 'driver-self';
 let deliveriesPhase = 0;
+let snapshotQueryFails = false;
+let orderQueryFails = false;
 
 jest.mock('@ridendine/db', () => ({
   createAdminClient: jest.fn(() => ({
@@ -56,7 +58,11 @@ jest.mock('@ridendine/db', () => ({
           select: () => ({
             eq: () => ({
               maybeSingle: () =>
-                Promise.resolve({ data: { public_stage: 'on_the_way' }, error: null }),
+                Promise.resolve(
+                  orderQueryFails
+                    ? { data: null, error: { message: 'connection reset' } }
+                    : { data: { public_stage: 'on_the_way' }, error: null }
+                ),
             }),
           }),
         };
@@ -98,13 +104,17 @@ jest.mock('@ridendine/db', () => ({
           select: () => ({
             eq: () => ({
               maybeSingle: () =>
-                Promise.resolve({
-                  data: {
-                    eta_pickup_at: null,
-                    route_to_dropoff_polyline: 'polyx',
-                  },
-                  error: null,
-                }),
+                Promise.resolve(
+                  snapshotQueryFails
+                    ? { data: null, error: { message: 'connection reset' } }
+                    : {
+                        data: {
+                          eta_pickup_at: null,
+                          route_to_dropoff_polyline: 'polyx',
+                        },
+                        error: null,
+                      }
+                ),
             }),
           }),
         };
@@ -119,6 +129,8 @@ describe('POST /api/location', () => {
     jest.clearAllMocks();
     deliveriesPhase = 0;
     deliveryOwnerId = 'driver-self';
+    snapshotQueryFails = false;
+    orderQueryFails = false;
   });
 
   it('returns 403 when deliveryId is not owned by driver', async () => {
@@ -165,5 +177,45 @@ describe('POST /api/location', () => {
     expect(payload).not.toHaveProperty('lat');
     expect(payload).not.toHaveProperty('lng');
     expect(payload).not.toHaveProperty('driver_lat');
+  });
+
+  it('skips the ETA broadcast when the delivery snapshot query fails', async () => {
+    snapshotQueryFails = true;
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const req = new NextRequest('http://localhost/api/location', {
+      method: 'POST',
+      body: JSON.stringify({
+        lat: 43.25,
+        lng: -79.87,
+        deliveryId: DELIVERY_UUID,
+      }),
+    });
+    const res = await POST(req);
+
+    // The location ping itself still succeeds; only the stale enrichment is skipped.
+    expect(res.ok).toBe(true);
+    expect(refreshFromDriverPing).toHaveBeenCalled();
+    expect(broadcastPublic).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
+  it('skips the ETA broadcast when the order stage query fails', async () => {
+    orderQueryFails = true;
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const req = new NextRequest('http://localhost/api/location', {
+      method: 'POST',
+      body: JSON.stringify({
+        lat: 43.25,
+        lng: -79.87,
+        deliveryId: DELIVERY_UUID,
+      }),
+    });
+    const res = await POST(req);
+
+    expect(res.ok).toBe(true);
+    expect(broadcastPublic).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

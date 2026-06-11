@@ -478,6 +478,51 @@ describe('DriverDashboard — no active deliveries empty state', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows a prominent warning banner when location permission is denied while on shift', async () => {
+    mockUseLocationTracker.mockReturnValue({
+      lastLocation: null,
+      lastPostedAt: null,
+      permissionState: 'denied',
+      locationError: 'Location permission denied',
+      isPosting: false,
+      startTracking: jest.fn(),
+      stopTracking: jest.fn(),
+    });
+    mockDashboardFetch(
+      readinessSummary({ presenceStatus: 'online' }),
+      shiftSummary({
+        presenceStatus: 'online',
+        currentShiftId: 'shift-1',
+        isOnShift: true,
+        shiftStartedAt: '2026-06-08T18:15:00.000Z',
+      })
+    );
+
+    render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[]} />);
+
+    const banner = await screen.findByRole('alert');
+    expect(banner).toHaveTextContent(/location tracking is off/i);
+    expect(banner).toHaveTextContent(/customers can.t see your position/i);
+    expect(banner).toHaveTextContent(/enable location for this site/i);
+  });
+
+  it('does not show the location warning banner while the driver is off shift', () => {
+    mockUseLocationTracker.mockReturnValue({
+      lastLocation: null,
+      lastPostedAt: null,
+      permissionState: 'denied',
+      locationError: 'Location permission denied',
+      isPosting: false,
+      startTracking: jest.fn(),
+      stopTracking: jest.fn(),
+    });
+    // Default beforeEach fetch never resolves, so the driver stays off shift.
+    render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[]} />);
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(/location tracking is off/i)).not.toBeInTheDocument();
+  });
+
   it('ignores stale initial readiness after a newer online toggle refresh resolves', async () => {
     const initialReadiness = deferredResponse({
       success: true,

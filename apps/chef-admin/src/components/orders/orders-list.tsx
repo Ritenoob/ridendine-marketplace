@@ -4,7 +4,13 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Card, Badge, Button, LiveIndicator, ORDER_STATUS_LABELS, type LiveIndicatorStatus } from '@ridendine/ui';
 import { chefStorefrontOrdersChannel, createBrowserClient, parseOrdersRealtimeRow } from '@ridendine/db';
-import { formatCurrency } from '@ridendine/utils';
+import {
+  formatCurrency,
+  getKitchenWorkflowStep,
+  KITCHEN_NEXT_TRANSITION,
+  KITCHEN_REJECT_TRANSITION,
+  type KitchenActionableStatus,
+} from '@ridendine/utils';
 import { OrderToast, type ToastMsg } from './order-toast';
 
 interface Order {
@@ -72,36 +78,6 @@ const ACCEPT_TIMEOUT_MS = 8 * 60 * 1000; // 8 minutes
 
 const STATUS_LABELS = ORDER_STATUS_LABELS;
 
-const KITCHEN_WORKFLOW: Record<
-  string,
-  { step: string; nextAction: string; focus: string; guidance: string }
-> = {
-  pending: {
-    step: 'Accept or reject',
-    nextAction: 'Accept order',
-    focus: 'Decision',
-    guidance: 'Review the ticket and accept before the countdown expires.',
-  },
-  accepted: {
-    step: 'Prep setup',
-    nextAction: 'Start Preparing',
-    focus: 'Prep',
-    guidance: 'Confirm items, timing, and any special instructions before cooking.',
-  },
-  preparing: {
-    step: 'Kitchen work',
-    nextAction: 'Mark Ready',
-    focus: 'Cook',
-    guidance: 'Finish, package, and mark ready only when the order can be handed to a driver.',
-  },
-  ready_for_pickup: {
-    step: 'Pickup handoff',
-    nextAction: 'Waiting for driver',
-    focus: 'Handoff',
-    guidance: 'Keep the order sealed, staged, and visible for driver pickup.',
-  },
-};
-
 // Order amounts (line totals, fees, tax, tip, total) are dollars.
 function money(value: number | null | undefined) {
   return formatCurrency(Number(value ?? 0));
@@ -113,12 +89,7 @@ function formatStatus(status: string | null | undefined) {
 }
 
 function getWorkflow(order: Order) {
-  return KITCHEN_WORKFLOW[order.status] ?? {
-    step: formatStatus(order.status),
-    nextAction: 'No kitchen action',
-    focus: 'Review',
-    guidance: 'This order does not need a kitchen state change right now.',
-  };
+  return getKitchenWorkflowStep(order.status, formatStatus(order.status));
 }
 
 function getReadyTiming(order: Order) {
@@ -428,28 +399,20 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
     }
   };
 
-  const handleAccept = async (orderId: string) => {
-    await updateOrderStatus(orderId, { action: 'accept', status: 'accepted' });
-  };
-
-  const handlePreparing = async (orderId: string) => {
+  // Advance an order along the shared kitchen workflow
+  // (pending -> accepted -> preparing -> ready_for_pickup).
+  const handleAdvance = async (orderId: string, fromStatus: KitchenActionableStatus) => {
+    const transition = KITCHEN_NEXT_TRANSITION[fromStatus];
     await updateOrderStatus(orderId, {
-      action: 'start_preparing',
-      status: 'preparing',
-    });
-  };
-
-  const handleReady = async (orderId: string) => {
-    await updateOrderStatus(orderId, {
-      action: 'mark_ready',
-      status: 'ready_for_pickup',
+      action: transition.action,
+      status: transition.nextStatus,
     });
   };
 
   const handleReject = async (orderId: string) => {
     await updateOrderStatus(orderId, {
-      action: 'reject',
-      status: 'rejected',
+      action: KITCHEN_REJECT_TRANSITION.action,
+      status: KITCHEN_REJECT_TRANSITION.nextStatus,
       reason: 'other',
       notes: 'Rejected by chef',
     });
@@ -663,33 +626,33 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
                         onClick={() => handleReject(order.id)}
                         disabled={Boolean(pendingOrderIds[order.id])}
                       >
-                        Reject
+                        {KITCHEN_REJECT_TRANSITION.buttonLabel}
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() => handleAccept(order.id)}
+                        onClick={() => handleAdvance(order.id, 'pending')}
                         disabled={Boolean(pendingOrderIds[order.id])}
                       >
-                        Accept
+                        {KITCHEN_NEXT_TRANSITION.pending.buttonLabel}
                       </Button>
                     </>
                   )}
                   {order.status === 'accepted' && (
                     <Button
                       size="sm"
-                      onClick={() => handlePreparing(order.id)}
+                      onClick={() => handleAdvance(order.id, 'accepted')}
                       disabled={Boolean(pendingOrderIds[order.id])}
                     >
-                      {pendingOrderIds[order.id] ? 'Updating...' : 'Start Preparing'}
+                      {pendingOrderIds[order.id] ? 'Updating...' : KITCHEN_NEXT_TRANSITION.accepted.buttonLabel}
                     </Button>
                   )}
                   {order.status === 'preparing' && (
                     <Button
                       size="sm"
-                      onClick={() => handleReady(order.id)}
+                      onClick={() => handleAdvance(order.id, 'preparing')}
                       disabled={Boolean(pendingOrderIds[order.id])}
                     >
-                      {pendingOrderIds[order.id] ? 'Updating...' : 'Mark Ready'}
+                      {pendingOrderIds[order.id] ? 'Updating...' : KITCHEN_NEXT_TRANSITION.preparing.buttonLabel}
                     </Button>
                   )}
                   {order.status === 'ready_for_pickup' && (

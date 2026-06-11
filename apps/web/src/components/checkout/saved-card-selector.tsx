@@ -33,27 +33,50 @@ function formatExpiry(month: number, year: number): string {
 export function SavedCardSelector({ onSelect }: SavedCardSelectorProps) {
   const [cards, setCards] = useState<SavedCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [selected, setSelected] = useState<string | 'new'>('new');
   const [saveCard, setSaveCard] = useState(false);
+  // Card id queued for auto-select. Consumed by the effect below, so onSelect
+  // only fires AFTER the card list state has committed — never mid-fetch and
+  // never after unmount.
+  const [pendingAutoSelect, setPendingAutoSelect] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/payment-methods')
+    const controller = new AbortController();
+
+    fetch('/api/payment-methods', { signal: controller.signal })
       .then((r) => r.json())
-      .then((json) => {
+      .then((json: { success?: boolean; data?: unknown }) => {
+        if (controller.signal.aborted) return; // unmounted mid-fetch
         if (json.success && Array.isArray(json.data)) {
-          setCards(json.data as SavedCard[]);
-          if (json.data.length > 0) {
-            const firstId = (json.data[0] as SavedCard).id;
-            setSelected(firstId);
-            onSelect(firstId, false);
+          const fetched = json.data as SavedCard[];
+          setCards(fetched);
+          const firstCard = fetched[0];
+          if (firstCard) {
+            setSelected(firstCard.id);
+            setPendingAutoSelect(firstCard.id);
           }
+        } else {
+          setLoadError(true);
         }
+        setLoading(false);
       })
-      .catch(() => {/* silently fall through to new card */})
-      .finally(() => setLoading(false));
-  // onSelect intentionally omitted — we only run this on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      .catch(() => {
+        if (controller.signal.aborted) return; // unmounted mid-fetch
+        setLoadError(true);
+        setLoading(false);
+      });
+
+    return () => controller.abort();
   }, []);
+
+  // Auto-select the first saved card once it is rendered. Clearing the pending
+  // id first means a changing onSelect identity can never re-fire the callback.
+  useEffect(() => {
+    if (pendingAutoSelect === null) return;
+    setPendingAutoSelect(null);
+    onSelect(pendingAutoSelect, false);
+  }, [pendingAutoSelect, onSelect]);
 
   if (loading) {
     return (
@@ -61,6 +84,14 @@ export function SavedCardSelector({ onSelect }: SavedCardSelectorProps) {
         <div className="h-12 rounded-md bg-surfaceMuted" />
         <div className="h-12 rounded-md bg-surfaceMuted" />
       </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <p className="text-sm text-textMuted">
+        Couldn&apos;t load saved cards &mdash; you can still pay with a new card.
+      </p>
     );
   }
 

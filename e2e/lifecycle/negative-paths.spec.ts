@@ -1,0 +1,485 @@
+/**
+ * Lifecycle: Negative-path coverage across all four apps
+ *
+ * Covers the "unhappy" branches of the order lifecycle:
+ *   - Customer: cancel a still-pending order, checkout with an empty cart,
+ *     invalid promo code feedback.
+ *   - Chef: reject a pending order (with a reason), terminal-state order
+ *     actions are refused gracefully by the API.
+ *   - Ops: refund queue up to the approval confirmation point (Stripe-gated
+ *     beyond that), suspending a chef via the required window.prompt reason
+ *     dialog and verifying the storefront disappears from the marketplace.
+ *   - Driver: declining a delivery offer releases it back to the dispatch pool.
+ *
+ * Seed dependencies (from supabase/seeds/seed.sql):
+ *   - Customer logins: alice@example.com / bob@example.com (password123)
+ *   - Chef logins: tuan@ridendine.ca (HOÀNG GIA PHỞ), sean@ridendine.ca (Every Bite Yum)
+ *   - Ops super_admin: ops@ridendine.ca / password123
+ *   - Driver: mike.driver@ridendine.ca / password123 (approved)
+ *   - Pending order RND-005 (ord-00005…) — owned by Alice, HOÀNG GIA PHỞ
+ *   - Delivered order RND-001 (ord-00001…) — Every Bite Yum (terminal status)
+ *   - Approved chef Ryo (cccccccc-…) with active storefront COOCO (ffffffff-…)
+ *   - Storefront every-bite-yum (dddddddd-…) with menu items
+ *
+ * Known fixture constraints (documented skip guards, not hard failures):
+ *   - RND-005 is the ONLY seeded pending order and is contended by three
+ *     scenarios (customer cancel here, chef reject here, chef accept in
+ *     chef.spec.ts) plus the chef-admin 8-minute auto-expiry reject. Whichever
+ *     test reaches it first wins; the others skip via guards.
+ *   - The seed contains no `assignment_attempts` rows, so the driver
+ *     decline-offer test skips unless the dispatch engine has generated a live
+ *     offer for the seeded driver at runtime.
+ *   - The seed contains no `refund_cases` rows, so the Stripe-gated refund
+ *     approval test skips; the refund-queue test still verifies the flow up to
+ *     the confirmation point (queue + Approve/Deny actions or empty state).
+ */
+
+import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
+
+// ── Seed fixture IDs (supabase/seeds/seed.sql) ────────────────────────────────
+
+const SEED_STOREFRONT_SLUG = 'every-bite-yum';
+const SEED_STOREFRONT_EBY_ID = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
+const SEED_PENDING_ORDER_ID = 'ord-00005-0000-0000-0000-000000000005'; // RND-005, pending, Alice
+const SEED_DELIVERED_ORDER_ID = 'ord-00001-0000-0000-0000-000000000001'; // RND-001, delivered, EBY
+const SEED_CHEF_RYO_ID = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+const SEED_STOREFRONT_COOCO_ID = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
+const SEED_STOREFRONT_COOCO_SLUG = 'cooco';
+
+const WEB_BASE = 'http://127.0.0.1:3000';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Reliable visibility probe — Locator.isVisible() does not wait. */
+async function becomesVisible(locator: import('@playwright/test').Locator, timeout = 8_000) {
+  return locator
+    .waitFor({ state: 'visible', timeout })
+    .then(() => true)
+    .catch(() => false);
+}
+
+async function signInWebCustomer(page: Page, email: string) {
+  await page.goto('/auth/login');
+  await page.getByLabel(/email/i).fill(email);
+  await page.getByLabel(/password/i).fill('password123');
+  await page.getByRole('button', { name: /sign in|log in/i }).click();
+  await page.waitForURL((url) => !url.pathname.startsWith('/auth/login'), { timeout: 15_000 });
+}
+
+async function signInChefAdmin(page: Page, email: string) {
+  await page.goto('/auth/login');
+  await page.getByLabel(/email/i).fill(email);
+  await page.getByLabel(/password/i).fill('password123');
+  await page.getByRole('button', { name: /sign in|log in/i }).click();
+  await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+}
+
+async function signInOps(page: Page) {
+  await page.goto('/auth/login');
+  const result = await page.evaluate(async () => {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'ops@ridendine.ca',
+        password: 'password123',
+      }),
+    });
+    return {
+      ok: response.ok,
+      status: response.status,
+      body: await response.text(),
+    };
+  });
+
+  expect(result.ok, `ops login failed (${result.status}): ${result.body}`).toBe(true);
+  await page.goto('/dashboard');
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 10_000 });
+}
+
+async function signInDriver(page: Page) {
+  await page.goto('/auth/login');
+  const result = await page.evaluate(async () => {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        email: 'mike.driver@ridendine.ca',
+        password: 'password123',
+      }),
+    });
+    const body = await response.json().catch(() => ({}));
+    return {
+      ok: response.ok,
+      status: response.status,
+      error: typeof body.error === 'string' ? body.error : null,
+    };
+  });
+
+  expect(result, result.error ?? `Driver login failed with status ${result.status}`).toMatchObject({
+    ok: true,
+  });
+  await page.goto('/');
+  await expect(page).not.toHaveURL(/\/auth\/login/);
+}
+
+async function waitForCartCount(page: Page) {
+  await expect(page.getByText(/your cart is empty/i)).toBeHidden({ timeout: 30_000 });
+  await expect(page.locator('a[href="/cart"]').filter({ hasText: /\d+/ }).first()).toBeVisible({
+    timeout: 30_000,
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Customer negative paths (web, port 3000)
+// ══════════════════════════════════════════════════════════════════════════════
+
+test.describe('customer negative paths @lifecycle @negative', () => {
+  test.use({ baseURL: 'http://127.0.0.1:3000' });
+
+  test('customer can cancel a pending order from the tracking page', async ({ page }) => {
+    // Uses seed order RND-005 (pending, owned by Alice). The customer cancel
+    // API only allows engine_status pending/payment_authorized/checkout_pending,
+    // which matches the seeded default engine_status of 'pending'.
+    await signInWebCustomer(page, 'alice@example.com');
+    await page.goto(`/orders/${SEED_PENDING_ORDER_ID}/confirmation`);
+
+    const cancelBtn = page.getByRole('button', { name: /cancel order/i });
+    if (!(await becomesVisible(cancelBtn, 10_000))) {
+      // RND-005 is contended: chef accept/reject tests and the chef-admin
+      // auto-expiry reject may already have moved it out of 'placed'.
+      test.skip(true, 'Seed order RND-005 is no longer cancellable (consumed by a competing lifecycle test)');
+    }
+    await cancelBtn.click();
+
+    // Inline confirmation step — confirm the cancellation.
+    const confirmBtn = page.getByRole('button', { name: /yes,?\s*cancel/i });
+    await expect(confirmBtn).toBeVisible({ timeout: 5_000 });
+    await confirmBtn.click();
+
+    // Success message from POST /api/orders/[id]/cancel
+    await expect(
+      page.getByText(/order has been cancelled/i).first()
+    ).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('checkout with an empty cart shows a graceful empty state, not a crash', async ({ page }) => {
+    const serverErrors: string[] = [];
+    page.on('response', (response) => {
+      if (response.status() >= 500) {
+        serverErrors.push(`${response.status()} ${response.url()}`);
+      }
+    });
+
+    // 1. The cart page itself prevents checkout when empty: no Proceed button.
+    await page.goto('/cart');
+    await expect(page.getByText(/your cart is empty/i)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('link', { name: /proceed to checkout/i })).toBeHidden();
+
+    // 2. Hitting /checkout directly with a guaranteed-empty cart (fresh account,
+    //    so no other parallel lifecycle test can have populated it) must render
+    //    the graceful empty-cart card — never a server error page.
+    const email = `neg-empty-cart-${Date.now()}@test.local`;
+    await page.goto('/auth/signup');
+    await page.getByLabel(/email/i).fill(email);
+    await page.getByLabel(/^password/i).fill('TestPass123!');
+    const confirmField = page.getByLabel(/confirm password/i);
+    if (await confirmField.isVisible()) {
+      await confirmField.fill('TestPass123!');
+    }
+    await page.getByRole('button', { name: /sign up|create account|register/i }).click();
+    await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
+
+    await page.goto(`/checkout?storefrontId=${SEED_STOREFRONT_EBY_ID}`);
+    // Graceful outcomes: the empty-cart card, or (if the fresh account has no
+    // customer profile yet) a clean redirect to login. Anything else fails below.
+    await expect(
+      page
+        .getByText(/your cart is empty|add items to your cart/i)
+        .or(page.getByLabel(/email/i))
+        .first()
+    ).toBeVisible({ timeout: 20_000 });
+
+    expect(serverErrors, `5xx during empty-cart checkout: ${serverErrors.join(', ')}`).toHaveLength(0);
+  });
+
+  test('an invalid promo code shows the invalid state at checkout', async ({ page }) => {
+    // Bob is not used by other lifecycle specs, so his cart state is ours.
+    await signInWebCustomer(page, 'bob@example.com');
+
+    await page.goto(`/chefs/${SEED_STOREFRONT_SLUG}`);
+    const addBtn = page.getByRole('button', { name: /^add$/i }).first();
+    await expect(addBtn).toBeVisible({ timeout: 15_000 });
+    await addBtn.click();
+    await waitForCartCount(page);
+
+    await page.getByRole('link', { name: /view cart/i }).first().click();
+    await page.getByRole('link', { name: /proceed to checkout/i }).first().click();
+    await expect(page).toHaveURL(/\/checkout\?storefrontId=/);
+
+    const promoInput = page.getByPlaceholder(/enter promo code/i);
+    await expect(promoInput).toBeVisible({ timeout: 20_000 });
+    await promoInput.fill('E2E-BOGUS-PROMO-CODE');
+
+    // Debounced GET /api/promos/validate returns
+    // { success: false, error: 'Promo code not found' } for unknown codes.
+    await expect(
+      page.getByText(/promo code not found|invalid promo|could not validate/i).first()
+    ).toBeVisible({ timeout: 15_000 });
+    // The "✓ … applied" success hint must never appear for a bogus code.
+    await expect(page.getByText(/✓ .*applied/i)).toBeHidden();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Chef negative paths (chef-admin, port 3001)
+// ══════════════════════════════════════════════════════════════════════════════
+
+test.describe('chef negative paths @lifecycle @negative', () => {
+  test.use({ baseURL: 'http://127.0.0.1:3001' });
+
+  test('chef can reject a pending order with a reason', async ({ page }) => {
+    // Uses seed order RND-005 (pending, HOÀNG GIA PHỞ / Tuan). The kitchen UI's
+    // Reject action posts { action: 'reject', reason: 'other', notes: 'Rejected
+    // by chef' } — the engine refuses rejects without a reason (MISSING_REASON).
+    await signInChefAdmin(page, 'tuan@ridendine.ca');
+    await page.goto('/dashboard/orders');
+
+    const rejectBtn = page.getByRole('button', { name: /^reject$/i }).first();
+    if (!(await becomesVisible(rejectBtn, 8_000))) {
+      // RND-005 already consumed: accepted (chef.spec), cancelled (customer
+      // cancel above), or auto-rejected by the 8-minute acceptance timeout
+      // (the seed creates it 10 minutes in the past).
+      test.skip(true, 'Seed order RND-005 is no longer pending (consumed by a competing lifecycle test or auto-expiry)');
+    }
+    await rejectBtn.click();
+
+    await expect(page.getByText(/rejected/i).first()).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('order action on a terminal-state order is refused gracefully by the API', async ({ page }) => {
+    // RND-001 is delivered (terminal). We attempt 'start_preparing', which has
+    // no valid path from the order's current engine state, so the engine must
+    // refuse with a clean 4xx — never a 500.
+    //
+    // Note: 'accept' is deliberately NOT used here. The seed leaves
+    // orders.engine_status at its column default ('pending') for historical
+    // orders, so an accept would slip through the engine state machine and
+    // corrupt the delivered fixture used by other lifecycle tests.
+    await signInChefAdmin(page, 'sean@ridendine.ca');
+
+    const patchResult = await page.evaluate(async (orderId) => {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start_preparing' }),
+      });
+      const body = await response.json().catch(() => null);
+      return { ok: response.ok, status: response.status, body };
+    }, SEED_DELIVERED_ORDER_ID);
+
+    expect(patchResult.ok, 'terminal-state action must be refused').toBe(false);
+    expect(patchResult.status).toBeGreaterThanOrEqual(400);
+    expect(patchResult.status, 'refusal must be graceful (4xx), not a server crash').toBeLessThan(500);
+    expect(patchResult.body?.success).toBe(false);
+    expect(String(patchResult.body?.error?.message ?? patchResult.body?.error ?? '')).toMatch(
+      /transition|invalid/i
+    );
+
+    // The order must be untouched.
+    const after = await page.evaluate(async (orderId) => {
+      const response = await fetch(`/api/orders/${orderId}`);
+      const body = await response.json().catch(() => null);
+      return { ok: response.ok, status: body?.data?.order?.status ?? null };
+    }, SEED_DELIVERED_ORDER_ID);
+    expect(after.ok).toBe(true);
+    expect(after.status).toBe('delivered');
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Ops negative paths (ops-admin, port 3002)
+// ══════════════════════════════════════════════════════════════════════════════
+
+test.describe('ops negative paths @lifecycle @negative', () => {
+  test.use({ baseURL: 'http://127.0.0.1:3002' });
+
+  test.beforeEach(async ({ page }) => {
+    await signInOps(page);
+  });
+
+  test('refund queue renders the flow up to the approval confirmation point', async ({ page }) => {
+    // The actual Stripe refund only happens after Approve is clicked — this
+    // test deliberately stops at the confirmation point so it can run without
+    // STRIPE_SECRET_KEY.
+    await page.goto('/dashboard/finance/refunds');
+    await expect(page.getByText(/refund queue/i).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/pending refund exposure/i).first()).toBeVisible();
+
+    const approveBtn = page.getByRole('button', { name: /^approve$/i }).first();
+    if (await becomesVisible(approveBtn, 5_000)) {
+      // Confirmation point reached: a pending case exposes Approve/Deny.
+      await expect(page.getByRole('button', { name: /^deny$/i }).first()).toBeVisible();
+    } else {
+      // seed.sql ships no refund_cases fixture — the graceful empty state is
+      // the expected steady-state outcome.
+      await expect(
+        page.getByText(/no pending refunds|no refund cases awaiting review/i).first()
+      ).toBeVisible();
+    }
+  });
+
+  test('ops can approve a pending refund case (Stripe-gated)', async ({ page }) => {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      test.skip();
+    }
+    await page.goto('/dashboard/finance/refunds');
+    await expect(page.getByText(/refund queue/i).first()).toBeVisible({ timeout: 15_000 });
+
+    const approveBtn = page.getByRole('button', { name: /^approve$/i }).first();
+    if (!(await becomesVisible(approveBtn, 5_000))) {
+      // seed.sql contains no refund_cases rows; a case only exists if an
+      // earlier run (or manual ops action) requested one.
+      test.skip(true, 'No pending refund case fixture in seed.sql — refund approval requires a runtime-created case');
+    }
+    await approveBtn.click();
+    await expect(page.getByText(/finance action failed/i)).toBeHidden({ timeout: 10_000 });
+  });
+
+  test('suspending a chef requires a prompt reason and hides the storefront', async ({ page }) => {
+    // Suspension targets Ryo / COOCO — the seeded EBY and PHỞ storefronts stay
+    // untouched for the other lifecycle specs. The chefs governance UI raises a
+    // window.prompt that REQUIRES a reason (engine: REASON_REQUIRED).
+    await page.goto('/dashboard/chefs');
+    await expect(page.getByText(/chefs/i).first()).toBeVisible({ timeout: 15_000 });
+
+    const ryoRow = page.locator('tr', { hasText: 'Ryo' }).first();
+    const suspendBtn = ryoRow.locator('button[title="Suspend"]');
+    if (!(await becomesVisible(suspendBtn, 8_000))) {
+      test.skip(true, 'Seed chef Ryo is not in approved state (left suspended by a previous partial run?) — run supabase db reset');
+    }
+
+    let suspended = false;
+    try {
+      // 1. Dismissing the prompt must abort the action — chef stays approved.
+      page.once('dialog', (dialog) => {
+        expect(dialog.type()).toBe('prompt');
+        void dialog.dismiss();
+      });
+      await suspendBtn.click();
+      await expect(ryoRow.getByText(/suspended/i)).toBeHidden();
+      await expect(ryoRow.getByText(/approved/i)).toBeVisible();
+
+      // 2. Accepting the prompt with a reason performs the suspension.
+      page.once('dialog', (dialog) => {
+        void dialog.accept('E2E negative-path test: governance suspension');
+      });
+      await suspendBtn.click();
+      await expect(ryoRow.getByText(/suspended/i)).toBeVisible({ timeout: 15_000 });
+      suspended = true;
+
+      // 3. The suspended chef's storefront must vanish from the marketplace:
+      //    suspension cascades is_active=false onto chef_storefronts, the
+      //    browse query filters on is_active, and the slug route 404s.
+      const storefrontResponse = await page.goto(
+        `${WEB_BASE}/chefs/${SEED_STOREFRONT_COOCO_SLUG}`
+      );
+      expect(storefrontResponse?.status()).toBe(404);
+
+      await page.goto(`${WEB_BASE}/chefs`);
+      await expect(page.getByRole('heading', { name: /browse chefs/i })).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(page.getByRole('link', { name: /cooco/i })).toBeHidden();
+    } finally {
+      if (suspended) {
+        // Best-effort restore so later local runs (without a db reset) and the
+        // remaining suite see the seeded marketplace. Unsuspend restores the
+        // chef; storefront re-publish is a separate governance action.
+        await page.goto('/dashboard/chefs');
+        await page.evaluate(
+          async ({ chefId, storefrontId }) => {
+            await fetch(`/api/chefs/${chefId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'unsuspend',
+                reason: 'E2E restore after negative-path suspension test',
+              }),
+            });
+            await fetch(`/api/engine/storefronts/${storefrontId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'publish' }),
+            });
+          },
+          { chefId: SEED_CHEF_RYO_ID, storefrontId: SEED_STOREFRONT_COOCO_ID }
+        );
+      }
+    }
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Driver negative paths (driver-app, port 3003)
+// ══════════════════════════════════════════════════════════════════════════════
+
+test.describe('driver negative paths @lifecycle @negative', () => {
+  test.use({ baseURL: 'http://127.0.0.1:3003' });
+
+  test('driver can decline a delivery offer and it returns to the dispatch pool', async ({ page }) => {
+    await signInDriver(page);
+
+    // Offers live in assignment_attempts (response='pending', unexpired).
+    // seed.sql ships an unassigned pending delivery (b2b2b2b2-…) but NO
+    // assignment_attempts row — offers are generated at runtime by the
+    // dispatch engine. Skip when no live offer exists for the seeded driver.
+    const offersBefore = await page.evaluate(async () => {
+      const response = await fetch('/api/offers');
+      const body = await response.json().catch(() => null);
+      const offers = body?.data?.offers ?? body?.offers ?? [];
+      return { ok: response.ok, status: response.status, offers };
+    });
+
+    expect(offersBefore.ok, `GET /api/offers failed with ${offersBefore.status}`).toBe(true);
+    if (!Array.isArray(offersBefore.offers) || offersBefore.offers.length === 0) {
+      test.skip(true, 'No live delivery offer for the seeded driver — seed.sql has no assignment_attempts fixture; offers are created by the dispatch engine at runtime');
+    }
+
+    const offer = offersBefore.offers[0] as { attemptId: string; deliveryId: string };
+
+    // Decline through the same API contract the OfferAlert UI uses.
+    const declineResult = await page.evaluate(async (attemptId) => {
+      const response = await fetch('/api/offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attemptId, action: 'decline', reason: 'busy' }),
+      });
+      const body = await response.json().catch(() => null);
+      return { ok: response.ok, status: response.status, body };
+    }, offer.attemptId);
+
+    expect(declineResult.ok, `decline failed (${declineResult.status})`).toBe(true);
+    expect(declineResult.body?.data?.declined ?? declineResult.body?.declined).toBe(true);
+
+    // The declined attempt must leave this driver's pending queue — the
+    // delivery itself stays unassigned so the dispatch engine can re-offer it.
+    const offersAfter = await page.evaluate(async () => {
+      const response = await fetch('/api/offers');
+      const body = await response.json().catch(() => null);
+      return body?.data?.offers ?? body?.offers ?? [];
+    });
+    const stillOffered = (offersAfter as Array<{ attemptId: string }>).some(
+      (o) => o.attemptId === offer.attemptId
+    );
+    expect(stillOffered, 'declined offer must not remain in the pending queue').toBe(false);
+
+    // The dashboard offer queue reflects the same state without crashing.
+    await page.goto('/');
+    await expect(page.getByText(/offer queue|pending offers/i).first()).toBeVisible({
+      timeout: 15_000,
+    });
+  });
+});

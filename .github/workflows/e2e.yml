@@ -1,0 +1,149 @@
+# E2E lifecycle suite against a seeded local Supabase stack.
+#
+# Design notes:
+# - ci.yml owns the lint/typecheck/unit/build gate plus a Playwright smoke run
+#   that uses placeholder Supabase env. This workflow is the complement: it
+#   boots the REAL local Supabase stack (supabase/config.toml: API 54321,
+#   DB 54322), applies migrations + the deterministic lifecycle seed, and runs
+#   `pnpm test:e2e:lifecycle` (fixture preflight + `playwright test
+#   e2e/lifecycle --project=web-smoke`). The lifecycle specs each pin their own
+#   baseURL per app, so the single web-smoke project drives all four apps —
+#   matching how the suite is run locally.
+# - Stripe-gated tests self-skip when STRIPE_SECRET_KEY is absent (the specs'
+#   own guard pattern), so no Stripe secret is required for a green run. If the
+#   repo defines a STRIPE_SECRET_KEY secret it is passed through and those
+#   tests will run.
+name: E2E (Seeded Supabase)
+
+on:
+  pull_request:
+    branches: [master, main]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "supabase/**"
+      - "e2e/**"
+      - "playwright.config.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/e2e.yml"
+  push:
+    branches: [master, main]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "supabase/**"
+      - "e2e/**"
+      - "playwright.config.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/e2e.yml"
+  workflow_dispatch:
+  schedule:
+    # Nightly full run (offset from ci.yml's 09:00 cron to spread runner load)
+    - cron: "0 7 * * *"
+
+permissions:
+  contents: read
+
+# One run per ref; a newer push supersedes an in-flight run.
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lifecycle:
+    name: Lifecycle E2E (local Supabase)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase stack
+        run: supabase start
+
+      - name: Reset database and apply lifecycle seed
+        run: |
+          # Applies supabase/migrations/* to the freshly started local stack.
+          supabase db reset
+
+          # Seed wiring note: config.toml has no [db.seed] block and the seed
+          # lives at supabase/seeds/seed.sql — NOT the CLI default
+          # supabase/seed.sql — so `supabase db reset` does not apply it. The
+          # repo's `pnpm db:seed` script ("supabase db seed") targets a CLI
+          # subcommand that is not available in current CLI releases, so the
+          # seed is applied explicitly with psql against the local DB
+          # (port 54322 per config.toml; local password is 'postgres').
+          # PGOPTIONS puts the `extensions` schema on the search path so the
+          # seed's unqualified pgcrypto calls (crypt/gen_salt) resolve.
+          PGOPTIONS="-c search_path=public,extensions" \
+            psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/seeds/seed.sql
+
+      - name: Write E2E env file
+        run: |
+          # playwright.config.ts (and the webServer dev apps it spawns) load
+          # .env.test from the repo root. Pull the actual local credentials
+          # from the running stack; fall back to the standard local demo
+          # values supabase start prints if the status output ever changes.
+          eval "$(supabase status -o env)"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=${API_URL:-http://127.0.0.1:54321}"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}"
+            echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}"
+            echo "DATABASE_URL=${DB_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}"
+            echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3000"
+            echo "NEXT_PUBLIC_CHEF_ADMIN_URL=http://127.0.0.1:3001"
+            echo "NEXT_PUBLIC_DRIVER_APP_URL=http://127.0.0.1:3003"
+            # Placeholders satisfy the lifecycle fixture preflight
+            # (scripts/e2e/verify-lifecycle-fixtures.mjs). STRIPE_SECRET_KEY is
+            # intentionally NOT placeholdered: when absent, Stripe-dependent
+            # tests skip via their own guards.
+            echo "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder"
+            echo "STRIPE_WEBHOOK_SECRET=whsec_placeholder"
+            echo "CRON_SECRET=ci-e2e-cron-secret"
+            echo "ENGINE_PROCESSOR_TOKEN=ci-e2e-processor-token"
+          } > .env.test
+          if [ -n "${STRIPE_SECRET_KEY}" ]; then
+            echo "STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}" >> .env.test
+          fi
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run lifecycle E2E suite
+        run: pnpm test:e2e:lifecycle
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-lifecycle-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Supabase logs on failure
+        if: failure()
+        run: supabase status || true

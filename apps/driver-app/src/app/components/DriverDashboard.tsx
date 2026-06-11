@@ -551,6 +551,22 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
         </div>
       )}
 
+      {(isOnShift || isOnline) &&
+        (locationTracker.permissionState === 'denied' || locationTracker.locationError) && (
+          <div
+            role="alert"
+            className="rounded-xl border border-danger/30 bg-dangerSoft p-4 text-sm font-semibold text-danger"
+          >
+            <p>
+              Location tracking is off — customers can&apos;t see your position. Enable location
+              for this site.
+            </p>
+            {locationTracker.permissionState !== 'denied' && locationTracker.locationError && (
+              <p className="mt-1 font-medium">{locationTracker.locationError}</p>
+            )}
+          </div>
+        )}
+
       <section className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>

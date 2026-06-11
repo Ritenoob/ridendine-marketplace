@@ -14,6 +14,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@ridendine/types": "workspace:*",
     "zod": "^3.23.0"
   },
   "devDependencies": {

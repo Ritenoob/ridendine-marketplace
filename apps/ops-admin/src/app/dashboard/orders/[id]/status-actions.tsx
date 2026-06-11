@@ -3,12 +3,28 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@ridendine/ui';
+import {
+  getEngineOrderAction,
+  isTerminalOrderStatus,
+  type EngineOrderActionKey,
+  type EngineOrderActionPresentation,
+} from '@ridendine/utils';
 
 interface OrderStatusActionsProps {
   orderId: string;
   currentStatus: string;
   allowedActions: string[];
 }
+
+// Button styling is an ops-admin (dark theme) concern; the action ->
+// label/api-action/success mapping is shared via @ridendine/utils.
+const ACTION_BUTTON_CLASSES: Record<EngineOrderActionKey, string> = {
+  accept_order: 'bg-info hover:bg-info',
+  reject_order: 'bg-danger hover:bg-danger',
+  start_preparing: 'bg-info hover:bg-info',
+  mark_ready: 'bg-info hover:bg-info/90',
+  complete_order: 'bg-success hover:bg-success',
+};
 
 export function OrderStatusActions({
   orderId,
@@ -22,42 +38,11 @@ export function OrderStatusActions({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const actionConfig: Record<string, { apiAction: string; label: string; success: string; className: string }> = {
-    accept_order: {
-      apiAction: 'accept',
-      label: 'Accept Order',
-      success: 'Order accepted',
-      className: 'bg-info hover:bg-info',
-    },
-    reject_order: {
-      apiAction: 'reject',
-      label: 'Reject Order',
-      success: 'Order rejected',
-      className: 'bg-danger hover:bg-danger',
-    },
-    start_preparing: {
-      apiAction: 'start_preparing',
-      label: 'Start Preparing',
-      success: 'Order moved to preparing',
-      className: 'bg-info hover:bg-info',
-    },
-    mark_ready: {
-      apiAction: 'mark_ready',
-      label: 'Mark Ready',
-      success: 'Order marked ready',
-      className: 'bg-info hover:bg-info/90',
-    },
-    complete_order: {
-      apiAction: 'complete',
-      label: 'Complete Order',
-      success: 'Order completed',
-      className: 'bg-success hover:bg-success',
-    },
-  };
-
   const actionableItems = allowedActions
-    .map((action) => ({ action, config: actionConfig[action] }))
-    .filter((item): item is { action: string; config: { apiAction: string; label: string; success: string; className: string } } => Boolean(item.config));
+    .map((action) => ({ action, config: getEngineOrderAction(action) }))
+    .filter((item): item is { action: EngineOrderActionKey; config: EngineOrderActionPresentation } =>
+      Boolean(item.config)
+    );
 
   const handleAction = async (action: string, successMessage: string) => {
     setPendingAction(action);
@@ -86,9 +71,7 @@ export function OrderStatusActions({
     }
   };
 
-  const isTerminal = ['completed', 'cancelled', 'rejected', 'refunded'].includes(
-    currentStatus
-  );
+  const isTerminal = isTerminalOrderStatus(currentStatus);
 
   return (
     <Card className="border-border bg-surface p-6">
@@ -122,9 +105,9 @@ export function OrderStatusActions({
             {actionableItems.map(({ action, config }) => (
               <button
                 key={action}
-                onClick={() => handleAction(config.apiAction, config.success)}
+                onClick={() => handleAction(config.apiAction, config.successMessage)}
                 disabled={pendingAction !== null}
-                className={`px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${config.className}`}
+                className={`px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${ACTION_BUTTON_CLASSES[action]}`}
               >
                 {pendingAction === config.apiAction ? 'Updating...' : config.label}
               </button>

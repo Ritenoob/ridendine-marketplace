@@ -1,0 +1,75 @@
+name: Load Test
+
+# Nightly automation for the load smoke (scripts/load/run-load-smoke.mjs,
+# `pnpm test:load`).
+#
+# SAFETY — why this defaults to dry-run:
+# The script runs two scenarios against LOAD_BASE_URL:
+#   - GET  /api/health           (read-only)
+#   - POST /api/support          (WRITE: submits real support requests to
+#                                 exercise the write-path rate limiter)
+# A live run against production creates up to LOAD_ITERATIONS (default 40)
+# support submissions per night — whatever the 429 rate limiter admits — so
+# the scheduled run and the default manual run use --dry-run, which only
+# prints the resolved config (base URL, iterations, concurrency, scenario
+# list) and exits 0. This still proves nightly that the script, its wiring,
+# and the runner toolchain are healthy.
+#
+# To run it FOR REAL: Actions -> Load Test -> Run workflow -> mode: "live"
+# (optionally overriding base_url, e.g. a staging deployment). Live runs
+# report p50/p95/p99 latency, error rate, and 429 counts per scenario.
+#
+# Failure semantics: the job fails on the script's own exit code. The script
+# exits non-zero only if the smoke itself crashes (it has no latency/error
+# thresholds); results are printed as JSON in the job log.
+#
+# Secrets: NONE required. The script takes no credentials — it only reads
+# the env vars LOAD_BASE_URL, LOAD_ITERATIONS, and LOAD_CONCURRENCY.
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # 08:00 UTC nightly (off-peak for Canadian traffic)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run prints config only; live sends real traffic (creates support submissions)"
+        type: choice
+        options:
+          - dry-run
+          - live
+        default: dry-run
+      base_url:
+        description: "Target base URL (customer web app)"
+        type: string
+        default: "https://ridendine.ca"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: load-test
+  cancel-in-progress: false
+
+jobs:
+  load-smoke:
+    name: Load smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      LOAD_BASE_URL: ${{ inputs.base_url || 'https://ridendine.ca' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Load smoke (dry run — default)
+        if: github.event_name == 'schedule' || inputs.mode != 'live'
+        run: pnpm test:load:dry-run
+      - name: Load smoke (LIVE — sends real traffic)
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
+        run: pnpm test:load

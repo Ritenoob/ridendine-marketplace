@@ -3,6 +3,7 @@
  */
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { KITCHEN_NEXT_TRANSITION, KITCHEN_REJECT_TRANSITION } from '@ridendine/utils';
 
 function read(relativePath: string): string {
   return readFileSync(join(__dirname, '..', relativePath), 'utf8');
@@ -55,10 +56,15 @@ describe('chef-admin smoke wiring', () => {
 
   it('orders list uses protected action payloads and empty state', () => {
     const src = read('components/orders/orders-list.tsx');
-    expect(src).toContain("action: 'accept'");
-    expect(src).toContain("action: 'start_preparing'");
-    expect(src).toContain("action: 'mark_ready'");
-    expect(src).toContain("action: 'reject'");
+    // The protected action payloads now come from the shared kitchen
+    // workflow in @ridendine/utils; assert the wiring plus the shared
+    // module's action vocabulary.
+    expect(src).toContain('KITCHEN_NEXT_TRANSITION');
+    expect(src).toContain('KITCHEN_REJECT_TRANSITION');
+    expect(KITCHEN_NEXT_TRANSITION.pending.action).toBe('accept');
+    expect(KITCHEN_NEXT_TRANSITION.accepted.action).toBe('start_preparing');
+    expect(KITCHEN_NEXT_TRANSITION.preparing.action).toBe('mark_ready');
+    expect(KITCHEN_REJECT_TRANSITION.action).toBe('reject');
     expect(src).toContain('Kitchen workflow');
     expect(src).toContain('Kitchen step');
     expect(src).toContain('Next action');

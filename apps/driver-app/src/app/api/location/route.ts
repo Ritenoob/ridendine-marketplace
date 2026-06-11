@@ -184,32 +184,45 @@ export async function POST(request: NextRequest) {
         if (delivery.order_id && CUSTOMER_LEG.has(delivery.status)) {
           const refreshed = await engine.eta.refreshFromDriverPing(deliveryId, { lat, lng });
 
-          const { data: snapRaw } = await adminClient
+          const { data: snapRaw, error: snapError } = await adminClient
             .from('deliveries')
             .select('eta_pickup_at, route_to_dropoff_polyline')
             .eq('id', deliveryId)
             .maybeSingle();
 
-          const { data: ordRaw } = await adminClient
+          const { data: ordRaw, error: ordError } = await adminClient
             .from('orders')
             .select('public_stage')
             .eq('id', delivery.order_id)
             .maybeSingle();
 
-          const snap = snapRaw as {
-            eta_pickup_at?: string | null;
-            route_to_dropoff_polyline?: string | null;
-          } | null;
-          const ord = ordRaw as { public_stage?: string } | null;
+          // Stale-data guard: only broadcast the ETA enrichment when the
+          // refresh queries actually returned rows. On a query error or a
+          // missing row the fallback values ('on_the_way' / null) would
+          // overwrite fresher data on the customer side, so skip the
+          // enrichment broadcast entirely. The location ping itself has
+          // already been persisted above.
+          if (!snapError && snapRaw && !ordError && ordRaw) {
+            const snap = snapRaw as {
+              eta_pickup_at?: string | null;
+              route_to_dropoff_polyline?: string | null;
+            };
+            const ord = ordRaw as { public_stage?: string };
 
-          await engine.events.broadcastPublic(delivery.order_id as string, {
-            public_stage: ord?.public_stage ?? 'on_the_way',
-            eta_pickup_at: snap?.eta_pickup_at ?? null,
-            eta_dropoff_at: refreshed.etaDropoffAt.toISOString(),
-            route_progress_pct: refreshed.progressPct,
-            route_remaining_seconds: refreshed.remainingSeconds,
-            route_to_dropoff_polyline: snap?.route_to_dropoff_polyline ?? null,
-          });
+            await engine.events.broadcastPublic(delivery.order_id as string, {
+              public_stage: ord.public_stage ?? 'on_the_way',
+              eta_pickup_at: snap.eta_pickup_at ?? null,
+              eta_dropoff_at: refreshed.etaDropoffAt.toISOString(),
+              route_progress_pct: refreshed.progressPct,
+              route_remaining_seconds: refreshed.remainingSeconds,
+              route_to_dropoff_polyline: snap.route_to_dropoff_polyline ?? null,
+            });
+          } else {
+            console.error(
+              'Skipping ETA broadcast: stale delivery/order snapshot',
+              snapError?.message ?? ordError?.message ?? 'row missing'
+            );
+          }
         }
       }
     }

@@ -3,6 +3,7 @@
 import { Card, Badge } from '@ridendine/ui';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { KITCHEN_NEXT_TRANSITION, type OrderWorkflowApiAction } from '@ridendine/utils';
 import { DashboardLayout } from '@/components/DashboardLayout';
 
 type Order = {
@@ -78,19 +79,9 @@ export default function OrdersPage() {
     }
   }
 
-  async function handleStatusChange(orderId: string, newStatus: string) {
-    const statusToAction: Record<string, string> = {
-      accepted: 'accept',
-      preparing: 'start_preparing',
-      ready: 'mark_ready',
-      cancelled: 'cancel',
-    };
-
-    const action = statusToAction[newStatus];
-    if (!action) {
-      return;
-    }
-
+  // Workflow progression actions come from the shared kitchen workflow
+  // (@ridendine/utils); cancel is an ops-only override and stays local.
+  async function handleWorkflowAction(orderId: string, action: OrderWorkflowApiAction) {
     try {
       const response = await fetch(`/api/engine/orders/${orderId}`, {
         method: 'PATCH',
@@ -220,13 +211,13 @@ export default function OrdersPage() {
                         {order.status === 'pending' && (
                           <>
                             <button
-                              onClick={() => handleStatusChange(order.id, 'accepted')}
+                              onClick={() => handleWorkflowAction(order.id, KITCHEN_NEXT_TRANSITION.pending.action)}
                               className="rounded bg-success px-3 py-1 text-xs text-white transition-colors hover:bg-success"
                             >
                               Accept
                             </button>
                             <button
-                              onClick={() => handleStatusChange(order.id, 'cancelled')}
+                              onClick={() => handleWorkflowAction(order.id, 'cancel')}
                               className="rounded bg-danger px-3 py-1 text-xs text-white transition-colors hover:bg-danger"
                             >
                               Cancel
@@ -235,7 +226,7 @@ export default function OrdersPage() {
                         )}
                         {order.status === 'accepted' && (
                           <button
-                            onClick={() => handleStatusChange(order.id, 'preparing')}
+                            onClick={() => handleWorkflowAction(order.id, KITCHEN_NEXT_TRANSITION.accepted.action)}
                             className="rounded bg-info px-3 py-1 text-xs text-white transition-colors hover:bg-info"
                           >
                             Start Prep
@@ -243,7 +234,7 @@ export default function OrdersPage() {
                         )}
                         {order.status === 'preparing' && (
                           <button
-                            onClick={() => handleStatusChange(order.id, 'ready')}
+                            onClick={() => handleWorkflowAction(order.id, KITCHEN_NEXT_TRANSITION.preparing.action)}
                             className="rounded bg-success px-3 py-1 text-xs text-white transition-colors hover:bg-success"
                           >
                             Mark Ready

@@ -35,3 +35,15 @@ export function calculateCartItemCount(items: CartSummaryItem[]): number {
 export function checkoutHrefForStorefront(storefrontId?: string | null): string {
   return storefrontId ? `/checkout?storefrontId=${encodeURIComponent(storefrontId)}` : '/chefs';
 }
+
+/**
+ * True when two dollar amounts differ by more than one cent.
+ *
+ * Used by checkout to compare the server-confirmed breakdown against the
+ * totals the customer saw on the details step; comparison is done in integer
+ * cents so floating-point noise can't trigger (or mask) a mismatch.
+ */
+export function totalsDifferBeyondTolerance(expectedDollars: number, serverDollars: number): boolean {
+  const diffCents = Math.abs(Math.round(serverDollars * 100) - Math.round(expectedDollars * 100));
+  return diffCents > 1;
+}

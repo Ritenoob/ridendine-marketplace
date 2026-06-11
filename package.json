@@ -50,6 +50,7 @@
     "audit:ops-negative-authz": "node scripts/audit/high-risk-ops-negative-authz.cjs",
     "audit:sean-super-admin": "node scripts/audit/sean-super-admin-fixture.cjs",
     "audit:db-hardening": "node scripts/audit/verify-db-hardening.mjs",
+    "audit:db-boundary": "node scripts/audit/db-boundary-ratchet.mjs",
     "ui:screenshots": "tsx scripts/ui/generate-ui-screenshots.ts",
     "ui:registry": "tsx scripts/ui/build-page-registry.ts",
     "ui:screenshots:sync": "tsx scripts/ui/sync-ui-screenshots.ts",

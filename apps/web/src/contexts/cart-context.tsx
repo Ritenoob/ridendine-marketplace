@@ -49,10 +49,45 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+/**
+ * localStorage key for the active cart's storefront id. The cart itself is
+ * server-backed (fetchCart pulls it from /api/cart); only this pointer is
+ * persisted so a page refresh can restore the cart context.
+ */
+export const CART_STOREFRONT_STORAGE_KEY = 'ridendine.cart.storefrontId';
+
+/** Best-effort persistence — localStorage may be unavailable (SSR, private mode). */
+function persistStorefrontId(id: string | null) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (id) {
+      window.localStorage.setItem(CART_STOREFRONT_STORAGE_KEY, id);
+    } else {
+      window.localStorage.removeItem(CART_STOREFRONT_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore quota/security errors — persistence is an enhancement only.
+  }
+}
+
+function readPersistedStorefrontId(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(CART_STOREFRONT_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
-  const [storefrontId, setStorefrontId] = useState<string | null>(null);
+  const [storefrontId, setStorefrontIdState] = useState<string | null>(null);
+
+  const setStorefrontId = useCallback((id: string) => {
+    setStorefrontIdState(id);
+    persistStorefrontId(id);
+  }, []);
 
   const itemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
 
@@ -139,7 +174,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [fetchCart]);
+  }, [fetchCart, setStorefrontId]);
 
   const removeItem = useCallback(async (itemId: string) => {
     setLoading(true);
@@ -187,7 +222,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => {
     setCart(null);
-    setStorefrontId(null);
+    setStorefrontIdState(null);
+    persistStorefrontId(null);
+  }, []);
+
+  // On mount, restore the persisted storefront pointer (if any) so a page
+  // refresh re-hydrates the server-backed cart. The fetch itself happens in
+  // the effect below once storefrontId is set and no cart is loaded.
+  useEffect(() => {
+    const stored = readPersistedStorefrontId();
+    if (stored) {
+      // Functional update: never clobber a storefront already set by a page
+      // (e.g. addToCart) before this effect ran.
+      setStorefrontIdState((current) => current ?? stored);
+    }
   }, []);
 
   useEffect(() => {

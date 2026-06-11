@@ -13,7 +13,7 @@ import { DeliveryTimePicker } from '@/components/checkout/delivery-time-picker';
 import { SavedCardSelector } from '@/components/checkout/saved-card-selector';
 import { CheckoutProgress } from '@/components/checkout/checkout-progress';
 import { orderConfirmationPath } from '@/lib/customer-ordering';
-import { calculateCartSubtotal, formatCartCurrency } from '@/lib/cart-summary';
+import { calculateCartSubtotal, formatCartCurrency, totalsDifferBeyondTolerance } from '@/lib/cart-summary';
 import { useEta } from '@/hooks/use-eta';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -144,7 +144,7 @@ function CheckoutContent() {
   const [showCustomTip, setShowCustomTip] = useState(false);
   const [customTip, setCustomTip] = useState('');
   const [promoCode, setPromoCode] = useState('');
-  const [promoStatus, setPromoStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
+  const [promoStatus, setPromoStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
   const [promoMessage, setPromoMessage] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [scheduledFor, setScheduledFor] = useState<string | null>(null);
@@ -161,6 +161,12 @@ function CheckoutContent() {
   const [breakdown, setBreakdown] = useState<OrderBreakdown | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<'details' | 'payment'>('details');
   const [creatingPayment, setCreatingPayment] = useState(false);
+  // Set when the server-confirmed breakdown no longer matches the amounts the
+  // customer reviewed on the details step (subtotal + tip − promo discount).
+  // While set, the Stripe payment form is gated behind an explicit
+  // re-confirmation of the updated total. The server stays the source of
+  // truth — this only stops a changed total from being charged silently.
+  const [totalChangeNotice, setTotalChangeNotice] = useState<{ expectedTotal: number } | null>(null);
 
   // Saved payment method state
   const [savedPaymentMethodId, setSavedPaymentMethodId] = useState<string | null>(null);
@@ -252,6 +258,9 @@ function CheckoutContent() {
       setPromoDiscount(0);
       return;
     }
+    // In flight: show the validating state until the LATEST response lands.
+    // (Stale responses below leave it untouched, so the indicator persists.)
+    setPromoStatus('validating');
     try {
       const res = await fetch(
         `/api/promos/validate?code=${encodeURIComponent(code)}&subtotal=${cartSubtotal}`
@@ -280,7 +289,9 @@ function CheckoutContent() {
     // late response cannot overwrite the reset below before the debounce fires.
     promoRequestIdRef.current += 1;
     setPromoCode(value.toUpperCase());
-    setPromoStatus('idle');
+    // Non-empty input is about to be validated (after the debounce), so show
+    // the in-flight state immediately rather than the idle "enter a code" UI.
+    setPromoStatus(value.trim() ? 'validating' : 'idle');
     setPromoMessage('');
     if (promoDebounceRef.current) clearTimeout(promoDebounceRef.current);
     promoDebounceRef.current = setTimeout(() => {
@@ -325,14 +336,30 @@ function CheckoutContent() {
       const result = await response.json();
 
       if (result.success) {
+        const serverBreakdown: OrderBreakdown | null = result.data.breakdown ?? null;
         setOrderId(result.data.orderId);
-        setBreakdown(result.data.breakdown);
+        setBreakdown(serverBreakdown);
 
         // Saved card confirmed server-side — no client-secret needed
         if (!result.data.clientSecret) {
           router.push(orderConfirmationPath(result.data.orderId));
           return;
         }
+
+        // Re-validate before payment: compare what the customer just reviewed
+        // (cart subtotal + tip − promo discount; delivery/service fees and tax
+        // are server-set and intentionally not shown as estimates on the
+        // details step) against the same components of the server breakdown.
+        // A mismatch of more than a cent gates payment behind re-confirmation.
+        const expectedTotal = cartSubtotal + tipDollars() - (promoStatus === 'valid' ? promoDiscount : 0);
+        const serverComparableTotal = serverBreakdown
+          ? serverBreakdown.subtotal + serverBreakdown.tip - serverBreakdown.discount
+          : expectedTotal;
+        setTotalChangeNotice(
+          totalsDifferBeyondTolerance(expectedTotal, serverComparableTotal)
+            ? { expectedTotal }
+            : null
+        );
 
         setClientSecret(result.data.clientSecret);
         setCheckoutStep('payment');
@@ -559,7 +586,13 @@ function CheckoutContent() {
                     placeholder="Enter promo code"
                     valid={promoStatus === 'valid'}
                     error={promoStatus === 'invalid' ? promoMessage : undefined}
-                    hint={promoStatus === 'valid' ? `✓ ${promoMessage}` : undefined}
+                    hint={
+                      promoStatus === 'valid'
+                        ? `✓ ${promoMessage}`
+                        : promoStatus === 'validating'
+                          ? 'Checking code…'
+                          : undefined
+                    }
                   />
                 </div>
               </Card>
@@ -593,14 +626,33 @@ function CheckoutContent() {
             /* Payment Step */
             <Card padding="lg">
               <h2 className="mb-6 font-semibold text-text">Payment Details</h2>
-              <div className="mb-5 rounded-lg border border-success/30 bg-successSoft px-4 py-3">
-                <h3 className="text-sm font-bold text-text">Secure payment with confirmed total</h3>
-                <p className="mt-1 text-sm leading-relaxed text-textMuted">
-                  RideNDine has locked delivery, service fees, tax, promos, tip, and total.
-                  Stripe securely handles the card step.
-                </p>
-              </div>
-              {clientSecret && (
+              {totalChangeNotice ? (
+                <div className="mb-5 rounded-lg border border-warning/30 bg-warningSoft px-4 py-3">
+                  <h3 className="text-sm font-bold text-text">Your order total was updated</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-textMuted">
+                    When RideNDine confirmed your order, the amounts changed from what you
+                    reviewed (you expected {formatCartCurrency(totalChangeNotice.expectedTotal)} before
+                    delivery, service fees, and tax). Please review the updated breakdown in the
+                    payment summary, then confirm the new total to continue.
+                  </p>
+                  <Button
+                    variant="primary"
+                    className="mt-3"
+                    onClick={() => setTotalChangeNotice(null)}
+                  >
+                    Confirm updated total — {formatCartCurrency(paymentTotal)}
+                  </Button>
+                </div>
+              ) : (
+                <div className="mb-5 rounded-lg border border-success/30 bg-successSoft px-4 py-3">
+                  <h3 className="text-sm font-bold text-text">Secure payment with confirmed total</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-textMuted">
+                    RideNDine has locked delivery, service fees, tax, promos, tip, and total.
+                    Stripe securely handles the card step.
+                  </p>
+                </div>
+              )}
+              {clientSecret && !totalChangeNotice && (
                 <Elements
                   stripe={stripePromise}
                   options={{

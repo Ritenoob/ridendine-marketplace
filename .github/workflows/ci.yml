@@ -47,6 +47,8 @@ jobs:
         run: pnpm lint
       - name: API route guard audit
         run: pnpm audit:guards
+      - name: DB boundary ratchet
+        run: pnpm audit:db-boundary
       - name: Test (engine)
         run: pnpm --filter @ridendine/engine test
       - name: Test (db)
