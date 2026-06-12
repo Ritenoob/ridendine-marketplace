@@ -82,6 +82,57 @@ VALUES
    '{"display_name":"Pending Chef","role":"chef"}', false, 'authenticated')
 ON CONFLICT (id) DO NOTHING;
 
+-- GoTrue requirements for password sign-in on directly-seeded users:
+--   * instance_id + aud must match what the auth server queries on.
+--   * The token/change columns must be empty strings, not NULL — GoTrue's row
+--     scan errors on NULLs ("converting NULL to string is unsupported"),
+--     which surfaces as a failed login.
+UPDATE auth.users SET
+  instance_id = '00000000-0000-0000-0000-000000000000',
+  aud = 'authenticated',
+  confirmation_token = COALESCE(confirmation_token, ''),
+  recovery_token = COALESCE(recovery_token, ''),
+  email_change = COALESCE(email_change, ''),
+  email_change_token_new = COALESCE(email_change_token_new, ''),
+  email_change_token_current = COALESCE(email_change_token_current, ''),
+  phone_change = COALESCE(phone_change, ''),
+  phone_change_token = COALESCE(phone_change_token, ''),
+  reauthentication_token = COALESCE(reauthentication_token, '')
+WHERE id IN (
+  '00000000-0000-0000-0000-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  '22222222-2222-2222-2222-222222222222',
+  '33333333-3333-3333-3333-333333333333',
+  '44444444-4444-4444-4444-444444444444',
+  '55555555-5555-5555-5555-555555555555',
+  '66666666-6666-6666-6666-666666666666',
+  '77777777-7777-7777-7777-777777777777',
+  '88888888-8888-8888-8888-888888888888'
+);
+
+-- Email/password sign-in also requires a matching auth.identities row per
+-- user (provider 'email'); GoTrue rejects credentials without one.
+INSERT INTO auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+SELECT
+  u.id::text,
+  u.id,
+  jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true),
+  'email',
+  NOW(), NOW(), NOW()
+FROM auth.users u
+WHERE u.id IN (
+  '00000000-0000-0000-0000-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  '22222222-2222-2222-2222-222222222222',
+  '33333333-3333-3333-3333-333333333333',
+  '44444444-4444-4444-4444-444444444444',
+  '55555555-5555-5555-5555-555555555555',
+  '66666666-6666-6666-6666-666666666666',
+  '77777777-7777-7777-7777-777777777777',
+  '88888888-8888-8888-8888-888888888888'
+)
+ON CONFLICT (provider_id, provider) DO NOTHING;
+
 -- ============================================================
 -- SECTION 1B: PLATFORM USERS
 -- ============================================================
