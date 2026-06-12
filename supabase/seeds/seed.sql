@@ -428,8 +428,8 @@ ON CONFLICT (id) DO NOTHING;
 -- SECTION 8: CUSTOMER ADDRESSES
 -- ============================================================
 
--- 00006 renamed customer_addresses.address_line1 -> street_address.
-INSERT INTO customer_addresses (id, customer_id, label, street_address, city, state, postal_code, country, is_default, created_at, updated_at)
+-- address_line1 matches production; 00048 converges fresh replays to it.
+INSERT INTO customer_addresses (id, customer_id, label, address_line1, city, state, postal_code, country, is_default, created_at, updated_at)
 VALUES
   ('add20000-0000-4000-8000-000000000001',
    'c0570000-0000-4000-8000-000000000001',
