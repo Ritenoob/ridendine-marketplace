@@ -1,6 +1,6 @@
 -- ============================================================
 -- RideNDine Seed Data — Schema-Compliant
--- 4 Chefs (3 approved, 1 pending_approval) | 3 Storefronts | 15 Dishes
+-- 4 Chefs (3 approved, 1 pending) | 3 Storefronts | 15 Dishes
 -- 2 Customers | 2 Drivers | 6 Orders | Deliveries (incl. 1 unassigned pending)
 -- ============================================================
 
@@ -105,7 +105,9 @@ VALUES
    'Pending Chef',
    '+1 (905) 555-0404',
    'A new chef awaiting platform approval.',
-   'pending_approval',
+   -- chef_profiles_status_check allows pending|approved|rejected|suspended;
+   -- 'pending_approval' is storefront-governance vocabulary, not a chef status.
+   'pending',
    NOW() - INTERVAL '1 day', NOW())
 ON CONFLICT (id) DO NOTHING;
 
