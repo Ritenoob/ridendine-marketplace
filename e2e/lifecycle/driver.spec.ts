@@ -7,7 +7,7 @@
  *
  * Seed dependencies:
  *   - Seeded driver: mike.driver@ridendine.ca / password123 (status: approved)
- *   - Seeded delivery: del-00001 in 'delivered' state (earnings baseline)
+ *   - Seeded delivery: de100000-0000-4000-8000-000000000001 in 'delivered' state (earnings baseline)
  *
  * Missing seed hooks needed for full green run:
  *   - A 'pending' delivery offer associated with the test driver account.
@@ -93,7 +93,7 @@ test.describe('driver lifecycle @lifecycle', () => {
   test('driver can see and accept a delivery offer', async ({ page }) => {
     await signInDriver(page);
 
-    // Navigate to deliveries list — seeded ready_for_pickup order (ord-00006 / del-assigned pending)
+    // Navigate to deliveries list — seeded ready_for_pickup order (RND-006 / assigned delivery pending)
     await page.goto('/delivery');
     // If no offer is present, skip — a real pending offer requires API injection
     const offerCard = page.locator('[data-testid*="offer"], [class*="offer"], button:has-text("Accept")').first();

@@ -62,6 +62,7 @@
     "docs:supabase": "node scripts/wiring/generate-supabase-diagrams.cjs",
     "test:wiring-fixes": "node scripts/wiring/verify-known-wiring-fixes.cjs && node --test scripts/smoke/runtime-contract-smoke.test.cjs scripts/smoke/live-role-fixture-smoke.test.cjs scripts/smoke/non-admin-role-fixture-smoke.test.cjs scripts/smoke/runtime-surface-classification.test.cjs scripts/smoke/runtime-coverage-audit.test.cjs scripts/smoke/runtime-proof-disposition.test.cjs scripts/smoke/ops-export-audit-smoke.test.cjs scripts/smoke/runtime-proof-action-smoke.test.cjs scripts/smoke/runtime-sample-fixtures.test.cjs scripts/smoke/driver-shift-mutation-smoke.test.cjs scripts/smoke/production-smoke.test.cjs scripts/smoke/responsive-production-smoke.test.cjs scripts/audit/sean-super-admin-fixture.test.cjs scripts/audit/high-risk-ops-authz-contracts.test.cjs scripts/audit/high-risk-ops-negative-authz.test.cjs",
     "audit:guards": "node scripts/audit/check-api-route-guards.mjs",
+    "e2e:validate-seed": "node scripts/e2e/validate-seed-uuids.mjs",
     "test:e2e:setup": "supabase db reset && pnpm db:seed",
     "test:e2e:lifecycle:fixtures": "node scripts/e2e/verify-lifecycle-fixtures.mjs",
     "test:e2e:lifecycle:reset": "node scripts/e2e/reset-live-fixtures.mjs",

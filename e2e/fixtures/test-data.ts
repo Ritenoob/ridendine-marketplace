@@ -1,7 +1,7 @@
 /**
  * Canonical seed UUIDs. Must match supabase/seeds/seed.sql.
  * Storefront 'every-bite-yum' = dddddddd-dddd-dddd-dddd-dddddddddddd
- * Menu item 'Classic Smash Burger' = item-eby-01 (string ID, not UUID)
+ * Menu item 'Classic Smash Burger' = 17e30000-0001-4000-8000-000000000001
  * Pending-approval chef profile = a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1
  * Unassigned pending delivery = b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2
  */
@@ -23,7 +23,7 @@ export const deterministicFixtures = {
     /** Canonical storefront UUID from seed.sql: Every Bite Yum */
     storefrontId: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
     /** Seed menu item ID for Classic Smash Burger */
-    menuItemId: 'item-eby-01',
+    menuItemId: '17e30000-0001-4000-8000-000000000001',
   },
   seed: {
     /** Pending-approval chef profile UUID (for ops "approve chef" test) */

@@ -7,7 +7,8 @@
  *
  * Seed dependencies (from supabase/seeds/seed.sql):
  *   - Storefront 'every-bite-yum' (id: dddddddd-dddd-dddd-dddd-dddddddddddd)
- *   - Menu items: item-eby-01 (Classic Smash Burger), item-eby-03 (Nashville Hot Chicken Sandwich)
+ *   - Menu items: 17e30000-0001-4000-8000-000000000001 (Classic Smash Burger),
+ *     17e30000-0001-4000-8000-000000000003 (Nashville Hot Chicken Sandwich)
  *   - Chef login: sean@ridendine.ca / password123  (for API state advance)
  *
  * Missing seed hooks that need to be added for full green run:
@@ -169,7 +170,7 @@ test.describe('customer lifecycle @lifecycle', () => {
   });
 
   test('customer can submit 5-star review after a delivered seed order', async ({ page }) => {
-    // Use seed order ord-00001 (delivered) owned by alice@example.com
+    // Use seed order RND-001 (delivered) owned by alice@example.com
     // Sign in as Alice
     await page.goto('/auth/login');
     await page.getByLabel(/email/i).fill('alice@example.com');

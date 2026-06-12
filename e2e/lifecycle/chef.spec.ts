@@ -8,7 +8,7 @@
  * Seed dependencies:
  *   - Seeded chef: sean@ridendine.ca / password123 (chef_id: aaaaaaaa-...)
  *   - Seeded storefront: every-bite-yum (for payouts baseline)
- *   - Seeded orders: ord-00004 (preparing) or ord-00005 (pending) associated with
+ *   - Seeded orders: RND-004 (preparing) or RND-005 (pending) associated with
  *     storefronts — chef needs a pending order to accept.
  *
  * Missing seed hooks needed for full green run:
@@ -85,7 +85,7 @@ test.describe('chef lifecycle @lifecycle', () => {
   });
 
   test('chef can accept a pending order', async ({ page }) => {
-    // Uses seeded order ord-00005 (pending, HOÀNG GIA PHỞ / Tuan)
+    // Uses seeded order RND-005 (pending, HOÀNG GIA PHỞ / Tuan)
     // Sign in as seeded chef tuan@ridendine.ca
     await page.goto('/auth/login');
     await page.getByLabel(/email/i).fill('tuan@ridendine.ca');
@@ -104,7 +104,7 @@ test.describe('chef lifecycle @lifecycle', () => {
   });
 
   test('chef can mark order as preparing and then ready', async ({ page }) => {
-    // Uses seeded order ord-00004 (accepted → preparing state for sean@ridendine.ca)
+    // Uses seeded order RND-004 (accepted → preparing state for sean@ridendine.ca)
     await page.goto('/auth/login');
     await page.getByLabel(/email/i).fill('sean@ridendine.ca');
     await page.getByLabel(/password/i).fill('password123');

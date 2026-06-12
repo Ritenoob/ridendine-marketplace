@@ -7,9 +7,10 @@
  *
  * Seed dependencies:
  *   - Ops super_admin: ops@ridendine.ca / password123
- *   - Seeded in-flight orders: ord-00004 (preparing), ord-00005 (pending),
- *     ord-00006 (ready_for_pickup — "stuck" for force-assign scenario)
- *   - Seeded approved drivers: drv-00001, drv-00002
+ *   - Seeded in-flight orders: RND-004 (preparing), RND-005 (pending),
+ *     RND-006 (ready_for_pickup — "stuck" for force-assign scenario)
+ *   - Seeded approved drivers: d2000000-0000-4000-8000-000000000001 (Mike Chen),
+ *     d2000000-0000-4000-8000-000000000002 (Sarah Kim)
  *
  * Missing seed hooks needed for full green run:
  *   - A 'pending_approval' chef account for the approve-chef test.
@@ -69,7 +70,7 @@ test.describe('ops lifecycle @lifecycle', () => {
   });
 
   test('ops can force-assign a driver to a stuck order', async ({ page }) => {
-    // Navigate to the ready_for_pickup seeded order (ord-00006 / RND-006)
+    // Navigate to the ready_for_pickup seeded order (RND-006)
     await page.goto('/dashboard/orders');
     // Try to find the ready_for_pickup row
     const stuckRow = page.getByText(/ready_for_pickup|RND-006/i).first();

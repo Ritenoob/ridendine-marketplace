@@ -16,8 +16,8 @@
  *   - Chef logins: tuan@ridendine.ca (HOÀNG GIA PHỞ), sean@ridendine.ca (Every Bite Yum)
  *   - Ops super_admin: ops@ridendine.ca / password123
  *   - Driver: mike.driver@ridendine.ca / password123 (approved)
- *   - Pending order RND-005 (ord-00005…) — owned by Alice, HOÀNG GIA PHỞ
- *   - Delivered order RND-001 (ord-00001…) — Every Bite Yum (terminal status)
+ *   - Pending order RND-005 (0d000000-0000-4000-8000-000000000005) — owned by Alice, HOÀNG GIA PHỞ
+ *   - Delivered order RND-001 (0d000000-0000-4000-8000-000000000001) — Every Bite Yum (terminal status)
  *   - Approved chef Ryo (cccccccc-…) with active storefront COOCO (ffffffff-…)
  *   - Storefront every-bite-yum (dddddddd-…) with menu items
  *
@@ -41,8 +41,8 @@ import type { Page } from '@playwright/test';
 
 const SEED_STOREFRONT_SLUG = 'every-bite-yum';
 const SEED_STOREFRONT_EBY_ID = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
-const SEED_PENDING_ORDER_ID = 'ord-00005-0000-0000-0000-000000000005'; // RND-005, pending, Alice
-const SEED_DELIVERED_ORDER_ID = 'ord-00001-0000-0000-0000-000000000001'; // RND-001, delivered, EBY
+const SEED_PENDING_ORDER_ID = '0d000000-0000-4000-8000-000000000005'; // RND-005, pending, Alice
+const SEED_DELIVERED_ORDER_ID = '0d000000-0000-4000-8000-000000000001'; // RND-001, delivered, EBY
 const SEED_CHEF_RYO_ID = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 const SEED_STOREFRONT_COOCO_ID = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
 const SEED_STOREFRONT_COOCO_SLUG = 'cooco';
