@@ -560,6 +560,26 @@ VALUES
    NOW() - INTERVAL '45 minutes', NOW() - INTERVAL '15 minutes')
 ON CONFLICT (id) DO NOTHING;
 
+-- engine_status must mirror each order's seeded status. The column default is
+-- 'pending', which would make the engine state machine evaluate kitchen
+-- actions on already-delivered orders from the wrong state (e.g. allowing
+-- start_preparing on RND-001). The public_stage sync trigger keeps
+-- public_stage consistent with this update.
+UPDATE orders SET engine_status = CASE status
+    WHEN 'delivered' THEN 'delivered'
+    WHEN 'preparing' THEN 'preparing'
+    WHEN 'ready_for_pickup' THEN 'ready'
+    ELSE 'pending'
+  END
+WHERE id IN (
+  '0d000000-0000-4000-8000-000000000001',
+  '0d000000-0000-4000-8000-000000000002',
+  '0d000000-0000-4000-8000-000000000003',
+  '0d000000-0000-4000-8000-000000000004',
+  '0d000000-0000-4000-8000-000000000005',
+  '0d000000-0000-4000-8000-000000000006'
+);
+
 -- ============================================================
 -- SECTION 12: ORDER ITEMS (using menu_item_name per schema)
 -- ============================================================

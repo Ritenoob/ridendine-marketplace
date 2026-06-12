@@ -37,7 +37,13 @@ function menuAddButton(page: import('@playwright/test').Page, itemName?: string)
     return button.first();
   }
 
-  return page.getByRole('heading', { name: itemName }).locator('..').locator('..').getByRole('button', { name: /^add$/i });
+  // .first(): featured-dish rails can render the same item twice on the page.
+  return page
+    .getByRole('heading', { name: itemName })
+    .locator('..')
+    .locator('..')
+    .getByRole('button', { name: /^add$/i })
+    .first();
 }
 
 async function signInCustomer(page: import('@playwright/test').Page) {
@@ -106,7 +112,8 @@ test.describe('customer lifecycle @lifecycle', () => {
     await addBtn.click();
     await waitForCartCount(page);
     await openCartFromStorefront(page);
-    await expect(page.getByText(/subtotal/i)).toBeVisible();
+    // .first(): the sticky mobile checkout bar repeats the subtotal label.
+    await expect(page.getByText(/subtotal/i).first()).toBeVisible();
     // At minimum one fee line should appear
     const feeLines = page.locator('text=/fee|tax|tip|delivery/i');
     await expect(feeLines.first()).toBeVisible({ timeout: 5_000 });
