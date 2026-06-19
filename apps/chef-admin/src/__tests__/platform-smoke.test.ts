@@ -94,6 +94,21 @@ describe('chef-admin smoke wiring', () => {
     expect(growth).toContain('Revenue Trend');
   });
 
+  it('sidebar includes kitchen command nav item', () => {
+    const src = read('components/layout/sidebar.tsx');
+    expect(src).toContain("href: '/dashboard/kitchen'");
+    expect(src).toContain("label: 'Kitchen'");
+  });
+
+  it('kitchen command page exists with all three sections and pause wiring', () => {
+    const page = read('app/dashboard/kitchen/page.tsx');
+    expect(page).toContain('Kitchen Command');
+    expect(page).toContain("Today's Prep Plan");
+    expect(page).toContain('Live Prep Board');
+    expect(page).toContain('/api/kitchen/overview');
+    expect(page).toContain('/api/kitchen/pause');
+  });
+
   it('menu editor exposes inventory controls through the API', () => {
     const modal = read('components/menu/item-modal.tsx');
     const list = read('components/menu/menu-list.tsx');
