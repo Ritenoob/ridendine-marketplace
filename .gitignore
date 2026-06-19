@@ -70,3 +70,6 @@ supabase/.temp/
 **/graphify-out/
 
 .claude/settings.local.json
+
+# Claude Flow agent session data (runtime artifacts, not source)
+.claude-flow/
