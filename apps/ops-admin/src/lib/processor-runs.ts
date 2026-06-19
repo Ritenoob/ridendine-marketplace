@@ -1,3 +1,9 @@
+import {
+  insertOpsProcessorRunClaim,
+  updateOpsProcessorRunFinish,
+  type SupabaseClient,
+} from '@ridendine/db';
+
 type ProcessorClient = {
   from: (table: string) => any;
 };
@@ -16,29 +22,25 @@ export async function claimProcessorRun(
   headers: Headers
 ): Promise<{ claimed: boolean; runId?: string; idempotencyKey: string; error?: string }> {
   const idempotencyKey = processorIdempotencyKey(headers, processorName);
-  const { data, error } = await client
-    .from('ops_processor_runs')
-    .insert({
-      processor_name: processorName,
-      idempotency_key: idempotencyKey,
-      status: 'processing',
-    })
-    .select('id')
-    .single();
 
-  if (!error && data?.id) {
-    return { claimed: true, runId: data.id as string, idempotencyKey };
-  }
-
-  if (error?.code === '23505') {
+  try {
+    const run = await insertOpsProcessorRunClaim(
+      client as unknown as SupabaseClient,
+      processorName,
+      idempotencyKey
+    );
+    if (run?.id) {
+      return { claimed: true, runId: run.id, idempotencyKey };
+    }
+    // Duplicate idempotency key (23505) — another invocation owns this slot.
     return { claimed: false, idempotencyKey };
+  } catch (error) {
+    return {
+      claimed: false,
+      idempotencyKey,
+      error: (error as { message?: string } | null)?.message || 'Failed to claim processor run',
+    };
   }
-
-  return {
-    claimed: false,
-    idempotencyKey,
-    error: error?.message || 'Failed to claim processor run',
-  };
 }
 
 export async function finishProcessorRun(
@@ -49,13 +51,17 @@ export async function finishProcessorRun(
   errorMessage?: string
 ): Promise<void> {
   if (!runId) return;
-  await client
-    .from('ops_processor_runs')
-    .update({
+  try {
+    await updateOpsProcessorRunFinish(
+      client as unknown as SupabaseClient,
+      runId,
       status,
-      finished_at: new Date().toISOString(),
       result,
-      error_message: errorMessage ?? null,
-    })
-    .eq('id', runId);
+      errorMessage
+    );
+  } catch {
+    // The raw update was fire-and-forget (its error result was ignored);
+    // preserve that behaviour so a failed bookkeeping write never fails
+    // the processor route itself.
+  }
 }

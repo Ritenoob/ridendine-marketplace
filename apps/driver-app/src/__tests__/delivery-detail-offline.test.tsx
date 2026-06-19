@@ -107,6 +107,10 @@ function createMemoryStore(): OutboxStore & { rows: OutboxEntry[] } {
       const index = rows.findIndex((row) => row.id === id);
       if (index >= 0) rows.splice(index, 1);
     },
+    async update(entry) {
+      const index = rows.findIndex((row) => row.id === entry.id);
+      if (index >= 0) rows[index] = entry;
+    },
   };
 }
 
@@ -251,7 +255,7 @@ describe('DeliveryDetail offline outbox', () => {
     expect(screen.queryByText(/waiting to sync/i)).not.toBeInTheDocument();
   });
 
-  it('queues pickup proof with the photo data URL when uploads fail offline', async () => {
+  it('queues pickup proof with a pending upload when the photo upload fails offline', async () => {
     (global.fetch as jest.Mock).mockRejectedValue(new TypeError('Failed to fetch'));
 
     class MockFileReader {
@@ -282,11 +286,151 @@ describe('DeliveryDetail offline outbox', () => {
     expect(await screen.findByText(/1 action waiting to sync/i)).toBeInTheDocument();
     expect(store.rows).toHaveLength(1);
     expect(store.rows[0]).toMatchObject({ kind: 'proof', deliveryId: 'del-1' });
-    expect(JSON.parse(store.rows[0]!.request.body)).toMatchObject({
-      eventType: 'pickup',
-      proofUrl: 'data:image/jpeg;base64,proof',
-    });
+    // The photo is carried as a pending upload, NOT baked into proofUrl.
+    expect(store.rows[0]!.pendingUploads).toEqual([
+      {
+        field: 'proofUrl',
+        dataUrl: 'data:image/jpeg;base64,proof',
+        context: 'pickup',
+        deliveryId: 'del-1',
+      },
+    ]);
+    const queuedBody = JSON.parse(store.rows[0]!.request.body);
+    expect(queuedBody).toMatchObject({ eventType: 'pickup' });
+    expect(queuedBody).not.toHaveProperty('proofUrl');
     // Status stays pending rather than advancing to picked up.
     expect(screen.getByRole('button', { name: 'Waiting to sync...' })).toBeDisabled();
+  });
+
+  it('replays a queued pickup proof by uploading the photo before submitting', async () => {
+    setNavigatorOnLine(false);
+    await mockOutboxRef.current!.enqueue({
+      kind: 'proof',
+      deliveryId: 'del-1',
+      request: {
+        url: '/api/deliveries/del-1/proof',
+        method: 'POST',
+        body: JSON.stringify({ eventType: 'pickup' }),
+      },
+      pendingUploads: [
+        {
+          field: 'proofUrl',
+          dataUrl: 'data:image/jpeg;base64,proof',
+          context: 'pickup',
+          deliveryId: 'del-1',
+        },
+      ],
+    });
+    (global.fetch as jest.Mock).mockImplementation(async (url: string) =>
+      url === '/api/upload'
+        ? {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              success: true,
+              url: 'https://storage.example/proof.jpg',
+              path: 'p',
+              context: 'pickup',
+            }),
+          }
+        : { ok: true, status: 200, json: async () => ({ success: true }) }
+    );
+
+    render(
+      <DeliveryDetail
+        delivery={{ ...deliveryFixture, status: 'arrived_at_pickup' } as any}
+        order={orderFixture}
+      />
+    );
+    expect(await screen.findByText(/1 action waiting to sync/i)).toBeInTheDocument();
+
+    setNavigatorOnLine(true);
+    fireEvent(window, new Event('online'));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/upload',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            dataUrl: 'data:image/jpeg;base64,proof',
+            context: 'pickup',
+            deliveryId: 'del-1',
+          }),
+        })
+      );
+    });
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/deliveries/del-1/proof',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            eventType: 'pickup',
+            proofUrl: 'https://storage.example/proof.jpg',
+          }),
+        })
+      );
+    });
+    await waitFor(() => expect(refreshMock).toHaveBeenCalled());
+    expect(store.rows).toHaveLength(0);
+    // Local status advanced to picked up after the replayed pickup proof.
+    expect(
+      await screen.findByRole('button', { name: 'Start Navigation to Customer' })
+    ).toBeInTheDocument();
+  });
+
+  it('surfaces a notice when a queued photo upload is rejected and the proof falls back to the data URL', async () => {
+    setNavigatorOnLine(false);
+    await mockOutboxRef.current!.enqueue({
+      kind: 'proof',
+      deliveryId: 'del-1',
+      request: {
+        url: '/api/deliveries/del-1/proof',
+        method: 'POST',
+        body: JSON.stringify({ eventType: 'pickup' }),
+      },
+      pendingUploads: [
+        {
+          field: 'proofUrl',
+          dataUrl: 'data:image/jpeg;base64,proof',
+          context: 'pickup',
+          deliveryId: 'del-1',
+        },
+      ],
+    });
+    (global.fetch as jest.Mock).mockImplementation(async (url: string) =>
+      url === '/api/upload'
+        ? { ok: false, status: 400, json: async () => ({ error: 'File too large. Maximum 5MB' }) }
+        : { ok: true, status: 200, json: async () => ({ success: true }) }
+    );
+
+    render(
+      <DeliveryDetail
+        delivery={{ ...deliveryFixture, status: 'arrived_at_pickup' } as any}
+        order={orderFixture}
+      />
+    );
+    expect(await screen.findByText(/1 action waiting to sync/i)).toBeInTheDocument();
+
+    setNavigatorOnLine(true);
+    fireEvent(window, new Event('online'));
+
+    // The proof itself was still submitted — with the raw data URL.
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/deliveries/del-1/proof',
+        expect.objectContaining({
+          body: JSON.stringify({
+            eventType: 'pickup',
+            proofUrl: 'data:image/jpeg;base64,proof',
+          }),
+        })
+      );
+    });
+    expect(
+      await screen.findByText(/photo could not be uploaded.*File too large/i)
+    ).toBeInTheDocument();
+    expect(store.rows).toHaveLength(0);
   });
 });

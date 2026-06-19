@@ -5,19 +5,17 @@
 // ==========================================
 
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listServiceAreas,
+  updateServiceAreaSurge,
+  type ServiceAreaSurgeRow,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { SURGE_CAP } from '@ridendine/engine';
 import { getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
-
-interface ServiceAreaRow {
-  id: string;
-  name: string;
-  surge_multiplier: number | null;
-  is_active: boolean;
-  dispatch_radius_km: number | null;
-}
 
 export async function GET() {
   try {
@@ -25,17 +23,15 @@ export async function GET() {
     const denied = guardPlatformApi(actor, 'platform_settings');
     if (denied) return denied;
 
-    const adminClient = createAdminClient() as any;
-    const { data, error } = await adminClient
-      .from('service_areas')
-      .select('id, name, surge_multiplier, is_active, dispatch_radius_km')
-      .order('name');
-
-    if (error) {
+    const adminClient = createAdminClient() as unknown as SupabaseClient;
+    let data: ServiceAreaSurgeRow[];
+    try {
+      data = await listServiceAreas(adminClient);
+    } catch {
       return NextResponse.json({ success: false, error: 'Failed to fetch service areas' }, { status: 500 });
     }
 
-    const areas = (data as ServiceAreaRow[]).map((area) => ({
+    const areas = data.map((area) => ({
       id: area.id,
       name: area.name,
       surgeMultiplier: area.surge_multiplier ?? 1.0,
@@ -75,24 +71,20 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const adminClient = createAdminClient() as any;
-    const { data, error } = await adminClient
-      .from('service_areas')
-      .update({ surge_multiplier: surgeMultiplier, updated_at: new Date().toISOString() })
-      .eq('id', serviceAreaId)
-      .select('id, name, surge_multiplier')
-      .single();
-
-    if (error) {
+    const adminClient = createAdminClient() as unknown as SupabaseClient;
+    let data: { id: string; name: string; surge_multiplier: number | null };
+    try {
+      data = await updateServiceAreaSurge(adminClient, serviceAreaId, surgeMultiplier);
+    } catch {
       return NextResponse.json({ success: false, error: 'Failed to update surge multiplier' }, { status: 500 });
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        id: (data as ServiceAreaRow).id,
-        name: (data as ServiceAreaRow).name,
-        surgeMultiplier: (data as ServiceAreaRow).surge_multiplier ?? 1.0,
+        id: data.id,
+        name: data.name,
+        surgeMultiplier: data.surge_multiplier ?? 1.0,
       },
     });
   } catch (err) {

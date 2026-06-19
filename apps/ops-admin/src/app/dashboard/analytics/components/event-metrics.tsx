@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@ridendine/ui';
-import { createBrowserClient } from '@ridendine/db';
+import { createBrowserClient, listAnalyticsEventNamesSince } from '@ridendine/db';
 
 interface EventCount {
   event_name: string;
@@ -98,12 +98,9 @@ export function EventMetrics() {
         if (!supabase) return;
 
         const startDate = getStartDate(period);
-        const { data, error } = await (supabase as any)
-          .from('analytics_events')
-          .select('event_name')
-          .gte('created_at', startDate.toISOString());
+        const data = await listAnalyticsEventNamesSince(supabase, startDate.toISOString());
 
-        if (!error && data) {
+        if (data) {
           setMetrics(buildMetrics(data));
         }
       } catch {

@@ -1,6 +1,11 @@
 import { Card, Badge, ORDER_STATUS_BG_CLASSES } from '@ridendine/ui';
 import Link from 'next/link';
-import { createAdminClient, getOpsOrderDetail, type SupabaseClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getOpsOrderDetail,
+  listOrderExceptionsForOrder,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { formatCurrency } from '@ridendine/utils';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { notFound } from 'next/navigation';
@@ -66,16 +71,12 @@ async function getOrderDetailPageData(orderId: string) {
     return null;
   }
 
-  const [timeline, allowedActions, financialsResult, exceptionsResult] =
+  const [timeline, allowedActions, financialsResult, exceptions] =
     await Promise.all([
       engine.audit.getAuditTrail('order', orderId),
       engine.orders.getAllowedActions(orderId, actor.role),
       engine.commerce.getOrderFinancials(orderId),
-      adminClient
-        .from('order_exceptions')
-        .select('*')
-        .eq('order_id', orderId)
-        .order('created_at', { ascending: false }),
+      listOrderExceptionsForOrder(adminClient, orderId),
     ]);
 
   return {
@@ -84,7 +85,7 @@ async function getOrderDetailPageData(orderId: string) {
     timeline,
     allowedActions,
     financials: financialsResult.success ? financialsResult.data : null,
-    exceptions: exceptionsResult.data ?? [],
+    exceptions: (exceptions ?? []) as any[],
   };
 }
 

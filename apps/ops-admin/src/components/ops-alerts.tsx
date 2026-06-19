@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { Bell } from 'lucide-react';
-import { createBrowserClient } from '@ridendine/db';
+import { createBrowserClient, listSystemAlertFeed } from '@ridendine/db';
 import { opsAlertsChannel } from '@ridendine/db';
 
 interface AlertItem {
@@ -72,12 +72,7 @@ export function OpsAlerts() {
     const fetchAlerts = async () => {
       if (!supabase) return;
       try {
-        const { data: sysAlerts } = await supabase
-          .from('system_alerts')
-          .select('id, alert_type, title, severity, entity_type, entity_id, created_at')
-          .eq('acknowledged', false)
-          .order('created_at', { ascending: false })
-          .limit(20);
+        const sysAlerts = await listSystemAlertFeed(supabase, 20);
 
         const rows = (sysAlerts ?? []) as SystemAlertRow[];
         const items: AlertItem[] = rows.map((a) => ({

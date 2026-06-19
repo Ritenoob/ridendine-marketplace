@@ -23,9 +23,16 @@ jest.mock('@/lib/engine', () => {
   };
 });
 
-const mockFrom = jest.fn();
+const mockListOrderTrendRows = jest.fn();
+const mockListChefPayableLedgerTotalsSince = jest.fn();
+const mockListChefDisplayNames = jest.fn();
+
 jest.mock('@ridendine/db', () => ({
-  createAdminClient: jest.fn(() => ({ from: mockFrom })),
+  createAdminClient: jest.fn(() => ({})),
+  listOrderTrendRows: (...args: unknown[]) => mockListOrderTrendRows(...args),
+  listChefPayableLedgerTotalsSince: (...args: unknown[]) =>
+    mockListChefPayableLedgerTotalsSince(...args),
+  listChefDisplayNames: (...args: unknown[]) => mockListChefDisplayNames(...args),
 }));
 
 jest.mock('next/server', () => ({
@@ -47,31 +54,14 @@ function makeRequest(params = {}) {
   return { url: url.toString() } as any;
 }
 
-function makeQueryChain(data) {
-  const chain = {
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    gte: jest.fn().mockReturnThis(),
-    lte: jest.fn().mockReturnThis(),
-    in: jest.fn().mockReturnThis(),
-    order: jest.fn().mockResolvedValue({ data }),
-  };
-  return chain;
-}
-
-function makeChefChain(data) {
-  return {
-    select: jest.fn().mockReturnThis(),
-    in: jest.fn().mockResolvedValue({ data }),
-  };
-}
-
-function makeLedgerChain(data) {
-  return {
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    gte: jest.fn().mockResolvedValue({ data }),
-  };
+function installRepositoryData({
+  orders = [] as unknown[],
+  ledger = [] as unknown[],
+  chefNames = [] as unknown[],
+} = {}) {
+  mockListOrderTrendRows.mockResolvedValue(orders);
+  mockListChefPayableLedgerTotalsSince.mockResolvedValue(ledger);
+  mockListChefDisplayNames.mockResolvedValue(chefNames);
 }
 
 beforeEach(() => {
@@ -100,11 +90,10 @@ describe('GET /api/analytics/trends', () => {
       { id: 'o2', total: 15.00, status: 'cancelled', payment_status: 'pending', created_at: new Date().toISOString() },
     ];
 
-    mockFrom.mockImplementation((table) => {
-      if (table === 'orders') return makeQueryChain(orders);
-      if (table === 'ledger_entries') return makeLedgerChain([{ entity_id: 'chef1', amount_cents: 1000 }]);
-      if (table === 'chef_profiles') return makeChefChain([{ id: 'chef1', display_name: 'Chef Alice' }]);
-      return makeQueryChain([]);
+    installRepositoryData({
+      orders,
+      ledger: [{ entity_id: 'chef1', amount_cents: 1000 }],
+      chefNames: [{ id: 'chef1', display_name: 'Chef Alice' }],
     });
 
     await GET(makeRequest({ days: '7' }));
@@ -121,6 +110,7 @@ describe('GET /api/analytics/trends', () => {
     expect(Array.isArray(callArg.data.trend)).toBe(true);
     expect(Array.isArray(callArg.data.peakHours)).toBe(true);
     expect(callArg.data.peakHours).toHaveLength(24);
+    expect(callArg.data.topChefs).toEqual([{ name: 'Chef Alice', revenue: 10 }]);
   });
 
   it('fills in missing dates with zeros in trend array', async () => {
@@ -131,12 +121,7 @@ describe('GET /api/analytics/trends', () => {
       sessionId: 's1',
     });
 
-    mockFrom.mockImplementation((table) => {
-      if (table === 'orders') return makeQueryChain([]);
-      if (table === 'ledger_entries') return makeLedgerChain([]);
-      if (table === 'chef_profiles') return makeChefChain([]);
-      return makeQueryChain([]);
-    });
+    installRepositoryData();
 
     await GET(makeRequest({ days: '7' }));
 
@@ -161,12 +146,7 @@ describe('GET /api/analytics/trends', () => {
       { id: 'o3', total: 30, status: 'cancelled', payment_status: 'pending', created_at: today },
     ];
 
-    mockFrom.mockImplementation((table) => {
-      if (table === 'orders') return makeQueryChain(orders);
-      if (table === 'ledger_entries') return makeLedgerChain([]);
-      if (table === 'chef_profiles') return makeChefChain([]);
-      return makeQueryChain([]);
-    });
+    installRepositoryData({ orders });
 
     await GET(makeRequest({ days: '1' }));
 

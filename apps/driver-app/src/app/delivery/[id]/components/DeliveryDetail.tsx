@@ -6,7 +6,12 @@ import { Card, Button, DELIVERY_STATUS_LABELS } from '@ridendine/ui';
 import type { Delivery } from '@ridendine/db';
 import { useLocationTracker } from '@/hooks/use-location-tracker';
 import { RouteMap } from '@/components/map/route-map';
-import { getOfflineOutbox, isOfflineApiError, type OutboxEntry } from '@/lib/offline-outbox';
+import {
+  getOfflineOutbox,
+  isOfflineApiError,
+  type OutboxEntry,
+  type PendingUpload,
+} from '@/lib/offline-outbox';
 
 type DeliveryStatus = 'assigned' | 'accepted' | 'en_route_to_pickup' | 'arrived_at_pickup' | 'picked_up' | 'en_route_to_dropoff' | 'arrived_at_dropoff';
 
@@ -191,6 +196,17 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
       router.refresh();
     }
 
+    const fallbacksHere = result.uploadFallbacks.filter(
+      (item) => item.entry.deliveryId === delivery.id
+    );
+    if (fallbacksHere.length > 0) {
+      setSyncNotice(
+        `A saved photo could not be uploaded (${fallbacksHere
+          .map((item) => item.message)
+          .join('; ')}) — the proof was submitted with the captured photo instead.`
+      );
+    }
+
     const droppedHere = result.dropped.filter((item) => item.entry.deliveryId === delivery.id);
     if (droppedHere.length > 0) {
       setSyncNotice(
@@ -217,10 +233,16 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
   const queueMutation = async (
     kind: 'status' | 'proof' | 'issue',
-    request: { url: string; method: string; body: string }
+    request: { url: string; method: string; body: string },
+    pendingUploads?: PendingUpload[]
   ): Promise<boolean> => {
     try {
-      await getOfflineOutbox().enqueue({ kind, deliveryId: delivery.id, request });
+      await getOfflineOutbox().enqueue({
+        kind,
+        deliveryId: delivery.id,
+        request,
+        ...(pendingUploads && pendingUploads.length > 0 ? { pendingUploads } : {}),
+      });
     } catch {
       return false; // IndexedDB unavailable — fall back to the normal error path.
     }
@@ -495,6 +517,28 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
     throw new Error('Failed to submit delivery proof while offline');
   };
 
+  // Queue a proof whose photo(s) could not be uploaded because the device is
+  // offline. The request body omits the pending fields; on replay the outbox
+  // uploads each photo to /api/upload first and substitutes the returned URL
+  // into the body before submitting the proof.
+  const queueProofWithUploads = async (
+    eventType: 'pickup' | 'dropoff',
+    pendingUploads: PendingUpload[],
+    metadata: { proofUrl?: string; signatureUrl?: string } = {}
+  ): Promise<'queued'> => {
+    const request = {
+      url: `/api/deliveries/${delivery.id}/proof`,
+      method: 'POST',
+      body: JSON.stringify({
+        eventType,
+        ...getLocationMetadata(),
+        ...metadata,
+      }),
+    };
+    if (await queueMutation('proof', request, pendingUploads)) return 'queued';
+    throw new Error('Failed to submit delivery proof while offline');
+  };
+
   const handlePickupConfirm = async () => {
     if (!pickupPhoto) return;
     setIsUploading(true);
@@ -502,9 +546,13 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
     try {
       // Offline fallback: when the upload cannot reach the server, queue the
-      // proof with the captured data URL itself so the photo is not lost.
+      // proof with the photo as a pending upload so replay uploads it first.
       const uploadedUrl = await uploadPhotoOrNull(pickupPhoto, 'pickup');
-      const proofResult = await submitDeliveryProof('pickup', uploadedUrl ?? pickupPhoto);
+      const proofResult = uploadedUrl
+        ? await submitDeliveryProof('pickup', uploadedUrl)
+        : await queueProofWithUploads('pickup', [
+            { field: 'proofUrl', dataUrl: pickupPhoto, context: 'pickup', deliveryId: delivery.id },
+          ]);
 
       if (proofResult === 'queued') {
         setPendingSync(true);
@@ -635,19 +683,52 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
 
     try {
       // Offline fallback: when an upload cannot reach the server, queue the
-      // proof with the captured data URLs so nothing is lost.
+      // proof with the captured photo(s) as pending uploads so replay uploads
+      // them before submitting the proof.
+      const pendingUploads: PendingUpload[] = [];
+
       const uploadedUrl = await uploadPhotoOrNull(photo, 'dropoff');
+      if (!uploadedUrl) {
+        pendingUploads.push({
+          field: 'proofUrl',
+          dataUrl: photo,
+          context: 'dropoff',
+          deliveryId: delivery.id,
+        });
+      }
 
       let signatureUrl: string | undefined;
       if (signature) {
-        signatureUrl = (await uploadPhotoOrNull(signature, 'signature')) ?? signature;
+        // Skip the signature upload attempt when the photo upload already
+        // failed offline — queue it as a pending upload right away.
+        const uploadedSignatureUrl = uploadedUrl
+          ? await uploadPhotoOrNull(signature, 'signature')
+          : null;
+        if (uploadedSignatureUrl) {
+          signatureUrl = uploadedSignatureUrl;
+        } else {
+          pendingUploads.push({
+            field: 'signatureUrl',
+            dataUrl: signature,
+            context: 'signature',
+            deliveryId: delivery.id,
+          });
+        }
       }
 
-      const proofResult = await submitDeliveryProof(
-        'dropoff',
-        uploadedUrl ?? photo,
-        signatureUrl ? { signatureUrl } : {}
-      );
+      const proofResult =
+        pendingUploads.length > 0
+          ? await queueProofWithUploads('dropoff', pendingUploads, {
+              ...(uploadedUrl ? { proofUrl: uploadedUrl } : {}),
+              ...(signatureUrl ? { signatureUrl } : {}),
+            })
+          : await submitDeliveryProof(
+              'dropoff',
+              // uploadedUrl is always set when nothing is pending; `?? photo`
+              // only satisfies the type checker.
+              uploadedUrl ?? photo,
+              signatureUrl ? { signatureUrl } : {}
+            );
 
       if (proofResult === 'queued') {
         setPendingSync(true);

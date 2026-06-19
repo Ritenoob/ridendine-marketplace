@@ -7,12 +7,13 @@ const mockChannel = {
   subscribe: jest.fn().mockReturnThis(),
 };
 const mockSupabase = {
-  from: jest.fn(),
   channel: jest.fn(() => mockChannel),
   removeChannel: jest.fn(),
 };
+const mockListSystemAlertFeed = jest.fn();
 jest.mock('@ridendine/db', () => ({
   createBrowserClient: jest.fn(() => mockSupabase),
+  listSystemAlertFeed: (...args: unknown[]) => mockListSystemAlertFeed(...args),
   opsAlertsChannel: () => 'ops:alerts',
 }));
 
@@ -47,14 +48,8 @@ global.AudioContext = jest.fn(() => mockAudioContext) as any;
 
 import { OpsAlerts } from '../ops-alerts';
 
-function makeQueryBuilder(rows: any[]) {
-  const builder: any = {
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockResolvedValue({ data: rows }),
-  };
-  return builder;
+function installAlertRows(rows: any[]) {
+  mockListSystemAlertFeed.mockResolvedValue(rows);
 }
 
 beforeEach(() => {
@@ -66,14 +61,14 @@ beforeEach(() => {
 
 describe('OpsAlerts', () => {
   it('renders bell icon button', async () => {
-    mockSupabase.from.mockReturnValue(makeQueryBuilder([]));
+    installAlertRows([]);
     render(<OpsAlerts />);
     const btn = screen.getByRole('button', { name: /alerts/i });
     expect(btn).toBeInTheDocument();
   });
 
   it('shows no badge when there are no alerts', async () => {
-    mockSupabase.from.mockReturnValue(makeQueryBuilder([]));
+    installAlertRows([]);
     render(<OpsAlerts />);
     await waitFor(() => {
       expect(screen.queryByText(/\d+/)).not.toBeInTheDocument();
@@ -85,7 +80,7 @@ describe('OpsAlerts', () => {
       { id: '1', alert_type: 'sla', title: 'SLA breach', severity: 'warning', entity_type: 'order', entity_id: 'o1', created_at: '2024-01-01T10:00:00Z' },
       { id: '2', alert_type: 'refund', title: 'Pending refund', severity: 'info', entity_type: 'order', entity_id: 'o2', created_at: '2024-01-01T09:00:00Z' },
     ];
-    mockSupabase.from.mockReturnValue(makeQueryBuilder(fakeAlerts));
+    installAlertRows(fakeAlerts);
     render(<OpsAlerts />);
     await waitFor(() => {
       expect(screen.getByText('2')).toBeInTheDocument();
@@ -96,7 +91,7 @@ describe('OpsAlerts', () => {
     const fakeAlerts = [
       { id: '1', alert_type: 'sla', title: 'SLA breach', severity: 'critical', entity_type: 'delivery', entity_id: 'd1', created_at: '2024-01-01T10:00:00Z' },
     ];
-    mockSupabase.from.mockReturnValue(makeQueryBuilder(fakeAlerts));
+    installAlertRows(fakeAlerts);
     render(<OpsAlerts />);
     await waitFor(() => screen.getByText('1'));
 
@@ -108,7 +103,7 @@ describe('OpsAlerts', () => {
   });
 
   it('shows "No active alerts" when dropdown is open with no alerts', async () => {
-    mockSupabase.from.mockReturnValue(makeQueryBuilder([]));
+    installAlertRows([]);
     render(<OpsAlerts />);
     const btn = screen.getByRole('button', { name: /alerts/i });
     await act(async () => { fireEvent.click(btn); });
@@ -119,7 +114,7 @@ describe('OpsAlerts', () => {
     const fakeAlerts = [
       { id: '1', alert_type: 'late', title: 'Late delivery', severity: 'error', entity_type: 'delivery', entity_id: 'abc123', created_at: '2024-01-01T10:00:00Z' },
     ];
-    mockSupabase.from.mockReturnValue(makeQueryBuilder(fakeAlerts));
+    installAlertRows(fakeAlerts);
     render(<OpsAlerts />);
     await waitFor(() => screen.getByText('1'));
     const btn = screen.getByRole('button', { name: /alerts/i });
@@ -132,7 +127,7 @@ describe('OpsAlerts', () => {
     const fakeAlerts = [
       { id: '1', alert_type: 'sla', title: 'Alert 1', severity: 'warning', entity_type: 'order', entity_id: 'o1', created_at: '2024-01-01T10:00:00Z' },
     ];
-    mockSupabase.from.mockReturnValue(makeQueryBuilder(fakeAlerts));
+    installAlertRows(fakeAlerts);
     render(<OpsAlerts />);
     await waitFor(() => screen.getByText('1'));
     const btn = screen.getByRole('button', { name: /alerts/i });
@@ -141,7 +136,7 @@ describe('OpsAlerts', () => {
   });
 
   it('subscribes to realtime channel on mount', async () => {
-    mockSupabase.from.mockReturnValue(makeQueryBuilder([]));
+    installAlertRows([]);
     render(<OpsAlerts />);
     await waitFor(() => {
       expect(mockSupabase.channel).toHaveBeenCalledWith('ops:alerts');

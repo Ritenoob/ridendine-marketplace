@@ -352,3 +352,111 @@ export async function getDeliveryTrackingEvents(
   if (error) throw error;
   return data as DeliveryTrackingEvent[];
 }
+
+// ==========================================
+// OPS-ADMIN READ MODELS / OPERATIONS
+// ==========================================
+
+/** Exact count of deliveries currently in the given statuses. */
+export async function countDeliveriesInStatuses(
+  client: SupabaseClient,
+  statuses: string[]
+): Promise<number> {
+  const { count, error } = await client
+    .from('deliveries')
+    .select('*', { count: 'exact', head: true })
+    .in('status', statuses as never[]);
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/** Exact count of deliveries in the given statuses created before `beforeIso`. */
+export async function countActiveDeliveriesStartedBefore(
+  client: SupabaseClient,
+  statuses: string[],
+  beforeIso: string
+): Promise<number> {
+  const { count, error } = await client
+    .from('deliveries')
+    .select('id', { count: 'exact', head: true })
+    .in('status', statuses as never[])
+    .lt('created_at', beforeIso);
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export interface DeliveryDurationRow {
+  created_at: string;
+  actual_dropoff_at: string | null;
+}
+
+/** `created_at, actual_dropoff_at` for deliveries created within [start, end]. */
+export async function listDeliveryDurationRowsBetween(
+  client: SupabaseClient,
+  startIso: string,
+  endIso: string
+): Promise<DeliveryDurationRow[]> {
+  const { data, error } = await client
+    .from('deliveries')
+    .select('created_at, actual_dropoff_at')
+    .gte('created_at', startIso)
+    .lte('created_at', endIso);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as DeliveryDurationRow[];
+}
+
+/** Completed delivery durations since `sinceIso` (dropoff recorded), capped. */
+export async function listCompletedDeliveryDurationsSince(
+  client: SupabaseClient,
+  sinceIso: string,
+  limit = 500
+): Promise<DeliveryDurationRow[]> {
+  const { data, error } = await client
+    .from('deliveries')
+    .select('created_at, actual_dropoff_at')
+    .not('actual_dropoff_at', 'is', null)
+    .gte('created_at', sinceIso)
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as DeliveryDurationRow[];
+}
+
+/** Active deliveries with coordinates + order number for the ops live map. */
+export async function listLiveMapDeliveries(
+  client: SupabaseClient,
+  statuses: string[]
+): Promise<Record<string, any>[]> {
+  const { data, error } = await client
+    .from('deliveries')
+    .select(`
+          id,
+          pickup_lat,
+          pickup_lng,
+          dropoff_lat,
+          dropoff_lng,
+          status,
+          driver_id,
+          orders (order_number)
+        `)
+    .in('status', statuses as never[]);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as Record<string, any>[];
+}
+
+/** Flag a delivery as escalated to ops (driver-assignment timeout, etc.). */
+export async function markDeliveryEscalatedToOps(
+  client: SupabaseClient,
+  deliveryId: string
+): Promise<void> {
+  const { error } = await client
+    .from('deliveries')
+    .update({ escalated_to_ops: true, updated_at: new Date().toISOString() } as never)
+    .eq('id', deliveryId);
+
+  if (error) throw error;
+}

@@ -4,10 +4,13 @@
 
 const mockGetOpsActorContext = jest.fn();
 const mockGuardPlatformApi = jest.fn();
-const mockAdminClient = { from: jest.fn() };
+const mockGetOpsDriverOperationsRawData = jest.fn();
+const mockAdminClient = { __id: 'admin-client' };
 
 jest.mock('@ridendine/db', () => ({
   createAdminClient: jest.fn(() => mockAdminClient),
+  getOpsDriverOperationsRawData: (...args: unknown[]) =>
+    mockGetOpsDriverOperationsRawData(...args),
 }));
 
 jest.mock('@/lib/engine', () => {
@@ -24,38 +27,7 @@ jest.mock('@/lib/engine', () => {
 
 import { GET } from '../app/api/drivers/[id]/operations/route';
 
-type Builder = {
-  select: jest.Mock;
-  eq: jest.Mock;
-  in: jest.Mock;
-  order: jest.Mock;
-  limit: jest.Mock;
-  maybeSingle: jest.Mock;
-};
-
 const DRIVER_ID = 'driver-ops-1';
-
-function singleResult(data: unknown, error: unknown = null): Builder {
-  const builder = {} as Builder;
-  builder.select = jest.fn(() => builder);
-  builder.eq = jest.fn(() => builder);
-  builder.in = jest.fn(() => builder);
-  builder.order = jest.fn(() => builder);
-  builder.limit = jest.fn(() => Promise.resolve({ data: [], error: null }));
-  builder.maybeSingle = jest.fn(() => Promise.resolve({ data, error }));
-  return builder;
-}
-
-function listResult(data: unknown[], error: unknown = null): Builder {
-  const builder = {} as Builder;
-  builder.select = jest.fn(() => builder);
-  builder.eq = jest.fn(() => builder);
-  builder.in = jest.fn(() => builder);
-  builder.order = jest.fn(() => builder);
-  builder.limit = jest.fn(() => Promise.resolve({ data, error }));
-  builder.maybeSingle = jest.fn(() => Promise.resolve({ data: null, error: null }));
-  return builder;
-}
 
 function installOpsData(overrides: {
   driver?: Record<string, unknown> | null;
@@ -83,90 +55,78 @@ function installOpsData(overrides: {
       }
     : overrides.driver;
 
-  const builders = {
-    drivers: singleResult(driver),
-    driver_presence: singleResult(
-      overrides.presence ?? {
-        status: 'online',
-        current_shift_id: 'shift-1',
-        last_location_at: freshLocation,
-        last_location_update: freshLocation,
-        updated_at: freshLocation,
-        current_lat: 49.2827,
-        current_lng: -123.1207,
-      }
-    ),
-    deliveries: listResult(
-      overrides.activeDeliveries ?? [
-        {
-          id: 'delivery-1',
-          order_id: 'order-1',
-          status: 'en_route_to_pickup',
+  const rawData = driver === null
+    ? null
+    : {
+        driver,
+        presence: overrides.presence ?? {
+          status: 'online',
+          current_shift_id: 'shift-1',
+          last_location_at: freshLocation,
+          last_location_update: freshLocation,
+          updated_at: freshLocation,
+          current_lat: 49.2827,
+          current_lng: -123.1207,
+        },
+        activeDeliveries: overrides.activeDeliveries ?? [
+          {
+            id: 'delivery-1',
+            order_id: 'order-1',
+            status: 'en_route_to_pickup',
+            updated_at: now.toISOString(),
+            estimated_dropoff_at: null,
+            pickup_address: '123 Pickup',
+            dropoff_address: '456 Dropoff',
+            orders: { order_number: 'RND-1001' },
+          },
+        ],
+        openExceptions: overrides.openExceptions ?? [
+          {
+            id: 'exception-1',
+            exception_type: 'driver_delay',
+            status: 'open',
+            severity: 'high',
+            title: 'Driver late',
+            created_at: now.toISOString(),
+          },
+          {
+            id: 'exception-2',
+            exception_type: 'missing_proof',
+            status: 'escalated',
+            severity: 'medium',
+            title: 'Proof review',
+            created_at: now.toISOString(),
+          },
+        ],
+        documents: overrides.documents ?? [
+          { id: 'doc-1', document_type: 'drivers_license', status: 'approved', expires_at: '2027-06-01T00:00:00.000Z' },
+          { id: 'doc-2', document_type: 'vehicle_registration', status: 'pending', expires_at: null },
+          { id: 'doc-3', document_type: 'vehicle_insurance', status: 'rejected', expires_at: null },
+        ],
+        payoutAccount: overrides.payoutAccount ?? {
+          status: 'active',
+          payouts_enabled: true,
+          charges_enabled: true,
+          onboarding_completed_at: now.toISOString(),
+        },
+        platformAccount: overrides.platformAccount ?? {
+          balance_cents: 12550,
+          pending_payout_cents: 2200,
+          currency: 'CAD',
           updated_at: now.toISOString(),
-          estimated_dropoff_at: null,
-          pickup_address: '123 Pickup',
-          dropoff_address: '456 Dropoff',
-          orders: { order_number: 'RND-1001' },
         },
-      ]
-    ),
-    order_exceptions: listResult(
-      overrides.openExceptions ?? [
-        {
-          id: 'exception-1',
-          exception_type: 'driver_delay',
-          status: 'open',
-          severity: 'high',
-          title: 'Driver late',
-          created_at: now.toISOString(),
+        shift: overrides.shift ?? {
+          id: 'shift-1',
+          started_at: new Date(now.getTime() - 90 * 60_000).toISOString(),
+          ended_at: null,
+          total_deliveries: 3,
+          total_earnings: 41.25,
+          total_distance_km: 22.4,
         },
-        {
-          id: 'exception-2',
-          exception_type: 'missing_proof',
-          status: 'escalated',
-          severity: 'medium',
-          title: 'Proof review',
-          created_at: now.toISOString(),
-        },
-      ]
-    ),
-    driver_documents: listResult(
-      overrides.documents ?? [
-        { id: 'doc-1', document_type: 'drivers_license', status: 'approved', expires_at: '2027-06-01T00:00:00.000Z' },
-        { id: 'doc-2', document_type: 'vehicle_registration', status: 'pending', expires_at: null },
-        { id: 'doc-3', document_type: 'vehicle_insurance', status: 'rejected', expires_at: null },
-      ]
-    ),
-    driver_payout_accounts: singleResult(
-      overrides.payoutAccount ?? {
-        status: 'active',
-        payouts_enabled: true,
-        charges_enabled: true,
-        onboarding_completed_at: now.toISOString(),
-      }
-    ),
-    platform_accounts: singleResult(
-      overrides.platformAccount ?? {
-        balance_cents: 12550,
-        pending_payout_cents: 2200,
-        currency: 'CAD',
-        updated_at: now.toISOString(),
-      }
-    ),
-    driver_shifts: singleResult(
-      overrides.shift ?? {
-        id: 'shift-1',
-        started_at: new Date(now.getTime() - 90 * 60_000).toISOString(),
-        ended_at: null,
-        total_deliveries: 3,
-        total_earnings: 41.25,
-        total_distance_km: 22.4,
-      }
-    ),
-  };
+      };
 
-  mockAdminClient.from.mockImplementation((table: keyof typeof builders) => builders[table]);
-  return builders;
+  mockGetOpsDriverOperationsRawData.mockResolvedValue(rawData);
+  return rawData;
 }
 
 async function callGet(driverId = DRIVER_ID) {

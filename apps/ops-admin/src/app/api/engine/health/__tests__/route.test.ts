@@ -7,10 +7,12 @@ import { GET } from '../route';
 const mockCheckSystemHealth = jest.fn();
 const mockGetOpsActorContext = jest.fn();
 const mockGuardPlatformApi = jest.fn();
+const mockListCompletedProcessorRuns = jest.fn();
 const mockAdminClient = { __id: 'admin-client' } as unknown as Record<string, unknown>;
 
 jest.mock('@ridendine/db', () => ({
   createAdminClient: jest.fn(() => mockAdminClient),
+  listCompletedProcessorRuns: (...args: unknown[]) => mockListCompletedProcessorRuns(...args),
 }));
 
 jest.mock('@ridendine/engine', () => ({
@@ -25,23 +27,11 @@ jest.mock('@/lib/engine', () => ({
 function installProcessorRunsQuery(
   rows: Array<{ processor_name: string; finished_at: string | null; status: string }>,
 ) {
-  // Builder shape used by route: from('ops_processor_runs').select(...).eq('status','completed').order(...).limit(N)
-  // The terminal limit() returns a Promise resolving to { data, error }.
-  const builder = {
-    select: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockResolvedValue({ data: rows, error: null }),
-  };
-  (mockAdminClient as Record<string, unknown>).from = jest.fn((table: string) => {
-    if (table === 'ops_processor_runs') return builder;
-    return {
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockResolvedValue({ data: [], error: null }),
-    };
-  });
-  return builder;
+  // The route now reads completed runs via the @ridendine/db repository
+  // (listCompletedProcessorRuns) instead of a raw builder chain.
+  mockListCompletedProcessorRuns.mockResolvedValue(
+    rows.map(({ processor_name, finished_at }) => ({ processor_name, finished_at }))
+  );
 }
 
 describe('GET /api/engine/health readiness', () => {

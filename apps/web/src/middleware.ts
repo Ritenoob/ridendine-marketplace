@@ -55,6 +55,43 @@ async function getMaintenanceMode(): Promise<boolean> {
   return maintenanceCacheValue;
 }
 
+/**
+ * Per-request Content-Security-Policy. Uses a nonce + `'strict-dynamic'` for
+ * scripts so we no longer need `'unsafe-inline'`/`'unsafe-eval'` (the main
+ * weakness from the security review). `'unsafe-eval'` is allowed in dev only.
+ * style-src keeps `'unsafe-inline'` (Next.js injects inline styles; inline
+ * style injection is far lower risk than inline scripts).
+ */
+function buildCsp(nonce: string): string {
+  const isDev = process.env.NODE_ENV !== 'production';
+  const scriptSrc = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    "'strict-dynamic'",
+    // Ignored by modern browsers when 'strict-dynamic' is present; kept as a
+    // fallback for older browsers without strict-dynamic support.
+    'js.stripe.com',
+    'va.vercel-scripts.com',
+    isDev ? "'unsafe-eval'" : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return [
+    "default-src 'self'",
+    `script-src ${scriptSrc}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: *.supabase.co images.unsplash.com",
+    "font-src 'self'",
+    "connect-src 'self' *.supabase.co api.stripe.com *.sentry.io vitals.vercel-insights.com *.vercel-insights.com",
+    "frame-src js.stripe.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; ');
+}
+
 const authMiddleware = createAuthMiddleware({
   publicRoutes: ['/auth/login', '/auth/signup'],
   authRoutes: ['/auth/login', '/auth/signup'],
@@ -62,6 +99,7 @@ const authMiddleware = createAuthMiddleware({
   authenticatedRedirect: '/chefs',
   /** OPTION A (Phase 2 / IRR-002): checkout requires authenticated customer session */
   protectedRoutes: ['/account', '/checkout'],
+  cspBuilder: buildCsp,
 });
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {

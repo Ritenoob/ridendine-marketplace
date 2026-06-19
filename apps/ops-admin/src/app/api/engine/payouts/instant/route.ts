@@ -1,4 +1,8 @@
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listInstantPayoutRequests,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { getOpsActorContext, guardPlatformApi, successResponse, finalizeOpsActor } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -8,16 +12,14 @@ export async function GET() {
   const opsActor = finalizeOpsActor(actor, guardPlatformApi(actor, 'finance_payouts'));
   if (opsActor instanceof Response) return opsActor;
 
-  const client = createAdminClient();
-  const { data, error } = await client
-    .from('instant_payout_requests')
-    .select('id, driver_id, amount_cents, fee_cents, status, requested_at, executed_at, failure_reason')
-    .order('requested_at', { ascending: false })
-    .limit(100);
-
-  if (error) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+  const client = createAdminClient() as unknown as SupabaseClient;
+  try {
+    const queue = await listInstantPayoutRequests(client, 100);
+    return successResponse({ queue });
+  } catch (error) {
+    return Response.json(
+      { success: false, error: error instanceof Error ? error.message : 'Failed to load queue' },
+      { status: 500 }
+    );
   }
-
-  return successResponse({ queue: data ?? [] });
 }

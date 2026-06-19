@@ -6,7 +6,12 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  insertSystemAlert,
+  markDeliveryEscalatedToOps,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { createCentralEngine } from '@ridendine/engine';
 import {
   checkChefAcceptanceTimeout,
@@ -61,15 +66,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: Escalate deliveries with no driver assignment after 10 minutes
+    const repositoryClient = client as unknown as SupabaseClient;
     let driverEscalations = 0;
     const driverTimeouts = await checkDriverAssignmentTimeout(client, 10);
     for (const v of driverTimeouts) {
-      await client
-        .from('deliveries')
-        .update({ escalated_to_ops: true, updated_at: new Date().toISOString() })
-        .eq('id', v.entityId);
+      await markDeliveryEscalatedToOps(repositoryClient, v.entityId);
 
-      await (client as any).from('system_alerts').insert({
+      await insertSystemAlert(repositoryClient, {
         alert_type: 'driver_assignment_timeout',
         severity: 'error',
         title: 'Driver assignment timeout',
@@ -85,7 +88,7 @@ export async function POST(request: NextRequest) {
     let staleAlerts = 0;
     const staleOrders = await checkStalePreparingOrders(client, 45);
     for (const v of staleOrders) {
-      await (client as any).from('system_alerts').insert({
+      await insertSystemAlert(repositoryClient, {
         alert_type: 'stale_preparing_order',
         severity: 'warning',
         title: 'Order stale in preparing state',

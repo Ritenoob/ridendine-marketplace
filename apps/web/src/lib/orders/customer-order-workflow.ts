@@ -1,3 +1,4 @@
+import { formatOrderStatusFallbackLabel, normalizeOrderStatus } from '@ridendine/utils';
 import { orderConfirmationPath } from '@/lib/customer-ordering';
 
 export type CustomerOrderStatusTone = 'success' | 'warning' | 'info' | 'default' | 'error';
@@ -107,19 +108,8 @@ const STATUS_PRESENTATION: Record<string, StatusPresentation> = {
   },
 };
 
-function normalizeStatus(status: string): string {
-  return status.trim().toLowerCase();
-}
-
-function fallbackStatusLabel(status: string): string {
-  const normalized = normalizeStatus(status);
-  if (!normalized) return 'Order update';
-  return normalized
-    .split('_')
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
+// Normalization + fallback-label mechanics live in @ridendine/utils
+// (order-workflow); the customer-specific copy and tones above stay local.
 
 export function customerOrderSupportHref(order: Pick<CustomerOrderWorkflowInput, 'id' | 'orderNumber'>): string {
   const params = new URLSearchParams({
@@ -131,9 +121,9 @@ export function customerOrderSupportHref(order: Pick<CustomerOrderWorkflowInput,
 }
 
 export function buildCustomerOrderWorkflow(input: CustomerOrderWorkflowInput): CustomerOrderWorkflow {
-  const normalizedStatus = normalizeStatus(input.status);
+  const normalizedStatus = normalizeOrderStatus(input.status);
   const presentation = STATUS_PRESENTATION[normalizedStatus] ?? {
-    statusLabel: fallbackStatusLabel(input.status),
+    statusLabel: formatOrderStatusFallbackLabel(input.status),
     statusTone: 'default',
     nextStepLabel: 'Track this order for the latest update.',
     primaryActionLabel: 'View details',

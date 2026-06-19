@@ -1,6 +1,11 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  countStorefronts,
+  getRawPlatformSettingsRow,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { finalizeOpsActor, getEngine, getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 import { maintenanceCommandSchema, type OpsCommandInput } from '@ridendine/validation';
 import { operationResultResponse, parseJsonBody } from '@/lib/validation';
@@ -12,15 +17,15 @@ export async function GET() {
   const denied = guardPlatformApi(actor, 'engine_maintenance');
   if (denied) return denied;
 
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
 
   // Check if maintenance mode is active (stored in platform_settings)
-  const { data: settings } = await client.from('platform_settings').select('*').limit(1).single();
+  const settings = await getRawPlatformSettingsRow(client);
 
   // Count active storefronts
-  const { count: activeCount } = await client.from('chef_storefronts').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_paused', false);
-  const { count: pausedCount } = await client.from('chef_storefronts').select('*', { count: 'exact', head: true }).eq('is_paused', true);
-  const { count: totalCount } = await client.from('chef_storefronts').select('*', { count: 'exact', head: true });
+  const activeCount = await countStorefronts(client, { isActive: true, isPaused: false });
+  const pausedCount = await countStorefronts(client, { isPaused: true });
+  const totalCount = await countStorefronts(client);
 
   return NextResponse.json({
     success: true,

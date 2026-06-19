@@ -19,9 +19,17 @@ jest.mock('@/lib/engine', () => {
   };
 });
 
-const mockFrom = jest.fn();
+const mockListOrderAnalyticsRows = jest.fn();
+const mockCountStorefrontsUpdatedBetween = jest.fn();
+const mockCountDriversUpdatedBetween = jest.fn();
+const mockListDeliveryDurationRowsBetween = jest.fn();
+
 jest.mock('@ridendine/db', () => ({
-  createAdminClient: jest.fn(() => ({ from: mockFrom })),
+  createAdminClient: jest.fn(() => ({})),
+  listOrderAnalyticsRows: (...args: unknown[]) => mockListOrderAnalyticsRows(...args),
+  countStorefrontsUpdatedBetween: (...args: unknown[]) => mockCountStorefrontsUpdatedBetween(...args),
+  countDriversUpdatedBetween: (...args: unknown[]) => mockCountDriversUpdatedBetween(...args),
+  listDeliveryDurationRowsBetween: (...args: unknown[]) => mockListDeliveryDurationRowsBetween(...args),
 }));
 
 jest.mock('next/server', () => ({
@@ -43,16 +51,11 @@ function makeRequest(period = 'week') {
   return { url: url.toString() } as Parameters<typeof GET>[0];
 }
 
-function mockQueryChain(data: unknown, count?: number) {
-  const chain: Record<string, unknown> = {};
-  const methods = ['select', 'gte', 'lte', 'lt', 'eq', 'in', 'not', 'order', 'limit', 'single'];
-  methods.forEach((m) => {
-    chain[m] = jest.fn(() => chain);
-  });
-  chain.data = data;
-  chain.count = count ?? null;
-  chain.error = null;
-  return chain;
+function installRepositoryData(orders: unknown[] = []) {
+  mockListOrderAnalyticsRows.mockResolvedValue(orders);
+  mockCountStorefrontsUpdatedBetween.mockResolvedValue(0);
+  mockCountDriversUpdatedBetween.mockResolvedValue(0);
+  mockListDeliveryDurationRowsBetween.mockResolvedValue([]);
 }
 
 describe('GET /api/analytics', () => {
@@ -71,16 +74,10 @@ describe('GET /api/analytics', () => {
     (getOpsActorContext as jest.Mock).mockResolvedValue({ id: 'u1', role: 'ops' });
 
     const now = new Date().toISOString();
-    const ordersChain = mockQueryChain([
+    installRepositoryData([
       { id: 'o1', total: 2000, service_fee: 200, status: 'delivered', customer_id: 'c1', created_at: now },
       { id: 'o2', total: 1500, service_fee: 150, status: 'pending', customer_id: 'c2', created_at: now },
     ]);
-    const emptyChain = mockQueryChain([]);
-
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'orders') return ordersChain;
-      return emptyChain;
-    });
 
     const res = await GET(makeRequest('week'));
     const json = res.data as Record<string, unknown>;
@@ -100,7 +97,7 @@ describe('GET /api/analytics', () => {
 
   it('returns period=today in response', async () => {
     (getOpsActorContext as jest.Mock).mockResolvedValue({ id: 'u1', role: 'ops' });
-    mockFrom.mockReturnValue(mockQueryChain([]));
+    installRepositoryData([]);
 
     const res = await GET(makeRequest('today'));
     const json = res.data as { data: { period: string } };
@@ -109,7 +106,7 @@ describe('GET /api/analytics', () => {
 
   it('returns period=month in response', async () => {
     (getOpsActorContext as jest.Mock).mockResolvedValue({ id: 'u1', role: 'ops' });
-    mockFrom.mockReturnValue(mockQueryChain([]));
+    installRepositoryData([]);
 
     const res = await GET(makeRequest('month'));
     const json = res.data as { data: { period: string } };
@@ -118,7 +115,7 @@ describe('GET /api/analytics', () => {
 
   it('falls back to week for invalid period', async () => {
     (getOpsActorContext as jest.Mock).mockResolvedValue({ id: 'u1', role: 'ops' });
-    mockFrom.mockReturnValue(mockQueryChain([]));
+    installRepositoryData([]);
 
     const req = { url: 'http://localhost:3002/api/analytics?period=invalid' } as Parameters<typeof GET>[0];
     const res = await GET(req);
@@ -130,16 +127,10 @@ describe('GET /api/analytics', () => {
     (getOpsActorContext as jest.Mock).mockResolvedValue({ id: 'u1', role: 'ops' });
 
     const now = new Date().toISOString();
-    const ordersChain = mockQueryChain([
+    installRepositoryData([
       { id: 'o1', total: 2000, service_fee: 200, status: 'delivered', customer_id: 'c1', created_at: now },
       { id: 'o2', total: 3000, service_fee: 300, status: 'delivered', customer_id: 'c2', created_at: now },
     ]);
-    const emptyChain = mockQueryChain([]);
-
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'orders') return ordersChain;
-      return emptyChain;
-    });
 
     const res = await GET(makeRequest('week'));
     const json = res.data as { data: { gmv: number; platformRevenue: number } };

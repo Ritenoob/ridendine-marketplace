@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { Card, PageHeader, StatusBadge } from '@ridendine/ui';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listChefComplianceProfiles,
+  listDriverComplianceProfiles,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getOpsActorContext, hasPlatformApiCapability } from '@/lib/engine';
 import {
@@ -30,59 +35,15 @@ type DriverComplianceRow = {
 };
 
 async function loadComplianceSubjects() {
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
   const now = new Date();
 
-  const [chefResult, driverResult] = await Promise.all([
-    client
-      .from('chef_profiles')
-      .select(`
-        id,
-        display_name,
-        status,
-        chef_documents (
-          id,
-          document_type,
-          document_url,
-          status,
-          expires_at,
-          notes,
-          reviewed_by,
-          reviewed_at,
-          created_at,
-          updated_at
-        )
-      `)
-      .order('created_at', { ascending: false })
-      .limit(200),
-    client
-      .from('drivers')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        status,
-        driver_documents (
-          id,
-          document_type,
-          document_url,
-          status,
-          expires_at,
-          notes,
-          reviewed_by,
-          reviewed_at,
-          created_at,
-          updated_at
-        )
-      `)
-      .order('created_at', { ascending: false })
-      .limit(200),
+  const [chefRows, driverRows] = await Promise.all([
+    listChefComplianceProfiles(client, 200),
+    listDriverComplianceProfiles(client, 200),
   ]);
 
-  if (chefResult.error) throw chefResult.error;
-  if (driverResult.error) throw driverResult.error;
-
-  const chefSubjects = ((chefResult.data ?? []) as ChefComplianceRow[]).map((chef) =>
+  const chefSubjects = ((chefRows ?? []) as unknown as ChefComplianceRow[]).map((chef) =>
     buildComplianceSubject({
       ownerType: 'chef',
       ownerId: chef.id,
@@ -93,7 +54,7 @@ async function loadComplianceSubjects() {
     })
   );
 
-  const driverSubjects = ((driverResult.data ?? []) as DriverComplianceRow[]).map((driver) =>
+  const driverSubjects = ((driverRows ?? []) as unknown as DriverComplianceRow[]).map((driver) =>
     buildComplianceSubject({
       ownerType: 'driver',
       ownerId: driver.id,

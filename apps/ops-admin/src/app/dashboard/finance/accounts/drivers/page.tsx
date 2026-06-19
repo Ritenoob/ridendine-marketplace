@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { Badge, Card } from '@ridendine/ui';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listDriverNameRefs,
+  listPlatformAccountsByType,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getOpsActorContext, hasRequiredRole } from '@/lib/engine';
 import { FinanceSubnav } from '../../_components/FinanceSubnav';
@@ -19,18 +24,25 @@ export default async function FinanceDriverAccountsPage() {
     return <FinanceAccessDenied />;
   }
 
-  const admin = createAdminClient();
-  const { data: rows, error } = await admin
-    .from('platform_accounts')
-    .select('owner_id, balance_cents, pending_payout_cents, currency, updated_at')
-    .eq('account_type', 'driver_payable')
-    .order('balance_cents', { ascending: false });
+  const admin = createAdminClient() as unknown as SupabaseClient;
+  // The raw query tolerated load failures (error renders a fallback card);
+  // a repository failure degrades the same way.
+  let rows: { owner_id: string; balance_cents: number; pending_payout_cents?: number }[] | null = null;
+  let error = false;
+  try {
+    rows = (await listPlatformAccountsByType(admin, 'driver_payable')) as unknown as {
+      owner_id: string;
+      balance_cents: number;
+      pending_payout_cents?: number;
+    }[];
+  } catch {
+    error = true;
+  }
 
   const driverIds = (rows ?? []).map((r: { owner_id: string }) => r.owner_id);
-  const { data: drivers } =
-    driverIds.length > 0
-      ? await admin.from('drivers').select('id, first_name, last_name').in('id', driverIds)
-      : { data: [] as { id: string; first_name: string; last_name: string }[] };
+  const drivers = (
+    driverIds.length > 0 ? await listDriverNameRefs(admin, driverIds).catch(() => []) : []
+  ) as { id: string; first_name: string; last_name: string }[];
 
   const nameById = new Map(
     (drivers ?? []).map((d: { id: string; first_name: string; last_name: string }) => [

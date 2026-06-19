@@ -596,3 +596,336 @@ export async function getFinanceOperationsReadModel(
     driverLiabilities,
   };
 }
+
+// ==========================================
+// SYSTEM ALERTS
+// ==========================================
+
+/** Unacknowledged system alerts (full rows), newest first. */
+export async function listActiveSystemAlerts(
+  client: SupabaseClient,
+  limit = 20
+): Promise<AnyRow[]> {
+  const { data, error } = await client
+    .from('system_alerts')
+    .select('*')
+    .eq('acknowledged', false)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data || []) as unknown as AnyRow[];
+}
+
+export interface SystemAlertSummaryRow {
+  id: string;
+  title: string;
+  severity: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  created_at: string;
+}
+
+/** Unacknowledged alert summaries plus the exact total count. */
+export async function listActiveSystemAlertSummaries(
+  client: SupabaseClient,
+  limit = 8
+): Promise<{ rows: SystemAlertSummaryRow[]; count: number | null }> {
+  const { data, count, error } = await client
+    .from('system_alerts')
+    .select('id, title, severity, entity_type, entity_id, created_at', { count: 'exact' })
+    .eq('acknowledged', false)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return { rows: (data ?? []) as unknown as SystemAlertSummaryRow[], count: count ?? null };
+}
+
+export interface SystemAlertFeedRow {
+  id: string;
+  alert_type: string;
+  title: string;
+  severity: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  created_at: string;
+}
+
+/** Unacknowledged alerts for the ops header bell feed, newest first. */
+export async function listSystemAlertFeed(
+  client: SupabaseClient,
+  limit = 20
+): Promise<SystemAlertFeedRow[]> {
+  const { data, error } = await client
+    .from('system_alerts')
+    .select('id, alert_type, title, severity, entity_type, entity_id, created_at')
+    .eq('acknowledged', false)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as SystemAlertFeedRow[];
+}
+
+export interface SystemAlertInsert {
+  alert_type: string;
+  severity: string;
+  title: string;
+  message: string;
+  entity_type?: string | null;
+  entity_id?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+/** Raise a system alert (SLA breaches, dispatch timeouts, etc.). */
+export async function insertSystemAlert(
+  client: SupabaseClient,
+  alert: SystemAlertInsert
+): Promise<void> {
+  const { error } = await client.from('system_alerts').insert(alert as never);
+  if (error) throw error;
+}
+
+// ==========================================
+// ORDER EXCEPTIONS
+// ==========================================
+
+/** All exceptions linked to an order, newest first. */
+export async function listOrderExceptionsForOrder(
+  client: SupabaseClient,
+  orderId: string
+): Promise<AnyRow[]> {
+  const { data, error } = await client
+    .from('order_exceptions')
+    .select('*')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as unknown as AnyRow[];
+}
+
+/**
+ * Open-ish exceptions for the ops exception review queue (with linked order
+ * number/status), oldest first so the longest-waiting items surface.
+ */
+export async function listExceptionQueueRows(
+  client: SupabaseClient,
+  statuses: string[],
+  limit = 200
+): Promise<AnyRow[]> {
+  const { data, error } = await client
+    .from('order_exceptions')
+    .select(`
+        id,
+        exception_type,
+        severity,
+        status,
+        title,
+        description,
+        recommended_actions,
+        order_id,
+        customer_id,
+        chef_id,
+        driver_id,
+        delivery_id,
+        assigned_to,
+        sla_deadline,
+        escalated_at,
+        created_at,
+        updated_at,
+        orders (
+          order_number,
+          status
+        )
+      `)
+    .in('status', statuses as never[])
+    .order('created_at', { ascending: true })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as AnyRow[];
+}
+
+// ==========================================
+// ASSIGNMENT ATTEMPTS (dispatch offer history)
+// ==========================================
+
+export interface AssignmentAttemptHistoryRow {
+  id: string;
+  delivery_id: string;
+  driver_id: string;
+  response: string;
+  offered_at: string;
+  responded_at: string | null;
+  expires_at: string | null;
+  decline_reason: string | null;
+  attempt_number: number;
+}
+
+/** Assignment attempts offered since `sinceIso`, newest first. */
+export async function listRecentAssignmentAttempts(
+  client: SupabaseClient,
+  sinceIso: string,
+  limit = 500
+): Promise<AssignmentAttemptHistoryRow[]> {
+  const { data, error } = await client
+    .from('assignment_attempts')
+    .select(
+      'id, delivery_id, driver_id, response, offered_at, responded_at, expires_at, decline_reason, attempt_number'
+    )
+    .gte('offered_at', sinceIso)
+    .order('offered_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as AssignmentAttemptHistoryRow[];
+}
+
+/** (driver_id, response) pairs since `sinceIso` for the given drivers. */
+export async function listAssignmentAttemptResponses(
+  client: SupabaseClient,
+  driverIds: string[],
+  sinceIso: string
+): Promise<Array<{ driver_id: string; response: string }>> {
+  const { data, error } = await client
+    .from('assignment_attempts')
+    .select('driver_id, response')
+    .in('driver_id', driverIds as never[])
+    .gte('offered_at', sinceIso);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as Array<{ driver_id: string; response: string }>;
+}
+
+// ==========================================
+// LIVE BOARD (initial snapshot queries)
+// ==========================================
+
+/**
+ * Orders touched since `sinceIso` with storefront/customer names and nested
+ * deliveries for the ops live board, most recently updated first.
+ */
+export async function listOpsLiveBoardOrders(
+  client: SupabaseClient,
+  sinceIso: string,
+  limit = 400
+): Promise<AnyRow[]> {
+  const { data, error } = await client
+    .from('orders')
+    .select(
+      `
+          id, order_number, engine_status, status, created_at, updated_at, completed_at,
+          estimated_ready_at, ready_at, prep_started_at, storefront_id, customer_id,
+          storefront:chef_storefronts ( id, name ),
+          customer:customers ( first_name, last_name ),
+          deliveries (
+            id, order_id, status, driver_id, updated_at,
+            estimated_dropoff_at, escalated_to_ops, assignment_attempts_count,
+            pickup_lat, pickup_lng, dropoff_lat, dropoff_lng,
+            pickup_address, dropoff_address
+          )
+        `
+    )
+    .gte('updated_at', sinceIso)
+    .order('updated_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as AnyRow[];
+}
+
+// ==========================================
+// OPERATIONAL HEALTH PROBES
+// ==========================================
+
+export interface OpsHealthProbeResult {
+  count: number | null;
+  error: string | null;
+}
+
+export interface OpsAdminHealthProbes {
+  db: { error: string | null };
+  orders: OpsHealthProbeResult;
+  deliveries: OpsHealthProbeResult;
+  drivers: OpsHealthProbeResult;
+  chefs: OpsHealthProbeResult;
+  customers: OpsHealthProbeResult;
+  driverPresence: OpsHealthProbeResult;
+}
+
+/**
+ * Cheap table probes for the /api/health endpoint. Never throws — each
+ * probe reports its own error so the endpoint can degrade gracefully.
+ */
+export async function getOpsAdminHealthProbes(
+  client: SupabaseClient
+): Promise<OpsAdminHealthProbes> {
+  const [
+    dbProbe,
+    ordersProbe,
+    deliveriesProbe,
+    driversProbe,
+    chefsProbe,
+    customersProbe,
+    presenceProbe,
+  ] = await Promise.all([
+    client.from('orders').select('id').limit(1),
+    client.from('orders').select('id', { count: 'exact', head: true }),
+    client.from('deliveries').select('id', { count: 'exact', head: true }),
+    client.from('drivers').select('id', { count: 'exact', head: true }),
+    client.from('chef_profiles').select('id', { count: 'exact', head: true }),
+    client.from('customers').select('id', { count: 'exact', head: true }),
+    client.from('driver_presence').select('driver_id', { count: 'exact', head: true }),
+  ]);
+
+  const toProbe = (probe: { count?: number | null; error: { message?: string } | null }): OpsHealthProbeResult => ({
+    count: probe.count ?? 0,
+    error: probe.error?.message ?? null,
+  });
+
+  return {
+    db: { error: dbProbe.error?.message ?? null },
+    orders: toProbe(ordersProbe),
+    deliveries: toProbe(deliveriesProbe),
+    drivers: toProbe(driversProbe),
+    chefs: toProbe(chefsProbe),
+    customers: toProbe(customersProbe),
+    driverPresence: toProbe(presenceProbe),
+  };
+}
+
+// ==========================================
+// E2E FIXTURE RESET
+// ==========================================
+
+/**
+ * Delete the synthetic E2E lifecycle orders and their dependent rows.
+ *
+ * Deliberately fire-and-forget per table (errors are ignored) to preserve
+ * the historical fixture-reset semantics: a partially missing table or RLS
+ * hiccup must never fail the reset endpoint, which only runs in non-prod
+ * with E2E_FIXTURE_RESET_ENABLED.
+ */
+export async function resetE2eOrderFixtures(
+  client: SupabaseClient,
+  orderNumbers: string[]
+): Promise<{ orderIds: string[] }> {
+  const { data: orders } = await client
+    .from('orders')
+    .select('id')
+    .in('order_number', orderNumbers as never[]);
+  const orderIds = ((orders ?? []) as Array<{ id: string }>).map((order) => order.id);
+
+  if (orderIds.length > 0) {
+    await client.from('order_exceptions').delete().in('order_id', orderIds as never[]);
+    await client.from('deliveries').delete().in('order_id', orderIds as never[]);
+    await client.from('ledger_entries').delete().in('order_id', orderIds as never[]);
+    await client.from('order_status_history').delete().in('order_id', orderIds as never[]);
+    await client.from('order_items').delete().in('order_id', orderIds as never[]);
+    await client.from('orders').delete().in('id', orderIds as never[]);
+  }
+
+  return { orderIds };
+}

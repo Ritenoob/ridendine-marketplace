@@ -85,7 +85,7 @@ test.describe('chef lifecycle @lifecycle', () => {
   });
 
   test('chef can accept a pending order', async ({ page }) => {
-    // Uses seeded order RND-005 (pending, HOÀNG GIA PHỞ / Tuan)
+    // Uses seeded order RND-005 (pending, HOÀNG GIA PHỞ / Tuan).
     // Sign in as seeded chef tuan@ridendine.ca
     await page.goto('/auth/login');
     await page.getByLabel(/email/i).fill('tuan@ridendine.ca');
@@ -94,13 +94,18 @@ test.describe('chef lifecycle @lifecycle', () => {
     await expect(page).not.toHaveURL(/\/auth\/login/, { timeout: 10_000 });
 
     await page.goto('/dashboard/orders');
-    // Seed order RND-005 should appear as pending
-    const acceptBtn = page.getByRole('button', { name: /accept/i }).first();
+    // Scope to the RND-005 card: RND-008 on the same dashboard is the
+    // DEDICATED chef-reject fixture for negative-paths.spec.ts and must not
+    // be consumed here. RND-005 is seeded 10 minutes in the past, so the
+    // 8-minute acceptance timeout may already have auto-rejected it — in
+    // that case the guard below skips (existing behaviour).
+    const orderCard = page.locator('div.bg-surface').filter({ hasText: 'RND-005' }).last();
+    const acceptBtn = orderCard.getByRole('button', { name: /^accept$/i });
     if (!(await acceptBtn.isVisible({ timeout: 5_000 }))) {
       test.skip();
     }
     await acceptBtn.click();
-    await expect(page.getByText(/accepted|preparing/i).first()).toBeVisible({ timeout: 5_000 });
+    await expect(orderCard.getByText(/accepted|preparing/i).first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('chef can mark order as preparing and then ready', async ({ page }) => {

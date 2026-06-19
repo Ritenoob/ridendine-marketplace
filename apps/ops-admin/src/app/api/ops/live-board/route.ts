@@ -1,4 +1,12 @@
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listDriverComplianceDocRefs,
+  listDriverPayoutAccountRefs,
+  listOpsLiveBoardDrivers,
+  listOpsLiveBoardOrders,
+  listOpsLiveBoardStorefronts,
+  type SupabaseClient,
+} from '@ridendine/db';
 import {
   mapEngineStatusToPublicStage,
   PublicOrderStage,
@@ -113,65 +121,33 @@ export async function GET() {
   const denied = guardPlatformApi(actor, 'dashboard_read');
   if (denied) return denied;
 
-  const admin = createAdminClient();
+  const admin = createAdminClient() as unknown as SupabaseClient;
   const since = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
 
   try {
-    const [ordersRes, driversRes, chefsRes, dash] = await Promise.all([
-      admin
-        .from('orders')
-        .select(
-          `
-          id, order_number, engine_status, status, created_at, updated_at, completed_at,
-          estimated_ready_at, ready_at, prep_started_at, storefront_id, customer_id,
-          storefront:chef_storefronts ( id, name ),
-          customer:customers ( first_name, last_name ),
-          deliveries (
-            id, order_id, status, driver_id, updated_at,
-            estimated_dropoff_at, escalated_to_ops, assignment_attempts_count,
-            pickup_lat, pickup_lng, dropoff_lat, dropoff_lng,
-            pickup_address, dropoff_address
-          )
-        `
-        )
-        .gte('updated_at', since)
-        .order('updated_at', { ascending: false })
-        .limit(400),
-      admin
-        .from('drivers')
-        .select(
-          `
-          id, first_name, last_name, status, updated_at,
-          driver_presence (
-            status, updated_at,
-            current_lat, current_lng,
-            last_location_lat, last_location_lng,
-            last_location_at, last_location_update
-          )
-        `
-        )
-        .eq('status', 'approved'),
-      admin
-        .from('chef_storefronts')
-        .select(
-          `
-          id, name, storefront_state, is_paused,
-          current_queue_size, max_queue_size, is_overloaded,
-          estimated_prep_time_max, updated_at,
-          chef_profiles ( display_name )
-        `
-        )
-        .eq('is_active', true)
-        .limit(300),
+    // Orders are the critical query (failure -> QUERY_FAILED); the drivers
+    // and chefs columns previously tolerated per-query errors by rendering
+    // empty, so their repository failures degrade to [] the same way.
+    const [ordersRes, driversData, chefsData, dash] = await Promise.all([
+      listOpsLiveBoardOrders(admin, since, 400).then(
+        (rows) => ({ rows, errorMessage: null as string | null }),
+        (error: unknown) => ({
+          rows: [] as Record<string, unknown>[],
+          errorMessage:
+            error instanceof Error ? error.message : 'Failed to load live board orders',
+        })
+      ),
+      listOpsLiveBoardDrivers(admin).catch(() => [] as Record<string, unknown>[]),
+      listOpsLiveBoardStorefronts(admin).catch(() => [] as Record<string, unknown>[]),
       getEngine().ops.getDashboard(),
     ]);
 
-    if (ordersRes.error) {
-      return errorResponse('QUERY_FAILED', ordersRes.error.message, 500);
+    if (ordersRes.errorMessage !== null) {
+      return errorResponse('QUERY_FAILED', ordersRes.errorMessage, 500);
     }
 
     const todayStart = startOfTodayIso();
-    const ordersRaw = (ordersRes.data ?? []) as Record<string, unknown>[];
+    const ordersRaw = (ordersRes.rows ?? []) as Record<string, unknown>[];
     const orders: OpsLiveOrderSnapshot[] = [];
 
     for (const row of ordersRaw) {
@@ -196,44 +172,32 @@ export async function GET() {
       );
     }
 
-    const driversData = (driversRes.error ? [] : driversRes.data ?? []) as Record<string, unknown>[];
-    const driverIds = driversData.map((driver) => driver.id).filter((id): id is string => typeof id === 'string');
-    const [documentsRes, payoutAccountsRes] = driverIds.length > 0
+    const driverIds = (driversData as Record<string, unknown>[])
+      .map((driver) => driver.id)
+      .filter((id): id is string => typeof id === 'string');
+    // Compliance/payout decorations previously tolerated query errors by
+    // skipping; repository failures degrade to [] the same way.
+    const [documentRows, payoutAccountRows] = driverIds.length > 0
       ? await Promise.all([
-          admin
-            .from('driver_documents')
-            .select('driver_id, document_type, status, expires_at')
-            .in('driver_id', driverIds)
-            .limit(1000),
-          admin
-            .from('driver_payout_accounts')
-            .select('driver_id, status, payouts_enabled, onboarding_completed_at')
-            .in('driver_id', driverIds)
-            .limit(1000),
+          listDriverComplianceDocRefs(admin, driverIds, 1000).catch(() => []),
+          listDriverPayoutAccountRefs(admin, driverIds, 1000).catch(() => []),
         ])
-      : [
-          { data: [], error: null },
-          { data: [], error: null },
-        ];
+      : [[], []];
     const documentsByDriver = new Map<string, Record<string, unknown>[]>();
-    if (!documentsRes.error) {
-      for (const doc of (documentsRes.data ?? []) as Record<string, unknown>[]) {
-        const driverId = doc.driver_id;
-        if (typeof driverId !== 'string') continue;
-        const rows = documentsByDriver.get(driverId) ?? [];
-        rows.push(doc);
-        documentsByDriver.set(driverId, rows);
-      }
+    for (const doc of documentRows as unknown as Record<string, unknown>[]) {
+      const driverId = doc.driver_id;
+      if (typeof driverId !== 'string') continue;
+      const rows = documentsByDriver.get(driverId) ?? [];
+      rows.push(doc);
+      documentsByDriver.set(driverId, rows);
     }
     const payoutByDriver = new Map<string, Record<string, unknown>>();
-    if (!payoutAccountsRes.error) {
-      for (const account of (payoutAccountsRes.data ?? []) as Record<string, unknown>[]) {
-        const driverId = account.driver_id;
-        if (typeof driverId === 'string') payoutByDriver.set(driverId, account);
-      }
+    for (const account of payoutAccountRows as unknown as Record<string, unknown>[]) {
+      const driverId = account.driver_id;
+      if (typeof driverId === 'string') payoutByDriver.set(driverId, account);
     }
     const now = new Date();
-    const drivers: OpsLiveDriverSnapshot[] = driversData.map((d) => {
+    const drivers: OpsLiveDriverSnapshot[] = (driversData as Record<string, unknown>[]).map((d) => {
       const p = one(d.driver_presence as Record<string, unknown> | Record<string, unknown>[] | null);
       const driverId = d.id as string;
       const presenceStatus = (p?.status as string | null | undefined) ?? 'offline';
@@ -275,8 +239,7 @@ export async function GET() {
       };
     });
 
-    const chefsData = (chefsRes.error ? [] : chefsRes.data ?? []) as Record<string, unknown>[];
-    const chefs: OpsLiveChefSnapshot[] = chefsData.map((c) => {
+    const chefs: OpsLiveChefSnapshot[] = (chefsData as Record<string, unknown>[]).map((c) => {
       const prof = one(c.chef_profiles as Record<string, unknown> | Record<string, unknown>[] | null);
       const dn = (prof?.display_name as string | undefined) ?? '';
       return {

@@ -28,7 +28,7 @@ jest.mock('@ridendine/utils', () => ({
 
 const mockSignInWithPassword = jest.fn();
 const mockSignOut = jest.fn();
-const mockSingle = jest.fn();
+const mockGetActivePlatformUserByUserId = jest.fn();
 
 jest.mock('@ridendine/db', () => ({
   createServerClient: jest.fn(() => ({
@@ -37,17 +37,9 @@ jest.mock('@ridendine/db', () => ({
       signOut: mockSignOut,
     },
   })),
-  createAdminClient: jest.fn(() => ({
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            single: mockSingle,
-          })),
-        })),
-      })),
-    })),
-  })),
+  createAdminClient: jest.fn(() => ({})),
+  getActivePlatformUserByUserId: (...args: unknown[]) =>
+    mockGetActivePlatformUserByUserId(...args),
 }));
 
 import { POST } from '../route';
@@ -88,9 +80,9 @@ describe('ops auth login route', () => {
       data: { user: { id: 'user-ops', email: 'ops@ridendine.ca' } },
       error: null,
     });
-    mockSingle.mockResolvedValue({
-      data: { id: 'platform-1', role: 'super_admin' },
-      error: null,
+    mockGetActivePlatformUserByUserId.mockResolvedValue({
+      id: 'platform-1',
+      role: 'super_admin',
     });
 
     const response = await POST(request({ email: 'ops@ridendine.ca', password: 'password123' }));
@@ -99,6 +91,7 @@ describe('ops auth login route', () => {
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.data.role).toBe('super_admin');
+    expect(mockGetActivePlatformUserByUserId).toHaveBeenCalledWith(expect.anything(), 'user-ops');
     expect(mockSignOut).not.toHaveBeenCalled();
   });
 });

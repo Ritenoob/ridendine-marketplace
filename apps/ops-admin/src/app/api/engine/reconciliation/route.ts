@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { getEngine, getOpsActorContext, guardPlatformApi, successResponse, errorResponse, finalizeOpsActor } from '@/lib/engine';
-import { createAdminClient } from '@ridendine/db';
+import { createAdminClient, listStripeReconciliationRows, type SupabaseClient } from '@ridendine/db';
 import { AuditAction } from '@ridendine/types';
 
 export const dynamic = 'force-dynamic';
@@ -12,13 +12,17 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status') ?? undefined;
-  const client = createAdminClient();
-  let query = client.from('stripe_reconciliation').select('*').order('created_at', { ascending: false }).limit(200);
-  if (status) query = query.eq('status', status);
-  const { data, error } = await query;
-
-  if (error) return errorResponse('QUERY_FAILED', error.message, 500);
-  return successResponse({ rows: data ?? [] });
+  const client = createAdminClient() as unknown as SupabaseClient;
+  try {
+    const rows = await listStripeReconciliationRows(client, { status, limit: 200 });
+    return successResponse({ rows });
+  } catch (error) {
+    return errorResponse(
+      'QUERY_FAILED',
+      error instanceof Error ? error.message : 'Failed to load reconciliation rows',
+      500
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {

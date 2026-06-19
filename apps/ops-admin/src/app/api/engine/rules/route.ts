@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import { createAdminClient, getPlatformSettingValue, type SupabaseClient } from '@ridendine/db';
 import { finalizeOpsActor, getEngine, getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 import { automationRuleCommandSchema, type OpsCommandInput } from '@ridendine/validation';
 import { operationResultResponse, parseJsonBody } from '@/lib/validation';
@@ -77,10 +77,10 @@ export async function GET() {
   const denied = guardPlatformApi(actor, 'engine_rules');
   if (denied) return denied;
 
-  const client = createAdminClient() as any;
-  const { data: settings } = await client.from('platform_settings').select('setting_value').limit(1).single();
+  const client = createAdminClient() as unknown as SupabaseClient;
+  const settingValue = await getPlatformSettingValue(client);
 
-  const storedRules = settings?.setting_value?.automation_rules;
+  const storedRules = settingValue?.automation_rules;
   const rules: AutomationRule[] =
     Array.isArray(storedRules) && storedRules.length > 0 ? storedRules : DEFAULT_RULES;
 

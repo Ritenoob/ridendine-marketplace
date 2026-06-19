@@ -1,6 +1,14 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
-import { createServerClient } from '@ridendine/db';
+import {
+  createServerClient,
+  countDeliveriesInStatuses,
+  countDriverPresenceByStatus,
+  countDriversByStatus,
+  countOrdersCreatedBetween,
+  listCompletedDeliveryDurationsSince,
+  listPaidOrderTotalsBetween,
+} from '@ridendine/db';
 import { KpiTile, PageHeader, StatusBadge } from '@ridendine/ui';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getEngine } from '@/lib/engine';
@@ -21,20 +29,15 @@ async function getDashboardStats() {
 
   try {
     const [
-      todayOrdersResult,
-      yesterdayOrdersResult,
-      todayRevenueResult,
-      yesterdayRevenueResult,
+      todayOrdersCount,
+      yesterdayOrdersCount,
+      todayRevenueRows,
+      yesterdayRevenueRows,
     ] = await Promise.all([
-      supabase.from('orders').select('*', { count: 'exact', head: true }).gte('created_at', today.toISOString()),
-      supabase.from('orders').select('*', { count: 'exact', head: true })
-        .gte('created_at', yesterday.toISOString())
-        .lt('created_at', today.toISOString()),
-      supabase.from('orders').select('total').gte('created_at', today.toISOString()).eq('payment_status', 'completed'),
-      supabase.from('orders').select('total')
-        .gte('created_at', yesterday.toISOString())
-        .lt('created_at', today.toISOString())
-        .eq('payment_status', 'completed'),
+      countOrdersCreatedBetween(supabase, today.toISOString()),
+      countOrdersCreatedBetween(supabase, yesterday.toISOString(), today.toISOString()),
+      listPaidOrderTotalsBetween(supabase, today.toISOString()),
+      listPaidOrderTotalsBetween(supabase, yesterday.toISOString(), today.toISOString()),
     ]);
 
     let activeDeliveries = 0;
@@ -42,36 +45,23 @@ async function getDashboardStats() {
     let onlineDrivers = 0;
 
     try {
-       
-      const deliveriesResult = await (supabase as any).from('deliveries').select('*', { count: 'exact', head: true }).in('status', [
+      activeDeliveries = await countDeliveriesInStatuses(supabase, [
         'assigned', 'accepted', 'en_route_to_pickup', 'picked_up', 'en_route_to_dropoff',
       ]);
-      activeDeliveries = deliveriesResult.count ?? 0;
     } catch { /* table may not exist */ }
 
     try {
-       
-      const driversResult = await (supabase as any).from('drivers').select('*', { count: 'exact', head: true }).eq('status', 'approved');
-      totalDrivers = driversResult.count ?? 0;
+      totalDrivers = await countDriversByStatus(supabase, 'approved');
     } catch { /* non-critical */ }
 
     try {
-       
-      const onlineResult = await (supabase as any).from('driver_presence').select('*', { count: 'exact', head: true }).eq('status', 'online');
-      onlineDrivers = onlineResult.count ?? 0;
+      onlineDrivers = await countDriverPresenceByStatus(supabase, 'online');
     } catch { /* non-critical */ }
 
     // Compute avg delivery time from actual_dropoff_at (not hardcoded)
     try {
       const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-       
-      const completedResult = await (supabase as any)
-        .from('deliveries')
-        .select('created_at, actual_dropoff_at')
-        .not('actual_dropoff_at', 'is', null)
-        .gte('created_at', monthAgo.toISOString())
-        .limit(500);
-      const rows = (completedResult.data ?? []) as Array<{ created_at: string; actual_dropoff_at: string | null }>;
+      const rows = await listCompletedDeliveryDurationsSince(supabase, monthAgo.toISOString(), 500);
       const durations = rows
         .map((row) => {
           if (!row.actual_dropoff_at) return null;
@@ -83,19 +73,19 @@ async function getDashboardStats() {
       void (durations.length > 0 ? durations.reduce((s, v) => s + v, 0) / durations.length : null);
     } catch { /* non-critical */ }
 
-    const todayRevenue = (todayRevenueResult.data as Array<{ total: number }> || []).reduce((sum, o) => sum + (o.total || 0), 0);
-    const yesterdayRevenue = (yesterdayRevenueResult.data as Array<{ total: number }> || []).reduce((sum, o) => sum + (o.total || 0), 0);
+    const todayRevenue = (todayRevenueRows || []).reduce((sum, o) => sum + (o.total || 0), 0);
+    const yesterdayRevenue = (yesterdayRevenueRows || []).reduce((sum, o) => sum + (o.total || 0), 0);
 
     const revenueGrowth = yesterdayRevenue > 0
       ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100
       : 0;
 
-    const orderGrowth = (yesterdayOrdersResult.count || 0) > 0
-      ? (((todayOrdersResult.count || 0) - (yesterdayOrdersResult.count || 0)) / (yesterdayOrdersResult.count || 1)) * 100
+    const orderGrowth = (yesterdayOrdersCount || 0) > 0
+      ? (((todayOrdersCount || 0) - (yesterdayOrdersCount || 0)) / (yesterdayOrdersCount || 1)) * 100
       : 0;
 
     return {
-      todayOrders: todayOrdersResult.count ?? 0,
+      todayOrders: todayOrdersCount ?? 0,
       activeDeliveries,
       todayRevenue,
       revenueGrowth,

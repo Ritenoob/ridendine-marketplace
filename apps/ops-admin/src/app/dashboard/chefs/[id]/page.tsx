@@ -1,7 +1,14 @@
 import { Card, Badge } from '@ridendine/ui';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
-import { createAdminClient, createServerClient, getChefGovernanceDetail } from '@ridendine/db';
+import {
+  createAdminClient,
+  createServerClient,
+  getChefGovernanceDetail,
+  listChefDeliveryZonesByStorefronts,
+  listChefDocuments,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { notFound } from 'next/navigation';
 import { ChefGovernanceActions } from './chef-governance-actions';
@@ -22,23 +29,14 @@ async function getChefDetails(chefId: string) {
 
 async function getDeliveryZones(storefrontIds: string[]) {
   if (storefrontIds.length === 0) return [];
-  const adminClient = createAdminClient() as any;
-  const { data } = await adminClient
-    .from('chef_delivery_zones')
-    .select('id, name, radius_km, delivery_fee, min_order_for_free_delivery, is_active, storefront_id')
-    .in('storefront_id', storefrontIds);
+  const adminClient = createAdminClient() as unknown as SupabaseClient;
+  const data = await listChefDeliveryZonesByStorefronts(adminClient, storefrontIds);
   return data || [];
 }
 
 async function getChefComplianceSubject(chefId: string, ownerName: string, ownerStatus: string) {
-  const adminClient = createAdminClient() as any;
-  const { data, error } = await adminClient
-    .from('chef_documents')
-    .select('id, document_type, document_url, status, expires_at, notes, reviewed_by, reviewed_at, created_at, updated_at')
-    .eq('chef_id', chefId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
+  const adminClient = createAdminClient() as unknown as SupabaseClient;
+  const data = await listChefDocuments(adminClient, chefId);
 
   return buildComplianceSubject({
     ownerType: 'chef',

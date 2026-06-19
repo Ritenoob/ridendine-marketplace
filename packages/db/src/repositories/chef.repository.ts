@@ -247,3 +247,210 @@ export async function rejectChef(
 ): Promise<ChefProfile> {
   return updateChefProfile(client, id, { status: 'rejected' });
 }
+
+// ==========================================
+// OPS-ADMIN READ MODELS
+// ==========================================
+
+export interface ChefDisplayNameRef {
+  id: string;
+  display_name: string | null;
+}
+
+export interface ChefProfileRef extends ChefDisplayNameRef {
+  user_id: string;
+}
+
+/** `id, display_name` for the given chef ids (trend leaderboards). */
+export async function listChefDisplayNames(
+  client: SupabaseClient,
+  chefIds: string[]
+): Promise<ChefDisplayNameRef[]> {
+  const { data, error } = await client
+    .from('chef_profiles')
+    .select('id, display_name')
+    .in('id', chefIds as never[]);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as ChefDisplayNameRef[];
+}
+
+/** `id, display_name, user_id` for the given chef ids (payout views). */
+export async function listChefProfileRefs(
+  client: SupabaseClient,
+  chefIds: string[]
+): Promise<ChefProfileRef[]> {
+  const { data, error } = await client
+    .from('chef_profiles')
+    .select('id, display_name, user_id')
+    .in('id', chefIds as never[]);
+
+  if (error) throw error;
+  return (data || []) as unknown as ChefProfileRef[];
+}
+
+/** Single chef display name, or null when missing. */
+export async function getChefDisplayName(
+  client: SupabaseClient,
+  chefId: string
+): Promise<{ display_name: string | null } | null> {
+  const { data, error } = await client
+    .from('chef_profiles')
+    .select('display_name')
+    .eq('id', chefId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as { display_name: string | null } | null) ?? null;
+}
+
+export interface ChefDocumentRow {
+  id: string;
+  document_type: string;
+  document_url: string | null;
+  status: string;
+  expires_at: string | null;
+  notes: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Compliance documents for one chef, newest first. */
+export async function listChefDocuments(
+  client: SupabaseClient,
+  chefId: string
+): Promise<ChefDocumentRow[]> {
+  const { data, error } = await client
+    .from('chef_documents')
+    .select('id, document_type, document_url, status, expires_at, notes, reviewed_by, reviewed_at, created_at, updated_at')
+    .eq('chef_id', chefId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as ChefDocumentRow[];
+}
+
+export interface ChefComplianceProfileRow {
+  id: string;
+  display_name: string;
+  status: string;
+  chef_documents: ChefDocumentRow[] | null;
+}
+
+/** Chefs with embedded compliance documents (compliance queue). */
+export async function listChefComplianceProfiles(
+  client: SupabaseClient,
+  limit = 200
+): Promise<ChefComplianceProfileRow[]> {
+  const { data, error } = await client
+    .from('chef_profiles')
+    .select(`
+      id,
+      display_name,
+      status,
+      chef_documents (
+        id,
+        document_type,
+        document_url,
+        status,
+        expires_at,
+        notes,
+        reviewed_by,
+        reviewed_at,
+        created_at,
+        updated_at
+      )
+    `)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as ChefComplianceProfileRow[];
+}
+
+export interface ChefDeliveryZoneRow {
+  id: string;
+  name: string;
+  radius_km: number | null;
+  delivery_fee: number | null;
+  min_order_for_free_delivery: number | null;
+  is_active: boolean;
+  storefront_id: string;
+}
+
+/** Delivery zones across a set of storefronts (chef governance detail). */
+export async function listChefDeliveryZonesByStorefronts(
+  client: SupabaseClient,
+  storefrontIds: string[]
+): Promise<ChefDeliveryZoneRow[]> {
+  const { data, error } = await client
+    .from('chef_delivery_zones')
+    .select('id, name, radius_km, delivery_fee, min_order_for_free_delivery, is_active, storefront_id')
+    .in('storefront_id', storefrontIds as never[]);
+
+  if (error) throw error;
+  return (data || []) as unknown as ChefDeliveryZoneRow[];
+}
+
+export interface ChefSearchRow {
+  id: string;
+  display_name: string;
+  status: string;
+}
+
+/** Chefs whose display name matches `q` (global search). */
+export async function searchChefsByName(
+  client: SupabaseClient,
+  q: string,
+  limit = 5
+): Promise<ChefSearchRow[]> {
+  const { data, error } = await client
+    .from('chef_profiles')
+    .select('id, display_name, status')
+    .ilike('display_name', `%${q}%`)
+    .limit(limit);
+
+  if (error) throw error;
+  return (data || []) as unknown as ChefSearchRow[];
+}
+
+export interface ChefExportRow {
+  display_name: string;
+  phone: string | null;
+  status: string;
+  created_at: string;
+}
+
+/** `lat, lng` of the chef kitchen serving a storefront, or null when unset. */
+export async function getKitchenCoordinatesByStorefront(
+  client: SupabaseClient,
+  storefrontId: string
+): Promise<{ lat: number | null; lng: number | null } | null> {
+  const { data, error } = await client
+    .from('chef_kitchens')
+    .select('lat, lng')
+    .eq('storefront_id' as never, storefrontId)
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return (data as { lat: number | null; lng: number | null } | null) ?? null;
+}
+
+/** Chef rows for CSV export, newest first. */
+export async function listChefExportRows(
+  client: SupabaseClient
+): Promise<ChefExportRow[]> {
+  const { data, error } = await client
+    .from('chef_profiles')
+    .select('display_name, phone, status, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as unknown as ChefExportRow[];
+}

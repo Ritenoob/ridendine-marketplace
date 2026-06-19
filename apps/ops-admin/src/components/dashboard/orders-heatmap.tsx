@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@ridendine/ui';
-import { createBrowserClient } from '@ridendine/db';
+import { createBrowserClient, listOrderCreatedTimesSince } from '@ridendine/db';
 
 export function OrdersHeatmap() {
   const [hourlyData, setHourlyData] = useState<number[]>(Array(24).fill(0));
@@ -23,10 +23,7 @@ export function OrdersHeatmap() {
 
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-      const { data: orders } = await db
-        .from('orders')
-        .select('created_at')
-        .gte('created_at', weekAgo.toISOString());
+      const orders = await listOrderCreatedTimesSince(db, weekAgo.toISOString()).catch(() => null);
 
       // Count orders by hour
       const hourCounts = Array(24).fill(0);

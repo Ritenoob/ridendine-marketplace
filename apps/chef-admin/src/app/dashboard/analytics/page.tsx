@@ -181,7 +181,7 @@ export default function AnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <h3 className="font-semibold text-text">
-            Revenue — Last {period === 'week' ? '7' : period === 'month' ? '30' : '365'} Days
+            Revenue - Last {period === 'week' ? '7' : period === 'month' ? '30' : '365'} Days
           </h3>
           <div className="mt-4">
             <BarChart bars={dailyBars} color="#EA5B26" />
@@ -245,6 +245,18 @@ export default function AnalyticsPage() {
           </div>
         )}
       </Card>
+
+      {/* Earnings Breakdown */}
+      <EarningsBreakdown revenue={data.revenue} orderCount={data.orderCount} />
+
+      {/* Operational Health */}
+      <OperationalHealth
+        cancellationRate={data.cancellationRate}
+        repeatCustomerRate={data.repeatCustomerRate}
+        avgOrderValue={data.avgOrderValue}
+        uniqueCustomers={data.uniqueCustomers}
+        orderCount={data.orderCount}
+      />
     </div>
   );
 }
@@ -278,6 +290,139 @@ function PageHeader({
         ))}
       </div>
     </div>
+  );
+}
+
+function EarningsBreakdown({
+  revenue,
+  orderCount,
+}: {
+  revenue: number;
+  orderCount: number;
+}) {
+  const platformFee = revenue * 0.15;
+  const stripeFee = revenue * 0.029 + orderCount * 0.3;
+  const netEarnings = revenue - platformFee - stripeFee;
+  const netPct = revenue > 0 ? (netEarnings / revenue) * 100 : 0;
+
+  const rows = [
+    { label: 'Gross Revenue', value: revenue, color: 'text-text', bold: true },
+    { label: 'Platform Fee (15%)', value: -platformFee, color: 'text-danger', bold: false },
+    { label: 'Stripe Processing (~2.9% + $0.30/order)', value: -stripeFee, color: 'text-danger', bold: false },
+    { label: 'Your Net Earnings', value: netEarnings, color: 'text-success', bold: true },
+  ];
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-semibold text-text">Earnings Breakdown</h3>
+          <p className="mt-0.5 text-sm text-textMuted">
+            What you actually keep after platform and processing fees
+          </p>
+        </div>
+        <span className="rounded-full bg-successSoft px-3 py-1 text-sm font-bold text-success">
+          ~{netPct.toFixed(0)}% take-home
+        </span>
+      </div>
+      <div className="mt-4 space-y-2">
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${
+              row.bold ? 'bg-surfaceMuted' : ''
+            }`}
+          >
+            <span className={`text-sm ${row.bold ? 'font-semibold text-text' : 'text-textMuted'}`}>
+              {row.label}
+            </span>
+            <span className={`text-sm font-bold ${row.color}`}>
+              {row.value >= 0 ? '' : '-'}${Math.abs(row.value).toFixed(2)}
+            </span>
+          </div>
+        ))}
+      </div>
+      {revenue === 0 && (
+        <p className="mt-3 text-xs text-textMuted">
+          Breakdown will populate once you have completed orders this period.
+        </p>
+      )}
+    </Card>
+  );
+}
+
+function OperationalHealth({
+  cancellationRate,
+  repeatCustomerRate,
+  avgOrderValue,
+  uniqueCustomers,
+  orderCount,
+}: {
+  cancellationRate: number;
+  repeatCustomerRate: number;
+  avgOrderValue: number;
+  uniqueCustomers: number;
+  orderCount: number;
+}) {
+  const fulfillmentRate = 100 - cancellationRate;
+
+  const kpis = [
+    {
+      label: 'Fulfillment Rate',
+      value: `${fulfillmentRate.toFixed(1)}%`,
+      sub: 'Orders completed vs received',
+      tone: fulfillmentRate >= 90 ? 'text-success' : fulfillmentRate >= 75 ? 'text-warning' : 'text-danger',
+      bar: fulfillmentRate,
+      barColor: fulfillmentRate >= 90 ? 'bg-success' : fulfillmentRate >= 75 ? 'bg-warning' : 'bg-danger',
+    },
+    {
+      label: 'Repeat Customer Rate',
+      value: `${repeatCustomerRate.toFixed(1)}%`,
+      sub: 'Customers who ordered more than once',
+      tone: repeatCustomerRate >= 30 ? 'text-success' : repeatCustomerRate >= 15 ? 'text-warning' : 'text-textMuted',
+      bar: Math.min(repeatCustomerRate, 100),
+      barColor: repeatCustomerRate >= 30 ? 'bg-success' : 'bg-warning',
+    },
+    {
+      label: 'Avg Order Value',
+      value: `$${avgOrderValue.toFixed(2)}`,
+      sub: 'Revenue per completed order',
+      tone: 'text-text',
+      bar: Math.min((avgOrderValue / 60) * 100, 100),
+      barColor: 'bg-primary',
+    },
+    {
+      label: 'Orders This Period',
+      value: orderCount,
+      sub: `${uniqueCustomers} unique customers`,
+      tone: 'text-text',
+      bar: Math.min((orderCount / 50) * 100, 100),
+      barColor: 'bg-info',
+    },
+  ];
+
+  return (
+    <Card>
+      <h3 className="font-semibold text-text">Operational Health</h3>
+      <p className="mt-0.5 text-sm text-textMuted">
+        How efficiently the kitchen ran this period
+      </p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map((kpi) => (
+          <div key={kpi.label} className="space-y-2">
+            <p className="text-xs font-medium text-textMuted">{kpi.label}</p>
+            <p className={`text-2xl font-bold ${kpi.tone}`}>{kpi.value}</p>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surfaceMuted">
+              <div
+                className={`h-full rounded-full ${kpi.barColor}`}
+                style={{ width: `${kpi.bar}%` }}
+              />
+            </div>
+            <p className="text-xs text-textSubtle">{kpi.sub}</p>
+          </div>
+        ))}
+      </div>
+    </Card>
   );
 }
 

@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import { Badge, Card } from '@ridendine/ui';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getChefDisplayName,
+  getDriverNameRef,
+  getPlatformAccount,
+  listLedgerEntriesForEntity,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { FinanceSubnav } from '../_components/FinanceSubnav';
 
@@ -12,32 +19,40 @@ export type AccountDetailType = 'chefs' | 'drivers';
 
 export async function FinanceAccountDetailContent({ type, id }: { type: AccountDetailType; id: string }) {
   const accountType = type === 'chefs' ? 'chef_payable' : 'driver_payable';
-  const admin = createAdminClient();
+  const admin = createAdminClient() as unknown as SupabaseClient;
 
-  const { data: account, error: acctErr } = await admin
-    .from('platform_accounts')
-    .select('*')
-    .eq('account_type', accountType)
-    .eq('owner_id', id)
-    .maybeSingle();
+  // The raw queries tolerated lookup errors (acctErr / ledErr rendered
+  // fallback panels); repository failures degrade the same way.
+  let account: Record<string, unknown> | null = null;
+  let acctErr = false;
+  try {
+    account = await getPlatformAccount(admin, accountType, id);
+  } catch {
+    acctErr = true;
+  }
 
   let title = id;
   if (type === 'chefs') {
-    const { data: chef } = await admin.from('chef_profiles').select('display_name').eq('id', id).maybeSingle();
+    const chef = await getChefDisplayName(admin, id).catch(() => null);
     title = (chef?.display_name as string) ?? id;
   } else {
-    const { data: d } = await admin.from('drivers').select('first_name, last_name').eq('id', id).maybeSingle();
+    const d = await getDriverNameRef(admin, id).catch(() => null);
     title =
       `${(d?.first_name as string) ?? ''} ${(d?.last_name as string) ?? ''}`.trim() || id;
   }
 
-  const { data: entries, error: ledErr } = await admin
-    .from('ledger_entries')
-    .select('id, created_at, entry_type, amount_cents, description, order_id, metadata')
-    .eq('entity_type', type === 'chefs' ? 'chef' : 'driver')
-    .eq('entity_id', id)
-    .order('created_at', { ascending: false })
-    .limit(100);
+  let entries: Record<string, unknown>[] | null = null;
+  let ledErr = false;
+  try {
+    entries = (await listLedgerEntriesForEntity(
+      admin,
+      type === 'chefs' ? 'chef' : 'driver',
+      id,
+      100
+    )) as unknown as Record<string, unknown>[];
+  } catch {
+    ledErr = true;
+  }
 
   const listHref = type === 'chefs' ? '/dashboard/finance/accounts/chefs' : '/dashboard/finance/accounts/drivers';
 

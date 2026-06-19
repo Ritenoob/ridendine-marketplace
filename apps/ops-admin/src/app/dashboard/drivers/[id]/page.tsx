@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {
   createAdminClient,
   getOpsDriverDetail,
+  listDriverDocuments,
   type SupabaseClient,
 } from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -47,14 +48,8 @@ async function getDriverPageData(driverId: string) {
 }
 
 async function getDriverComplianceSubject(driverId: string, ownerName: string, ownerStatus: string) {
-  const adminClient = createAdminClient() as any;
-  const { data, error } = await adminClient
-    .from('driver_documents')
-    .select('id, document_type, document_url, status, expires_at, notes, reviewed_by, reviewed_at, created_at, updated_at')
-    .eq('driver_id', driverId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
+  const adminClient = createAdminClient() as unknown as SupabaseClient;
+  const data = await listDriverDocuments(adminClient, driverId);
 
   return buildComplianceSubject({
     ownerType: 'driver',

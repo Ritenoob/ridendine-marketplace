@@ -1,5 +1,9 @@
 import { Badge, Card } from '@ridendine/ui';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listInstantPayoutRequests,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getOpsActorContext, hasRequiredRole } from '@/lib/engine';
 import { FinanceSubnav } from '../_components/FinanceSubnav';
@@ -18,12 +22,16 @@ export default async function FinanceInstantPayoutsPage() {
     return <FinanceAccessDenied />;
   }
 
-  const admin = createAdminClient();
-  const { data: rows, error } = await admin
-    .from('instant_payout_requests')
-    .select('id, driver_id, amount_cents, fee_cents, status, requested_at, executed_at, failure_reason')
-    .order('requested_at', { ascending: false })
-    .limit(100);
+  const admin = createAdminClient() as unknown as SupabaseClient;
+  // The raw query tolerated load failures (error renders a fallback card);
+  // a repository failure degrades the same way.
+  let rows: Record<string, unknown>[] | null = null;
+  let error = false;
+  try {
+    rows = (await listInstantPayoutRequests(admin, 100)) as unknown as Record<string, unknown>[];
+  } catch {
+    error = true;
+  }
 
   return (
     <DashboardLayout>

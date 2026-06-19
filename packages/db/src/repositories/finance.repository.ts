@@ -209,3 +209,448 @@ export async function getDriverLiabilitySummaries(
   if (error) throw error;
   return mapLiabilitySummaryRows((data ?? []) as LiabilitySummaryRow[], 'Unknown Driver');
 }
+
+// ==========================================
+// LEDGER READ MODELS (ops-admin payouts/analytics)
+// ==========================================
+
+export interface LedgerEntityAmountRow {
+  entity_id: string | null;
+  amount_cents: number;
+}
+
+/** chef_payable ledger lines (entity_id + amount) since `sinceIso`. */
+export async function listChefPayableLedgerTotalsSince(
+  client: SupabaseClient,
+  sinceIso: string
+): Promise<LedgerEntityAmountRow[]> {
+  const { data, error } = await client
+    .from('ledger_entries')
+    .select('entity_id, amount_cents')
+    .eq('entry_type', 'chef_payable')
+    .gte('created_at', sinceIso);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as LedgerEntityAmountRow[];
+}
+
+/** All chef_payable ledger lines scoped to chef entities (lifetime totals). */
+export async function listChefPayableLedgerTotals(
+  client: SupabaseClient
+): Promise<LedgerEntityAmountRow[]> {
+  const { data, error } = await client
+    .from('ledger_entries')
+    .select('entity_id, amount_cents')
+    .eq('entry_type', 'chef_payable')
+    .eq('entity_type', 'chef');
+
+  if (error) throw error;
+  return (data ?? []) as unknown as LedgerEntityAmountRow[];
+}
+
+export interface LedgerEntryDetailRow {
+  id: string;
+  created_at: string;
+  entry_type: string;
+  amount_cents: number;
+  description: string | null;
+  order_id?: string | null;
+  entity_id?: string | null;
+  metadata: Record<string, unknown> | null;
+}
+
+/** Ledger lines scoped to one entity (chef/driver account detail). */
+export async function listLedgerEntriesForEntity(
+  client: SupabaseClient,
+  entityType: string,
+  entityId: string,
+  limit = 100
+): Promise<LedgerEntryDetailRow[]> {
+  const { data, error } = await client
+    .from('ledger_entries')
+    .select('id, created_at, entry_type, amount_cents, description, order_id, metadata')
+    .eq('entity_type', entityType)
+    .eq('entity_id', entityId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as LedgerEntryDetailRow[];
+}
+
+/** Ledger lines tagged with a payout run id in their metadata. */
+export async function listLedgerEntriesForPayoutRun(
+  client: SupabaseClient,
+  payoutRunId: string,
+  limit = 200
+): Promise<LedgerEntryDetailRow[]> {
+  const { data, error } = await client
+    .from('ledger_entries')
+    .select('id, created_at, entry_type, amount_cents, description, entity_id, metadata')
+    .contains('metadata', { payout_run_id: payoutRunId })
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as LedgerEntryDetailRow[];
+}
+
+export interface LedgerExportRow {
+  entry_type: string;
+  amount_cents: number;
+  currency: string;
+  description: string | null;
+  entity_type: string | null;
+  entity_id: string | null;
+  created_at: string;
+}
+
+/** Ledger lines in [start, end] for CSV export, newest first. */
+export async function listLedgerExportRows(
+  client: SupabaseClient,
+  startIso: string,
+  endIso: string
+): Promise<LedgerExportRow[]> {
+  const { data, error } = await client
+    .from('ledger_entries')
+    .select('entry_type, amount_cents, currency, description, entity_type, entity_id, created_at')
+    .gte('created_at', startIso)
+    .lte('created_at', endIso)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as unknown as LedgerExportRow[];
+}
+
+// ==========================================
+// CHEF PAYOUTS / PAYOUT ACCOUNTS
+// ==========================================
+
+export interface ChefPayoutTotalRow {
+  chef_id: string;
+  amount: number;
+}
+
+/** chef_payouts (chef_id + amount) in the given statuses. */
+export async function listChefPayoutTotalsByStatuses(
+  client: SupabaseClient,
+  statuses: string[]
+): Promise<ChefPayoutTotalRow[]> {
+  const { data, error } = await client
+    .from('chef_payouts')
+    .select('chef_id, amount')
+    .in('status', statuses as never[]);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as ChefPayoutTotalRow[];
+}
+
+export interface ChefPayoutAccountRef {
+  chef_id: string;
+  stripe_account_id: string | null;
+  payout_enabled: boolean | null;
+}
+
+/** Payout account refs for the given chef ids. */
+export async function listChefPayoutAccountRefs(
+  client: SupabaseClient,
+  chefIds: string[]
+): Promise<ChefPayoutAccountRef[]> {
+  const { data, error } = await client
+    .from('chef_payout_accounts')
+    .select('chef_id, stripe_account_id, payout_enabled')
+    .in('chef_id', chefIds as never[]);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as ChefPayoutAccountRef[];
+}
+
+export interface BankChefPayoutRow {
+  id: string;
+  chef_id: string;
+  amount: number;
+  status: string;
+  payment_rail?: string | null;
+  bank_batch_id: string | null;
+  bank_reference: string | null;
+  reconciliation_status: string | null;
+  created_at: string;
+}
+
+/** Bank-rail chef payouts in the given statuses. */
+export async function listBankChefPayouts(
+  client: SupabaseClient,
+  statuses: string[]
+): Promise<BankChefPayoutRow[]> {
+  const { data, error } = await client
+    .from('chef_payouts')
+    .select('id, chef_id, amount, status, payment_rail, bank_batch_id, bank_reference, reconciliation_status, created_at')
+    .eq('payment_rail', 'bank')
+    .in('status', statuses as never[]);
+
+  if (error) throw error;
+  return (data || []) as unknown as BankChefPayoutRow[];
+}
+
+export interface BankPayoutExportRow {
+  id: string;
+  chef_id: string;
+  amount: number;
+  status: string;
+  bank_batch_id: string | null;
+  bank_reference: string | null;
+  reconciliation_status: string | null;
+  period_start: string | null;
+  period_end: string | null;
+  created_at: string;
+}
+
+/** Bank-rail chef payouts created in [start, end] for CSV export. */
+export async function listBankPayoutExportRows(
+  client: SupabaseClient,
+  startIso: string,
+  endIso: string
+): Promise<BankPayoutExportRow[]> {
+  const { data, error } = await client
+    .from('chef_payouts')
+    .select('id, chef_id, amount, status, bank_batch_id, bank_reference, reconciliation_status, period_start, period_end, created_at')
+    .eq('payment_rail', 'bank')
+    .gte('created_at', startIso)
+    .lte('created_at', endIso)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as unknown as BankPayoutExportRow[];
+}
+
+// ==========================================
+// PAYOUT RUNS
+// ==========================================
+
+export interface PayoutRunSummaryRow {
+  id: string;
+  run_type: string;
+  status: string;
+  period_start: string;
+  period_end: string;
+  total_amount: number;
+  successful_payouts: number;
+  failed_payouts: number;
+  created_at: string;
+}
+
+/** Recent payout runs, newest first. */
+export async function listPayoutRunSummaries(
+  client: SupabaseClient,
+  limit = 80
+): Promise<PayoutRunSummaryRow[]> {
+  const { data, error } = await client
+    .from('payout_runs')
+    .select('id, run_type, status, period_start, period_end, total_amount, successful_payouts, failed_payouts, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as PayoutRunSummaryRow[];
+}
+
+/** Full payout run row by id, or null when missing. */
+export async function getPayoutRunById(
+  client: SupabaseClient,
+  runId: string
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await client
+    .from('payout_runs')
+    .select('*')
+    .eq('id', runId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as Record<string, unknown> | null) ?? null;
+}
+
+/**
+ * The currently `processing` payout run for a rail, or null. Used as the
+ * friendly 409 guard before triggering a new run (migration 00032's partial
+ * unique index remains the ironclad guard).
+ */
+export async function getProcessingPayoutRun(
+  client: SupabaseClient,
+  runType: 'chef' | 'driver'
+): Promise<{ id: string } | null> {
+  const { data, error } = await client
+    .from('payout_runs')
+    .select('id')
+    .eq('run_type', runType)
+    .eq('status', 'processing')
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as { id: string } | null) ?? null;
+}
+
+/** Driver payout lines attached to a payout run. */
+export async function listDriverPayoutsForRun(
+  client: SupabaseClient,
+  payoutRunId: string
+): Promise<Record<string, unknown>[]> {
+  const { data, error } = await client
+    .from('driver_payouts')
+    .select('*')
+    .eq('payout_run_id', payoutRunId);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as Record<string, unknown>[];
+}
+
+// ==========================================
+// INSTANT PAYOUTS
+// ==========================================
+
+export interface InstantPayoutRequestRow {
+  id: string;
+  driver_id: string;
+  amount_cents: number;
+  fee_cents: number | null;
+  status: string;
+  requested_at: string;
+  executed_at: string | null;
+  failure_reason: string | null;
+}
+
+/** Instant payout queue, newest request first. */
+export async function listInstantPayoutRequests(
+  client: SupabaseClient,
+  limit = 100
+): Promise<InstantPayoutRequestRow[]> {
+  const { data, error } = await client
+    .from('instant_payout_requests')
+    .select('id, driver_id, amount_cents, fee_cents, status, requested_at, executed_at, failure_reason')
+    .order('requested_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as InstantPayoutRequestRow[];
+}
+
+export interface InstantPayoutRequestRef {
+  id: string;
+  driver_id: string;
+  amount_cents: number;
+  status: string;
+}
+
+/** A single instant payout request (id, driver, amount, status), or null. */
+export async function getInstantPayoutRequestById(
+  client: SupabaseClient,
+  id: string
+): Promise<InstantPayoutRequestRef | null> {
+  const { data, error } = await client
+    .from('instant_payout_requests')
+    .select('id, driver_id, amount_cents, status')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return data as unknown as InstantPayoutRequestRef;
+}
+
+// ==========================================
+// STRIPE RECONCILIATION / EVENT EXPORTS
+// ==========================================
+
+/** Stripe reconciliation rows, newest first, optionally filtered by status. */
+export async function listStripeReconciliationRows(
+  client: SupabaseClient,
+  options: { status?: string; limit?: number } = {}
+): Promise<Record<string, unknown>[]> {
+  let query = client
+    .from('stripe_reconciliation')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(options.limit ?? 200);
+  if (options.status) query = query.eq('status', options.status);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as unknown as Record<string, unknown>[];
+}
+
+export interface StripeEventExportRow {
+  stripe_event_id: string;
+  event_type: string;
+  livemode: boolean | null;
+  processing_status: string | null;
+  related_order_id: string | null;
+  processed_at: string | null;
+  error_message: string | null;
+  created_at: string;
+}
+
+/** Processed Stripe events in [start, end] for CSV export, newest first. */
+export async function listStripeEventExportRows(
+  client: SupabaseClient,
+  startIso: string,
+  endIso: string
+): Promise<StripeEventExportRow[]> {
+  const { data, error } = await client
+    .from('stripe_events_processed')
+    .select(
+      'stripe_event_id, event_type, livemode, processing_status, related_order_id, processed_at, error_message, created_at'
+    )
+    .gte('processed_at', startIso)
+    .lte('processed_at', endIso)
+    .order('processed_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as unknown as StripeEventExportRow[];
+}
+
+// ==========================================
+// PLATFORM ACCOUNTS
+// ==========================================
+
+export interface PlatformAccountBalanceRow {
+  owner_id: string;
+  balance_cents: number;
+  pending_payout_cents: number | null;
+  currency: string | null;
+  updated_at: string | null;
+}
+
+/** Payable account balances for an account type, highest balance first. */
+export async function listPlatformAccountsByType(
+  client: SupabaseClient,
+  accountType: string
+): Promise<PlatformAccountBalanceRow[]> {
+  const { data, error } = await client
+    .from('platform_accounts')
+    .select('owner_id, balance_cents, pending_payout_cents, currency, updated_at')
+    .eq('account_type', accountType)
+    .order('balance_cents', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as PlatformAccountBalanceRow[];
+}
+
+/** Full platform account row for (account_type, owner), or null. */
+export async function getPlatformAccount(
+  client: SupabaseClient,
+  accountType: string,
+  ownerId: string
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await client
+    .from('platform_accounts')
+    .select('*')
+    .eq('account_type', accountType)
+    .eq('owner_id', ownerId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as Record<string, unknown> | null) ?? null;
+}

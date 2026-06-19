@@ -220,3 +220,70 @@ export async function getOrCreateCustomer(
     profile_image_url: null,
   });
 }
+
+// ==========================================
+// OPS-ADMIN READ MODELS
+// ==========================================
+
+/** The auth user id behind a customer record, or null when missing. */
+export async function getCustomerUserIdRef(
+  client: SupabaseClient,
+  customerId: string
+): Promise<{ user_id: string } | null> {
+  const { data, error } = await client
+    .from('customers')
+    .select('user_id')
+    .eq('id', customerId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return data as unknown as { user_id: string };
+}
+
+export interface CustomerSearchRow {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+}
+
+/** Customers whose name or email matches `q` (global search). */
+export async function searchCustomersByText(
+  client: SupabaseClient,
+  q: string,
+  limit = 5
+): Promise<CustomerSearchRow[]> {
+  const { data, error } = await client
+    .from('customers')
+    .select('id, first_name, last_name, email')
+    .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%`)
+    .limit(limit);
+
+  if (error) throw error;
+  return (data || []) as unknown as CustomerSearchRow[];
+}
+
+export interface CustomerExportRow {
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+  created_at: string;
+}
+
+/** Customer rows for CSV export, newest first. */
+export async function listCustomerExportRows(
+  client: SupabaseClient
+): Promise<CustomerExportRow[]> {
+  const { data, error } = await client
+    .from('customers')
+    .select('first_name, last_name, email, phone, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as unknown as CustomerExportRow[];
+}

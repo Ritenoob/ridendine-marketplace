@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { createBrowserClient, opsLiveMapChannel } from '@ridendine/db';
+import {
+  createBrowserClient,
+  listLiveMapDeliveries,
+  listLiveMapDrivers,
+  opsLiveMapChannel,
+} from '@ridendine/db';
 import { DEFAULT_SERVICE_REGION_CENTER, DEFAULT_MAP_ZOOM } from '@ridendine/engine';
 import { getLocationHealth, locationHealthClass } from '@/lib/location-health';
 
@@ -121,22 +126,7 @@ export default function LiveMap() {
     async function fetchData() {
       try {
         setLoadError(null);
-        const { data: driverData } = await client
-          .from('drivers')
-          .select(`
-          id,
-          first_name,
-          last_name,
-          driver_presence (
-            status,
-            last_location_lat,
-            last_location_lng,
-            last_location_at,
-            last_location_update,
-            updated_at
-          )
-        `)
-          .eq('status', 'approved');
+        const driverData = await listLiveMapDrivers(client);
 
         if (driverData) {
           const mappedDrivers = (driverData as unknown as DriverMapRow[]).map(
@@ -160,25 +150,13 @@ export default function LiveMap() {
           setDrivers(mappedDrivers);
         }
 
-        const { data: deliveryData } = await client
-          .from('deliveries')
-          .select(`
-          id,
-          pickup_lat,
-          pickup_lng,
-          dropoff_lat,
-          dropoff_lng,
-          status,
-          driver_id,
-          orders (order_number)
-        `)
-          .in('status', [
+        const deliveryData = await listLiveMapDeliveries(client, [
           'assigned',
           'accepted',
           'en_route_to_pickup',
           'picked_up',
           'en_route_to_dropoff',
-          ]);
+        ]);
 
         if (deliveryData) {
           const mappedDeliveries = (deliveryData as unknown as DeliveryMapRow[]).map(

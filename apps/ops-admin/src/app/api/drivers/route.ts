@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient, createDriver, listOpsDrivers, type SupabaseClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  createDriver,
+  createDriverPresence,
+  insertAuditLog,
+  listOpsDrivers,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { createDriverProfileSchema, paginationSchema, signupSchema } from '@ridendine/validation';
 import {
   evaluateRateLimit,
@@ -105,8 +112,8 @@ export async function POST(request: Request) {
       vehicle_description: null,
     });
 
-    await (supabase as any).from('driver_presence').insert({ driver_id: driver.id, status: 'offline' });
-    await (supabase as any).from('audit_logs').insert({
+    await createDriverPresence(supabase, driver.id, 'offline');
+    await insertAuditLog(supabase, {
       action: 'ops_create',
       actor_type: 'platform_user',
       entity_type: 'driver',

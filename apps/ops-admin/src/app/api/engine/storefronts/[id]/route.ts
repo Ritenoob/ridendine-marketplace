@@ -4,7 +4,13 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient, updateStorefront, type SupabaseClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getStorefrontOpsDetail,
+  listStorefrontStateChanges,
+  updateStorefront,
+  type SupabaseClient,
+} from '@ridendine/db';
 import {
   finalizeOpsActor,
   getEngine,
@@ -33,22 +39,16 @@ export async function GET(
   const adminClient = createAdminClient() as unknown as SupabaseClient;
   const engine = getEngine();
 
-  // Get storefront with related data
-  const { data: storefront, error } = await adminClient
-    .from('chef_storefronts')
-    .select(`
-      *,
-      chef:chef_profiles (
-        id, display_name, phone, status
-      ),
-      kitchen:chef_kitchens (
-        address, lat, lng
-      )
-    `)
-    .eq('id', storefrontId)
-    .single();
+  // Get storefront with related data (any lookup failure surfaces as 404,
+  // matching the raw query's previous `error || !storefront` handling)
+  let storefront = null;
+  try {
+    storefront = await getStorefrontOpsDetail(adminClient, storefrontId);
+  } catch {
+    storefront = null;
+  }
 
-  if (error || !storefront) {
+  if (!storefront) {
     return errorResponse('NOT_FOUND', 'Storefront not found', 404);
   }
 
@@ -61,13 +61,8 @@ export async function GET(
   // Get overload status
   const overloadStatus = await engine.kitchen.checkOverloadStatus(storefrontId);
 
-  // Get state change history (cast to any for new table)
-  const { data: stateChanges } = await adminClient
-    .from('storefront_state_changes')
-    .select('*')
-    .eq('storefront_id', storefrontId)
-    .order('created_at', { ascending: false })
-    .limit(20);
+  // Get state change history
+  const stateChanges = await listStorefrontStateChanges(adminClient, storefrontId, 20);
 
   return successResponse({
     storefront,

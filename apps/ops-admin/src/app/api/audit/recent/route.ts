@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
+import { createAdminClient, listRecentAuditLogs, type SupabaseClient } from '@ridendine/db';
 import { getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -20,17 +20,13 @@ export async function GET(request: Request) {
   const limit = Number.isFinite(raw) && raw > 0 && raw <= 200 ? raw : DEFAULT_LIMIT;
 
   const admin = createAdminClient() as unknown as SupabaseClient;
-  const { data, error } = await admin
-    .from('audit_logs')
-    .select(
-      'id, action, entity_type, entity_id, actor_type, actor_id, actor_role, reason, created_at'
-    )
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    const items = await listRecentAuditLogs(admin, { limit });
+    return NextResponse.json({ success: true, data: { items } });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to load audit logs' },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ success: true, data: { items: data ?? [] } });
 }

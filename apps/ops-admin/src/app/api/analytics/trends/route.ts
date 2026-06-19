@@ -1,5 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listChefDisplayNames,
+  listChefPayableLedgerTotalsSince,
+  listOrderTrendRows,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -38,15 +44,11 @@ function buildPeakHours(orders: any[]) {
   return hourCounts.map((count, hour) => ({ hour, orders: count }));
 }
 
-async function fetchTopChefs(client: any, startDate: Date, chefLimit = 10) {
-  const { data: ledger } = await client
-    .from('ledger_entries')
-    .select('entity_id, amount_cents')
-    .eq('entry_type', 'chef_payable')
-    .gte('created_at', startDate.toISOString());
+async function fetchTopChefs(client: SupabaseClient, startDate: Date, chefLimit = 10) {
+  const ledger = await listChefPayableLedgerTotalsSince(client, startDate.toISOString());
 
   const chefRevenue = new Map<string, number>();
-  for (const entry of ledger ?? []) {
+  for (const entry of ledger) {
     if (!entry.entity_id) continue;
     chefRevenue.set(entry.entity_id, (chefRevenue.get(entry.entity_id) ?? 0) + entry.amount_cents);
   }
@@ -58,12 +60,9 @@ async function fetchTopChefs(client: any, startDate: Date, chefLimit = 10) {
 
   if (topChefIds.length === 0) return [];
 
-  const { data: chefNames } = await client
-    .from('chef_profiles')
-    .select('id, display_name')
-    .in('id', topChefIds);
+  const chefNames = await listChefDisplayNames(client, topChefIds);
 
-  const chefNameMap = new Map((chefNames ?? []).map((c: any) => [c.id, c.display_name]));
+  const chefNameMap = new Map(chefNames.map((c) => [c.id, c.display_name]));
   return topChefIds.map(id => ({
     name: chefNameMap.get(id) ?? 'Unknown',
     revenue: (chefRevenue.get(id) ?? 0) / 100,
@@ -90,16 +89,14 @@ export async function GET(request: NextRequest) {
   const endDate = new Date();
   const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
 
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
 
-  const { data: orders } = await client
-    .from('orders')
-    .select('id, total, status, payment_status, created_at')
-    .gte('created_at', startDate.toISOString())
-    .lte('created_at', endDate.toISOString())
-    .order('created_at', { ascending: true });
+  const safeOrders = await listOrderTrendRows(
+    client,
+    startDate.toISOString(),
+    endDate.toISOString()
+  );
 
-  const safeOrders = orders ?? [];
   const trend = buildDailyBuckets(safeOrders, startDate, endDate);
   const peakHours = buildPeakHours(safeOrders);
   const topChefs = await fetchTopChefs(client, startDate);

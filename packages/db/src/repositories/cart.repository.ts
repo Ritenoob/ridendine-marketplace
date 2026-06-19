@@ -129,6 +129,30 @@ export async function deleteCartItem(
   if (error) throw error;
 }
 
+/**
+ * Ownership check: `{ id }` for a cart item only when its parent cart belongs
+ * to the given customer, otherwise null.
+ */
+export async function getCustomerCartItemRef(
+  client: SupabaseClient,
+  cartItemId: string,
+  customerId: string
+): Promise<{ id: string } | null> {
+  const { data, error } = await client
+    .from('cart_items')
+    .select('id, carts!inner(customer_id)')
+    .eq('id', cartItemId)
+    .eq('carts.customer_id', customerId)
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return (data as { id: string } | null) ?? null;
+}
+
 export async function clearCart(
   client: SupabaseClient,
   cartId: string

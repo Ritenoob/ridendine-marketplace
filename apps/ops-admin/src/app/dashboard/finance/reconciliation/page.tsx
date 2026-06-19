@@ -1,4 +1,4 @@
-import { createAdminClient } from '@ridendine/db';
+import { createAdminClient, listStripeReconciliationRows, type SupabaseClient } from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getOpsActorContext, hasRequiredRole } from '@/lib/engine';
 import { PageHeader, StatusBadge, EmptyState } from '@ridendine/ui';
@@ -31,12 +31,16 @@ export default async function FinanceReconciliationPage() {
     return <FinanceAccessDenied />;
   }
 
-  const admin = createAdminClient();
-  const { data: rows, error } = await admin
-    .from('stripe_reconciliation')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(200);
+  const admin = createAdminClient() as unknown as SupabaseClient;
+  // The raw query tolerated load failures (error renders an empty state);
+  // a repository failure degrades the same way.
+  let rows: Record<string, unknown>[] | null = null;
+  let error = false;
+  try {
+    rows = await listStripeReconciliationRows(admin, { limit: 200 });
+  } catch {
+    error = true;
+  }
 
   const unmatched = (rows ?? []).filter((r: Record<string, unknown>) => r.status === 'unmatched');
 

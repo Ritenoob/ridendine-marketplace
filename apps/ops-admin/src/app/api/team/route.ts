@@ -1,6 +1,12 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  insertPlatformUser,
+  listPlatformUsers,
+  updatePlatformUser,
+  type SupabaseClient,
+} from '@ridendine/db';
 import {
   evaluateRateLimit,
   RATE_LIMIT_POLICIES,
@@ -26,14 +32,16 @@ export async function GET() {
   const denied = guardPlatformApi(actor, 'team_list');
   if (denied) return denied;
 
-  const client = createAdminClient() as any;
-  const { data, error } = await client
-    .from('platform_users')
-    .select('id, user_id, email, name, role, is_active, created_at')
-    .order('created_at', { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, data });
+  const client = createAdminClient() as unknown as SupabaseClient;
+  try {
+    const data = await listPlatformUsers(client);
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to load team' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -62,10 +70,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Invalid role. Use: ${validRoles.join(', ')}` }, { status: 400 });
   }
 
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
 
   // Create auth user via admin API
-  const { data: authData, error: authError } = await client.auth.admin.createUser({
+  const { data: authData, error: authError } = await (client as any).auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -75,16 +83,19 @@ export async function POST(request: NextRequest) {
   if (authError) return NextResponse.json({ error: authError.message }, { status: 400 });
 
   // Create platform_users record
-  const { error: platformError } = await client.from('platform_users').insert({
-    user_id: authData.user.id,
-    email,
-    name,
-    role,
-    is_active: true,
-  });
-
-  if (platformError) {
-    return NextResponse.json({ error: platformError.message }, { status: 500 });
+  try {
+    await insertPlatformUser(client, {
+      user_id: authData.user.id,
+      email,
+      name,
+      role,
+      is_active: true,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to create platform user' },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ success: true, data: { userId: authData.user.id, email, name, role } });
@@ -100,13 +111,19 @@ export async function PATCH(request: NextRequest) {
   const { id, role, is_active } = await request.json();
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
-  const client = createAdminClient() as any;
-  const update: Record<string, unknown> = {};
+  const client = createAdminClient() as unknown as SupabaseClient;
+  const update: { role?: string; is_active?: boolean } = {};
   if (role !== undefined) update.role = role;
   if (is_active !== undefined) update.is_active = is_active;
 
-  const { error } = await client.from('platform_users').update(update).eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    await updatePlatformUser(client, id, update);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to update platform user' },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ success: true });
 }

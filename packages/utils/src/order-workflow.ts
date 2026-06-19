@@ -173,6 +173,32 @@ export function getEngineOrderAction(
 }
 
 // ------------------------------------------
+// Status normalization (shared with the customer-facing workflow)
+// ------------------------------------------
+
+/** Canonical lowercase/trimmed form used to key status lookup tables. */
+export function normalizeOrderStatus(status: string): string {
+  return status.trim().toLowerCase();
+}
+
+/**
+ * Human-readable fallback label for a status with no curated copy
+ * (e.g. 'ready_for_pickup' -> 'Ready For Pickup').
+ */
+export function formatOrderStatusFallbackLabel(
+  status: string,
+  emptyLabel = 'Order update'
+): string {
+  const normalized = normalizeOrderStatus(status);
+  if (!normalized) return emptyLabel;
+  return normalized
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+// ------------------------------------------
 // Terminal states
 // ------------------------------------------
 

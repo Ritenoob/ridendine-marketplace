@@ -4,6 +4,8 @@ const { loadRootEnv } = require('../../scripts/load-root-env.cjs');
 loadRootEnv(__dirname);
 
 const nextConfig = {
+  // Don't advertise the framework (was leaking `X-Powered-By: Next.js`).
+  poweredByHeader: false,
   transpilePackages: [
     '@ridendine/db',
     '@ridendine/ui',
@@ -39,10 +41,9 @@ const nextConfig = {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' js.stripe.com va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: *.supabase.co images.unsplash.com; font-src 'self'; connect-src 'self' *.supabase.co api.stripe.com *.sentry.io vitals.vercel-insights.com *.vercel-insights.com; frame-src js.stripe.com; object-src 'none'; base-uri 'self'",
-          },
+          // NOTE: Content-Security-Policy is set per-request in src/middleware.ts
+          // so it can include a unique nonce (removes the previous
+          // 'unsafe-inline' / 'unsafe-eval' script weakness).
         ],
       },
     ];

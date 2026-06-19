@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@ridendine/ui';
-import { createBrowserClient } from '@ridendine/db';
+import { createBrowserClient, listPaidOrderRevenueByDateSince } from '@ridendine/db';
 
 interface DayRevenue {
   date: string;
@@ -31,11 +31,9 @@ export function RevenueChart() {
       const days = period === '7d' ? 7 : 30;
       const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-      const { data: orders } = await db
-        .from('orders')
-        .select('total, created_at')
-        .gte('created_at', startDate.toISOString())
-        .eq('payment_status', 'completed');
+      const orders = await listPaidOrderRevenueByDateSince(db, startDate.toISOString()).catch(
+        () => null
+      );
 
       // Group by date
       const dailyData: Record<string, { revenue: number; orders: number }> = {};

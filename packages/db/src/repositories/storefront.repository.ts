@@ -243,3 +243,134 @@ export async function searchStorefronts(
   if (error) throw error;
   return data;
 }
+
+// ==========================================
+// OPS-ADMIN READ MODELS
+// ==========================================
+
+/** Exact count of storefronts updated within [start, end] (id projection). */
+export async function countStorefrontsUpdatedBetween(
+  client: SupabaseClient,
+  startIso: string,
+  endIso: string
+): Promise<number> {
+  const { count, error } = await client
+    .from('chef_storefronts')
+    .select('id', { count: 'exact', head: true })
+    .gte('updated_at', startIso)
+    .lte('updated_at', endIso);
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/** Exact count of storefronts, optionally filtered by active/paused flags. */
+export async function countStorefronts(
+  client: SupabaseClient,
+  filters: { isActive?: boolean; isPaused?: boolean } = {}
+): Promise<number> {
+  let query = client
+    .from('chef_storefronts')
+    .select('*', { count: 'exact', head: true });
+  if (filters.isActive !== undefined) query = query.eq('is_active', filters.isActive);
+  if (filters.isPaused !== undefined) query = query.eq('is_paused', filters.isPaused);
+
+  const { count, error } = await query;
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/** `id, name` for the given storefront ids. */
+export async function listStorefrontRefs(
+  client: SupabaseClient,
+  storefrontIds: string[]
+): Promise<Array<{ id: string; name: string }>> {
+  const { data, error } = await client
+    .from('chef_storefronts')
+    .select('id, name')
+    .in('id', storefrontIds as never[]);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as Array<{ id: string; name: string }>;
+}
+
+/** `id, chef_id` for storefronts owned by the given chefs. */
+export async function listStorefrontChefRefs(
+  client: SupabaseClient,
+  chefIds: string[]
+): Promise<Array<{ id: string; chef_id: string }>> {
+  const { data, error } = await client
+    .from('chef_storefronts')
+    .select('id, chef_id')
+    .in('chef_id', chefIds as never[]);
+
+  if (error) throw error;
+  return (data || []) as unknown as Array<{ id: string; chef_id: string }>;
+}
+
+/**
+ * Storefront with embedded chef profile + kitchen address for the ops
+ * storefront detail view. Returns null when missing.
+ */
+export async function getStorefrontOpsDetail(
+  client: SupabaseClient,
+  storefrontId: string
+): Promise<Record<string, any> | null> {
+  const { data, error } = await client
+    .from('chef_storefronts')
+    .select(`
+      *,
+      chef:chef_profiles (
+        id, display_name, phone, status
+      ),
+      kitchen:chef_kitchens (
+        address, lat, lng
+      )
+    `)
+    .eq('id', storefrontId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return data as unknown as Record<string, any>;
+}
+
+/** State change history for a storefront, newest first. */
+export async function listStorefrontStateChanges(
+  client: SupabaseClient,
+  storefrontId: string,
+  limit = 20
+): Promise<Record<string, any>[]> {
+  const { data, error } = await client
+    .from('storefront_state_changes')
+    .select('*')
+    .eq('storefront_id', storefrontId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as Record<string, any>[];
+}
+
+/** Active storefronts with queue/pause state for the ops live board. */
+export async function listOpsLiveBoardStorefronts(
+  client: SupabaseClient,
+  limit = 300
+): Promise<Record<string, any>[]> {
+  const { data, error } = await client
+    .from('chef_storefronts')
+    .select(`
+          id, name, storefront_state, is_paused,
+          current_queue_size, max_queue_size, is_overloaded,
+          estimated_prep_time_max, updated_at,
+          chef_profiles ( display_name )
+        `)
+    .eq('is_active', true)
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as Record<string, any>[];
+}

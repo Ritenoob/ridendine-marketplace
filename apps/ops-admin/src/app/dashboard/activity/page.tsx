@@ -1,6 +1,12 @@
 import { Card, Badge } from '@ridendine/ui';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listPlatformUserNameRefs,
+  listRecentAuditLogs,
+  listRecentOpsOverrideLogs,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { getOpsActorContext, hasPlatformApiCapability } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -22,31 +28,25 @@ export default async function ActivityPage() {
     );
   }
 
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
 
   // Recent audit logs from ops actions
-  const { data: auditLogs } = await client
-    .from('audit_logs')
-    .select('id, action, entity_type, entity_id, actor_type, actor_id, actor_role, reason, created_at')
-    .in('actor_type', ['admin', 'user'])
-    .order('created_at', { ascending: false })
-    .limit(100);
+  const auditLogs = await listRecentAuditLogs(client, {
+    limit: 100,
+    actorTypes: ['admin', 'user'],
+  });
 
   // Ops override logs
-  const { data: overrideLogs } = await client
-    .from('ops_override_logs')
-    .select('id, action, entity_type, entity_id, reason, actor_user_id, actor_role, created_at')
-    .order('created_at', { ascending: false })
-    .limit(50);
+  const overrideLogs = await listRecentOpsOverrideLogs(client, 50);
 
   // Get platform user names for display
   const actorIds = new Set<string>();
   for (const log of auditLogs || []) { if (log.actor_id) actorIds.add(log.actor_id); }
   for (const log of overrideLogs || []) { if (log.actor_user_id) actorIds.add(log.actor_user_id); }
 
-  const { data: users } = actorIds.size > 0
-    ? await client.from('platform_users').select('user_id, name, role').in('user_id', [...actorIds])
-    : { data: [] };
+  const users = actorIds.size > 0
+    ? await listPlatformUserNameRefs(client, [...actorIds])
+    : [];
 
   const userMap = new Map<string, { user_id: string; name: string; role: string }>(
     (users || []).map((u: any) => [u.user_id, u])

@@ -147,6 +147,106 @@ export async function createMenuCategory(
   return data;
 }
 
+export interface MenuItemAvailabilityRef {
+  id: string;
+  storefront_id: string;
+  price: number;
+  is_available: boolean;
+  is_sold_out: boolean;
+}
+
+/**
+ * Pricing/availability refs for a set of menu items (checkout quote and
+ * reorder validation).
+ */
+export async function listMenuItemAvailabilityRefs(
+  client: SupabaseClient,
+  menuItemIds: string[]
+): Promise<MenuItemAvailabilityRef[]> {
+  const { data, error } = await client
+    .from('menu_items')
+    .select('id, storefront_id, price, is_available, is_sold_out')
+    .in('id', menuItemIds as never[]);
+
+  if (error) throw error;
+  return (data || []) as unknown as MenuItemAvailabilityRef[];
+}
+
+export interface MenuItemOptionValueRef {
+  id: string;
+  option_id: string;
+  name: string;
+  price_adjustment: number;
+  is_available: boolean;
+  sort_order?: number;
+}
+
+export interface MenuItemOptionWithValues {
+  id: string;
+  menu_item_id: string;
+  name: string;
+  is_required: boolean;
+  max_selections: number;
+  sort_order?: number;
+  menu_item_option_values?: MenuItemOptionValueRef[];
+}
+
+/** Options (with nested values) for a set of menu items. */
+export async function listMenuItemOptionsWithValues(
+  client: SupabaseClient,
+  menuItemIds: string[]
+): Promise<MenuItemOptionWithValues[]> {
+  const { data, error } = await (client as any)
+    .from('menu_item_options')
+    .select(
+      'id, menu_item_id, name, is_required, max_selections, sort_order, menu_item_option_values(id, option_id, name, price_adjustment, is_available, sort_order)'
+    )
+    .in('menu_item_id', menuItemIds);
+
+  if (error) throw error;
+  return (data ?? []) as MenuItemOptionWithValues[];
+}
+
+/**
+ * All option rows (with nested values) attached to a storefront's available
+ * menu items (public storefront menu API).
+ */
+export async function listStorefrontMenuItemOptions(
+  client: SupabaseClient,
+  storefrontId: string
+): Promise<Array<Record<string, any>>> {
+  const itemsResult = await client
+    .from('menu_items')
+    .select('id')
+    .eq('storefront_id', storefrontId)
+    .eq('is_available', true);
+
+  const menuItemIds =
+    (itemsResult.data as Array<{ id: string }> | null)?.map((item) => item.id) ?? [];
+
+  const { data, error } = await (client as any)
+    .from('menu_item_options')
+    .select('*, menu_item_option_values(*)')
+    .in('menu_item_id', menuItemIds);
+
+  if (error) throw error;
+  return (data ?? []) as Array<Record<string, any>>;
+}
+
+/** Exact count of live (available, not sold out) menu items platform-wide. */
+export async function countLiveMenuItems(
+  client: SupabaseClient
+): Promise<number> {
+  const { count, error } = await client
+    .from('menu_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_available', true)
+    .eq('is_sold_out', false);
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function getStorefrontMenu(
   client: SupabaseClient,
   storefrontId: string,

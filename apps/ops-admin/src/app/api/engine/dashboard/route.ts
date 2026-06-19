@@ -4,7 +4,12 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listActiveSystemAlerts,
+  listOrdersNeedingAttention,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { dashboardCommandSchema, type OpsCommandInput } from '@ridendine/validation';
 import { operationResultResponse, parseJsonBody } from '@/lib/validation';
 import {
@@ -59,24 +64,14 @@ export async function GET(request: NextRequest) {
   const dispatchBoard = await engine.dispatch.getDispatchBoard();
 
   // Get recent orders needing attention
-  const { data: urgentOrders } = await adminDb
-    .from('orders')
-    .select(`
-      id, order_number, total, engine_status, created_at,
-      customer:customers (first_name, last_name),
-      storefront:chef_storefronts (name)
-    `)
-    .in('engine_status', ['pending', 'dispatch_pending', 'exception'])
-    .order('created_at', { ascending: true })
-    .limit(10);
+  const urgentOrders = await listOrdersNeedingAttention(
+    repositoryClient,
+    ['pending', 'dispatch_pending', 'exception'],
+    10
+  );
 
-  // Get active alerts (cast to any for new table)
-  const { data: alerts } = await repositoryClient
-    .from('system_alerts')
-    .select('*')
-    .eq('acknowledged', false)
-    .order('created_at', { ascending: false })
-    .limit(20);
+  // Get active alerts
+  const alerts = await listActiveSystemAlerts(repositoryClient, 20);
 
   // Get SLA breaches
   const breachedTimers = await engine.sla.getBreachedTimers(10);

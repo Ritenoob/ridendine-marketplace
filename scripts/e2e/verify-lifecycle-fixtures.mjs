@@ -44,7 +44,11 @@ const requiredSeedMarkers = [
   ['preparing order fixture RND-004', 'RND-004'],
   ['pending order fixture RND-005', 'RND-005'],
   ['ready for pickup order fixture RND-006', 'RND-006'],
+  ['pending customer-cancel order fixture RND-007', 'RND-007'],
+  ['pending chef-reject order fixture RND-008', 'RND-008'],
   ['unassigned pending delivery fixture', 'b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2'],
+  ['pending driver offer fixture (assignment_attempts)', '0ffe0000-0000-4000-8000-000000000001'],
+  ['pending refund case fixture (refund_cases)', 'ca5e0000-0000-4000-8000-000000000001'],
 ];
 
 const missingMarkers = requiredSeedMarkers.filter(([, marker]) => !seedSql.includes(marker));

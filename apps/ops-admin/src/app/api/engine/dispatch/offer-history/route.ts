@@ -1,4 +1,9 @@
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listAssignmentAttemptResponses,
+  listRecentAssignmentAttempts,
+  type SupabaseClient,
+} from '@ridendine/db';
 import {
   getOpsActorContext,
   errorResponse,
@@ -17,34 +22,26 @@ export async function GET() {
   const denied = guardPlatformApi(actor, 'dispatch_read');
   if (denied) return denied;
 
-  const client = createAdminClient();
+  const client = createAdminClient() as unknown as SupabaseClient;
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  const { data: attempts, error } = await client
-    .from('assignment_attempts')
-    .select(
-      'id, delivery_id, driver_id, response, offered_at, responded_at, expires_at, decline_reason, attempt_number'
-    )
-    .gte('offered_at', since)
-    .order('offered_at', { ascending: false })
-    .limit(500);
-
-  if (error) {
-    return errorResponse('FETCH_ERROR', error.message);
+  let rows;
+  try {
+    rows = await listRecentAssignmentAttempts(client, since, 500);
+  } catch (error) {
+    return errorResponse(
+      'FETCH_ERROR',
+      error instanceof Error ? error.message : 'Failed to load assignment attempts'
+    );
   }
 
-  const rows = attempts ?? [];
   const driverIds = [...new Set(rows.map((r: { driver_id: string }) => r.driver_id))];
 
   const acceptByDriver = new Map<string, number>();
   const totalByDriver = new Map<string, number>();
 
   if (driverIds.length) {
-    const { data: stats } = await client
-      .from('assignment_attempts')
-      .select('driver_id, response')
-      .in('driver_id', driverIds)
-      .gte('offered_at', since);
+    const stats = await listAssignmentAttemptResponses(client, driverIds, since);
 
     for (const row of stats ?? []) {
       const id = (row as { driver_id: string }).driver_id;
@@ -55,7 +52,7 @@ export async function GET() {
     }
   }
 
-  const enriched = rows.map((row: Record<string, unknown>) => {
+  const enriched = rows.map((row) => {
     const driverId = row.driver_id as string;
     const accepted = acceptByDriver.get(driverId) ?? 0;
     const total = totalByDriver.get(driverId) ?? 1;

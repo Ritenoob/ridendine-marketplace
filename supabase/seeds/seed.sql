@@ -1,7 +1,8 @@
 -- ============================================================
 -- RideNDine Seed Data — Schema-Compliant
 -- 4 Chefs (3 approved, 1 pending) | 3 Storefronts | 15 Dishes
--- 2 Customers | 2 Drivers | 6 Orders | Deliveries (incl. 1 unassigned pending)
+-- 2 Customers | 2 Drivers | 8 Orders | Deliveries (incl. 1 unassigned pending)
+-- 1 pending driver offer | 1 pending refund case
 -- ============================================================
 --
 -- DETERMINISTIC SEED ID SCHEME (all ids are valid UUID literals)
@@ -25,6 +26,8 @@
 --   order_status_history            05000000     osh-        "05" ≈ os(h)
 --   deliveries                      de100000     del-        "de1" = del
 --   reviews                         ee000000     rev-        —
+--   assignment_attempts             0ffe0000     —           "0ffe" ≈ offe(r)
+--   refund_cases                    ca5e0000     —           "ca5e" ≈ case
 --
 --   Group (2nd segment):
 --     * menu_categories / menu_items / chef_kitchens: storefront code
@@ -557,7 +560,32 @@ VALUES
    'ready_for_pickup', 'pending',
    41.00, 5.00, 2.00, 5.97, 0.00, 53.97,
    NULL,
-   NOW() - INTERVAL '45 minutes', NOW() - INTERVAL '15 minutes')
+   NOW() - INTERVAL '45 minutes', NOW() - INTERVAL '15 minutes'),
+
+  -- Order 7: Every Bite Yum - pending — DEDICATED customer-cancel fixture
+  -- (e2e/lifecycle/negative-paths.spec.ts, Alice cancels from the tracking
+  -- page). created_at NOW() keeps the chef-admin 8-minute acceptance
+  -- countdown from auto-rejecting it while the suite runs.
+  ('0d000000-0000-4000-8000-000000000007', 'RND-007',
+   'c0570000-0000-4000-8000-000000000001',
+   'dddddddd-dddd-dddd-dddd-dddddddddddd',
+   'add20000-0000-4000-8000-000000000001',
+   'pending', 'pending',
+   38.98, 5.00, 2.00, 5.98, 0.00, 51.96,
+   'E2E cancel fixture — do not prepare',
+   NOW(), NOW()),
+
+  -- Order 8: HOÀNG GIA PHỞ - pending — DEDICATED chef-reject fixture
+  -- (e2e/lifecycle/negative-paths.spec.ts signs in as tuan@ridendine.ca, so
+  -- the storefront MUST be Tuan's). created_at NOW() — see RND-007 note.
+  ('0d000000-0000-4000-8000-000000000008', 'RND-008',
+   'c0570000-0000-4000-8000-000000000002',
+   'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+   'add20000-0000-4000-8000-000000000002',
+   'pending', 'pending',
+   54.00, 5.00, 2.00, 7.93, 0.00, 68.93,
+   'E2E reject fixture — do not prepare',
+   NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- engine_status must mirror each order's seeded status. The column default is
@@ -577,7 +605,9 @@ WHERE id IN (
   '0d000000-0000-4000-8000-000000000003',
   '0d000000-0000-4000-8000-000000000004',
   '0d000000-0000-4000-8000-000000000005',
-  '0d000000-0000-4000-8000-000000000006'
+  '0d000000-0000-4000-8000-000000000006',
+  '0d000000-0000-4000-8000-000000000007',
+  '0d000000-0000-4000-8000-000000000008'
 );
 
 -- ============================================================
@@ -597,7 +627,11 @@ VALUES
   ('01000000-0005-4000-8000-000000000001', '0d000000-0000-4000-8000-000000000005', '17e30000-0002-4000-8000-000000000002', 'Chicken Phở (Phở Gà)', 1, 26.00, 26.00, NOW() - INTERVAL '10 minutes'),
   ('01000000-0005-4000-8000-000000000002', '0d000000-0000-4000-8000-000000000005', '17e30000-0002-4000-8000-000000000004', 'Stir-Fried Pork Vermicelli (Bún Thịt Xào)', 1, 24.00, 24.00, NOW() - INTERVAL '10 minutes'),
   ('01000000-0006-4000-8000-000000000001', '0d000000-0000-4000-8000-000000000006', '17e30000-0003-4000-8000-000000000004', 'Gyudon (Beef Rice Bowl)', 1, 19.00, 19.00, NOW() - INTERVAL '45 minutes'),
-  ('01000000-0006-4000-8000-000000000002', '0d000000-0000-4000-8000-000000000006', '17e30000-0003-4000-8000-000000000005', 'Karaage Chicken Don', 1, 20.00, 20.00, NOW() - INTERVAL '45 minutes')
+  ('01000000-0006-4000-8000-000000000002', '0d000000-0000-4000-8000-000000000006', '17e30000-0003-4000-8000-000000000005', 'Karaage Chicken Don', 1, 20.00, 20.00, NOW() - INTERVAL '45 minutes'),
+  ('01000000-0007-4000-8000-000000000001', '0d000000-0000-4000-8000-000000000007', '17e30000-0001-4000-8000-000000000001', 'Classic Smash Burger', 1, 18.99, 18.99, NOW()),
+  ('01000000-0007-4000-8000-000000000002', '0d000000-0000-4000-8000-000000000007', '17e30000-0001-4000-8000-000000000003', 'Nashville Hot Chicken Sandwich', 1, 19.99, 19.99, NOW()),
+  ('01000000-0008-4000-8000-000000000001', '0d000000-0000-4000-8000-000000000008', '17e30000-0002-4000-8000-000000000001', 'Beef Phở (Phở Bò)', 1, 28.00, 28.00, NOW()),
+  ('01000000-0008-4000-8000-000000000002', '0d000000-0000-4000-8000-000000000008', '17e30000-0002-4000-8000-000000000002', 'Chicken Phở (Phở Gà)', 1, 26.00, 26.00, NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
@@ -631,7 +665,9 @@ VALUES
   ('05000000-0006-4000-8000-000000000001', '0d000000-0000-4000-8000-000000000006', 'pending', 'Order placed', NOW() - INTERVAL '45 minutes'),
   ('05000000-0006-4000-8000-000000000002', '0d000000-0000-4000-8000-000000000006', 'accepted', 'Accepted', NOW() - INTERVAL '40 minutes'),
   ('05000000-0006-4000-8000-000000000003', '0d000000-0000-4000-8000-000000000006', 'preparing', 'Preparing', NOW() - INTERVAL '35 minutes'),
-  ('05000000-0006-4000-8000-000000000004', '0d000000-0000-4000-8000-000000000006', 'ready_for_pickup', 'Ready for pickup — awaiting driver', NOW() - INTERVAL '15 minutes')
+  ('05000000-0006-4000-8000-000000000004', '0d000000-0000-4000-8000-000000000006', 'ready_for_pickup', 'Ready for pickup — awaiting driver', NOW() - INTERVAL '15 minutes'),
+  ('05000000-0007-4000-8000-000000000001', '0d000000-0000-4000-8000-000000000007', 'pending', 'Order placed (e2e customer-cancel fixture)', NOW()),
+  ('05000000-0008-4000-8000-000000000001', '0d000000-0000-4000-8000-000000000008', 'pending', 'Order placed (e2e chef-reject fixture)', NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
@@ -695,6 +731,31 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
+-- SECTION 14B: ASSIGNMENT ATTEMPTS (pending driver offer)
+-- ============================================================
+-- Live delivery offer for the seeded unassigned pending delivery
+-- (b2b2b2b2-…) targeted at Mike (mike.driver@ridendine.ca) — required by the
+-- driver "decline a delivery offer" negative-path Playwright test. The
+-- driver-app GET /api/offers filter is response='pending' AND
+-- expires_at > NOW(), so the 4-hour expiry comfortably outlives the suite.
+-- Schema (00007_central_engine_tables.sql): response CHECK IN
+-- ('pending', 'accepted', 'declined', 'expired', 'cancelled').
+
+INSERT INTO assignment_attempts (
+  id, delivery_id, driver_id, attempt_number,
+  offered_at, expires_at, response,
+  distance_meters, estimated_minutes, created_at
+)
+VALUES
+  ('0ffe0000-0000-4000-8000-000000000001',
+   'b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2',
+   'd2000000-0000-4000-8000-000000000001',
+   1,
+   NOW(), NOW() + INTERVAL '4 hours', 'pending',
+   3500, 12, NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
 -- SECTION 15: REVIEWS
 -- ============================================================
 
@@ -718,4 +779,30 @@ VALUES
    'ffffffff-ffff-ffff-ffff-ffffffffffff',
    5, 'The tonkotsu ramen broth was so rich and creamy. You can tell it was simmered for hours. Ryo is a true craftsman.',
    NOW() - INTERVAL '2 days' + INTERVAL '2 hours', NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- SECTION 16: REFUND CASES (pending ops/finance review)
+-- ============================================================
+-- One pending refund case against delivered order RND-001 (Alice, Every Bite
+-- Yum) so the ops-admin refund queue (/dashboard/finance/refunds) renders a
+-- populated queue with Approve/Deny actions. requested_by is Alice's
+-- auth.users id (NOT NULL FK). Schema (00007_central_engine_tables.sql):
+-- status CHECK IN ('pending', 'approved', 'denied', 'processing',
+-- 'completed', 'failed'); refund_reason VARCHAR(50) NOT NULL — value matches
+-- the engine RefundReason vocabulary ('quality_issue').
+-- approved_amount_cents stays NULL so the queue displays the requested
+-- amount ($18.99 — the Classic Smash Burger line).
+
+INSERT INTO refund_cases (
+  id, order_id, requested_by,
+  requested_amount_cents, refund_reason, refund_notes,
+  status, created_at, updated_at
+)
+VALUES
+  ('ca5e0000-0000-4000-8000-000000000001',
+   '0d000000-0000-4000-8000-000000000001',
+   '44444444-4444-4444-4444-444444444444',
+   1899, 'quality_issue', 'Burger arrived cold — customer requested a refund for the item.',
+   'pending', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;

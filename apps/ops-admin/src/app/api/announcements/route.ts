@@ -1,6 +1,12 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  insertNotifications,
+  listAnnouncementAudienceUserIds,
+  type AnnouncementAudience,
+  type SupabaseClient,
+} from '@ridendine/db';
 import {
   evaluateRateLimit,
   RATE_LIMIT_POLICIES,
@@ -35,23 +41,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Invalid audience. Use: ${validAudiences.join(', ')}` }, { status: 400 });
   }
 
-  const client = createAdminClient() as any;
-  let userIds: string[] = [];
+  const client = createAdminClient() as unknown as SupabaseClient;
 
   try {
-    if (audience === 'all_customers') {
-      const { data } = await client.from('customers').select('user_id');
-      userIds = (data || []).map((r: any) => r.user_id);
-    } else if (audience === 'all_chefs') {
-      const { data } = await client.from('chef_profiles').select('user_id');
-      userIds = (data || []).map((r: any) => r.user_id);
-    } else if (audience === 'all_drivers') {
-      const { data } = await client.from('drivers').select('user_id');
-      userIds = (data || []).map((r: any) => r.user_id);
-    } else if (audience === 'all_ops') {
-      const { data } = await client.from('platform_users').select('user_id').eq('is_active', true);
-      userIds = (data || []).map((r: any) => r.user_id);
-    }
+    const userIds = await listAnnouncementAudienceUserIds(
+      client,
+      audience as AnnouncementAudience
+    );
 
     if (userIds.length === 0) {
       return NextResponse.json({ success: true, data: { sent: 0, audience } });
@@ -69,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     for (let i = 0; i < notifications.length; i += 100) {
       const batch = notifications.slice(i, i + 100);
-      await client.from('notifications').insert(batch);
+      await insertNotifications(client, batch);
     }
 
     return NextResponse.json({

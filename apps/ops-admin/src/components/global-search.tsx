@@ -3,7 +3,14 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Package, User, ChefHat, Truck, MapPin } from 'lucide-react';
-import { createBrowserClient } from '@ridendine/db';
+import {
+  createBrowserClient,
+  searchChefsByName,
+  searchCustomersByText,
+  searchDriversByName,
+  searchOrdersByNumber,
+  type SupabaseClient,
+} from '@ridendine/db';
 
 interface SearchResult {
   type: 'order' | 'customer' | 'chef' | 'driver' | 'delivery';
@@ -21,12 +28,8 @@ const TYPE_ICON_COMPONENTS: Record<string, React.ComponentType<{ className?: str
   delivery: MapPin,
 };
 
-async function searchOrders(supabase: any, q: string): Promise<SearchResult[]> {
-  const { data } = await supabase
-    .from('orders')
-    .select('id, order_number, status, total')
-    .ilike('order_number', `%${q}%`)
-    .limit(5);
+async function searchOrders(supabase: SupabaseClient, q: string): Promise<SearchResult[]> {
+  const data = await searchOrdersByNumber(supabase, q, 5);
   return (data || []).map((o: any) => ({
     type: 'order' as const,
     id: o.id,
@@ -36,12 +39,8 @@ async function searchOrders(supabase: any, q: string): Promise<SearchResult[]> {
   }));
 }
 
-async function searchCustomers(supabase: any, q: string): Promise<SearchResult[]> {
-  const { data } = await supabase
-    .from('customers')
-    .select('id, first_name, last_name, email')
-    .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%`)
-    .limit(5);
+async function searchCustomers(supabase: SupabaseClient, q: string): Promise<SearchResult[]> {
+  const data = await searchCustomersByText(supabase, q, 5);
   return (data || []).map((c: any) => ({
     type: 'customer' as const,
     id: c.id,
@@ -51,12 +50,8 @@ async function searchCustomers(supabase: any, q: string): Promise<SearchResult[]
   }));
 }
 
-async function searchChefs(supabase: any, q: string): Promise<SearchResult[]> {
-  const { data } = await supabase
-    .from('chef_profiles')
-    .select('id, display_name, status')
-    .ilike('display_name', `%${q}%`)
-    .limit(5);
+async function searchChefs(supabase: SupabaseClient, q: string): Promise<SearchResult[]> {
+  const data = await searchChefsByName(supabase, q, 5);
   return (data || []).map((ch: any) => ({
     type: 'chef' as const,
     id: ch.id,
@@ -66,12 +61,8 @@ async function searchChefs(supabase: any, q: string): Promise<SearchResult[]> {
   }));
 }
 
-async function searchDrivers(supabase: any, q: string): Promise<SearchResult[]> {
-  const { data } = await supabase
-    .from('drivers')
-    .select('id, first_name, last_name, status')
-    .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%`)
-    .limit(5);
+async function searchDrivers(supabase: SupabaseClient, q: string): Promise<SearchResult[]> {
+  const data = await searchDriversByName(supabase, q, 5);
   return (data || []).map((d: any) => ({
     type: 'driver' as const,
     id: d.id,

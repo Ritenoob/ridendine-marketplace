@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@ridendine/ui';
-import { createBrowserClient } from '@ridendine/db';
+import { createBrowserClient, listRecentOrderTickerRows } from '@ridendine/db';
 import { opsOrdersChannel, parseOrdersRealtimeRow } from '@ridendine/db';
 
 interface RealtimeOrder {
@@ -30,12 +30,7 @@ export function RealTimeStats() {
     async function fetchInitial() {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
-      const { data } = await db
-        .from('orders')
-        .select('id, order_number, total, status, created_at')
-        .gte('created_at', fiveMinutesAgo)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      const data = await listRecentOrderTickerRows(db, fiveMinutesAgo, 10).catch(() => null);
 
       if (data) {
         const parsed = (data as RealtimeOrder[])

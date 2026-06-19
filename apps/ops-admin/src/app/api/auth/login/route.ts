@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerClient, createAdminClient } from '@ridendine/db';
+import {
+  createServerClient,
+  createAdminClient,
+  getActivePlatformUserByUserId,
+  type SupabaseClient,
+} from '@ridendine/db';
 import {
   evaluateRateLimit,
   RATE_LIMIT_POLICIES,
@@ -46,13 +51,8 @@ export async function POST(request: Request) {
     }
 
     // Verify user has a platform_users entry
-    const adminClient = createAdminClient();
-    const { data: platformUser } = await (adminClient as any)
-      .from('platform_users')
-      .select('id, role')
-      .eq('user_id', authData.user.id)
-      .eq('is_active', true)
-      .single();
+    const adminClient = createAdminClient() as unknown as SupabaseClient;
+    const platformUser = await getActivePlatformUserByUserId(adminClient, authData.user.id);
 
     if (!platformUser) {
       await supabase.auth.signOut();

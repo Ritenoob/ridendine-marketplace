@@ -16,22 +16,26 @@
  *   - Chef logins: tuan@ridendine.ca (HOÀNG GIA PHỞ), sean@ridendine.ca (Every Bite Yum)
  *   - Ops super_admin: ops@ridendine.ca / password123
  *   - Driver: mike.driver@ridendine.ca / password123 (approved)
- *   - Pending order RND-005 (0d000000-0000-4000-8000-000000000005) — owned by Alice, HOÀNG GIA PHỞ
+ *   - Pending order RND-007 (0d000000-0000-4000-8000-000000000007) — DEDICATED
+ *     customer-cancel fixture (Alice, Every Bite Yum, created_at NOW())
+ *   - Pending order RND-008 (0d000000-0000-4000-8000-000000000008) — DEDICATED
+ *     chef-reject fixture (Bob, HOÀNG GIA PHỞ / Tuan, created_at NOW())
+ *   - Pending driver offer 0ffe0000-… (assignment_attempts, response 'pending',
+ *     expires NOW()+4h) on the unassigned delivery b2b2b2b2-… offered to Mike
+ *   - Pending refund case ca5e0000-… (refund_cases, status 'pending') against
+ *     delivered order RND-001
  *   - Delivered order RND-001 (0d000000-0000-4000-8000-000000000001) — Every Bite Yum (terminal status)
  *   - Approved chef Ryo (cccccccc-…) with active storefront COOCO (ffffffff-…)
  *   - Storefront every-bite-yum (dddddddd-…) with menu items
  *
- * Known fixture constraints (documented skip guards, not hard failures):
- *   - RND-005 is the ONLY seeded pending order and is contended by three
- *     scenarios (customer cancel here, chef reject here, chef accept in
- *     chef.spec.ts) plus the chef-admin 8-minute auto-expiry reject. Whichever
- *     test reaches it first wins; the others skip via guards.
- *   - The seed contains no `assignment_attempts` rows, so the driver
- *     decline-offer test skips unless the dispatch engine has generated a live
- *     offer for the seeded driver at runtime.
- *   - The seed contains no `refund_cases` rows, so the Stripe-gated refund
- *     approval test skips; the refund-queue test still verifies the flow up to
- *     the confirmation point (queue + Approve/Deny actions or empty state).
+ * Remaining runtime guards (graceful skips for stale local DBs only — a fresh
+ * `supabase db reset` makes every test below run):
+ *   - RND-007 / RND-008 are dedicated to this spec (RND-005 stays the
+ *     chef.spec.ts accept fixture), so there is no cross-test contention; the
+ *     skips only fire when a previous partial run already consumed a fixture.
+ *   - The driver decline test prefers the seeded offer and skips only when no
+ *     live pending offer exists for the seeded driver.
+ *   - The refund approval test stays Stripe-gated (STRIPE_SECRET_KEY).
  */
 
 import { expect, test } from '@playwright/test';
@@ -41,8 +45,12 @@ import type { Page } from '@playwright/test';
 
 const SEED_STOREFRONT_SLUG = 'every-bite-yum';
 const SEED_STOREFRONT_EBY_ID = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
-const SEED_PENDING_ORDER_ID = '0d000000-0000-4000-8000-000000000005'; // RND-005, pending, Alice
+const SEED_CANCELLABLE_ORDER_ID = '0d000000-0000-4000-8000-000000000007'; // RND-007, pending, Alice, EBY
+const SEED_REJECTABLE_ORDER_NUMBER = 'RND-008'; // 0d000000-…-008, pending, HOÀNG GIA PHỞ (Tuan)
 const SEED_DELIVERED_ORDER_ID = '0d000000-0000-4000-8000-000000000001'; // RND-001, delivered, EBY
+const SEED_REFUNDED_ORDER_NUMBER = 'RND-001'; // order behind the seeded refund case
+const SEED_UNASSIGNED_DELIVERY_ID = 'b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2';
+const SEED_DRIVER_OFFER_ATTEMPT_ID = '0ffe0000-0000-4000-8000-000000000001'; // pending offer for Mike
 const SEED_CHEF_RYO_ID = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 const SEED_STOREFRONT_COOCO_ID = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
 const SEED_STOREFRONT_COOCO_SLUG = 'cooco';
@@ -140,17 +148,20 @@ test.describe('customer negative paths @lifecycle @negative', () => {
   test.use({ baseURL: 'http://127.0.0.1:3000' });
 
   test('customer can cancel a pending order from the tracking page', async ({ page }) => {
-    // Uses seed order RND-005 (pending, owned by Alice). The customer cancel
-    // API only allows engine_status pending/payment_authorized/checkout_pending,
-    // which matches the seeded default engine_status of 'pending'.
+    // Uses seed order RND-007 (pending, owned by Alice) — a DEDICATED fixture
+    // for this test, so no other lifecycle scenario contends for it. The
+    // customer cancel API only allows engine_status
+    // pending/payment_authorized/checkout_pending, which matches the seeded
+    // engine_status of 'pending'.
     await signInWebCustomer(page, 'alice@example.com');
-    await page.goto(`/orders/${SEED_PENDING_ORDER_ID}/confirmation`);
+    await page.goto(`/orders/${SEED_CANCELLABLE_ORDER_ID}/confirmation`);
 
     const cancelBtn = page.getByRole('button', { name: /cancel order/i });
     if (!(await becomesVisible(cancelBtn, 10_000))) {
-      // RND-005 is contended: chef accept/reject tests and the chef-admin
-      // auto-expiry reject may already have moved it out of 'placed'.
-      test.skip(true, 'Seed order RND-005 is no longer cancellable (consumed by a competing lifecycle test)');
+      // RND-007 is dedicated to this test; the only way it is not cancellable
+      // is a stale local DB where a previous run already cancelled it (or the
+      // 8-minute acceptance timeout elapsed since the seed was applied).
+      test.skip(true, 'Seed order RND-007 is no longer pending at runtime (stale local DB — run supabase db reset)');
     }
     await cancelBtn.click();
 
@@ -241,22 +252,31 @@ test.describe('chef negative paths @lifecycle @negative', () => {
   test.use({ baseURL: 'http://127.0.0.1:3001' });
 
   test('chef can reject a pending order with a reason', async ({ page }) => {
-    // Uses seed order RND-005 (pending, HOÀNG GIA PHỞ / Tuan). The kitchen UI's
-    // Reject action posts { action: 'reject', reason: 'other', notes: 'Rejected
-    // by chef' } — the engine refuses rejects without a reason (MISSING_REASON).
+    // Uses seed order RND-008 (pending, HOÀNG GIA PHỞ / Tuan) — a DEDICATED
+    // fixture for this test (chef.spec.ts accept targets RND-005). The kitchen
+    // UI's Reject action posts { action: 'reject', reason: 'other', notes:
+    // 'Rejected by chef' } — the engine refuses rejects without a reason
+    // (MISSING_REASON).
     await signInChefAdmin(page, 'tuan@ridendine.ca');
     await page.goto('/dashboard/orders');
 
-    const rejectBtn = page.getByRole('button', { name: /^reject$/i }).first();
+    // Scope to the RND-008 order card (the @ridendine/ui Card renders
+    // div.bg-surface; `.last()` picks the innermost match, i.e. the card
+    // itself rather than a page-level container).
+    const orderCard = page
+      .locator('div.bg-surface')
+      .filter({ hasText: SEED_REJECTABLE_ORDER_NUMBER })
+      .last();
+    const rejectBtn = orderCard.getByRole('button', { name: /^reject$/i });
     if (!(await becomesVisible(rejectBtn, 8_000))) {
-      // RND-005 already consumed: accepted (chef.spec), cancelled (customer
-      // cancel above), or auto-rejected by the 8-minute acceptance timeout
-      // (the seed creates it 10 minutes in the past).
-      test.skip(true, 'Seed order RND-005 is no longer pending (consumed by a competing lifecycle test or auto-expiry)');
+      // RND-008 is dedicated to this test; it can only be missing on a stale
+      // local DB where a previous run already rejected it (or the 8-minute
+      // acceptance timeout elapsed since the seed was applied).
+      test.skip(true, 'Seed order RND-008 is no longer pending at runtime (stale local DB — run supabase db reset)');
     }
     await rejectBtn.click();
 
-    await expect(page.getByText(/rejected/i).first()).toBeVisible({ timeout: 10_000 });
+    await expect(orderCard.getByText(/rejected/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('order action on a terminal-state order is refused gracefully by the API', async ({ page }) => {
@@ -313,26 +333,27 @@ test.describe('ops negative paths @lifecycle @negative', () => {
   test('refund queue renders the flow up to the approval confirmation point', async ({ page }) => {
     // The actual Stripe refund only happens after Approve is clicked — this
     // test deliberately stops at the confirmation point so it can run without
-    // STRIPE_SECRET_KEY.
+    // STRIPE_SECRET_KEY. seed.sql ships a pending refund case (ca5e0000-…,
+    // $18.99 quality_issue against delivered order RND-001), so the queue
+    // must render populated with the case row and its Approve/Deny actions.
     await page.goto('/dashboard/finance/refunds');
     await expect(page.getByText(/refund queue/i).first()).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText(/pending refund exposure/i).first()).toBeVisible();
 
     const approveBtn = page.getByRole('button', { name: /^approve$/i }).first();
-    if (await becomesVisible(approveBtn, 5_000)) {
-      // Confirmation point reached: a pending case exposes Approve/Deny.
-      await expect(page.getByRole('button', { name: /^deny$/i }).first()).toBeVisible();
-    } else {
-      // seed.sql ships no refund_cases fixture — the graceful empty state is
-      // the expected steady-state outcome.
-      await expect(
-        page.getByText(/no pending refunds|no refund cases awaiting review/i).first()
-      ).toBeVisible();
+    if (!(await becomesVisible(approveBtn, 10_000))) {
+      // The seeded case is dedicated to this suite; it is only absent on a
+      // stale local DB where an earlier Stripe-gated run approved/denied it.
+      test.skip(true, 'Seeded refund case ca5e0000-… is no longer pending at runtime (stale local DB — run supabase db reset)');
     }
+    // Confirmation point reached: the seeded case row exposes Approve/Deny.
+    await expect(page.getByText(SEED_REFUNDED_ORDER_NUMBER).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /^deny$/i }).first()).toBeVisible();
   });
 
   test('ops can approve a pending refund case (Stripe-gated)', async ({ page }) => {
     if (!process.env.STRIPE_SECRET_KEY) {
+      // Approving triggers a real Stripe refund — keep this gate.
       test.skip();
     }
     await page.goto('/dashboard/finance/refunds');
@@ -340,9 +361,9 @@ test.describe('ops negative paths @lifecycle @negative', () => {
 
     const approveBtn = page.getByRole('button', { name: /^approve$/i }).first();
     if (!(await becomesVisible(approveBtn, 5_000))) {
-      // seed.sql contains no refund_cases rows; a case only exists if an
-      // earlier run (or manual ops action) requested one.
-      test.skip(true, 'No pending refund case fixture in seed.sql — refund approval requires a runtime-created case');
+      // seed.sql ships a pending case (ca5e0000-…); it is only absent when a
+      // previous Stripe-gated run on a stale local DB already reviewed it.
+      test.skip(true, 'Seeded refund case ca5e0000-… is no longer pending at runtime (stale local DB — run supabase db reset)');
     }
     await approveBtn.click();
     await expect(page.getByText(/finance action failed/i)).toBeHidden({ timeout: 10_000 });
@@ -441,9 +462,11 @@ test.describe('driver negative paths @lifecycle @negative', () => {
     await signInDriver(page);
 
     // Offers live in assignment_attempts (response='pending', unexpired).
-    // seed.sql ships an unassigned pending delivery (b2b2b2b2-…) but NO
-    // assignment_attempts row — offers are generated at runtime by the
-    // dispatch engine. Skip when no live offer exists for the seeded driver.
+    // seed.sql ships a pending offer (0ffe0000-…, attempt 1, expires NOW()+4h)
+    // on the unassigned pending delivery (b2b2b2b2-…) offered to the seeded
+    // driver Mike, so GET /api/offers returns at least that offer on a fresh
+    // DB. Skip only if no live pending offer exists at runtime (stale local
+    // DB where a previous run already declined it).
     const offersBefore = await page.evaluate(async () => {
       const response = await fetch('/api/offers');
       const body = await response.json().catch(() => null);
@@ -453,10 +476,16 @@ test.describe('driver negative paths @lifecycle @negative', () => {
 
     expect(offersBefore.ok, `GET /api/offers failed with ${offersBefore.status}`).toBe(true);
     if (!Array.isArray(offersBefore.offers) || offersBefore.offers.length === 0) {
-      test.skip(true, 'No live delivery offer for the seeded driver — seed.sql has no assignment_attempts fixture; offers are created by the dispatch engine at runtime');
+      test.skip(true, 'No live pending offer for the seeded driver (seeded offer 0ffe0000-… already consumed — stale local DB, run supabase db reset)');
     }
 
-    const offer = offersBefore.offers[0] as { attemptId: string; deliveryId: string };
+    // Prefer the seeded fixture offer; fall back to any live offer (e.g. one
+    // generated by the dispatch engine during the suite).
+    const liveOffers = offersBefore.offers as Array<{ attemptId: string; deliveryId: string }>;
+    const offer =
+      liveOffers.find((o) => o.attemptId === SEED_DRIVER_OFFER_ATTEMPT_ID) ??
+      liveOffers.find((o) => o.deliveryId === SEED_UNASSIGNED_DELIVERY_ID) ??
+      liveOffers[0];
 
     // Decline through the same API contract the OfferAlert UI uses.
     const declineResult = await page.evaluate(async (attemptId) => {

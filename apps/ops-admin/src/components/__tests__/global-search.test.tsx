@@ -2,11 +2,17 @@ import React from 'react';
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 
 // Mock @ridendine/db
-const mockSupabase = {
-  from: jest.fn(),
-};
+const mockSupabase = { __id: 'browser-client' };
+const mockSearchOrdersByNumber = jest.fn();
+const mockSearchCustomersByText = jest.fn();
+const mockSearchChefsByName = jest.fn();
+const mockSearchDriversByName = jest.fn();
 jest.mock('@ridendine/db', () => ({
   createBrowserClient: jest.fn(() => mockSupabase),
+  searchOrdersByNumber: (...args: unknown[]) => mockSearchOrdersByNumber(...args),
+  searchCustomersByText: (...args: unknown[]) => mockSearchCustomersByText(...args),
+  searchChefsByName: (...args: unknown[]) => mockSearchChefsByName(...args),
+  searchDriversByName: (...args: unknown[]) => mockSearchDriversByName(...args),
 }));
 
 // Mock next/navigation
@@ -17,20 +23,22 @@ jest.mock('next/navigation', () => ({
 
 import { GlobalSearch } from '../global-search';
 
-function makeQueryBuilder(rows: any[]) {
-  const builder: any = {
-    select: jest.fn().mockReturnThis(),
-    ilike: jest.fn().mockReturnThis(),
-    or: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockResolvedValue({ data: rows }),
-  };
-  return builder;
+function installSearchResults({
+  orders = [] as any[],
+  customers = [] as any[],
+  chefs = [] as any[],
+  drivers = [] as any[],
+} = {}) {
+  mockSearchOrdersByNumber.mockResolvedValue(orders);
+  mockSearchCustomersByText.mockResolvedValue(customers);
+  mockSearchChefsByName.mockResolvedValue(chefs);
+  mockSearchDriversByName.mockResolvedValue(drivers);
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
   jest.useFakeTimers();
-  mockSupabase.from.mockReturnValue(makeQueryBuilder([]));
+  installSearchResults();
 });
 
 afterEach(() => {
@@ -87,7 +95,7 @@ describe('GlobalSearch', () => {
   });
 
   it('shows "No results found" when query returns empty', async () => {
-    mockSupabase.from.mockReturnValue(makeQueryBuilder([]));
+    installSearchResults();
     render(<GlobalSearch />);
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: /open search/i })); });
     const input = screen.getByPlaceholderText(/search orders/i);
@@ -102,10 +110,7 @@ describe('GlobalSearch', () => {
     const orderRows = [
       { id: 'ord1', order_number: 'ORD-001', status: 'pending', total: '25.00' },
     ];
-    mockSupabase.from.mockImplementation((table: string) => {
-      if (table === 'orders') return makeQueryBuilder(orderRows);
-      return makeQueryBuilder([]);
-    });
+    installSearchResults({ orders: orderRows });
 
     render(<GlobalSearch />);
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: /open search/i })); });
@@ -121,10 +126,7 @@ describe('GlobalSearch', () => {
     const orderRows = [
       { id: 'ord1', order_number: 'ORD-001', status: 'pending', total: '25.00' },
     ];
-    mockSupabase.from.mockImplementation((table: string) => {
-      if (table === 'orders') return makeQueryBuilder(orderRows);
-      return makeQueryBuilder([]);
-    });
+    installSearchResults({ orders: orderRows });
 
     render(<GlobalSearch />);
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: /open search/i })); });
@@ -140,10 +142,7 @@ describe('GlobalSearch', () => {
     const orderRows = [
       { id: 'ord1', order_number: 'ORD-001', status: 'pending', total: '25.00' },
     ];
-    mockSupabase.from.mockImplementation((table: string) => {
-      if (table === 'orders') return makeQueryBuilder(orderRows);
-      return makeQueryBuilder([]);
-    });
+    installSearchResults({ orders: orderRows });
 
     render(<GlobalSearch />);
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: /open search/i })); });

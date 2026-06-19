@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listCompletedProcessorRuns,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { checkSystemHealth } from '@ridendine/engine';
 import { getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 
@@ -12,11 +16,6 @@ const TRACKED_PROCESSORS = [
   'payouts-driver-preview',
   'reconciliation-daily',
 ] as const;
-
-type ProcessorRunsRow = {
-  processor_name: string;
-  finished_at: string | null;
-};
 
 function envReadiness() {
   const required = [
@@ -35,7 +34,7 @@ function envReadiness() {
 }
 
 async function processorRunsReadiness(
-  client: { from: (table: string) => any },
+  client: SupabaseClient,
 ): Promise<Record<string, { lastSuccessAt: string | null }>> {
   const initial: Record<string, { lastSuccessAt: string | null }> = {};
   for (const name of TRACKED_PROCESSORS) {
@@ -43,16 +42,10 @@ async function processorRunsReadiness(
   }
 
   try {
-    const { data, error } = await client
-      .from('ops_processor_runs')
-      .select('processor_name, finished_at')
-      .eq('status', 'completed')
-      .order('finished_at', { ascending: false })
-      .limit(50);
+    const data = await listCompletedProcessorRuns(client, 50);
+    if (!Array.isArray(data)) return initial;
 
-    if (error || !Array.isArray(data)) return initial;
-
-    for (const row of data as ProcessorRunsRow[]) {
+    for (const row of data) {
       const slot = initial[row.processor_name];
       if (!slot) continue;
       if (slot.lastSuccessAt === null && row.finished_at) {
@@ -74,7 +67,7 @@ export async function GET() {
     const client = createAdminClient();
     const [health, processorRuns] = await Promise.all([
       checkSystemHealth(client as any),
-      processorRunsReadiness(client as unknown as { from: (table: string) => any }),
+      processorRunsReadiness(client as unknown as SupabaseClient),
     ]);
     const readiness = {
       env: envReadiness(),

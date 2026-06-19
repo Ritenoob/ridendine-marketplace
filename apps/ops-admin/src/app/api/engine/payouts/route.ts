@@ -1,6 +1,15 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listBankChefPayouts,
+  listChefPayableLedgerTotals,
+  listChefPayoutAccountRefs,
+  listChefPayoutTotalsByStatuses,
+  listChefProfileRefs,
+  listStorefrontChefRefs,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { finalizeOpsActor, getEngine, getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 import { bankPayoutCommandSchema, type OpsCommandInput } from '@ridendine/validation';
 import { operationResultResponse, parseJsonBody } from '@/lib/validation';
@@ -27,34 +36,22 @@ export async function GET() {
   const opsActor = finalizeOpsActor(actor, guardPlatformApi(actor, 'finance_payouts'));
   if (opsActor instanceof Response) return opsActor;
 
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
 
-  const { data: chefPayables } = await client
-    .from('ledger_entries')
-    .select('entity_id, amount_cents')
-    .eq('entry_type', 'chef_payable')
-    .eq('entity_type', 'chef');
+  const chefPayables = await listChefPayableLedgerTotals(client);
 
   const chefTotals = buildChefTotals(chefPayables || []);
 
-  const { data: paidPayouts } = await client
-    .from('chef_payouts')
-    .select('chef_id, amount')
-    .in('status', ['scheduled', 'approved', 'exported', 'bank_submitted', 'paid', 'reconciled']);
+  const paidPayouts = await listChefPayoutTotalsByStatuses(client, [
+    'scheduled', 'approved', 'exported', 'bank_submitted', 'paid', 'reconciled',
+  ]);
 
   const paidTotals = buildPaidTotals(paidPayouts || []);
 
   const chefIds = [...chefTotals.keys()];
-  const { data: chefs } = chefIds.length > 0
-    ? await client.from('chef_profiles').select('id, display_name, user_id').in('id', chefIds)
-    : { data: [] };
-  const { data: storefronts } = chefIds.length > 0
-    ? await client.from('chef_storefronts').select('id, chef_id').in('chef_id', chefIds)
-    : { data: [] };
-
-  const { data: payoutAccounts } = chefIds.length > 0
-    ? await client.from('chef_payout_accounts').select('chef_id, stripe_account_id, payout_enabled').in('chef_id', chefIds)
-    : { data: [] };
+  const chefs = chefIds.length > 0 ? await listChefProfileRefs(client, chefIds) : [];
+  const storefronts = chefIds.length > 0 ? await listStorefrontChefRefs(client, chefIds) : [];
+  const payoutAccounts = chefIds.length > 0 ? await listChefPayoutAccountRefs(client, chefIds) : [];
 
   const accountMap = new Map<string, { stripe_account_id?: string; payout_enabled?: boolean }>(
     (payoutAccounts || []).map((a: any) => [a.chef_id, a])
@@ -82,11 +79,9 @@ export async function GET() {
     })
     .filter((c: any) => c.balance > 0);
 
-  const { data: bankPayoutsRaw } = await client
-    .from('chef_payouts')
-    .select('id, chef_id, amount, status, payment_rail, bank_batch_id, bank_reference, reconciliation_status, created_at')
-    .eq('payment_rail', 'bank')
-    .in('status', ['scheduled', 'approved', 'exported', 'bank_submitted', 'paid']);
+  const bankPayoutsRaw = await listBankChefPayouts(client, [
+    'scheduled', 'approved', 'exported', 'bank_submitted', 'paid',
+  ]);
 
   const bankPayouts = (bankPayoutsRaw || []).map((p: any) => {
     const chef = (chefs || []).find((c: any) => c.id === p.chef_id);

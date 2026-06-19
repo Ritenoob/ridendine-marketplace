@@ -26,11 +26,19 @@ export interface AuthMiddlewareConfig {
   authRoutes?: string[];
   /** Protected route prefixes — only these routes require auth (if set, default-protect is off) */
   protectedRoutes?: string[];
+  /**
+   * Optional per-request Content-Security-Policy builder. When provided, a
+   * fresh nonce is generated per request, injected into the request headers as
+   * `x-nonce` + `Content-Security-Policy` (so Next.js applies the nonce to its
+   * own inline scripts), and the returned CSP string is set on every response.
+   * This lets a CSP drop `'unsafe-inline'`/`'unsafe-eval'` for scripts.
+   */
+  cspBuilder?: (nonce: string) => string;
 }
 
-function createSupabaseMiddlewareClient(request: NextRequest) {
+function createSupabaseMiddlewareClient(request: NextRequest, requestHeaders: Headers) {
   let response = NextResponse.next({
-    request: { headers: request.headers },
+    request: { headers: requestHeaders },
   });
 
   const supabase = createServerClient(
@@ -46,7 +54,7 @@ function createSupabaseMiddlewareClient(request: NextRequest) {
             request.cookies.set({ name, value, ...options });
           });
           response = NextResponse.next({
-            request: { headers: request.headers },
+            request: { headers: requestHeaders },
           });
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set({ name, value, ...options });
@@ -84,10 +92,27 @@ export function createAuthMiddleware(config: AuthMiddlewareConfig) {
     authenticatedRedirect = '/',
     authRoutes,
     protectedRoutes,
+    cspBuilder,
   } = config;
 
   return async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+
+    // Build per-request CSP context (nonce + header) when configured. The
+    // augmented request headers are forwarded to the renderer so Next.js can
+    // nonce its own inline scripts.
+    const requestHeaders = new Headers(request.headers);
+    let csp: string | undefined;
+    if (cspBuilder) {
+      const nonce = btoa(crypto.randomUUID());
+      csp = cspBuilder(nonce);
+      requestHeaders.set('x-nonce', nonce);
+      requestHeaders.set('Content-Security-Policy', csp);
+    }
+    const withCsp = <T extends NextResponse>(res: T): T => {
+      if (csp) res.headers.set('Content-Security-Policy', csp);
+      return res;
+    };
 
     // Dev autologin — opt-in shortcut for local development only.
     // Never honored in production regardless of env value.
@@ -95,10 +120,10 @@ export function createAuthMiddleware(config: AuthMiddlewareConfig) {
       process.env.NODE_ENV !== 'production' &&
       process.env.ALLOW_DEV_AUTOLOGIN === 'true'
     ) {
-      return NextResponse.next();
+      return withCsp(NextResponse.next({ request: { headers: requestHeaders } }));
     }
 
-    const { supabase, response } = createSupabaseMiddlewareClient(request);
+    const { supabase, response } = createSupabaseMiddlewareClient(request, requestHeaders);
 
     // SECURITY: use getUser() — it verifies the JWT against the Supabase Auth
     // server. getSession() only decodes the cookie locally, which a client can
@@ -126,14 +151,14 @@ export function createAuthMiddleware(config: AuthMiddlewareConfig) {
     if (needsAuth && !user) {
       const redirectUrl = new URL(loginRoute, request.url);
       redirectUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(redirectUrl);
+      return withCsp(NextResponse.redirect(redirectUrl));
     }
 
     // Redirect authenticated users away from auth pages
     if (isAuthRoute && user) {
-      return NextResponse.redirect(new URL(authenticatedRedirect, request.url));
+      return withCsp(NextResponse.redirect(new URL(authenticatedRedirect, request.url)));
     }
 
-    return response();
+    return withCsp(response());
   };
 }

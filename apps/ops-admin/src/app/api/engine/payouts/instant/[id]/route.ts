@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import { createAdminClient, getInstantPayoutRequestById, type SupabaseClient } from '@ridendine/db';
 import { getEngine, getOpsActorContext, guardPlatformApi, successResponse, errorResponse, finalizeOpsActor } from '@/lib/engine';
 import { AuditAction } from '@ridendine/types';
 
@@ -14,12 +14,8 @@ export async function POST(
   if (opsActor instanceof Response) return opsActor;
 
   const { id } = await context.params;
-  const client = createAdminClient();
-  const { data: row } = await client
-    .from('instant_payout_requests')
-    .select('id, driver_id, amount_cents, status')
-    .eq('id', id)
-    .single();
+  const client = createAdminClient() as unknown as SupabaseClient;
+  const row = await getInstantPayoutRequestById(client, id);
 
   if (!row || row.status !== 'pending') {
     return errorResponse('NOT_FOUND', 'Instant payout request not found or not pending', 404);

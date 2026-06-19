@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { AuditAction } from '@ridendine/types';
-import { createAdminClient } from '@ridendine/db';
+import { createAdminClient, getProcessingPayoutRun, type SupabaseClient } from '@ridendine/db';
 import { bankPayoutCommandSchema } from '@ridendine/validation';
 import { getEngine, getOpsActorContext, guardPlatformApi, successResponse, errorResponse, finalizeOpsActor } from '@/lib/engine';
 
@@ -42,14 +42,8 @@ export async function POST(request: NextRequest) {
   // C.5 / O2 — refuse to start a second concurrent run for this rail.
   // The migration 00032 partial unique index is the ironclad guard; this is
   // the friendly 409 the UI can show instead of a generic DB error.
-  const adminClient = createAdminClient();
-  const { data: inProgress } = await adminClient
-    .from('payout_runs')
-    .select('id')
-    .eq('run_type', runType)
-    .eq('status', 'processing')
-    .limit(1)
-    .maybeSingle();
+  const adminClient = createAdminClient() as unknown as SupabaseClient;
+  const inProgress = await getProcessingPayoutRun(adminClient, runType);
   if (inProgress) {
     return errorResponse(
       'PAYOUT_RUN_IN_PROGRESS',

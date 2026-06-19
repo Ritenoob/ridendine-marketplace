@@ -158,3 +158,73 @@ export async function getActivePromoCodes(
   if (error) throw error;
   return data as PromoCode[];
 }
+
+// ==========================================
+// OPS-ADMIN PROMO MANAGEMENT
+// ==========================================
+
+/** All promo codes (active and inactive), newest first. */
+export async function listAllPromoCodes(
+  client: SupabaseClient
+): Promise<PromoCode[]> {
+  const { data, error } = await client
+    .from('promo_codes')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as PromoCode[];
+}
+
+export interface PromoCodeCreateInput {
+  code: string;
+  discount_type: string;
+  discount_value: number;
+  min_order_amount: number;
+  usage_limit: number | null;
+  usage_count: number;
+  starts_at: string | null;
+  expires_at: string | null;
+  is_active: boolean;
+}
+
+/** Create a promo code and return the inserted row. */
+export async function createPromoCode(
+  client: SupabaseClient,
+  input: PromoCodeCreateInput
+): Promise<PromoCode> {
+  const { data, error } = await client
+    .from('promo_codes')
+    .insert(input as never)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as PromoCode;
+}
+
+/** Toggle a promo code's active flag and return the updated row. */
+export async function setPromoCodeActive(
+  client: SupabaseClient,
+  id: string,
+  isActive: boolean
+): Promise<PromoCode> {
+  const { data, error } = await client
+    .from('promo_codes')
+    .update({ is_active: isActive, updated_at: new Date().toISOString() } as never)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as PromoCode;
+}
+
+/** Permanently delete a promo code. */
+export async function deletePromoCode(
+  client: SupabaseClient,
+  id: string
+): Promise<void> {
+  const { error } = await client.from('promo_codes').delete().eq('id', id);
+  if (error) throw error;
+}

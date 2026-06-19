@@ -14,10 +14,26 @@ export interface OutboxRequest {
   body: string;
 }
 
+/**
+ * A photo captured offline that still needs to be uploaded to /api/upload
+ * before the queued proof submission can carry a real storage URL. On replay
+ * the upload runs first and the returned URL is substituted into the request
+ * body at `field`; if the server rejects the upload outright (4xx), the raw
+ * data URL is substituted instead so the proof is never lost.
+ */
+export interface PendingUpload {
+  field: 'proofUrl' | 'signatureUrl';
+  dataUrl: string;
+  context: 'pickup' | 'dropoff' | 'signature';
+  deliveryId: string;
+}
+
 export interface OutboxEntryInput {
   kind: OutboxKind;
   deliveryId: string;
   request: OutboxRequest;
+  /** Uploads that must complete before this (proof) request is submitted. */
+  pendingUploads?: PendingUpload[];
 }
 
 export interface OutboxEntry extends OutboxEntryInput {
@@ -32,6 +48,12 @@ export interface OutboxStore {
   /** All entries in FIFO (ascending seq) order. */
   all(): Promise<OutboxEntry[]>;
   remove(id: string): Promise<void>;
+  /**
+   * Optional: persist in-place changes to an entry (same seq/id). Used to
+   * save pending-upload progress so a completed upload is not repeated when a
+   * later step of the same entry fails and the pass halts.
+   */
+  update?(entry: OutboxEntry): Promise<void>;
 }
 
 export interface ReplayResult {
@@ -39,6 +61,12 @@ export interface ReplayResult {
   replayed: OutboxEntry[];
   /** Entries the server rejected with a 4xx; removed, but surfaced to the UI. */
   dropped: Array<{ entry: OutboxEntry; message: string }>;
+  /**
+   * Proof entries whose pending photo upload was rejected by the server
+   * (real 4xx). The proof was still submitted with the raw data URL so it is
+   * not lost, but the rejection is surfaced to the UI.
+   */
+  uploadFallbacks: Array<{ entry: OutboxEntry; message: string }>;
   /** Entries still queued after this pass. */
   remaining: number;
 }
@@ -66,6 +94,20 @@ export function extractApiErrorMessage(body: unknown, fallback: string): string 
     }
   }
   return fallback;
+}
+
+const UPLOAD_URL = '/api/upload';
+
+/** Re-serialize a JSON request body with one field replaced. */
+function withBodyField(body: string, field: string, value: string): string {
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(body) as Record<string, unknown>;
+  } catch {
+    parsed = {};
+  }
+  parsed[field] = value;
+  return JSON.stringify(parsed);
 }
 
 function newEntryId(): string {
@@ -101,11 +143,79 @@ export class OfflineOutbox {
     return run;
   }
 
+  /**
+   * Run the pending uploads for a proof entry, substituting each returned URL
+   * into the entry's request body. Mutates `entry` and persists progress so a
+   * completed upload is never repeated on a later pass.
+   *
+   * Returns 'halt' when an upload could not reach the server (network error,
+   * SW offline 503, or genuine 5xx) — the entry stays queued and the caller
+   * must stop the pass to preserve FIFO order.
+   */
+  private async resolvePendingUploads(
+    entry: OutboxEntry,
+    uploadFallbacks: ReplayResult['uploadFallbacks']
+  ): Promise<'resolved' | 'halt'> {
+    const pending = [...(entry.pendingUploads ?? [])];
+
+    while (pending.length > 0) {
+      const upload = pending[0]!;
+      let response: OutboxResponse;
+      try {
+        response = await this.fetchFn(UPLOAD_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dataUrl: upload.dataUrl,
+            context: upload.context,
+            deliveryId: upload.deliveryId,
+          }),
+        });
+      } catch {
+        return 'halt'; // Still offline.
+      }
+
+      const body = await response.json().catch(() => null);
+      if (isOfflineApiError(response.status, body)) return 'halt';
+
+      const url =
+        response.ok && body && typeof body === 'object'
+          ? (body as Record<string, unknown>).url
+          : undefined;
+
+      if (typeof url === 'string') {
+        entry.request.body = withBodyField(entry.request.body, upload.field, url);
+      } else if (response.ok || (response.status >= 400 && response.status < 500)) {
+        // The server made a real decision (or returned a malformed success) —
+        // fall back to submitting the raw data URL so the proof is not lost.
+        entry.request.body = withBodyField(entry.request.body, upload.field, upload.dataUrl);
+        uploadFallbacks.push({
+          entry,
+          message: extractApiErrorMessage(body, `Photo upload failed (${response.status})`),
+        });
+      } else {
+        return 'halt'; // Genuine 5xx: retry this upload on the next pass.
+      }
+
+      pending.shift();
+      entry.pendingUploads = pending.length > 0 ? [...pending] : undefined;
+      await this.store.update?.(entry);
+    }
+
+    return 'resolved';
+  }
+
   private async replayPass(): Promise<ReplayResult> {
     const replayed: OutboxEntry[] = [];
     const dropped: ReplayResult['dropped'] = [];
+    const uploadFallbacks: ReplayResult['uploadFallbacks'] = [];
 
     for (const entry of await this.store.all()) {
+      if (entry.kind === 'proof' && entry.pendingUploads && entry.pendingUploads.length > 0) {
+        const outcome = await this.resolvePendingUploads(entry, uploadFallbacks);
+        if (outcome === 'halt') break; // Keep this entry and everything after it.
+      }
+
       let response: OutboxResponse;
       try {
         response = await this.fetchFn(entry.request.url, {
@@ -142,7 +252,7 @@ export class OfflineOutbox {
       break; // Genuine 5xx: keep FIFO order intact and retry on the next replay.
     }
 
-    return { replayed, dropped, remaining: (await this.store.all()).length };
+    return { replayed, dropped, uploadFallbacks, remaining: (await this.store.all()).length };
   }
 }
 
@@ -195,6 +305,10 @@ export function createIndexedDbStore(): OutboxStore {
       const rows = (await promisify(store.getAll())) as OutboxEntry[];
       const match = rows.find((row) => row.id === id);
       if (match) await promisify(store.delete(match.seq));
+    },
+    async update(entry) {
+      // keyPath is `seq`, so put() replaces the row in place, preserving FIFO.
+      await promisify((await objectStore('readwrite')).put(entry));
     },
   };
 }

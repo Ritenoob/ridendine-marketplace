@@ -78,6 +78,102 @@ export async function deleteAddress(
   if (error) throw error;
 }
 
+/**
+ * Ownership check: `{ id }` for an address only when it belongs to the given
+ * customer, otherwise null.
+ */
+export async function getCustomerAddressRef(
+  client: SupabaseClient,
+  addressId: string,
+  customerId: string
+): Promise<{ id: string } | null> {
+  const { data, error } = await client
+    .from('customer_addresses')
+    .select('id')
+    .eq('id', addressId)
+    .eq('customer_id', customerId)
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return (data as { id: string } | null) ?? null;
+}
+
+export interface AddressGeoFields {
+  address_line1: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  country: string | null;
+}
+
+/** Street/city/region fields used to (re)geocode an address. */
+export async function getAddressGeoFields(
+  client: SupabaseClient,
+  addressId: string
+): Promise<AddressGeoFields | null> {
+  const { data, error } = await client
+    .from('customer_addresses')
+    .select('address_line1, city, state, postal_code, country')
+    .eq('id', addressId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return data as unknown as AddressGeoFields;
+}
+
+export interface AddressCoordinates {
+  lat: number | null;
+  lng: number | null;
+}
+
+/** `lat, lng` for an address by id (no ownership filter). */
+export async function getAddressCoordinatesById(
+  client: SupabaseClient,
+  addressId: string
+): Promise<AddressCoordinates | null> {
+  const { data, error } = await client
+    .from('customer_addresses')
+    .select('lat, lng')
+    .eq('id', addressId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return data as unknown as AddressCoordinates;
+}
+
+/** `lat, lng` for an address, scoped to the owning customer. */
+export async function getCustomerAddressCoordinates(
+  client: SupabaseClient,
+  addressId: string,
+  customerId: string
+): Promise<AddressCoordinates | null> {
+  const { data, error } = await client
+    .from('customer_addresses')
+    .select('lat, lng')
+    .eq('id', addressId)
+    .eq('customer_id', customerId)
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return (data as AddressCoordinates | null) ?? null;
+}
+
 export async function setDefaultAddress(
   client: SupabaseClient,
   customerId: string,

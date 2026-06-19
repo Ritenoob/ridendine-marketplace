@@ -209,3 +209,89 @@ export async function updatePlatformSettings(
   }
   return mapPlatformSettings(data as PlatformSettingsRow);
 }
+
+// ==========================================
+// RAW SETTINGS ROW (maintenance / automation rules JSON)
+// ==========================================
+
+/**
+ * The first platform_settings row, unmapped. Maintenance mode and
+ * automation rules live in its `setting_value` JSON blob. Returns null
+ * when the table has no rows.
+ */
+export async function getRawPlatformSettingsRow(
+  client: SupabaseClient
+): Promise<Record<string, any> | null> {
+  const { data, error } = await client
+    .from('platform_settings')
+    .select('*')
+    .limit(1)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return data as unknown as Record<string, any>;
+}
+
+/** Just the `setting_value` JSON of the first platform_settings row, or null. */
+export async function getPlatformSettingValue(
+  client: SupabaseClient
+): Promise<Record<string, any> | null> {
+  const { data, error } = await client
+    .from('platform_settings')
+    .select('setting_value')
+    .limit(1)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+
+  return ((data as unknown as { setting_value?: Record<string, any> | null })?.setting_value ?? null);
+}
+
+// ==========================================
+// SERVICE AREAS (surge pricing)
+// ==========================================
+
+export interface ServiceAreaSurgeRow {
+  id: string;
+  name: string;
+  surge_multiplier: number | null;
+  is_active: boolean;
+  dispatch_radius_km: number | null;
+}
+
+/** All service areas with surge state, ordered by name. */
+export async function listServiceAreas(
+  client: SupabaseClient
+): Promise<ServiceAreaSurgeRow[]> {
+  const { data, error } = await client
+    .from('service_areas')
+    .select('id, name, surge_multiplier, is_active, dispatch_radius_km')
+    .order('name');
+
+  if (error) throw error;
+  return (data ?? []) as unknown as ServiceAreaSurgeRow[];
+}
+
+/** Override the surge multiplier on a service area; returns the new state. */
+export async function updateServiceAreaSurge(
+  client: SupabaseClient,
+  serviceAreaId: string,
+  surgeMultiplier: number
+): Promise<{ id: string; name: string; surge_multiplier: number | null }> {
+  const { data, error } = await client
+    .from('service_areas')
+    .update({ surge_multiplier: surgeMultiplier, updated_at: new Date().toISOString() } as never)
+    .eq('id', serviceAreaId)
+    .select('id, name, surge_multiplier')
+    .single();
+
+  if (error) throw error;
+  return data as unknown as { id: string; name: string; surge_multiplier: number | null };
+}

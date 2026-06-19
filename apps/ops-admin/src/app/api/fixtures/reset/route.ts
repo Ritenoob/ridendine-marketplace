@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import { createAdminClient, resetE2eOrderFixtures, type SupabaseClient } from '@ridendine/db';
 import { getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -23,23 +23,10 @@ export async function POST() {
   const denied = guardPlatformApi(actor, 'team_manage');
   if (denied) return denied;
 
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
   const testOrderNumbers = ['RD-E2E-LIFECYCLE'];
 
-  const { data: orders } = await client
-    .from('orders')
-    .select('id')
-    .in('order_number', testOrderNumbers);
-  const orderIds = (orders ?? []).map((order: { id: string }) => order.id);
-
-  if (orderIds.length > 0) {
-    await client.from('order_exceptions').delete().in('order_id', orderIds);
-    await client.from('deliveries').delete().in('order_id', orderIds);
-    await client.from('ledger_entries').delete().in('order_id', orderIds);
-    await client.from('order_status_history').delete().in('order_id', orderIds);
-    await client.from('order_items').delete().in('order_id', orderIds);
-    await client.from('orders').delete().in('id', orderIds);
-  }
+  const { orderIds } = await resetE2eOrderFixtures(client, testOrderNumbers);
 
   return NextResponse.json({
     success: true,

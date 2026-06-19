@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import { Badge, Card } from '@ridendine/ui';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getPayoutRunById,
+  listDriverPayoutsForRun,
+  listLedgerEntriesForPayoutRun,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getOpsActorContext, hasRequiredRole } from '@/lib/engine';
 import { FinanceSubnav } from '../../_components/FinanceSubnav';
@@ -22,20 +28,25 @@ export default async function FinancePayoutRunDetailPage({ params }: PageProps) 
     return <FinanceAccessDenied />;
   }
 
-  const admin = createAdminClient();
-  const { data: run, error } = await admin.from('payout_runs').select('*').eq('id', runId).maybeSingle();
+  const admin = createAdminClient() as unknown as SupabaseClient;
+  // The raw queries tolerated load failures (error renders "Run not found");
+  // repository failures degrade the same way.
+  let run: Record<string, unknown> | null = null;
+  let error = false;
+  try {
+    run = await getPayoutRunById(admin, runId);
+  } catch {
+    error = true;
+  }
 
-  const { data: ledgerLines } = await admin
-    .from('ledger_entries')
-    .select('id, created_at, entry_type, amount_cents, description, entity_id, metadata')
-    .contains('metadata', { payout_run_id: runId })
-    .order('created_at', { ascending: false })
-    .limit(200);
+  const ledgerLines = (await listLedgerEntriesForPayoutRun(admin, runId, 200).catch(
+    () => []
+  )) as unknown as Record<string, unknown>[];
 
-  const { data: driverLines } =
+  const driverLines =
     (run?.run_type as string) === 'driver'
-      ? await admin.from('driver_payouts').select('*').eq('payout_run_id', runId)
-      : { data: [] };
+      ? await listDriverPayoutsForRun(admin, runId).catch(() => [])
+      : [];
 
   return (
     <DashboardLayout>

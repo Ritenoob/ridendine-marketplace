@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { createAdminClient } from '@ridendine/db';
+import { createAdminClient, listPayoutRunSummaries, type SupabaseClient } from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getOpsActorContext, hasRequiredRole } from '@/lib/engine';
 import { PageHeader, EmptyState, StatusBadge } from '@ridendine/ui';
@@ -39,12 +39,16 @@ export default async function FinancePayoutRunsPage() {
     return <FinanceAccessDenied />;
   }
 
-  const admin = createAdminClient();
-  const { data: runs, error } = await admin
-    .from('payout_runs')
-    .select('id, run_type, status, period_start, period_end, total_amount, successful_payouts, failed_payouts, created_at')
-    .order('created_at', { ascending: false })
-    .limit(80);
+  const admin = createAdminClient() as unknown as SupabaseClient;
+  // The raw query tolerated load failures (error renders an empty state);
+  // a repository failure degrades the same way.
+  let runs: PayoutRun[] | null = null;
+  let error = false;
+  try {
+    runs = (await listPayoutRunSummaries(admin, 80)) as unknown as PayoutRun[];
+  } catch {
+    error = true;
+  }
 
   return (
     <DashboardLayout>

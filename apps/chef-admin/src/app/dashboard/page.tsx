@@ -196,6 +196,37 @@ async function getDashboardData(storefrontId: string) {
     earnedMonthOrders = [];
   }
 
+  // Week-over-week revenue for the Business Snapshot
+  const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const prevWeekStart = new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+  type SimpleOrderRow = { total: number | null };
+  let weekRevenue = 0;
+  let prevWeekRevenue = 0;
+  try {
+    const { data: thisWeekData } = await supabase
+      .from('orders')
+      .select('total')
+      .eq('storefront_id', storefrontId)
+      .in('status', EARNED_ORDER_STATUSES)
+      .gte('created_at', weekStart.toISOString());
+    weekRevenue = ((thisWeekData ?? []) as SimpleOrderRow[]).reduce(
+      (s, o) => s + Number(o.total || 0), 0
+    );
+    const { data: prevWeekData } = await supabase
+      .from('orders')
+      .select('total')
+      .eq('storefront_id', storefrontId)
+      .in('status', EARNED_ORDER_STATUSES)
+      .gte('created_at', prevWeekStart.toISOString())
+      .lt('created_at', weekStart.toISOString());
+    prevWeekRevenue = ((prevWeekData ?? []) as SimpleOrderRow[]).reduce(
+      (s, o) => s + Number(o.total || 0), 0
+    );
+  } catch {
+    weekRevenue = 0;
+    prevWeekRevenue = 0;
+  }
+
   // Order volume today (all statuses) — count only, no row transfer.
   let todayOrderCount = 0;
   try {
@@ -268,6 +299,8 @@ async function getDashboardData(storefrontId: string) {
       monthOrders: earnedMonthOrders.length,
       monthRevenue,
       averageTicket: earnedTodayOrders.length ? todayRevenue / earnedTodayOrders.length : 0,
+      weekRevenue,
+      prevWeekRevenue,
     },
     recentOrders: recentOrders.map(withCustomer),
     actionOrders: actionOrders.map(withCustomer),
@@ -755,7 +788,7 @@ export default async function DashboardPage() {
             </div>
             <Flame className="h-5 w-5 text-primary" />
           </div>
-          <div className="mt-5 space-y-3">
+          <div className="mt-5 space-y-2">
             <div className="flex items-center justify-between rounded-xl bg-surfaceMuted px-4 py-3">
               <span className="text-sm text-textMuted">Today revenue</span>
               <span className="font-bold text-text">{money(dashboard.stats.todayRevenue)}</span>
@@ -765,8 +798,29 @@ export default async function DashboardPage() {
               <span className="font-bold text-text">{money(dashboard.stats.averageTicket)}</span>
             </div>
             <div className="flex items-center justify-between rounded-xl bg-surfaceMuted px-4 py-3">
+              <span className="text-sm text-textMuted">This week</span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-text">{money(dashboard.stats.weekRevenue)}</span>
+                {dashboard.stats.prevWeekRevenue > 0 && (() => {
+                  const pct = ((dashboard.stats.weekRevenue - dashboard.stats.prevWeekRevenue) / dashboard.stats.prevWeekRevenue) * 100;
+                  const isUp = pct >= 0;
+                  return (
+                    <span className={`text-xs font-semibold ${isUp ? 'text-success' : 'text-danger'}`}>
+                      {isUp ? '+' : ''}{pct.toFixed(1)}%
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-surfaceMuted px-4 py-3">
               <span className="text-sm text-textMuted">Month revenue</span>
               <span className="font-bold text-text">{money(dashboard.stats.monthRevenue)}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-success/20 bg-successSoft px-4 py-3">
+              <span className="text-sm font-medium text-success">Est. net earnings (month)</span>
+              <span className="font-bold text-success">
+                {money(Math.max(0, dashboard.stats.monthRevenue * 0.821 - dashboard.stats.monthOrders * 0.30))}
+              </span>
             </div>
           </div>
         </div>

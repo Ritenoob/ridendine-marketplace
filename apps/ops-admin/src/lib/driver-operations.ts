@@ -3,6 +3,7 @@ import {
   type DriverComplianceDocumentInput,
   type DriverReadinessSignal,
 } from '@ridendine/types';
+import { getOpsDriverOperationsRawData, type SupabaseClient } from '@ridendine/db';
 import { getLocationHealth, type LocationHealth } from '@/lib/location-health';
 import {
   buildOpsDriverReadinessSignal,
@@ -85,18 +86,8 @@ export type OpsDriverOperationsSummary = {
   };
 };
 
-type QueryError = { message?: string; code?: string } | null;
-type QueryResult<T> = { data: T | null; error: QueryError };
-type ListResult<T> = { data: T[] | null; error: QueryError };
-
 function normalizeStatus(status: unknown): string {
   return typeof status === 'string' ? status.trim().toLowerCase() : '';
-}
-
-function throwIfError(result: { error: QueryError }, label: string) {
-  if (result.error) {
-    throw new Error(result.error.message ?? `${label} query failed`);
-  }
 }
 
 function one<T>(value: T | T[] | null | undefined): T | null {
@@ -153,88 +144,29 @@ export async function getOpsDriverOperationsSummary(
   driverId: string,
   now = new Date()
 ): Promise<OpsDriverOperationsSummary | null> {
-  const [
-    driverResult,
-    presenceResult,
-    activeDeliveriesResult,
-    exceptionsResult,
-    documentsResult,
-    payoutAccountResult,
-    platformAccountResult,
-  ] = await Promise.all([
-    client
-      .from('drivers')
-      .select('id, first_name, last_name, email, phone, status, vehicle_type, created_at, instant_payouts_enabled')
-      .eq('id', driverId)
-      .maybeSingle() as Promise<QueryResult<Record<string, unknown>>>,
-    client
-      .from('driver_presence')
-      .select('status, current_shift_id, last_location_at, last_location_update, updated_at, current_lat, current_lng, last_location_lat, last_location_lng')
-      .eq('driver_id', driverId)
-      .maybeSingle() as Promise<QueryResult<Record<string, unknown>>>,
-    client
-      .from('deliveries')
-      .select('id, order_id, status, updated_at, estimated_dropoff_at, pickup_address, dropoff_address, orders ( order_number )')
-      .eq('driver_id', driverId)
-      .in('status', OPS_ACTIVE_DELIVERY_STATUSES)
-      .order('updated_at', { ascending: false })
-      .limit(25) as Promise<ListResult<Record<string, unknown>>>,
-    client
-      .from('order_exceptions')
-      .select('id, exception_type, status, severity, title, created_at')
-      .eq('driver_id', driverId)
-      .in('status', OPEN_EXCEPTION_STATUSES)
-      .order('created_at', { ascending: false })
-      .limit(25) as Promise<ListResult<Record<string, unknown>>>,
-    client
-      .from('driver_documents')
-      .select('id, document_type, status, expires_at')
-      .eq('driver_id', driverId)
-      .limit(100) as Promise<ListResult<Record<string, unknown>>>,
-    client
-      .from('driver_payout_accounts')
-      .select('status, payouts_enabled, charges_enabled, onboarding_completed_at')
-      .eq('driver_id', driverId)
-      .maybeSingle() as Promise<QueryResult<Record<string, unknown>>>,
-    client
-      .from('platform_accounts')
-      .select('balance_cents, pending_payout_cents, currency, updated_at')
-      .eq('account_type', 'driver_payable')
-      .eq('owner_id', driverId)
-      .maybeSingle() as Promise<QueryResult<Record<string, unknown>>>,
-  ]);
+  const rawData = await getOpsDriverOperationsRawData(
+    client as unknown as SupabaseClient,
+    driverId,
+    {
+      activeDeliveryStatuses: OPS_ACTIVE_DELIVERY_STATUSES,
+      openExceptionStatuses: OPEN_EXCEPTION_STATUSES,
+    }
+  );
 
-  throwIfError(driverResult, 'driver');
-  if (!driverResult.data) return null;
+  if (!rawData) return null;
 
-  throwIfError(presenceResult, 'driver presence');
-  throwIfError(activeDeliveriesResult, 'active deliveries');
-  throwIfError(exceptionsResult, 'driver exceptions');
-  throwIfError(documentsResult, 'driver documents');
-  throwIfError(payoutAccountResult, 'driver payout account');
-  throwIfError(platformAccountResult, 'driver payable account');
-
-  const driver = driverResult.data;
-  const presence = presenceResult.data;
-  const activeDeliveries = activeDeliveriesResult.data ?? [];
-  const openExceptions = exceptionsResult.data ?? [];
-  const documents = documentsResult.data ?? [];
-  const payoutAccount = payoutAccountResult.data;
-  const platformAccount = platformAccountResult.data;
+  const {
+    driver,
+    presence,
+    activeDeliveries,
+    openExceptions,
+    documents,
+    payoutAccount,
+    platformAccount,
+    shift,
+  } = rawData;
   const presenceStatus = normalizeStatus(presence?.status) || 'offline';
   const currentShiftId = stringValue(presence?.current_shift_id);
-  const shiftResult = currentShiftId
-    ? await client
-        .from('driver_shifts')
-        .select('id, started_at, ended_at, total_deliveries, total_earnings, total_distance_km')
-        .eq('id', currentShiftId)
-        .eq('driver_id', driverId)
-        .maybeSingle() as QueryResult<Record<string, unknown>>
-    : ({ data: null, error: null } satisfies QueryResult<Record<string, unknown>>);
-
-  throwIfError(shiftResult, 'driver shift');
-
-  const shift = shiftResult.data;
   const shiftStartedAt = stringValue(shift?.started_at);
   const shiftEndedAt = stringValue(shift?.ended_at);
   const lastLocationAt =

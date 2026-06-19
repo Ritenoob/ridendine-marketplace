@@ -1,4 +1,12 @@
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  countDriverPresenceByStatus,
+  countDriversByStatus,
+  countOrdersCreatedBetween,
+  countOrdersCreatedSinceWithStatus,
+  listPaidOrderRevenueRowsSince,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { KpiTile, PageHeader } from '@ridendine/ui';
 import { EventMetrics } from './components/event-metrics';
@@ -15,42 +23,20 @@ async function getLiveStats() {
 
   try {
     const [
-      totalOrdersResult,
-      completedOrdersResult,
-      revenueResult,
-      approvedDriversResult,
-      onlineDriversResult,
+      totalOrders,
+      completedOrders,
+      revenueData,
+      approvedDrivers,
+      onlineDrivers,
     ] = await Promise.all([
-      supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo.toISOString()),
-      supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo.toISOString())
-        .eq('status', 'delivered'),
-      supabase
-        .from('orders')
-        .select('total, service_fee')
-        .gte('created_at', thirtyDaysAgo.toISOString())
-        .eq('payment_status', 'completed'),
-      supabase
-        .from('drivers')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'approved'),
-      supabase
-        .from('driver_presence')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'online'),
+      countOrdersCreatedBetween(supabase, thirtyDaysAgo.toISOString()),
+      countOrdersCreatedSinceWithStatus(supabase, thirtyDaysAgo.toISOString(), 'delivered'),
+      listPaidOrderRevenueRowsSince(supabase, thirtyDaysAgo.toISOString()),
+      countDriversByStatus(supabase, 'approved'),
+      countDriverPresenceByStatus(supabase, 'online'),
     ]);
 
-    const revenueData =
-      (revenueResult.data as Array<{ total: number | null; service_fee: number | null }>) ?? [];
     const totalRevenue = revenueData.reduce((sum, order) => sum + (order.total ?? 0), 0);
-
-    const totalOrders = totalOrdersResult.count ?? 0;
-    const completedOrders = completedOrdersResult.count ?? 0;
     const completionRate = totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0;
 
     return {
@@ -58,8 +44,8 @@ async function getLiveStats() {
       completedOrders,
       totalRevenue,
       completionRate,
-      approvedDrivers: approvedDriversResult.count ?? 0,
-      onlineDrivers: onlineDriversResult.count ?? 0,
+      approvedDrivers,
+      onlineDrivers,
     };
   } catch {
     return {

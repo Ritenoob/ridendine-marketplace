@@ -1,6 +1,13 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  createPromoCode,
+  deletePromoCode,
+  listAllPromoCodes,
+  setPromoCodeActive,
+  type SupabaseClient,
+} from '@ridendine/db';
 import {
   evaluateRateLimit,
   RATE_LIMIT_POLICIES,
@@ -19,6 +26,13 @@ async function checkRateLimit(request: NextRequest, actor: { userId: string } | 
   return limit.allowed ? null : rateLimitPolicyResponse(limit);
 }
 
+function promoErrorResponse(error: unknown, fallback: string) {
+  return NextResponse.json(
+    { error: error instanceof Error ? error.message : fallback },
+    { status: 500 }
+  );
+}
+
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
@@ -26,14 +40,13 @@ export async function GET() {
   const denied = guardPlatformApi(actor, 'promos');
   if (denied) return denied;
 
-  const client = createAdminClient() as any;
-  const { data, error } = await client
-    .from('promo_codes')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, data });
+  const client = createAdminClient() as unknown as SupabaseClient;
+  try {
+    const data = await listAllPromoCodes(client);
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return promoErrorResponse(error, 'Failed to load promo codes');
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -50,10 +63,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'code, discountType, and discountValue are required' }, { status: 400 });
   }
 
-  const client = createAdminClient() as any;
-  const { data, error } = await client
-    .from('promo_codes')
-    .insert({
+  const client = createAdminClient() as unknown as SupabaseClient;
+  try {
+    const data = await createPromoCode(client, {
       code: code.toUpperCase().trim(),
       discount_type: discountType,
       discount_value: discountValue,
@@ -63,12 +75,11 @@ export async function POST(request: NextRequest) {
       starts_at: startsAt || null,
       expires_at: expiresAt || null,
       is_active: true,
-    })
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, data });
+    });
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return promoErrorResponse(error, 'Failed to create promo code');
+  }
 }
 
 export async function PATCH(request: NextRequest) {
@@ -83,16 +94,13 @@ export async function PATCH(request: NextRequest) {
 
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
-  const client = createAdminClient() as any;
-  const { data, error } = await client
-    .from('promo_codes')
-    .update({ is_active, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, data });
+  const client = createAdminClient() as unknown as SupabaseClient;
+  try {
+    const data = await setPromoCodeActive(client, id, is_active);
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return promoErrorResponse(error, 'Failed to update promo code');
+  }
 }
 
 export async function DELETE(request: NextRequest) {
@@ -105,12 +113,11 @@ export async function DELETE(request: NextRequest) {
   const { id } = await request.json();
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
-  const client = createAdminClient() as any;
-  const { error } = await client
-    .from('promo_codes')
-    .delete()
-    .eq('id', id);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+  const client = createAdminClient() as unknown as SupabaseClient;
+  try {
+    await deletePromoCode(client, id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return promoErrorResponse(error, 'Failed to delete promo code');
+  }
 }

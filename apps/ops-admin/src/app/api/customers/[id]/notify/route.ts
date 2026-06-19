@@ -1,6 +1,11 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getCustomerUserIdRef,
+  insertNotification,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { finalizeOpsActor, getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 
 export async function POST(
@@ -18,19 +23,15 @@ export async function POST(
     return NextResponse.json({ error: 'title and body required' }, { status: 400 });
   }
 
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
 
-  const { data: customer } = await client
-    .from('customers')
-    .select('user_id')
-    .eq('id', customerId)
-    .single();
+  const customer = await getCustomerUserIdRef(client, customerId);
 
   if (!customer) {
     return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
   }
 
-  await client.from('notifications').insert({
+  await insertNotification(client, {
     user_id: customer.user_id,
     type: 'ops_message',
     title,

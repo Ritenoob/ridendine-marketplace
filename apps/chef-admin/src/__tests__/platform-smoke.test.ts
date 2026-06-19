@@ -52,6 +52,10 @@ describe('chef-admin smoke wiring', () => {
     expect(src).toContain('Business Snapshot');
     expect(src).toContain('getMenuItemsByStorefront');
     expect(src).toContain('chef_availability');
+    // Business Snapshot: week-over-week and net earnings
+    expect(src).toContain('weekRevenue');
+    expect(src).toContain('prevWeekRevenue');
+    expect(src).toContain('Est. net earnings');
   });
 
   it('orders list uses protected action payloads and empty state', () => {
@@ -71,6 +75,23 @@ describe('chef-admin smoke wiring', () => {
     expect(src).toContain('Ready for pickup');
     expect(src).toContain('No ');
     expect(src).toContain('orders');
+  });
+
+  it('sidebar includes business engine nav items', () => {
+    const src = read('components/layout/sidebar.tsx');
+    expect(src).toContain("href: '/dashboard/customers'");
+    expect(src).toContain("label: 'Customers'");
+    expect(src).toContain("href: '/dashboard/growth'");
+    expect(src).toContain("label: 'Growth'");
+  });
+
+  it('business engine pages exist', () => {
+    const customers = read('app/dashboard/customers/page.tsx');
+    const growth = read('app/dashboard/growth/page.tsx');
+    expect(customers).toContain('Customer List');
+    expect(customers).toContain('Understanding Your Customer Tiers');
+    expect(growth).toContain('Business Growth');
+    expect(growth).toContain('Revenue Trend');
   });
 
   it('menu editor exposes inventory controls through the API', () => {

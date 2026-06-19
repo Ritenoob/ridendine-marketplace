@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card, Badge } from '@ridendine/ui';
-import { createBrowserClient } from '@ridendine/db';
+import {
+  createBrowserClient,
+  countActiveDeliveriesStartedBefore,
+  countDriverPresenceByStatus,
+  countLowRatingReviewsSince,
+  countUnassignedReadyOrders,
+} from '@ridendine/db';
 import Link from 'next/link';
 
 interface Alert {
@@ -59,80 +65,72 @@ export function AlertsPanel({ pendingApprovals }: AlertsPanelProps) {
         });
       }
 
-      // Check for stuck deliveries (longer than 60 min)
-      const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      const { data: stuckDeliveries } = await db
-        .from('deliveries')
-        .select('id', { count: 'exact', head: true })
-        .in('status', ['assigned', 'accepted', 'en_route_to_pickup'])
-        .lt('created_at', hourAgo);
+      // The raw queries here silently tolerated failures; repository errors
+      // degrade to zero counts the same way.
+      try {
+        // Check for stuck deliveries (longer than 60 min)
+        const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+        const stuckDeliveryCount = await countActiveDeliveriesStartedBefore(
+          db,
+          ['assigned', 'accepted', 'en_route_to_pickup'],
+          hourAgo
+        ).catch(() => 0);
 
-      if (stuckDeliveries && (stuckDeliveries as any).count > 0) {
-        generatedAlerts.push({
-          id: 'stuck-deliveries',
-          type: 'warning',
-          title: `${(stuckDeliveries as any).count} Delayed Deliveries`,
-          message: 'Some deliveries have been in progress for over 60 minutes',
-          link: '/dashboard/deliveries',
-          time: '1h+',
-        });
-      }
+        if (stuckDeliveryCount > 0) {
+          generatedAlerts.push({
+            id: 'stuck-deliveries',
+            type: 'warning',
+            title: `${stuckDeliveryCount} Delayed Deliveries`,
+            message: 'Some deliveries have been in progress for over 60 minutes',
+            link: '/dashboard/deliveries',
+            time: '1h+',
+          });
+        }
 
-      // Check driver availability
-      const { count: onlineDrivers } = await db
-        .from('driver_presence')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'online');
+        // Check driver availability
+        const onlineDrivers = await countDriverPresenceByStatus(db, 'online').catch(() => 0);
 
-      if ((onlineDrivers || 0) < 3) {
-        generatedAlerts.push({
-          id: 'low-drivers',
-          type: 'warning',
-          title: 'Low Driver Availability',
-          message: `Only ${onlineDrivers || 0} driver${onlineDrivers === 1 ? '' : 's'} online`,
-          link: '/dashboard/drivers',
-          time: 'Now',
-        });
-      }
+        if ((onlineDrivers || 0) < 3) {
+          generatedAlerts.push({
+            id: 'low-drivers',
+            type: 'warning',
+            title: 'Low Driver Availability',
+            message: `Only ${onlineDrivers || 0} driver${onlineDrivers === 1 ? '' : 's'} online`,
+            link: '/dashboard/drivers',
+            time: 'Now',
+          });
+        }
 
-      // Check for unassigned orders
-      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-      const { count: unassignedOrders } = await db
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'ready_for_pickup')
-        .is('driver_id', null)
-        .lt('created_at', tenMinutesAgo);
+        // Check for unassigned orders
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+        const unassignedOrders = await countUnassignedReadyOrders(db, tenMinutesAgo).catch(() => 0);
 
-      if ((unassignedOrders || 0) > 0) {
-        generatedAlerts.push({
-          id: 'unassigned-orders',
-          type: 'urgent',
-          title: `${unassignedOrders} Unassigned Orders`,
-          message: 'Orders waiting for driver assignment over 10 minutes',
-          link: '/dashboard/deliveries',
-          time: '10m+',
-        });
-      }
+        if ((unassignedOrders || 0) > 0) {
+          generatedAlerts.push({
+            id: 'unassigned-orders',
+            type: 'urgent',
+            title: `${unassignedOrders} Unassigned Orders`,
+            message: 'Orders waiting for driver assignment over 10 minutes',
+            link: '/dashboard/deliveries',
+            time: '10m+',
+          });
+        }
 
-      // Check for low-rated deliveries today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { count: lowRatings } = await db
-        .from('reviews')
-        .select('*', { count: 'exact', head: true })
-        .lte('rating', 2)
-        .gte('created_at', today.toISOString());
+        // Check for low-rated deliveries today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const lowRatings = await countLowRatingReviewsSince(db, 2, today.toISOString()).catch(() => 0);
 
-      if ((lowRatings || 0) > 0) {
-        generatedAlerts.push({
-          id: 'low-ratings',
-          type: 'info',
-          title: `${lowRatings} Low Rating${(lowRatings || 0) > 1 ? 's' : ''} Today`,
-          message: 'Some customers left negative reviews',
-          time: 'Today',
-        });
-      }
+        if ((lowRatings || 0) > 0) {
+          generatedAlerts.push({
+            id: 'low-ratings',
+            type: 'info',
+            title: `${lowRatings} Low Rating${(lowRatings || 0) > 1 ? 's' : ''} Today`,
+            message: 'Some customers left negative reviews',
+            time: 'Today',
+          });
+        }
+      } catch { /* non-critical */ }
 
       setAlerts(generatedAlerts);
       setLoading(false);

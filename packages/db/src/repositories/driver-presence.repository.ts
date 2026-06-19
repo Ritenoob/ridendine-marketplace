@@ -99,3 +99,30 @@ export async function upsertDriverPresence(
   if (error) throw error;
   return data as DriverPresence;
 }
+
+/** Insert the initial presence row for a newly created driver. */
+export async function createDriverPresence(
+  client: SupabaseClient,
+  driverId: string,
+  status: 'offline' | 'online' | 'busy' = 'offline'
+): Promise<void> {
+  const { error } = await client
+    .from('driver_presence')
+    .insert({ driver_id: driverId, status });
+
+  if (error) throw error;
+}
+
+/** Exact count of driver presence rows in the given status. */
+export async function countDriverPresenceByStatus(
+  client: SupabaseClient,
+  status: 'offline' | 'online' | 'busy'
+): Promise<number> {
+  const { count, error } = await client
+    .from('driver_presence')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', status);
+
+  if (error) throw error;
+  return count ?? 0;
+}

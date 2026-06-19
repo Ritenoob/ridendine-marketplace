@@ -1,7 +1,17 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  listBankPayoutExportRows,
+  listChefExportRows,
+  listCustomerExportRows,
+  listDriverExportRows,
+  listLedgerExportRows,
+  listOrderExportRows,
+  listStripeEventExportRows,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { AuditAction } from '@ridendine/types';
 import { getEngine, getOpsActorContext, guardPlatformApi, finalizeOpsActor } from '@/lib/engine';
 
@@ -23,37 +33,24 @@ function buildCsvRow(row: any): string {
   return values.join(',');
 }
 
-async function fetchOrders(client: any, startDate: string, endDate: string) {
-  const { data } = await client.from('orders')
-    .select('order_number, status, subtotal, delivery_fee, service_fee, tax, tip, total, payment_status, created_at')
-    .gte('created_at', startDate).lte('created_at', endDate)
-    .order('created_at', { ascending: false });
+async function fetchOrders(client: SupabaseClient, startDate: string, endDate: string) {
+  const data = await listOrderExportRows(client, startDate, endDate);
   return {
     rows: data || [],
     headers: ['Order Number', 'Status', 'Subtotal', 'Delivery Fee', 'Service Fee', 'Tax', 'Tip', 'Total', 'Payment', 'Date'],
   };
 }
 
-async function fetchLedger(client: any, startDate: string, endDate: string) {
-  const { data } = await client.from('ledger_entries')
-    .select('entry_type, amount_cents, currency, description, entity_type, entity_id, created_at')
-    .gte('created_at', startDate).lte('created_at', endDate)
-    .order('created_at', { ascending: false });
+async function fetchLedger(client: SupabaseClient, startDate: string, endDate: string) {
+  const data = await listLedgerExportRows(client, startDate, endDate);
   return {
     rows: (data || []).map((r: any) => ({ ...r, amount: (r.amount_cents / 100).toFixed(2) })),
     headers: ['Type', 'Amount', 'Currency', 'Description', 'Entity Type', 'Entity ID', 'Date'],
   };
 }
 
-async function fetchStripeEventsProcessed(client: any, startDate: string, endDate: string) {
-  const { data } = await client
-    .from('stripe_events_processed')
-    .select(
-      'stripe_event_id, event_type, livemode, processing_status, related_order_id, processed_at, error_message, created_at'
-    )
-    .gte('processed_at', startDate)
-    .lte('processed_at', endDate)
-    .order('processed_at', { ascending: false });
+async function fetchStripeEventsProcessed(client: SupabaseClient, startDate: string, endDate: string) {
+  const data = await listStripeEventExportRows(client, startDate, endDate);
   return {
     rows: data || [],
     headers: [
@@ -69,14 +66,8 @@ async function fetchStripeEventsProcessed(client: any, startDate: string, endDat
   };
 }
 
-async function fetchBankPayouts(client: any, startDate: string, endDate: string) {
-  const { data } = await client
-    .from('chef_payouts')
-    .select('id, chef_id, amount, status, bank_batch_id, bank_reference, reconciliation_status, period_start, period_end, created_at')
-    .eq('payment_rail', 'bank')
-    .gte('created_at', startDate)
-    .lte('created_at', endDate)
-    .order('created_at', { ascending: false });
+async function fetchBankPayouts(client: SupabaseClient, startDate: string, endDate: string) {
+  const data = await listBankPayoutExportRows(client, startDate, endDate);
   return {
     rows: (data || []).map((r: any) => ({
       payout_id: r.id,
@@ -107,30 +98,24 @@ async function fetchBankPayouts(client: any, startDate: string, endDate: string)
   };
 }
 
-async function fetchCustomers(client: any) {
-  const { data } = await client.from('customers')
-    .select('first_name, last_name, email, phone, created_at')
-    .order('created_at', { ascending: false });
+async function fetchCustomers(client: SupabaseClient) {
+  const data = await listCustomerExportRows(client);
   return {
     rows: data || [],
     headers: ['First Name', 'Last Name', 'Email', 'Phone', 'Joined'],
   };
 }
 
-async function fetchChefs(client: any) {
-  const { data } = await client.from('chef_profiles')
-    .select('display_name, phone, status, created_at')
-    .order('created_at', { ascending: false });
+async function fetchChefs(client: SupabaseClient) {
+  const data = await listChefExportRows(client);
   return {
     rows: data || [],
     headers: ['Name', 'Phone', 'Status', 'Joined'],
   };
 }
 
-async function fetchDrivers(client: any) {
-  const { data } = await client.from('drivers')
-    .select('first_name, last_name, email, phone, status, total_deliveries, rating, created_at')
-    .order('created_at', { ascending: false });
+async function fetchDrivers(client: SupabaseClient) {
+  const data = await listDriverExportRows(client);
   return {
     rows: data || [],
     headers: ['First Name', 'Last Name', 'Email', 'Phone', 'Status', 'Deliveries', 'Rating', 'Joined'],
@@ -152,7 +137,7 @@ export async function GET(request: NextRequest) {
   const opsActor = finalizeOpsActor(actor, guardPlatformApi(actor, capability));
   if (opsActor instanceof Response) return opsActor;
 
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
   let rows: any[] = [];
   let headers: string[] = [];
 

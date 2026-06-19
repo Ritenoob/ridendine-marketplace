@@ -7,7 +7,7 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   const adminClient = createAdminClient() as unknown as SupabaseClient;
   const rateLimitStatus = getRateLimitProviderStatus();
 
@@ -38,5 +38,18 @@ export async function GET() {
 
   const status =
     payload.readiness === 'not_ready' ? 503 : 200;
+
+  // The full payload leaks internal detail (version, build SHA, infra provider,
+  // per-dependency status). Only expose it to an authorized internal caller;
+  // everyone else gets a minimal liveness signal. The status code still carries
+  // readiness so external uptime monitors keep working without a token.
+  const healthToken = process.env.HEALTH_CHECK_TOKEN;
+  const authorized =
+    Boolean(healthToken) && request.headers.get('x-health-token') === healthToken;
+
+  if (!authorized) {
+    return apiSuccess({ ok: true, service: 'web', readiness: payload.readiness }, status);
+  }
+
   return apiSuccess(payload, status);
 }

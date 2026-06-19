@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import {
   createAdminClient,
   createChefProfile,
+  insertAuditLog,
   listChefsWithStorefronts,
   type SupabaseClient,
 } from '@ridendine/db';
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
       status,
     });
 
-    await (supabase as any).from('audit_logs').insert({
+    await insertAuditLog(supabase, {
       action: 'ops_create',
       actor_type: 'platform_user',
       entity_type: 'chef',

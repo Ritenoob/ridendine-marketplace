@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import { Card, PageHeader, StatusBadge } from '@ridendine/ui';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  countOpenSupportTickets,
+  listActiveSystemAlertSummaries,
+  listExceptionQueueRows,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { getOpsActorContext, hasPlatformApiCapability } from '@/lib/engine';
 import { ExceptionActions } from './exception-actions';
@@ -88,35 +94,12 @@ function normalizeExceptionRow(row: any): ExceptionQueueRow {
 }
 
 async function loadExceptionData() {
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
 
-  const [exceptionResult, alertResult, ticketResult] = await Promise.all([
-    client
-      .from('order_exceptions')
-      .select(`
-        id,
-        exception_type,
-        severity,
-        status,
-        title,
-        description,
-        recommended_actions,
-        order_id,
-        customer_id,
-        chef_id,
-        driver_id,
-        delivery_id,
-        assigned_to,
-        sla_deadline,
-        escalated_at,
-        created_at,
-        updated_at,
-        orders (
-          order_number,
-          status
-        )
-      `)
-      .in('status', [
+  const [exceptionRows, alertResult, openTicketCount] = await Promise.all([
+    listExceptionQueueRows(
+      client,
+      [
         'open',
         'acknowledged',
         'in_progress',
@@ -124,34 +107,21 @@ async function loadExceptionData() {
         'pending_chef',
         'pending_driver',
         'escalated',
-      ])
-      .order('created_at', { ascending: true })
-      .limit(200),
-    client
-      .from('system_alerts')
-      .select('id, title, severity, entity_type, entity_id, created_at', { count: 'exact' })
-      .eq('acknowledged', false)
-      .order('created_at', { ascending: false })
-      .limit(8),
-    client
-      .from('support_tickets')
-      .select('id', { count: 'exact' })
-      .in('status', ['open', 'in_progress'])
-      .limit(1),
+      ],
+      200
+    ),
+    listActiveSystemAlertSummaries(client, 8),
+    countOpenSupportTickets(client),
   ]);
 
-  if (exceptionResult.error) throw exceptionResult.error;
-  if (alertResult.error) throw alertResult.error;
-  if (ticketResult.error) throw ticketResult.error;
-
-  const alerts = (alertResult.data ?? []) as AlertRow[];
-  const rows = ((exceptionResult.data ?? []) as any[]).map(normalizeExceptionRow);
+  const alerts = (alertResult.rows ?? []) as AlertRow[];
+  const rows = ((exceptionRows ?? []) as any[]).map(normalizeExceptionRow);
 
   return {
     alerts,
     queue: buildExceptionQueue(rows, {
       activeAlertCount: alertResult.count ?? alerts.length,
-      openTicketCount: ticketResult.count ?? (ticketResult.data ?? []).length,
+      openTicketCount,
     }),
   };
 }

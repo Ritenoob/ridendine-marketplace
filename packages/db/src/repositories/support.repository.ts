@@ -180,3 +180,20 @@ export async function updateSupportTicket(
   if (error) throw error;
   return data;
 }
+
+/**
+ * Exact count of tickets currently open or in progress. Uses a count query
+ * with a 1-row projection (no full ticket payload).
+ */
+export async function countOpenSupportTickets(
+  client: SupabaseClient
+): Promise<number> {
+  const { data, count, error } = await client
+    .from('support_tickets')
+    .select('id', { count: 'exact' })
+    .in('status', ['open', 'in_progress'])
+    .limit(1);
+
+  if (error) throw error;
+  return count ?? (data ?? []).length;
+}

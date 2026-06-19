@@ -1,5 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  countDriversUpdatedBetween,
+  countStorefrontsUpdatedBetween,
+  listDeliveryDurationRowsBetween,
+  listOrderAnalyticsRows,
+  type AnalyticsOrderRow,
+  type DeliveryDurationRow,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { getOpsActorContext, guardPlatformApi } from '@/lib/engine';
 import {
   getPeriodDates,
@@ -12,25 +21,11 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-interface OrderRow {
-  id: string;
-  total: number;
-  service_fee: number | null;
-  status: string;
-  customer_id: string;
-  created_at: string;
-}
-
-interface DeliveryRow {
-  created_at: string;
-  actual_dropoff_at: string | null;
-}
-
 function sumField<T>(rows: T[], key: keyof T): number {
   return rows.reduce((acc, row) => acc + (Number(row[key]) || 0), 0);
 }
 
-function calcAvgDeliveryMinutes(deliveries: DeliveryRow[]): number | null {
+function calcAvgDeliveryMinutes(deliveries: DeliveryDurationRow[]): number | null {
   const durations = deliveries
     .map((d) => {
       if (!d.actual_dropoff_at) return null;
@@ -44,47 +39,7 @@ function calcAvgDeliveryMinutes(deliveries: DeliveryRow[]): number | null {
   return Math.round(durations.reduce((s, v) => s + v, 0) / durations.length);
 }
 
-async function fetchOrders(client: ReturnType<typeof createAdminClient>, start: Date, end: Date) {
-   
-  const { data } = await (client as any)
-    .from('orders')
-    .select('id, total, service_fee, status, customer_id, created_at')
-    .gte('created_at', start.toISOString())
-    .lte('created_at', end.toISOString());
-  return (data ?? []) as OrderRow[];
-}
-
-async function fetchActiveChefs(client: ReturnType<typeof createAdminClient>, start: Date, end: Date) {
-   
-  const { count } = await (client as any)
-    .from('chef_storefronts')
-    .select('id', { count: 'exact', head: true })
-    .gte('updated_at', start.toISOString())
-    .lte('updated_at', end.toISOString());
-  return count ?? 0;
-}
-
-async function fetchActiveDrivers(client: ReturnType<typeof createAdminClient>, start: Date, end: Date) {
-   
-  const { count } = await (client as any)
-    .from('drivers')
-    .select('id', { count: 'exact', head: true })
-    .gte('updated_at', start.toISOString())
-    .lte('updated_at', end.toISOString());
-  return count ?? 0;
-}
-
-async function fetchDeliveries(client: ReturnType<typeof createAdminClient>, start: Date, end: Date) {
-   
-  const { data } = await (client as any)
-    .from('deliveries')
-    .select('created_at, actual_dropoff_at')
-    .gte('created_at', start.toISOString())
-    .lte('created_at', end.toISOString());
-  return (data ?? []) as DeliveryRow[];
-}
-
-function buildMetrics(orders: OrderRow[], period: AnalyticsPeriod) {
+function buildMetrics(orders: AnalyticsOrderRow[], period: AnalyticsPeriod) {
   const gmv = sumField(orders, 'total');
   const platformRevenue = sumField(orders, 'service_fee');
   const totalOrders = orders.length;
@@ -105,15 +60,14 @@ export async function GET(request: NextRequest) {
   const { start, end } = getPeriodDates(period);
   const prev = getPreviousPeriodDates(period);
 
-   
-  const client = createAdminClient() as any;
+  const client = createAdminClient() as unknown as SupabaseClient;
 
   const [orders, prevOrders, activeChefs, activeDrivers, deliveries] = await Promise.all([
-    fetchOrders(client, start, end),
-    fetchOrders(client, prev.start, prev.end),
-    fetchActiveChefs(client, start, end),
-    fetchActiveDrivers(client, start, end),
-    fetchDeliveries(client, start, end),
+    listOrderAnalyticsRows(client, start.toISOString(), end.toISOString()),
+    listOrderAnalyticsRows(client, prev.start.toISOString(), prev.end.toISOString()),
+    countStorefrontsUpdatedBetween(client, start.toISOString(), end.toISOString()),
+    countDriversUpdatedBetween(client, start.toISOString(), end.toISOString()),
+    listDeliveryDurationRowsBetween(client, start.toISOString(), end.toISOString()),
   ]);
 
   const metrics = buildMetrics(orders, period);

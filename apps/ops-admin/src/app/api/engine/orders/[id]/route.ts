@@ -4,7 +4,12 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getEngineOrderDetail,
+  listOrderExceptionsForOrder,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { orderCommandSchema } from '@ridendine/validation';
 import { operationResultResponse } from '@/lib/validation';
 import {
@@ -36,34 +41,16 @@ export async function GET(
   const engine = getEngine();
   const adminClient = createAdminClient() as unknown as SupabaseClient;
 
-  // Get order
-  const { data: order, error } = await adminClient
-    .from('orders')
-    .select(`
-      *,
-      customer:customers (
-        id, first_name, last_name, email, phone
-      ),
-      storefront:chef_storefronts (
-        id, name, slug,
-        chef:chef_profiles (id, display_name, phone)
-      ),
-      delivery_address:customer_addresses (
-        address_line1, address_line2, city, state, postal_code
-      ),
-      items:order_items (
-        id, quantity, unit_price, total_price,
-        menu_item:menu_items (name, description)
-      ),
-      delivery:deliveries (
-        id, status, driver_id,
-        driver:drivers (first_name, last_name, phone)
-      )
-    `)
-    .eq('id', orderId)
-    .single();
+  // Get order (any lookup failure surfaces as 404, matching the raw query's
+  // previous `error || !order` handling)
+  let order = null;
+  try {
+    order = await getEngineOrderDetail(adminClient, orderId);
+  } catch {
+    order = null;
+  }
 
-  if (error || !order) {
+  if (!order) {
     return errorResponse('NOT_FOUND', 'Order not found', 404);
   }
 
@@ -72,12 +59,8 @@ export async function GET(
     ? await engine.audit.getAuditTrail('order', orderId)
     : [];
 
-  // Get any linked exceptions (cast to any for new table)
-  const { data: exceptions } = await adminClient
-    .from('order_exceptions')
-    .select('*')
-    .eq('order_id', orderId)
-    .order('created_at', { ascending: false });
+  // Get any linked exceptions
+  const exceptions = await listOrderExceptionsForOrder(adminClient, orderId);
 
   // Get allowed actions
   const allowedActions = await engine.orders.getAllowedActions(orderId, opsActor.role);
