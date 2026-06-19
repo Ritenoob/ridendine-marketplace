@@ -8,6 +8,7 @@ import {
   computePrepPlan,
   aggregatePrepBoard,
   computeKitchenLoad,
+  mapActiveOrdersToTickets,
   type PrepMenuItem,
   type HistoricalOrderForPrep,
   type ActiveOrder,
@@ -46,7 +47,7 @@ export async function GET(): Promise<Response> {
         adminClient
           .from('orders')
           .select(
-            'id, estimated_prep_minutes, order_items ( quantity, special_instructions, menu_item:menu_items ( id, name ) )'
+            'id, order_number, status, created_at, special_instructions, customer_id, estimated_ready_at, estimated_prep_minutes, prep_started_at, order_items ( quantity, special_instructions, menu_item:menu_items ( id, name ) )'
           )
           .eq('storefront_id', storefrontId)
           .in('status', ACTIVE_ORDER_STATUSES),
@@ -74,9 +75,32 @@ export async function GET(): Promise<Response> {
     const activeOrders = (activeOrdersResult.data ?? []) as unknown as ActiveOrder[];
     const historicalOrders = (historicalOrdersResult.data ?? []) as unknown as HistoricalOrderForPrep[];
 
+    // Single batched customer query - no N+1 (mirrors /api/orders pattern)
+    const customerIds = [
+      ...new Set(
+        activeOrders.map((o) => o.customer_id).filter((id): id is string => Boolean(id))
+      ),
+    ];
+    const { data: customers, error: customersError } =
+      customerIds.length > 0
+        ? await adminClient
+            .from('customers')
+            .select('id, first_name, last_name')
+            .in('id', customerIds)
+        : { data: [], error: null };
+    if (customersError) {
+      console.error('Failed to fetch customers for kitchen tickets:', customersError);
+    }
+
+    type CustomerRow = { id: string; first_name: string; last_name: string };
+    const customersById = new Map<string, CustomerRow>(
+      ((customers ?? []) as CustomerRow[]).map((c) => [c.id, c])
+    );
+
     const load = computeKitchenLoad(activeOrders, storefront);
     const prepPlan = computePrepPlan(menuItems, historicalOrders, now);
     const prepBoard = aggregatePrepBoard(activeOrders);
+    const tickets = mapActiveOrdersToTickets(activeOrders, customersById);
 
     return successResponse({
       load,
@@ -86,6 +110,8 @@ export async function GET(): Promise<Response> {
         isPaused: storefront.is_paused ?? false,
         isActive: storefront.is_active ?? false,
       },
+      tickets,
+      storefrontId,
     });
   } catch (error) {
     console.error('Error fetching kitchen overview:', error);

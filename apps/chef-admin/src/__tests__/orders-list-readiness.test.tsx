@@ -4,16 +4,26 @@
 
 import '@testing-library/jest-dom';
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { OrdersList } from '../components/orders/orders-list';
 
+// Mock the sound util (sound.ts does not depend on a browser audio file)
+jest.mock('@/lib/sound', () => ({
+  playNewOrderChime: jest.fn(),
+}));
+
 const mockRemoveChannel = jest.fn();
+let capturedOnHandler: ((payload: Record<string, unknown>) => void) | null = null;
+
 const mockSubscribe = jest.fn((callback?: (status: string) => void) => {
   callback?.('SUBSCRIBED');
   return mockChannel;
 });
 const mockChannel = {
-  on: jest.fn(() => mockChannel),
+  on: jest.fn((_event: string, _filter: unknown, handler: (p: Record<string, unknown>) => void) => {
+    capturedOnHandler = handler;
+    return mockChannel;
+  }),
   subscribe: mockSubscribe,
 };
 
@@ -113,6 +123,7 @@ const baseOrder = {
 
 describe('OrdersList chef readiness workflow', () => {
   beforeEach(() => {
+    capturedOnHandler = null;
     jest.clearAllMocks();
     global.fetch = jest.fn() as jest.Mock;
   });
@@ -181,5 +192,39 @@ describe('OrdersList chef readiness workflow', () => {
     });
     expect(await screen.findByText('Pickup handoff')).toBeInTheDocument();
     expect(screen.getAllByText('Waiting for driver').length).toBeGreaterThan(0);
+  });
+
+  it('prepends a new order, shows a toast, and chimes when a realtime INSERT arrives', async () => {
+    const { playNewOrderChime } = require('@/lib/sound') as { playNewOrderChime: jest.Mock };
+
+    render(
+      <OrdersList storefrontId="storefront-1" initialOrders={[]} />
+    );
+
+    // Channel is set up after mount; handler must be captured
+    expect(capturedOnHandler).not.toBeNull();
+
+    const newOrder = {
+      id: 'order-rt-1',
+      order_number: 'RD-2001',
+      status: 'pending',
+      storefront_id: 'storefront-1',
+      total: 25,
+      created_at: new Date().toISOString(),
+      customer: { first_name: 'Amy', last_name: 'Chen' },
+    };
+
+    await act(async () => {
+      capturedOnHandler!({ eventType: 'INSERT', new: newOrder });
+    });
+
+    // New order must be prepended in the DOM
+    expect(await screen.findByText('RD-2001')).toBeInTheDocument();
+
+    // Toast with order/customer info must appear
+    expect(await screen.findByText(/New order RD-2001 from Amy Chen/i)).toBeInTheDocument();
+
+    // Chime must fire exactly once for this new order
+    expect(playNewOrderChime).toHaveBeenCalledTimes(1);
   });
 });

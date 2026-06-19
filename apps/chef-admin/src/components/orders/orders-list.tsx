@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Card, Badge, Button, LiveIndicator, ORDER_STATUS_LABELS, type LiveIndicatorStatus } from '@ridendine/ui';
-import { chefStorefrontOrdersChannel, createBrowserClient, parseOrdersRealtimeRow } from '@ridendine/db';
 import {
   formatCurrency,
   getKitchenWorkflowStep,
@@ -12,6 +11,8 @@ import {
   type KitchenActionableStatus,
 } from '@ridendine/utils';
 import { OrderToast, type ToastMsg } from './order-toast';
+import { useStorefrontOrdersRealtime } from '@/hooks/use-storefront-orders-realtime';
+import { playNewOrderChime } from '@/lib/sound';
 
 interface Order {
   id: string;
@@ -166,7 +167,6 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
   // Orders for which the auto-expiry reject PATCH has already been sent in
   // this tab — guards against duplicate fires across re-renders.
   const expiredOrderIdsRef = useRef<Set<string>>(new Set());
-  const [playSound, setPlaySound] = useState(false);
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [realtimeStatus, setRealtimeStatus] = useState<LiveIndicatorStatus>('connecting');
 
@@ -182,108 +182,39 @@ export function OrdersList({ initialOrders, storefrontId }: OrdersListProps) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const supabase = useMemo(() => createBrowserClient(), []);
+  // Track which orders have triggered sound + toast to avoid duplicate
+  // alerts when onInsert fires a second time with the hydrated order.
+  const notifiedOrderIds = useRef<Set<string>>(new Set());
 
-  // Subscribe to real-time updates (scoped to this storefront — RLS + client filter)
-  useEffect(() => {
-    if (!supabase || !storefrontId) return;
-
-    const db = supabase;
-    const filter = `storefront_id=eq.${storefrontId}`;
-    const channel = db
-      .channel(chefStorefrontOrdersChannel(storefrontId))
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'orders', filter },
-        (payload) => {
-          const hydrateOrder = async (orderId: string) => {
-            try {
-              const response = await fetch(`/api/orders/${orderId}`);
-              if (!response.ok) return null;
-              const json = await response.json();
-              return json.data?.order ?? json.order ?? null;
-            } catch {
-              return null;
-            }
-          };
-
-          // A single malformed realtime message must not take down the
-          // subscription — keep the thin row + skip it instead.
-          try {
-            if (payload.eventType === 'INSERT') {
-              const row = parseOrdersRealtimeRow(payload.new);
-              if (!row || row.storefront_id !== storefrontId) return;
-              const newOrder = payload.new as Order;
-              setOrders((prev) => [newOrder, ...prev]);
-              hydrateOrder(newOrder.id)
-                .then((fullOrder) => {
-                  if (!fullOrder) return;
-                  setOrders((prev) => prev.map((order) => order.id === fullOrder.id ? fullOrder : order));
-                })
-                .catch(() => {
-                  // Hydration is best-effort; the thin realtime row stays.
-                });
-              setPlaySound(true);
-              const orderNum = (payload.new as Order).order_number ?? '';
-              const customer = (payload.new as Order).customer;
-              const customerName = customer
-                ? `${customer.first_name} ${customer.last_name}`
-                : 'a customer';
-              addToast(`New order ${orderNum} from ${customerName}`);
-            } else if (payload.eventType === 'UPDATE') {
-              const row = parseOrdersRealtimeRow(payload.new);
-              if (!row || row.storefront_id !== storefrontId) return;
-              const updatedOrder = payload.new as Order;
-              setOrders((prev) =>
-                prev.map((o) => (o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o))
-              );
-              hydrateOrder(updatedOrder.id)
-                .then((fullOrder) => {
-                  if (!fullOrder) return;
-                  setOrders((prev) => prev.map((order) => order.id === fullOrder.id ? { ...order, ...fullOrder } : order));
-                })
-                .catch(() => {
-                  // Hydration is best-effort; the thin realtime row stays.
-                });
-            }
-          } catch (err) {
-            console.error('Failed to process realtime order event', err);
-          }
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          setRealtimeStatus('connected');
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          setRealtimeStatus('disconnected');
-        } else {
-          setRealtimeStatus('connecting');
-        }
-      });
-
-    return () => {
-      db.removeChannel(channel);
-    };
-  }, [supabase, storefrontId, addToast]);
-
-  // Play notification sound for new orders
-  useEffect(() => {
-    if (playSound) {
-      // Gracefully handle audio notification
-      // Sound file can be added to public/sounds/new-order.mp3 when available
-      try {
-        const audio = new Audio('/sounds/new-order.mp3');
-        audio.play().catch(() => {
-          // Silent fail if audio file not found or autoplay blocked
-          console.debug('Audio notification unavailable');
-        });
-      } catch {
-        // Silent fail if Audio API not available
-        console.debug('Audio API unavailable');
-      }
-      setPlaySound(false);
+  const handleInsert = useCallback((order: Order) => {
+    setOrders((prev: Order[]) => {
+      const exists = prev.some((o) => o.id === order.id);
+      if (!exists) return [order, ...prev];
+      return prev.map((o) => (o.id === order.id ? { ...o, ...order } : o));
+    });
+    if (!notifiedOrderIds.current.has(order.id)) {
+      notifiedOrderIds.current.add(order.id);
+      playNewOrderChime();
+      const orderNum = order.order_number ?? '';
+      const customer = order.customer;
+      const customerName = customer
+        ? `${customer.first_name} ${customer.last_name}`
+        : 'a customer';
+      addToast(`New order ${orderNum} from ${customerName}`);
     }
-  }, [playSound]);
+  }, [addToast]);
+
+  const handleUpdate = useCallback((order: Order) => {
+    setOrders((prev: Order[]) =>
+      prev.map((o) => (o.id === order.id ? { ...o, ...order } : o))
+    );
+  }, []);
+
+  useStorefrontOrdersRealtime<Order>(storefrontId, {
+    onInsert: handleInsert,
+    onUpdate: handleUpdate,
+    onConnectionChange: (status) => setRealtimeStatus(status),
+  });
 
   useEffect(() => {
     setOrders(initialOrders);

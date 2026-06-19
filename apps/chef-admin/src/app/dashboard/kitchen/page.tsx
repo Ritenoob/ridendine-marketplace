@@ -11,6 +11,8 @@ import {
   ChevronUp,
   Check,
 } from 'lucide-react';
+import { KitchenOrderQueue } from '@/components/kitchen/kitchen-order-queue';
+import type { KitchenTicket } from '@/lib/kitchen';
 
 // ============================================================
 // Types matching /api/kitchen/overview response
@@ -55,6 +57,8 @@ interface OverviewPayload {
   prepPlan: PrepPlanItem[];
   prepBoard: PrepBoardItem[];
   service: { isPaused: boolean; isActive: boolean };
+  tickets: KitchenTicket[];
+  storefrontId: string;
 }
 
 // ============================================================
@@ -300,7 +304,7 @@ export default function KitchenPage() {
     );
   }
 
-  const { load, prepPlan, prepBoard, service } = data;
+  const { load, prepPlan, prepBoard, service, tickets, storefrontId } = data;
   const isSlammed = load.level === 'slammed';
 
   return (
@@ -368,6 +372,11 @@ export default function KitchenPage() {
             onClick={togglePause}
           />
         </div>
+      </div>
+
+      {/* Live Order Queue */}
+      <div className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
+        <KitchenOrderQueue tickets={tickets ?? []} storefrontId={storefrontId ?? ''} />
       </div>
 
       {/* Today's Prep Plan */}

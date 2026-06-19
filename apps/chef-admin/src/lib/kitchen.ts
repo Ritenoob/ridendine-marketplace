@@ -31,6 +31,33 @@ export interface ActiveOrder {
     special_instructions: string | null;
     menu_item: { id: string; name: string } | null;
   }[];
+  // Optional fields added for KitchenTicket mapping (Task 4).
+  // Existing consumers (computeKitchenLoad, aggregatePrepBoard) are unaffected.
+  order_number?: string | null;
+  status?: string;
+  created_at?: string;
+  special_instructions?: string | null;
+  customer_id?: string | null;
+  estimated_ready_at?: string | null;
+  prep_started_at?: string | null;
+}
+
+export interface KitchenTicket {
+  id: string;
+  orderNumber: string;
+  status: string;
+  createdAt: string;
+  prepStartedAt: string | null;
+  estimatedReadyAt: string | null;
+  estimatedPrepMinutes: number | null;
+  specialInstructions: string | null;
+  customerName: string | null;
+  items: {
+    name: string;
+    quantity: number;
+    specialInstructions: string | null;
+  }[];
+  totalQty: number;
 }
 
 export interface StorefrontForLoad {
@@ -216,6 +243,48 @@ export function aggregatePrepBoard(activeOrders: ActiveOrder[]): PrepBoardItem[]
   }
 
   return [...map.values()].sort((a, b) => b.totalQty - a.totalQty);
+}
+
+/**
+ * Map enriched active orders to KitchenTicket view models.
+ * Pure function - no DB access. Customer map built by the caller (single batched query).
+ */
+export function mapActiveOrdersToTickets(
+  activeOrders: ActiveOrder[],
+  customersById: Map<string, { first_name: string; last_name: string }>
+): KitchenTicket[] {
+  return activeOrders.map((order) => {
+    const customer = order.customer_id
+      ? customersById.get(order.customer_id)
+      : undefined;
+    const customerName = customer
+      ? `${customer.first_name} ${customer.last_name}`
+      : null;
+
+    const items = order.order_items
+      .filter((oi) => oi.menu_item !== null)
+      .map((oi) => ({
+        name: oi.menu_item!.name,
+        quantity: oi.quantity,
+        specialInstructions: oi.special_instructions,
+      }));
+
+    const totalQty = items.reduce((sum, i) => sum + i.quantity, 0);
+
+    return {
+      id: order.id,
+      orderNumber: order.order_number ?? '',
+      status: order.status ?? '',
+      createdAt: order.created_at ?? '',
+      prepStartedAt: order.prep_started_at ?? null,
+      estimatedReadyAt: order.estimated_ready_at ?? null,
+      estimatedPrepMinutes: order.estimated_prep_minutes,
+      specialInstructions: order.special_instructions ?? null,
+      customerName,
+      items,
+      totalQty,
+    };
+  });
 }
 
 export function computeKitchenLoad(

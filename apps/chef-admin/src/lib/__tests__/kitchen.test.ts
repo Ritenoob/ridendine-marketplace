@@ -5,7 +5,9 @@ import {
   computePrepPlan,
   aggregatePrepBoard,
   computeKitchenLoad,
+  mapActiveOrdersToTickets,
   KITCHEN_TZ,
+  type ActiveOrder,
 } from '../kitchen';
 
 // June 19 2026 is a Friday.
@@ -305,5 +307,71 @@ describe('computeKitchenLoad', () => {
 describe('KITCHEN_TZ', () => {
   it('is set to Americas timezone', () => {
     expect(KITCHEN_TZ).toMatch(/America\//);
+  });
+});
+
+// ============================================================
+// mapActiveOrdersToTickets
+// ============================================================
+
+describe('mapActiveOrdersToTickets', () => {
+  const customersById = new Map([
+    ['c-1', { first_name: 'Amy', last_name: 'Chen' }],
+  ]);
+
+  const fullOrder: ActiveOrder = {
+    id: 'ord-1',
+    order_number: 'RD-1001',
+    status: 'preparing',
+    created_at: '2026-06-19T12:00:00Z',
+    estimated_prep_minutes: 20,
+    prep_started_at: '2026-06-19T11:55:00Z',
+    estimated_ready_at: null,
+    special_instructions: 'extra spicy',
+    customer_id: 'c-1',
+    order_items: [
+      { quantity: 2, special_instructions: 'no onion', menu_item: { id: 'mi-1', name: 'Butter Chicken' } },
+      { quantity: 1, special_instructions: null, menu_item: { id: 'mi-2', name: 'Naan' } },
+    ],
+  };
+
+  it('maps fields, sums totalQty, and attaches customer name', () => {
+    const [t] = mapActiveOrdersToTickets([fullOrder], customersById);
+    expect(t.id).toBe('ord-1');
+    expect(t.orderNumber).toBe('RD-1001');
+    expect(t.status).toBe('preparing');
+    expect(t.createdAt).toBe('2026-06-19T12:00:00Z');
+    expect(t.prepStartedAt).toBe('2026-06-19T11:55:00Z');
+    expect(t.estimatedPrepMinutes).toBe(20);
+    expect(t.estimatedReadyAt).toBeNull();
+    expect(t.specialInstructions).toBe('extra spicy');
+    expect(t.customerName).toBe('Amy Chen');
+    expect(t.items).toHaveLength(2);
+    expect(t.totalQty).toBe(3); // 2 + 1
+  });
+
+  it('returns null customerName when customer not in map', () => {
+    const order: ActiveOrder = {
+      ...fullOrder,
+      id: 'ord-2',
+      customer_id: 'c-unknown',
+    };
+    const [t] = mapActiveOrdersToTickets([order], customersById);
+    expect(t.customerName).toBeNull();
+  });
+
+  it('skips order_items with null menu_item', () => {
+    const order: ActiveOrder = {
+      ...fullOrder,
+      id: 'ord-3',
+      order_items: [
+        { quantity: 1, special_instructions: null, menu_item: null },
+        { quantity: 3, special_instructions: null, menu_item: { id: 'mi-1', name: 'Naan' } },
+      ],
+    };
+    const [t] = mapActiveOrdersToTickets([order], customersById);
+    expect(t.items).toHaveLength(1);
+    expect(t.items[0].name).toBe('Naan');
+    expect(t.totalQty).toBe(3);
   });
 });
