@@ -680,7 +680,10 @@ export class MasterOrderEngine {
       .eq('id', orderId)
       .maybeSingle();
     if ((preCheck as { engine_status?: string } | null)?.engine_status === EngineOrderStatus.PAYMENT_AUTHORIZED) {
-      await this.submitToChef({ orderId, actorId: actor.userId });
+      const submitResult = await this.submitToChef({ orderId, actorId: 'system' });
+      if (!submitResult.success) {
+        return { success: false, error: { code: 'TRANSITION_FAILED', message: `Order not yet submitted to kitchen: ${submitResult.error ?? 'submit failed'}` } };
+      }
     }
 
     const result = await this.chefAccept({

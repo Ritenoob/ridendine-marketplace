@@ -227,6 +227,20 @@ export async function POST(request: Request): Promise<Response> {
                 submitResult.error?.code,
                 redactSensitiveForLog(submitResult.error?.message || '')
               );
+              // Recovery: payment succeeded so directly advance to pending.
+              // The .eq guard makes this idempotent and safe against concurrent cancellations.
+              const { error: fallbackError } = await (admin as any)
+                .from('orders')
+                .update({
+                  engine_status: 'pending',
+                  status: 'pending',
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', orderId)
+                .eq('engine_status', 'payment_authorized');
+              if (fallbackError) {
+                console.error('submitToKitchen fallback also failed for order', orderId, fallbackError.message);
+              }
             }
 
             const cartId = paymentIntent.metadata?.cart_id;
