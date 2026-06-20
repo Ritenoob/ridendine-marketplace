@@ -672,6 +672,17 @@ export class MasterOrderEngine {
     estimatedPrepMinutes: number,
     actor: ActorContext,
   ): Promise<OperationResult<{ id: string; engine_status: string; status: string; previous_engine_status: string }>> {
+    // Recovery: if the Stripe webhook's submitToKitchen failed silently, the order
+    // sits at payment_authorized while the kitchen shows it as pending. Auto-advance.
+    const { data: preCheck } = await this.client
+      .from('orders')
+      .select('engine_status')
+      .eq('id', orderId)
+      .maybeSingle();
+    if ((preCheck as { engine_status?: string } | null)?.engine_status === EngineOrderStatus.PAYMENT_AUTHORIZED) {
+      await this.submitToChef({ orderId, actorId: actor.userId });
+    }
+
     const result = await this.chefAccept({
       orderId,
       actorId: actor.userId,
