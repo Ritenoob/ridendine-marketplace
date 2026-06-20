@@ -11,6 +11,8 @@ export interface PrepCountdownProps {
   estimatedPrepMinutes?: number | null;
   /** Current order status. */
   status: string;
+  /** Render larger text for KDS ticket cards. */
+  large?: boolean;
 }
 
 /** Remaining milliseconds threshold below which the timer turns amber. */
@@ -66,7 +68,9 @@ export function PrepCountdown({
   prepStartedAt,
   estimatedPrepMinutes,
   status,
+  large = false,
 }: PrepCountdownProps): React.ReactElement {
+  const sizeClass = large ? 'text-base font-bold' : 'text-sm font-medium';
   const [now, setNow] = useState<number>(() => Date.now());
 
   // Memoized so it doesn't recompute on every 1-second interval tick.
@@ -92,13 +96,13 @@ export function PrepCountdown({
   if (target === null) {
     if (estimatedPrepMinutes != null) {
       return (
-        <span className="text-sm text-muted-foreground">
+        <span className={`${sizeClass} text-textMuted`}>
           Prep ~{estimatedPrepMinutes}m
         </span>
       );
     }
     return (
-      <span className="text-sm text-muted-foreground">No prep estimate</span>
+      <span className={`${sizeClass} text-textSubtle`}>No prep estimate</span>
     );
   }
 
@@ -119,15 +123,14 @@ export function PrepCountdown({
     label = `Ready in ${formatMs(diffMs)}`;
   }
 
-  const pulseClass =
-    diffMs <= 0 && !reducedMotion ? ' animate-pulse' : '';
+  const pulseClass = diffMs <= 0 && !reducedMotion ? ' animate-pulse' : '';
 
   return (
     <span
       role="timer"
       aria-live="off"
       aria-label={label}
-      className={`text-sm font-medium${pulseClass} ${colorClass}`}
+      className={`${sizeClass}${pulseClass} ${colorClass}`}
     >
       {label}
     </span>
