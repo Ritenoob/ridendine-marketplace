@@ -232,6 +232,7 @@ interface KitchenOrderQueueProps {
 export function KitchenOrderQueue({ tickets, storefrontId }: KitchenOrderQueueProps) {
   const [queue, setQueue] = useState<KitchenTicket[]>(() => sortTickets(tickets));
   const [newCount, setNewCount] = useState(0);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [realtimeStatus, setRealtimeStatus] = useState<LiveIndicatorStatus>('connecting');
   const inFlightIds = useRef<Set<string>>(new Set());
   const notifiedIds = useRef<Set<string>>(new Set());
@@ -313,11 +314,21 @@ export function KitchenOrderQueue({ tickets, storefrontId }: KitchenOrderQueuePr
           setQueue((prev) =>
             sortTickets(prev.map((t) => (t.id === ticket.id ? { ...t, status: ticket.status } : t)))
           );
+          try {
+            const body = await res.json();
+            const msg = body?.error?.message || body?.error?.code || `HTTP ${res.status}`;
+            setActionError(`Action failed: ${msg}`);
+          } catch {
+            setActionError(`Action failed: HTTP ${res.status}`);
+          }
+        } else {
+          setActionError(null);
         }
       } catch {
         setQueue((prev) =>
           sortTickets(prev.map((t) => (t.id === ticket.id ? { ...t, status: ticket.status } : t)))
         );
+        setActionError('Action failed: network error');
       } finally {
         inFlightIds.current.delete(ticket.id);
         setQueue((prev) => sortTickets([...prev]));
@@ -330,6 +341,14 @@ export function KitchenOrderQueue({ tickets, storefrontId }: KitchenOrderQueuePr
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Action error banner */}
+      {actionError && (
+        <div className="flex items-center justify-between gap-2 rounded-lg bg-dangerSoft px-4 py-2 text-sm text-danger">
+          <span>{actionError}</span>
+          <button onClick={() => setActionError(null)} className="ml-2 font-bold">x</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
