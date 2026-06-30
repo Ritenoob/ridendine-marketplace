@@ -29,9 +29,10 @@ interface RouteParams {
 }
 
 // Cancellable before the chef accepts (mirrors customer self-serve cancel).
-// `draft` = order created but payment not yet confirmed (abandoned checkout).
+// The engine state machine has no draft -> cancelled path, so unpaid `draft`
+// checkouts are not cancellable here (they expire on their own); cancel applies
+// to paid, not-yet-accepted orders.
 const PARTNER_CANCELLABLE_STATUSES = new Set([
-  'draft',
   'pending',
   'payment_authorized',
   'checkout_pending',
