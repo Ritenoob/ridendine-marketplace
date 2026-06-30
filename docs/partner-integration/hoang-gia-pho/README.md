@@ -101,3 +101,45 @@ the same order so a network retry never double-charges.
 Use Stripe test mode (RideNDine pointed at `sk_test_…` / `pk_test_…`) and card
 `4242 4242 4242 4242`, any future expiry/CVC. Confirm the order appears in the
 chef app after `payment_intent.succeeded`.
+
+## Order status webhooks (recommended)
+
+So your storefront can show live status (received → accepted → preparing →
+ready → delivered) instead of stopping at payment, register a webhook with
+RideNDine. RideNDine stores a `webhook_url` + `webhook_secret` on your partner
+record and POSTs an event each time the order advances:
+
+```json
+{ "id": "<delivery-id>", "event": "order.ready",
+  "order": { "id": "...", "orderNumber": "RD-...", "status": "ready_for_pickup", "total": 45.56 },
+  "occurredAt": "2026-06-30T..." }
+```
+
+Events: `order.received`, `order.accepted`, `order.preparing`, `order.ready`,
+`order.delivered`, `order.cancelled`, `order.rejected`.
+
+**Verify the signature** before trusting a webhook — header
+`X-RideNDine-Signature: sha256=<hex>` is `HMAC-SHA256(webhook_secret, raw_body)`:
+
+```js
+import { createHmac, timingSafeEqual } from 'crypto';
+function verify(rawBody, header, secret) {
+  const expected = 'sha256=' + createHmac('sha256', secret).update(rawBody).digest('hex');
+  const a = Buffer.from(header || ''); const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+```
+
+Respond `2xx` to acknowledge; non-2xx / timeout is retried with exponential
+backoff (up to 6 attempts). Delivery cadence depends on RideNDine's processor
+schedule.
+
+## Menu as source of truth
+
+The `MENU` map in `api/pay.js` is a convenience. Prices and availability live in
+RideNDine — fetch `GET /api/partner/storefronts/{id}/menu` (returns the real
+`menuItemId`s, prices, and `soldOut`) rather than hard-coding prices, so your
+storefront never drifts from the kitchen. RideNDine always reprices server-side,
+so a stale map can never overcharge — but it can show wrong prices or let a
+sold-out item be ordered. The storefront list now also returns `acceptingOrders`
+so you can hide a paused kitchen.

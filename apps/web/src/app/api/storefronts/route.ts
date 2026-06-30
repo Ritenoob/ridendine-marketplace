@@ -17,7 +17,10 @@ function publicStorefront(row: any) {
     minOrderAmount: row.min_order_amount,
     estimatedPrepTimeMin: row.estimated_prep_time_min,
     estimatedPrepTimeMax: row.estimated_prep_time_max,
-    acceptingOrders: row.accepting_orders,
+    // chef_storefronts has no `accepting_orders` column — a storefront is taking
+    // orders when it is active and not paused.
+    acceptingOrders: row.is_active === true && row.is_paused !== true,
+    isPaused: row.is_paused === true,
     isFeatured: row.is_featured,
     chef: row.chef_profiles
       ? {
