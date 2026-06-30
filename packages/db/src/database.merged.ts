@@ -284,6 +284,184 @@ type NotificationsWithAliases = {
   Relationships: GenTables['notifications']['Relationships'];
 };
 
+// ------------------------------------------------------------------
+// Migration 00056 — inventory tables (typegen runs against an older remote DB).
+// ------------------------------------------------------------------
+type StorageLocationsTable = {
+  Row: { id: string; storefront_id: string; name: string; type: string; created_at: string; updated_at: string };
+  Insert: { id?: string; storefront_id: string; name: string; type?: string; created_at?: string; updated_at?: string };
+  Update: { id?: string; storefront_id?: string; name?: string; type?: string; created_at?: string; updated_at?: string };
+  Relationships: [];
+};
+
+type InventoryItemsTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    name: string;
+    category: string | null;
+    unit: string;
+    current_quantity: number;
+    par_quantity: number | null;
+    reorder_point: number | null;
+    cost_per_unit: number;
+    preferred_supplier_id: string | null;
+    storage_location_id: string | null;
+    expiry_date: string | null;
+    lot_code: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    name: string;
+    category?: string | null;
+    unit?: string;
+    current_quantity?: number;
+    par_quantity?: number | null;
+    reorder_point?: number | null;
+    cost_per_unit?: number;
+    preferred_supplier_id?: string | null;
+    storage_location_id?: string | null;
+    expiry_date?: string | null;
+    lot_code?: string | null;
+    is_active?: boolean;
+    created_at?: string;
+    updated_at?: string;
+  };
+  Update: Partial<InventoryItemsTable['Insert']>;
+  Relationships: [];
+};
+
+type InventoryStockMovementsTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    inventory_item_id: string;
+    movement_type: string;
+    quantity: number;
+    unit_cost: number | null;
+    reference_type: string | null;
+    reference_id: string | null;
+    note: string | null;
+    created_by: string | null;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    inventory_item_id: string;
+    movement_type: string;
+    quantity: number;
+    unit_cost?: number | null;
+    reference_type?: string | null;
+    reference_id?: string | null;
+    note?: string | null;
+    created_by?: string | null;
+    created_at?: string;
+  };
+  Update: Partial<InventoryStockMovementsTable['Insert']>;
+  Relationships: [];
+};
+
+type InventoryCountsTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    status: string;
+    counted_by: string | null;
+    note: string | null;
+    created_at: string;
+    completed_at: string | null;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    status?: string;
+    counted_by?: string | null;
+    note?: string | null;
+    created_at?: string;
+    completed_at?: string | null;
+  };
+  Update: Partial<InventoryCountsTable['Insert']>;
+  Relationships: [];
+};
+
+type InventoryCountLinesTable = {
+  Row: {
+    id: string;
+    count_id: string;
+    inventory_item_id: string;
+    counted_quantity: number;
+    system_quantity: number | null;
+    variance: number | null;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    count_id: string;
+    inventory_item_id: string;
+    counted_quantity: number;
+    system_quantity?: number | null;
+    variance?: number | null;
+    created_at?: string;
+  };
+  Update: Partial<InventoryCountLinesTable['Insert']>;
+  Relationships: [];
+};
+
+type InventoryWasteEventsTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    inventory_item_id: string;
+    quantity: number;
+    reason: string | null;
+    cost_value: number | null;
+    created_by: string | null;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    inventory_item_id: string;
+    quantity: number;
+    reason?: string | null;
+    cost_value?: number | null;
+    created_by?: string | null;
+    created_at?: string;
+  };
+  Update: Partial<InventoryWasteEventsTable['Insert']>;
+  Relationships: [];
+};
+
+type InventoryAlertsTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    inventory_item_id: string;
+    alert_type: string;
+    status: string;
+    detail: Record<string, unknown>;
+    created_at: string;
+    resolved_at: string | null;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    inventory_item_id: string;
+    alert_type: string;
+    status?: string;
+    detail?: Record<string, unknown>;
+    created_at?: string;
+    resolved_at?: string | null;
+  };
+  Update: Partial<InventoryAlertsTable['Insert']>;
+  Relationships: [];
+};
+
 type MergedTables = Omit<
   GenTables,
   | 'drivers'
@@ -306,6 +484,13 @@ type MergedTables = Omit<
   instant_payout_requests: InstantPayoutRequestsTable;
   service_areas: ServiceAreasTable;
   promo_code_usages: PromoCodeUsagesTable;
+  storage_locations: StorageLocationsTable;
+  inventory_items: InventoryItemsTable;
+  inventory_stock_movements: InventoryStockMovementsTable;
+  inventory_counts: InventoryCountsTable;
+  inventory_count_lines: InventoryCountLinesTable;
+  inventory_waste_events: InventoryWasteEventsTable;
+  inventory_alerts: InventoryAlertsTable;
 };
 
 export type Database = Omit<GeneratedDatabase, 'public'> & {

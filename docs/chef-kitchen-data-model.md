@@ -124,9 +124,48 @@ Recipe/costing CRUD APIs (`/api/recipes`, `/api/menu/[id]/recipe`,
 recipe engine that writes `recipe_cost_snapshots` at order time — all land once
 `00055` is applied. The costing math they call is already built and tested.
 
+## Stage 7 — Inventory
+
+Migration: `supabase/migrations/00056_inventory.sql` (**additive**; authored, not
+yet applied). Also wires the deferred `recipe_ingredients.inventory_item_id` FK.
+
+### Source of truth: a movement ledger
+
+`inventory_stock_movements` is authoritative — **on-hand = Σ signed movement
+quantities**. `inventory_items.current_quantity` is a **cache** the API keeps in
+step. Movement signs (`packages/engine/src/orchestrators/inventory.engine.ts`,
+pure): `receive`/`return` add; `consume_order`/`consume_batch`/`waste` subtract;
+`adjustment`/`count_correction`/`transfer` carry an explicit sign.
+
+### Tables
+
+`storage_locations`, `inventory_items`, `inventory_stock_movements`,
+`inventory_counts`, `inventory_count_lines`, `inventory_waste_events`,
+`inventory_alerts`. RLS mirrors the earlier stages (chef → own storefront via
+`is_chef_of_storefront`; ops read‑only; service_role full; movements are chef
+**read‑only**). Types are mirrored into `packages/db/src/database.merged.ts` so
+the wired routes are strictly typed before `db:generate` runs.
+
+### Engine intelligence (pure, tested)
+
+`computeStockStatus` (stockout/low/ok), `computeReorderSuggestion` (qty back to
+par), `ordersRemaining`, `computeInventoryAlerts` (low_stock / stockout /
+expiring_soon / expired — stock and expiry independent).
+
+### APIs (wired — active once 00056 is applied)
+
+`GET/POST /api/inventory`, `GET/PATCH /api/inventory/[id]`,
+`POST /api/inventory/[id]/movement`, `GET /api/inventory/alerts`,
+`POST /api/inventory/counts`, `POST /api/inventory/waste`. All authenticate the
+chef, scope every query by `storefront_id` (ownership), rate‑limit writes
+(`chefWrite`), validate with `@ridendine/validation`, and audit‑log creates.
+See `docs/chef-kitchen-api.md`.
+
 ## Verification
 
 ```bash
-pnpm --filter @ridendine/engine typecheck && pnpm --filter @ridendine/engine exec vitest run kitchen-ticket-state costing.service
-pnpm --filter @ridendine/validation typecheck && pnpm --filter @ridendine/validation exec vitest run kitchen recipe
+pnpm --filter @ridendine/db typecheck
+pnpm --filter @ridendine/engine typecheck && pnpm --filter @ridendine/engine exec vitest run kitchen-ticket-state costing.service inventory.engine
+pnpm --filter @ridendine/validation typecheck && pnpm --filter @ridendine/validation exec vitest run kitchen recipe inventory
+pnpm --filter @ridendine/chef-admin typecheck && pnpm --filter @ridendine/chef-admin exec jest
 ```
