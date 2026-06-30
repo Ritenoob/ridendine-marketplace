@@ -150,6 +150,8 @@ const ACTOR_PERMISSION_MATRIX: Record<string, Set<string>> = {
   ]),
 };
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Action -> event type mapping
 const ACTION_EVENT_MAP: Record<string, string> = {
   create_order: 'order.created',
@@ -278,7 +280,10 @@ export class MasterOrderEngine {
     if (reason) {
       if (action === 'cancel_order') {
         updateData.cancellation_reason = reason;
-        updateData.cancelled_by = actorId;
+        // cancelled_by is a uuid column; non-uuid actors (e.g. 'system' for
+        // processor/partner-initiated cancels) record null rather than failing
+        // the whole update. Real user/ops cancels still record their uuid.
+        updateData.cancelled_by = UUID_PATTERN.test(actorId) ? actorId : null;
         updateData.cancelled_at = new Date().toISOString();
       }
       if (action === 'reject_order') {

@@ -5,6 +5,8 @@ export const middleware = createAuthMiddleware({
     '/auth/login',
     '/api/health',
     '/api/engine/processors',
+    // Processor-token-gated (not session-auth); the route validates the token.
+    '/api/engine/partner-stats',
     '/api/ops/live-board',
     // E2E walkthrough fix — without these, fresh-session POSTs to
     // /api/auth/login returned 307 from the default-protect middleware,
