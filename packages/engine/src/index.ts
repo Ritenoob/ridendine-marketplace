@@ -109,6 +109,7 @@ export {
 
 // Legacy services (for backwards compatibility)
 export * from './services/orders.service';
+export * from './services/costing.service';
 export * from './services/chefs.service';
 export * from './services/customers.service';
 export * from './services/permissions.service';

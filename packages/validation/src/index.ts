@@ -8,6 +8,7 @@ export * from './schemas/customer';
 export * from './schemas/partner';
 export * from './schemas/order';
 export * from './schemas/kitchen';
+export * from './schemas/recipe';
 export * from './schemas/driver';
 export * from './schemas/common';
 export * from './schemas/ops';

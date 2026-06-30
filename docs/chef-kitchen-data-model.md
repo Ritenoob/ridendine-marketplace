@@ -72,9 +72,61 @@ alongside the order engine's accept/prep/ready actions, the
 and the KDS "Packing" column. These are intentionally not shipped half‑wired
 against tables that don't exist in the live DB yet.
 
+## Stage 6 — Recipes & food cost
+
+Migration: `supabase/migrations/00055_recipes_and_costing.sql` (**additive**;
+authored, not yet applied). Adds `public.is_chef_of_storefront(uuid)` — a
+`SECURITY DEFINER` predicate that DRYs the nested-table RLS policies.
+
+### Tables
+
+| Table | Purpose |
+|---|---|
+| `recipes` | A recipe, optionally linked to a `menu_item` (`storefront_id` scoped) |
+| `recipe_versions` | Versioned definition: `batch_yield`, `portion_size`, `waste_factor`, `is_active` |
+| `recipe_ingredients` | Per‑version lines: `name`, `quantity`, `unit`, `cost_per_unit`, `waste_factor`, `inventory_item_id` (plain UUID; FK added in the inventory stage) |
+| `recipe_steps` | Per‑version prep/cook steps with optional `station` |
+| `menu_item_recipe_versions` | Active recipe version per menu item |
+| `recipe_cost_snapshots` | **Point‑in‑time** cost (so historical orders are never re‑priced with today's costs) |
+| `packaging_items` | Chef's packaging catalogue (`storefront_id` scoped) |
+| `menu_item_packaging` | Packaging used by a menu item, with `quantity` |
+
+### Costing math (`@ridendine/engine`)
+
+`packages/engine/src/services/costing.service.ts` is **pure** (no DB): callers
+pass already‑fetched ingredient/packaging rows. Formulas:
+
+```
+ingredientLineCost = quantity * costPerUnit * (1 + wasteFactor)
+batchIngredientCost = Σ ingredientLineCost
+perPortionFoodCost  = batchIngredientCost / batchYield   (batchYield<=0 ⇒ batchCost)
+packagingCost       = Σ (costPerUnit * quantity)
+totalItemCost       = perPortionFoodCost + packagingCost
+grossMargin         = sellPrice - totalItemCost
+foodCostPct         = totalItemCost / sellPrice           (null when sellPrice = 0)
+suggestedPrice      = totalItemCost / targetFoodCostPct    (default target 30%)
+marginWarning       = foodCostPct > targetFoodCostPct
+```
+
+`computeMenuItemCosting(input)` returns the full rounded breakdown. **No fake
+data** — a menu item with no recipe simply has no costing to show.
+
+### Validation
+
+`packages/validation/src/schemas/recipe.ts`: `createRecipeSchema`,
+`createRecipeVersionSchema`, `recipeIngredientSchema`, `recipeStepSchema`,
+`packagingItemSchema`, `menuItemPackagingSchema`, `attachRecipeToMenuItemSchema`.
+
+### Not yet wired
+
+Recipe/costing CRUD APIs (`/api/recipes`, `/api/menu/[id]/recipe`,
+`/api/menu/[id]/cost`, `/api/costs/overview`), the recipe builder UI, and the
+recipe engine that writes `recipe_cost_snapshots` at order time — all land once
+`00055` is applied. The costing math they call is already built and tested.
+
 ## Verification
 
 ```bash
-pnpm --filter @ridendine/engine typecheck && pnpm --filter @ridendine/engine exec vitest run kitchen-ticket-state
-pnpm --filter @ridendine/validation typecheck && pnpm --filter @ridendine/validation exec vitest run kitchen
+pnpm --filter @ridendine/engine typecheck && pnpm --filter @ridendine/engine exec vitest run kitchen-ticket-state costing.service
+pnpm --filter @ridendine/validation typecheck && pnpm --filter @ridendine/validation exec vitest run kitchen recipe
 ```
