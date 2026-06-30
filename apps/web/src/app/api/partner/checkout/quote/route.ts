@@ -15,6 +15,7 @@ import {
 import { errorResponse, successResponse } from '@/lib/engine';
 import { resolvePartnerContext, partnerHasScope } from '@/lib/partner/auth';
 import { enforcePartnerRateLimit } from '@/lib/partner/rate-limit';
+import { verifyPartnerSignature } from '@/lib/partner/signing';
 import { buildPartnerQuote } from '@/lib/checkout/quote';
 
 export async function POST(request: Request): Promise<Response> {
@@ -39,9 +40,19 @@ export async function POST(request: Request): Promise<Response> {
   const rateLimited = await enforcePartnerRateLimit(request, partner, 'POST:/api/partner/checkout/quote');
   if (rateLimited) return rateLimited;
 
+  let raw: string;
+  try {
+    raw = await request.text();
+  } catch {
+    return errorResponse('VALIDATION_ERROR', 'Invalid body', 400);
+  }
+  const sig = verifyPartnerSignature(partner, raw, request, Date.now());
+  if (!sig.ok) {
+    return errorResponse(sig.code ?? 'SIGNATURE_INVALID', sig.message ?? 'Invalid signature', 401);
+  }
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(raw);
   } catch {
     return errorResponse('VALIDATION_ERROR', 'Invalid JSON body', 400);
   }

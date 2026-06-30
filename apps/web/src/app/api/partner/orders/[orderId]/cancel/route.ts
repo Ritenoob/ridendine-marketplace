@@ -20,6 +20,7 @@ import {
 } from '@ridendine/utils';
 import { resolvePartnerContext, partnerHasScope } from '@/lib/partner/auth';
 import { enforcePartnerRateLimit } from '@/lib/partner/rate-limit';
+import { verifyPartnerSignature } from '@/lib/partner/signing';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,9 @@ interface RouteParams {
 }
 
 // Cancellable before the chef accepts (mirrors customer self-serve cancel).
+// `draft` = order created but payment not yet confirmed (abandoned checkout).
 const PARTNER_CANCELLABLE_STATUSES = new Set([
+  'draft',
   'pending',
   'payment_authorized',
   'checkout_pending',
@@ -54,6 +57,12 @@ export async function POST(request: Request, { params }: RouteParams): Promise<R
   }
   const rateLimited = await enforcePartnerRateLimit(request, partner, 'POST:/api/partner/orders/[orderId]/cancel');
   if (rateLimited) return rateLimited;
+
+  // No request body; sign over empty string when the key requires signing.
+  const sig = verifyPartnerSignature(partner, '', request, Date.now());
+  if (!sig.ok) {
+    return errorResponse(sig.code ?? 'SIGNATURE_INVALID', sig.message ?? 'Invalid signature', 401);
+  }
 
   const { orderId } = await params;
 

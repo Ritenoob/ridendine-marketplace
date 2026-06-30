@@ -15,6 +15,8 @@ export interface ResolvedPartner {
   scopes: string[];
   keyId: string;
   rateLimitPerMin: number;
+  requireSignature: boolean;
+  signingSecret: string | null;
 }
 
 /**
@@ -28,7 +30,7 @@ export async function resolvePartnerByKeyHash(
 ): Promise<ResolvedPartner | null> {
   const { data, error } = await (client as any)
     .from('api_partner_keys')
-    .select('id, scopes, is_active, revoked_at, api_partners!inner(id, name, is_active, test_mode, rate_limit_per_min)')
+    .select('id, scopes, is_active, revoked_at, require_signature, signing_secret, api_partners!inner(id, name, is_active, test_mode, rate_limit_per_min)')
     .eq('key_hash', keyHash)
     .eq('is_active', true)
     .is('revoked_at', null)
@@ -46,6 +48,8 @@ export async function resolvePartnerByKeyHash(
     scopes: Array.isArray((data as any).scopes) ? ((data as any).scopes as string[]) : ['quote', 'checkout'],
     keyId: (data as any).id as string,
     rateLimitPerMin: Number.isFinite(rateLimit) && rateLimit > 0 ? rateLimit : 120,
+    requireSignature: !!(data as any).require_signature,
+    signingSecret: ((data as any).signing_secret as string) ?? null,
   };
 }
 

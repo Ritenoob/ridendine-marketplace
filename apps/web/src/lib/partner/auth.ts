@@ -21,6 +21,8 @@ export interface PartnerContext {
   scopes: string[];
   keyId: string | null;
   rateLimitPerMin: number;
+  requireSignature: boolean;
+  signingSecret: string | null;
 }
 
 function extractKey(request: Request): string {
@@ -61,6 +63,8 @@ export async function resolvePartnerContext(
       scopes: resolved.scopes,
       keyId: resolved.keyId,
       rateLimitPerMin: resolved.rateLimitPerMin,
+      requireSignature: resolved.requireSignature,
+      signingSecret: resolved.signingSecret,
     };
   }
 
@@ -74,6 +78,8 @@ export async function resolvePartnerContext(
       scopes: ['quote', 'checkout'],
       keyId: null,
       rateLimitPerMin: 120,
+      requireSignature: false,
+      signingSecret: null,
     };
   }
 
