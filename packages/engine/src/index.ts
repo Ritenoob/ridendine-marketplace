@@ -15,6 +15,7 @@ export * from './core/sla-checks';
 export * from './orchestrators/master-order-engine';
 export * from './orchestrators/delivery-engine';
 export * from './orchestrators/order-state-machine';
+export * from './orchestrators/kitchen-ticket-state';
 export * from './orchestrators/payout-engine';
 
 // Phase 3 extractions
