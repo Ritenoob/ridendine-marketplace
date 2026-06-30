@@ -27,7 +27,7 @@ jest.mock('@ridendine/utils', () => ({
 }));
 
 jest.mock('@/lib/engine', () => ({
-  getEngine: () => ({ orders: { cancelOrder: (...a: unknown[]) => mockCancelOrder(...a) } }),
+  getEngine: () => ({ masterOrder: { cancelOrder: (...a: unknown[]) => mockCancelOrder(...a) } }),
   getSystemActor: () => ({ userId: 'system', role: 'system' }),
   errorResponse: (code: string, message: string, status = 400) =>
     Response.json({ success: false, code, error: message }, { status }),

@@ -90,7 +90,10 @@ export async function POST(request: Request, { params }: RouteParams): Promise<R
 
   const engine = getEngine();
   const systemActor = getSystemActor();
-  const result = await engine.orders.cancelOrder({
+  // masterOrder.cancelOrder routes through the state machine and handles the
+  // 'system' actor (orders.cancelOrder writes actorId into a uuid column, which
+  // rejects 'system'). It also voids/refunds the payment intent.
+  const result = await (engine as any).masterOrder.cancelOrder({
     orderId,
     actorId: systemActor.userId,
     actorType: systemActor.role,
@@ -100,13 +103,13 @@ export async function POST(request: Request, { params }: RouteParams): Promise<R
     actor: systemActor,
   });
 
-  if (!result.success) {
-    return errorResponse('CANCEL_FAILED', (result as any).error ?? 'Cancellation failed', 500);
+  if (!result?.success) {
+    return errorResponse('CANCEL_FAILED', result?.error?.message ?? result?.error ?? 'Cancellation failed', 500);
   }
 
   return successResponse({
     orderId,
-    engineStatus: result.order.engine_status,
-    message: 'Order cancelled. The customer will be refunded.',
+    engineStatus: result.order?.engine_status ?? 'cancelled',
+    message: 'Order cancelled. Any captured payment will be refunded.',
   });
 }
