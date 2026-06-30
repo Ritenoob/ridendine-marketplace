@@ -1,8 +1,8 @@
 // ==========================================
 // PARTNER CHECKOUT QUOTE API
-// Returns the canonical server-computed total for an inline partner order
-// without creating an order or PaymentIntent. Same pricing engine as the
-// customer-facing /api/checkout/quote.
+// Returns the canonical server-computed total for an inline partner order.
+// Side-effect-free: prices the items + address with NO customer/address/cart
+// rows written (buildPartnerQuote). Same pricing engine as customer checkout.
 // ==========================================
 
 import { createAdminClient, type SupabaseClient } from '@ridendine/db';
@@ -14,8 +14,7 @@ import {
 } from '@ridendine/utils';
 import { errorResponse, successResponse } from '@/lib/engine';
 import { resolvePartnerContext, partnerHasScope } from '@/lib/partner/auth';
-import { materializePartnerOrder, MaterializeError } from '@/lib/partner/materialize';
-import { buildCheckoutQuote } from '@/lib/checkout/quote';
+import { buildPartnerQuote } from '@/lib/checkout/quote';
 
 export async function POST(request: Request): Promise<Response> {
   const limit = await evaluateRateLimit({
@@ -53,27 +52,11 @@ export async function POST(request: Request): Promise<Response> {
   }
   const data = validationResult.data;
 
-  let materialized;
-  try {
-    materialized = await materializePartnerOrder(adminClient, {
-      storefrontId: data.storefrontId,
-      customer: data.customer,
-      deliveryAddress: data.deliveryAddress,
-      items: data.items,
-    });
-  } catch (error) {
-    if (error instanceof MaterializeError) {
-      return errorResponse(error.code, error.publicMessage, error.status);
-    }
-    console.error('Partner quote materialization error:', error);
-    return errorResponse('INTERNAL_ERROR', 'Failed to prepare partner order', 500);
-  }
-
-  const quoteResult = await buildCheckoutQuote({
+  const quoteResult = await buildPartnerQuote({
     adminClient,
-    customerId: materialized.customerId,
     storefrontId: data.storefrontId,
-    deliveryAddressId: materialized.deliveryAddressId,
+    items: data.items,
+    deliveryAddress: data.deliveryAddress,
     tip: data.tip ?? 0,
     promoCode: data.promoCode,
   });

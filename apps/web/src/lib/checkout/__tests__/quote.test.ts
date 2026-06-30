@@ -2,12 +2,13 @@
  * @jest-environment node
  */
 
-import { buildCheckoutQuote } from '../quote';
+import { buildCheckoutQuote, buildPartnerQuote } from '../quote';
 
 const mockGetCartWithItems = jest.fn();
 const mockCalculateDeliveryFee = jest.fn();
 const mockIsWithinDeliveryZone = jest.fn();
 const mockGetTaxRates = jest.fn();
+const mockGeocodeAddress = jest.fn();
 
 jest.mock('@ridendine/db', () => ({
   getCartWithItems: (...args: unknown[]) => mockGetCartWithItems(...args),
@@ -20,6 +21,8 @@ jest.mock('@ridendine/engine', () => ({
   estimateDistance: () => 1.2,
   getSurgeMultiplier: async () => 1,
   isWithinDeliveryZone: (...args: unknown[]) => mockIsWithinDeliveryZone(...args),
+  geocodeAddress: (...args: unknown[]) => mockGeocodeAddress(...args),
+  buildAddressString: (a: Record<string, unknown>) => Object.values(a).join(', '),
 }));
 
 function createAdminClientMock(overrides: {
@@ -268,5 +271,46 @@ describe('buildCheckoutQuote modifier validation', () => {
       ok: false,
       error: { code: 'OPTION_VALUE_UNAVAILABLE' },
     });
+  });
+});
+
+describe('buildPartnerQuote (side-effect-free inline quote)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCalculateDeliveryFee.mockReturnValue({ feeCents: 500 });
+    mockIsWithinDeliveryZone.mockResolvedValue(true);
+    mockGetTaxRates.mockResolvedValue({ hstRate: 0, serviceFeePercent: 0 });
+  });
+
+  it('prices inline items WITHOUT reading or writing a cart', async () => {
+    const result = await buildPartnerQuote({
+      adminClient: createAdminClientMock() as any,
+      storefrontId: 'storefront-1',
+      items: [{ menuItemId: 'menu-1', quantity: 2, selectedOptions: [{ optionId: 'option-1', valueId: 'value-1' }] }],
+      deliveryAddress: { addressLine1: '1 King St', city: 'Hamilton', state: 'ON', postalCode: 'L8P1A1', lat: 43.25, lng: -79.87 },
+      tip: 3,
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    // 2 × ($10 menu + $2 modifier) = $24 subtotal, + $3 tip
+    expect(result.value.quote.subtotal).toBe(24);
+    expect(result.value.quote.tip).toBe(3);
+    // No cart involved at all — this is the whole point of Part C.
+    expect(mockGetCartWithItems).not.toHaveBeenCalled();
+    // lat/lng supplied → no geocoding needed.
+    expect(mockGeocodeAddress).not.toHaveBeenCalled();
+  });
+
+  it('geocodes when coordinates are not supplied', async () => {
+    mockGeocodeAddress.mockResolvedValue({ latitude: 43.25, longitude: -79.87 });
+    const result = await buildPartnerQuote({
+      adminClient: createAdminClientMock() as any,
+      storefrontId: 'storefront-1',
+      items: [{ menuItemId: 'menu-1', quantity: 1, selectedOptions: [{ optionId: 'option-1', valueId: 'value-1' }] }],
+      deliveryAddress: { addressLine1: '1 King St', city: 'Hamilton', state: 'ON', postalCode: 'L8P1A1' },
+    });
+    expect(result.ok).toBe(true);
+    expect(mockGeocodeAddress).toHaveBeenCalledTimes(1);
   });
 });
