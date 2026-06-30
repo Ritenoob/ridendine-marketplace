@@ -22,6 +22,10 @@ out/
 *.pem
 *.key
 
+# Partner integration — local Vercel env handoff files carry the partner secret
+*-vercel.env
+docs/partner-integration/**/partner-vercel.env
+
 # Legacy test credentials file (removed in rebuild Phase 1).
 # Listed here so a future accidental paste of the same filename never re-enters the repo.
 TEST_CREDENTIALS.md
