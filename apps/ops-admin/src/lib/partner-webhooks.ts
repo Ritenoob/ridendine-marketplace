@@ -1,23 +1,25 @@
 // ==========================================
 // PARTNER WEBHOOK DELIVERY
 // Delivers order-lifecycle events to partners that registered a webhook_url.
-// Enqueues from domain_events (idempotent on domain_event_id), then delivers
-// pending/failed rows with HMAC-signed bodies and exponential backoff retry.
-// Driven by the partner-webhooks processor cron.
+// Enqueues from order_status_history (the persistent status-transition log;
+// domain_events is volatile/pruned), idempotent on the history row id, then
+// delivers pending/failed rows with HMAC-signed bodies and exponential-backoff
+// retry. Driven by the partner-webhooks processor cron.
 // ==========================================
 
 import { createHmac } from 'crypto';
 import type { SupabaseClient } from '@ridendine/db';
 
-/** engine domain event -> partner-facing event name. Only these are delivered. */
-const DELIVERABLE_EVENTS: Record<string, string> = {
-  'order.submitted': 'order.received', // paid + sent to the kitchen
-  'order.accepted': 'order.accepted',
-  'order.prep_started': 'order.preparing',
-  'order.ready': 'order.ready',
-  'order.completed': 'order.delivered',
-  'order.cancelled': 'order.cancelled',
-  'order.rejected': 'order.rejected',
+/** order status (new_status) -> partner-facing event name. Only these deliver. */
+const STATUS_EVENTS: Record<string, string> = {
+  accepted: 'order.accepted',
+  preparing: 'order.preparing',
+  ready_for_pickup: 'order.ready',
+  out_for_delivery: 'order.out_for_delivery',
+  delivered: 'order.delivered',
+  completed: 'order.delivered',
+  cancelled: 'order.cancelled',
+  rejected: 'order.rejected',
 };
 
 const ENQUEUE_WINDOW_MS = 48 * 60 * 60 * 1000;
@@ -43,10 +45,10 @@ interface OrderRow {
   engine_status: string | null;
   total: number | null;
 }
-interface EventRow {
+interface StatusRow {
   id: string;
-  event_type: string;
-  entity_id: string;
+  order_id: string;
+  new_status: string;
   created_at: string;
 }
 
@@ -60,17 +62,17 @@ export async function enqueuePartnerWebhooks(
 ): Promise<number> {
   const since = new Date(nowMs - ENQUEUE_WINDOW_MS).toISOString();
   const { data: events } = await (admin as any)
-    .from('domain_events')
-    .select('id, event_type, entity_id, created_at')
-    .in('event_type', Object.keys(DELIVERABLE_EVENTS))
+    .from('order_status_history')
+    .select('id, order_id, new_status, created_at')
+    .in('new_status', Object.keys(STATUS_EVENTS))
     .gte('created_at', since)
     .order('created_at', { ascending: true })
     .limit(1000);
 
-  const eventRows = (events ?? []) as EventRow[];
+  const eventRows = (events ?? []) as StatusRow[];
   if (eventRows.length === 0) return 0;
 
-  const orderIds = Array.from(new Set(eventRows.map((e) => e.entity_id)));
+  const orderIds = Array.from(new Set(eventRows.map((e) => e.order_id)));
   const { data: orders } = await (admin as any)
     .from('orders')
     .select('id, order_number, partner_id, status, engine_status, total')
@@ -102,7 +104,9 @@ export async function enqueuePartnerWebhooks(
   const toInsert: Record<string, unknown>[] = [];
   for (const ev of eventRows) {
     if (seen.has(ev.id)) continue;
-    const order = orderById.get(ev.entity_id);
+    const partnerEvent = STATUS_EVENTS[ev.new_status];
+    if (!partnerEvent) continue;
+    const order = orderById.get(ev.order_id);
     if (!order?.partner_id) continue;
     const partner = partnerById.get(order.partner_id);
     if (!partner) continue;
@@ -111,9 +115,9 @@ export async function enqueuePartnerWebhooks(
       partner_id: partner.id,
       order_id: order.id,
       domain_event_id: ev.id,
-      event_type: DELIVERABLE_EVENTS[ev.event_type],
+      event_type: partnerEvent,
       payload: {
-        event: DELIVERABLE_EVENTS[ev.event_type],
+        event: partnerEvent,
         order: {
           id: order.id,
           orderNumber: order.order_number,

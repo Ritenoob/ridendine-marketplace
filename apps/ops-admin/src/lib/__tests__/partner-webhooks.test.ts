@@ -43,9 +43,9 @@ describe('enqueuePartnerWebhooks', () => {
     const capture: Record<string, any[]> = {};
     const admin = makeAdmin(
       {
-        domain_events: [
-          { id: 'ev-1', event_type: 'order.ready', entity_id: 'order-1', created_at: '2026-06-30T00:00:00Z' },
-          { id: 'ev-2', event_type: 'order.ready', entity_id: 'order-no-partner', created_at: '2026-06-30T00:00:00Z' },
+        order_status_history: [
+          { id: 'ev-1', new_status: 'ready_for_pickup', order_id: 'order-1', created_at: '2026-06-30T00:00:00Z' },
+          { id: 'ev-2', new_status: 'ready_for_pickup', order_id: 'order-no-partner', created_at: '2026-06-30T00:00:00Z' },
         ],
         orders: [
           { id: 'order-1', order_number: 'RD-1', partner_id: 'p1', status: 'ready_for_pickup', engine_status: 'ready', total: 42 },
@@ -75,7 +75,7 @@ describe('enqueuePartnerWebhooks', () => {
     const capture: Record<string, any[]> = {};
     const admin = makeAdmin(
       {
-        domain_events: [{ id: 'ev-1', event_type: 'order.ready', entity_id: 'order-1', created_at: 'x' }],
+        order_status_history: [{ id: 'ev-1', new_status: 'ready_for_pickup', order_id: 'order-1', created_at: 'x' }],
         orders: [{ id: 'order-1', partner_id: 'p1', order_number: 'RD-1', status: 'ready', engine_status: 'ready', total: 1 }],
         api_partners: [{ id: 'p1', webhook_url: null, webhook_secret: null, is_active: true }],
       },
