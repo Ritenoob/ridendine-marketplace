@@ -8,16 +8,21 @@ import {
   computePrepPlan,
   aggregatePrepBoard,
   computeKitchenLoad,
+  computeServiceMetrics,
   mapActiveOrdersToTickets,
   type PrepMenuItem,
   type HistoricalOrderForPrep,
   type ActiveOrder,
+  type ClosedOrderForMetrics,
 } from '@/lib/kitchen';
 
 export const dynamic = 'force-dynamic';
 
 const ACTIVE_ORDER_STATUSES = ['pending', 'accepted', 'preparing', 'ready_for_pickup'];
 const HISTORICAL_DAYS = 28;
+// Wider than one day so timezone-day filtering inside computeServiceMetrics is
+// safe regardless of UTC offset; the pure function trims to the kitchen's today.
+const TODAY_LOOKBACK_HOURS = 48;
 
 export async function GET(): Promise<Response> {
   try {
@@ -30,8 +35,15 @@ export async function GET(): Promise<Response> {
     const adminClient = createAdminClient();
     const now = new Date();
     const historicalCutoff = new Date(now.getTime() - HISTORICAL_DAYS * 24 * 60 * 60 * 1000);
+    const todayCutoff = new Date(now.getTime() - TODAY_LOOKBACK_HOURS * 60 * 60 * 1000);
 
-    const [storefrontResult, menuItemsResult, activeOrdersResult, historicalOrdersResult] =
+    const [
+      storefrontResult,
+      menuItemsResult,
+      activeOrdersResult,
+      historicalOrdersResult,
+      closedTodayResult,
+    ] =
       await Promise.all([
         adminClient
           .from('chef_storefronts')
@@ -62,6 +74,14 @@ export async function GET(): Promise<Response> {
           .eq('storefront_id', storefrontId)
           .in('status', ['delivered', 'completed'])
           .gte('created_at', historicalCutoff.toISOString()),
+
+        adminClient
+          .from('orders')
+          .select('total, created_at, prep_started_at, actual_ready_at')
+          .eq('storefront_id', storefrontId)
+          .neq('is_test', true)
+          .in('status', ['delivered', 'completed'])
+          .gte('created_at', todayCutoff.toISOString()),
       ]);
 
     const storefront = storefrontResult.data;
@@ -99,13 +119,18 @@ export async function GET(): Promise<Response> {
       ((customers ?? []) as CustomerRow[]).map((c) => [c.id, c])
     );
 
+    if (closedTodayResult.error) console.error('Kitchen overview: closed-today query error', closedTodayResult.error);
+    const closedToday = (closedTodayResult.data ?? []) as unknown as ClosedOrderForMetrics[];
+
     const load = computeKitchenLoad(activeOrders, storefront);
     const prepPlan = computePrepPlan(menuItems, historicalOrders, now);
     const prepBoard = aggregatePrepBoard(activeOrders);
     const tickets = mapActiveOrdersToTickets(activeOrders, customersById);
+    const metrics = computeServiceMetrics(activeOrders, closedToday, menuItems, now);
 
     return successResponse({
       load,
+      metrics,
       prepPlan,
       prepBoard,
       service: {

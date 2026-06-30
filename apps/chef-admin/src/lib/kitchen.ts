@@ -287,6 +287,108 @@ export function mapActiveOrdersToTickets(
   });
 }
 
+// ---------------------------------------------------------------------------
+// Service metrics (Stage 2) — today's live operating snapshot.
+// Pure function over already-fetched rows. Only computes what real data
+// supports; food/labour/prime cost are intentionally NOT here (no recipe or
+// labour data exists yet — those surface as "needs setup" in the UI).
+// ---------------------------------------------------------------------------
+
+export interface ClosedOrderForMetrics {
+  total: number | null;
+  created_at: string;
+  prep_started_at: string | null;
+  actual_ready_at: string | null;
+}
+
+export interface ServiceMetrics {
+  activeCount: number;
+  newWaiting: number;
+  inPrep: number;
+  ready: number;
+  late: number;
+  completedToday: number;
+  salesToday: number;
+  avgPrepMinutes: number | null;
+  soldOutItems: string[];
+  atLimitItems: string[];
+}
+
+/** Calendar-day key (YYYY-MM-DD) for a date in the kitchen's timezone. */
+export function kitchenDateKey(date: Date, tz: string = KITCHEN_TZ): string {
+  const { year, month, day } = getDateParts(date, tz);
+  return toDateKey(year, month, day);
+}
+
+export function computeServiceMetrics(
+  activeOrders: ActiveOrder[],
+  closedOrders: ClosedOrderForMetrics[],
+  menuItems: PrepMenuItem[],
+  now: Date,
+  tz: string = KITCHEN_TZ
+): ServiceMetrics {
+  const nowMs = now.getTime();
+  const todayKey = kitchenDateKey(now, tz);
+
+  let newWaiting = 0;
+  let inPrep = 0;
+  let ready = 0;
+  let late = 0;
+
+  for (const order of activeOrders) {
+    const status = order.status ?? '';
+    if (status === 'pending') newWaiting += 1;
+    else if (status === 'accepted' || status === 'preparing') inPrep += 1;
+    else if (status === 'ready_for_pickup') ready += 1;
+
+    const isActivePrep = ['pending', 'accepted', 'preparing'].includes(status);
+    if (isActivePrep && order.estimated_ready_at && Date.parse(order.estimated_ready_at) < nowMs) {
+      late += 1;
+    }
+  }
+
+  // Restrict closed orders to today (kitchen tz) for sales / avg prep.
+  const closedToday = closedOrders.filter(
+    (o) => o.created_at && kitchenDateKey(new Date(o.created_at), tz) === todayKey
+  );
+  const salesToday = closedToday.reduce((sum, o) => sum + Number(o.total ?? 0), 0);
+
+  const prepDurations = closedToday
+    .filter((o) => o.prep_started_at && o.actual_ready_at)
+    .map(
+      (o) =>
+        (Date.parse(o.actual_ready_at as string) - Date.parse(o.prep_started_at as string)) / 60000
+    )
+    .filter((mins) => Number.isFinite(mins) && mins >= 0);
+  const avgPrepMinutes =
+    prepDurations.length > 0
+      ? Math.round(prepDurations.reduce((s, m) => s + m, 0) / prepDurations.length)
+      : null;
+
+  const soldOutItems = menuItems.filter((m) => m.is_sold_out).map((m) => m.name);
+  const atLimitItems = menuItems
+    .filter(
+      (m) =>
+        !m.is_sold_out &&
+        m.daily_limit != null &&
+        (m.daily_sold ?? 0) >= m.daily_limit
+    )
+    .map((m) => m.name);
+
+  return {
+    activeCount: activeOrders.length,
+    newWaiting,
+    inPrep,
+    ready,
+    late,
+    completedToday: closedToday.length,
+    salesToday,
+    avgPrepMinutes,
+    soldOutItems,
+    atLimitItems,
+  };
+}
+
 export function computeKitchenLoad(
   activeOrders: ActiveOrder[],
   storefront: StorefrontForLoad

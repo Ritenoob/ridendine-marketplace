@@ -1,6 +1,6 @@
 # High-Risk Ops Authorization Contracts
 
-Generated: 2026-06-11T04:46:27.507Z
+Generated: 2026-06-22T18:27:29.554Z
 
 This generated audit documents static authorization contracts for high-risk Ops/control-plane routes. It does not change route behavior; it fails if a route drops its expected actor context, capability guard, processor token validation, Stripe signature validation, or internal command-center gate.
 

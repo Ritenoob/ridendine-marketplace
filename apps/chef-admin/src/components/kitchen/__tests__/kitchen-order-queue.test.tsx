@@ -171,7 +171,8 @@ describe('KitchenOrderQueue', () => {
     );
   });
 
-  it('patches customer name on the hydrated second onInsert call', async () => {
+  it('hydrates a new realtime ticket via the ticket endpoint so items are never empty', async () => {
+    const { playNewOrderChime } = require('@/lib/sound') as { playNewOrderChime: jest.Mock };
     const { useStorefrontOrdersRealtime } = require('@/hooks/use-storefront-orders-realtime') as {
       useStorefrontOrdersRealtime: jest.Mock;
     };
@@ -182,10 +183,24 @@ describe('KitchenOrderQueue', () => {
       }
     );
 
+    // The hydration endpoint returns the FULL ticket (items + customer).
+    const hydrated = ticket({
+      id: 'ord-new',
+      status: 'pending',
+      orderNumber: 'RD-999',
+      customerName: 'Alice Chen',
+      items: [{ name: 'Pho Tai', quantity: 1, specialInstructions: null }],
+      totalQty: 1,
+    });
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: { ticket: hydrated } }),
+    });
+
     render(<KitchenOrderQueue tickets={[]} storefrontId="sf-1" />);
 
-    // First call: thin INSERT (no customer)
-    act(() => {
+    // Realtime delivers a THIN row (no items, no customer).
+    await act(async () => {
       capturedOnInsert!({
         id: 'ord-new',
         order_number: 'RD-999',
@@ -194,23 +209,16 @@ describe('KitchenOrderQueue', () => {
         customer: null,
       });
     });
-    expect(screen.getByText('RD-999')).toBeInTheDocument();
-    expect(screen.queryByText(/Alice Chen/)).toBeNull();
 
-    // Second call: hydrated INSERT (same id, now with customer)
-    act(() => {
-      capturedOnInsert!({
-        id: 'ord-new',
-        order_number: 'RD-999',
-        status: 'pending',
-        created_at: new Date(NOW).toISOString(),
-        customer: { first_name: 'Alice', last_name: 'Chen' },
-      });
-    });
+    // The queue hydrates the ticket from the server before showing full data.
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith('/api/kitchen/tickets/ord-new')
+    );
+    expect(await screen.findByText('Alice Chen')).toBeInTheDocument();
+    expect(screen.getByText('Pho Tai')).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(screen.getByText(/Alice Chen/)).toBeInTheDocument();
-    });
+    // Chime fires exactly once for the new order.
+    expect(playNewOrderChime).toHaveBeenCalledTimes(1);
   });
 
   it('resets the new-order badge count when clicked', async () => {
@@ -275,11 +283,12 @@ describe('KitchenOrderQueue', () => {
       />
     );
 
-    // ord-2 must still reflect the optimistic state (Mark Ready button = preparing)
-    // NOT reverted to Accept button (accepted)
+    // ord-2 must still reflect the confirmed optimistic state: it shows
+    // "Mark Ready" (preparing) and must NOT revert to "Start Preparing"
+    // (accepted). (ord-3 stays pending and legitimately keeps its Accept button.)
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: 'Start Preparing' })).toBeNull();
-      expect(screen.queryByRole('button', { name: 'Accept' })).toBeNull();
+      expect(screen.getByRole('button', { name: 'Mark Ready' })).toBeInTheDocument();
     });
   });
 });

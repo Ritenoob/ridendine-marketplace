@@ -4,15 +4,14 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   AlertTriangle,
   AlertCircle,
-  Flame,
-  Clock,
   RefreshCw,
   ChevronDown,
   ChevronUp,
   Check,
 } from 'lucide-react';
 import { KitchenOrderQueue } from '@/components/kitchen/kitchen-order-queue';
-import type { KitchenTicket } from '@/lib/kitchen';
+import { KitchenCommandHeader } from '@/components/kitchen/kitchen-command-header';
+import type { KitchenTicket, ServiceMetrics } from '@/lib/kitchen';
 
 // ============================================================
 // Types matching /api/kitchen/overview response
@@ -54,23 +53,13 @@ interface PrepBoardItem {
 
 interface OverviewPayload {
   load: KitchenLoad;
+  metrics: ServiceMetrics;
   prepPlan: PrepPlanItem[];
   prepBoard: PrepBoardItem[];
   service: { isPaused: boolean; isActive: boolean };
   tickets: KitchenTicket[];
   storefrontId: string;
 }
-
-// ============================================================
-// Load level config
-// ============================================================
-
-const LEVEL_CONFIG: Record<LoadLevel, { label: string; badge: string; dot: string }> = {
-  idle:    { label: 'Idle',    badge: 'bg-surfaceMuted text-textMuted',   dot: 'bg-textSubtle' },
-  steady:  { label: 'Steady',  badge: 'bg-successSoft text-success',      dot: 'bg-success' },
-  busy:    { label: 'Busy',    badge: 'bg-warningSoft text-warning',      dot: 'bg-warning' },
-  slammed: { label: 'Slammed', badge: 'bg-dangerSoft text-danger',        dot: 'bg-danger' },
-};
 
 const BASIS_LABEL: Record<PrepPlanItem['basis'], string> = {
   'same-weekday': 'same-weekday avg',
@@ -81,39 +70,6 @@ const BASIS_LABEL: Record<PrepPlanItem['basis'], string> = {
 // ============================================================
 // Sub-components
 // ============================================================
-
-function LoadGauge({ load }: { load: KitchenLoad }) {
-  const config = LEVEL_CONFIG[load.level];
-  const fillPct = load.capacity > 0
-    ? Math.min(100, Math.round((load.activeCount / load.capacity) * 100))
-    : 0;
-
-  return (
-    <div className="flex items-center gap-4 flex-wrap">
-      <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${config.badge}`}>
-        <span className={`h-2 w-2 rounded-full ${config.dot}`} />
-        {config.label}
-      </span>
-      <div className="flex items-center gap-2">
-        <div className="h-2 w-32 rounded-full bg-surfaceMuted overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${config.dot}`}
-            style={{ width: `${fillPct}%` }}
-          />
-        </div>
-        <span className="text-xs text-textMuted whitespace-nowrap">
-          {load.activeCount}/{load.capacity} orders
-        </span>
-      </div>
-      {load.outstandingPrepMinutes > 0 && (
-        <span className="flex items-center gap-1 text-xs text-textMuted">
-          <Clock className="h-3.5 w-3.5" />
-          ~{load.outstandingPrepMinutes}min outstanding
-        </span>
-      )}
-    </div>
-  );
-}
 
 function PauseButton({
   isPaused,
@@ -304,7 +260,7 @@ export default function KitchenPage() {
     );
   }
 
-  const { load, prepPlan, prepBoard, service, tickets, storefrontId } = data;
+  const { load, metrics, prepPlan, prepBoard, service, tickets, storefrontId } = data;
   const isSlammed = load.level === 'slammed';
 
   return (
@@ -356,23 +312,17 @@ export default function KitchenPage() {
         </button>
       </div>
 
-      {/* Service control card */}
-      <div className="rounded-xl border border-divider bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Flame className="h-5 w-5 text-primary" />
-              <h2 className="font-bold text-text">Kitchen Load</h2>
-            </div>
-            <LoadGauge load={load} />
-          </div>
-          <PauseButton
-            isPaused={service.isPaused}
-            loading={pausing}
-            onClick={togglePause}
-          />
-        </div>
+      {/* Service control */}
+      <div className="flex items-center justify-end">
+        <PauseButton
+          isPaused={service.isPaused}
+          loading={pausing}
+          onClick={togglePause}
+        />
       </div>
+
+      {/* Command metrics header (real data only) */}
+      <KitchenCommandHeader metrics={metrics} load={load} />
 
       {/* Live Order Queue */}
       <div className="rounded-2xl border border-divider bg-white p-5 shadow-sm">
