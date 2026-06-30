@@ -13,7 +13,7 @@ import {
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
 import { errorResponse, successResponse } from '@/lib/engine';
-import { isAuthorizedPartner } from '@/lib/partner/auth';
+import { resolvePartnerContext, partnerHasScope } from '@/lib/partner/auth';
 import { materializePartnerOrder, MaterializeError } from '@/lib/partner/materialize';
 import { buildCheckoutQuote } from '@/lib/checkout/quote';
 
@@ -26,8 +26,14 @@ export async function POST(request: Request): Promise<Response> {
   });
   if (!limit.allowed) return rateLimitPolicyResponse(limit);
 
-  if (!isAuthorizedPartner(request)) {
+  const adminClient = createAdminClient() as unknown as SupabaseClient;
+
+  const partner = await resolvePartnerContext(request, adminClient);
+  if (!partner) {
     return errorResponse('UNAUTHORIZED', 'Invalid or missing partner API key', 401);
+  }
+  if (!partnerHasScope(partner, 'quote')) {
+    return errorResponse('FORBIDDEN_SCOPE', 'This key is not permitted to request quotes', 403);
   }
 
   let body: unknown;
@@ -46,8 +52,6 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
   const data = validationResult.data;
-
-  const adminClient = createAdminClient() as unknown as SupabaseClient;
 
   let materialized;
   try {

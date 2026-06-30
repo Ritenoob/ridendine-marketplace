@@ -15,7 +15,7 @@ import {
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
 import { errorResponse, getSystemActor } from '@/lib/engine';
-import { isAuthorizedPartner } from '@/lib/partner/auth';
+import { resolvePartnerContext, partnerHasScope } from '@/lib/partner/auth';
 import { materializePartnerOrder, MaterializeError } from '@/lib/partner/materialize';
 import { runCheckout, type CheckoutRequestInput } from '@/lib/checkout/run-checkout';
 
@@ -28,8 +28,14 @@ export async function POST(request: Request): Promise<Response> {
   });
   if (!limit.allowed) return rateLimitPolicyResponse(limit);
 
-  if (!isAuthorizedPartner(request)) {
+  const adminClient = createAdminClient() as unknown as SupabaseClient;
+
+  const partner = await resolvePartnerContext(request, adminClient);
+  if (!partner) {
     return errorResponse('UNAUTHORIZED', 'Invalid or missing partner API key', 401);
+  }
+  if (!partnerHasScope(partner, 'checkout')) {
+    return errorResponse('FORBIDDEN_SCOPE', 'This key is not permitted to create orders', 403);
   }
 
   let body: unknown;
@@ -48,8 +54,6 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
   const data = validationResult.data;
-
-  const adminClient = createAdminClient() as unknown as SupabaseClient;
 
   let materialized;
   try {
@@ -83,5 +87,7 @@ export async function POST(request: Request): Promise<Response> {
     actor: getSystemActor(),
     customerId: materialized.customerId,
     input,
+    partnerId: partner.partnerId,
+    isTest: partner.testMode,
   });
 }

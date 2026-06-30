@@ -223,6 +223,10 @@ export interface RunCheckoutParams {
   actor: ActorContext;
   customerId: string;
   input: CheckoutRequestInput;
+  /** Originating partner (partner API only); stamped on the order. */
+  partnerId?: string | null;
+  /** Test-mode order: recorded but kept out of kitchen/finance/loyalty. */
+  isTest?: boolean;
 }
 
 /**
@@ -234,6 +238,8 @@ export async function runCheckout({
   actor,
   customerId,
   input,
+  partnerId = null,
+  isTest = false,
 }: RunCheckoutParams): Promise<Response> {
   try {
     const {
@@ -423,6 +429,10 @@ export async function runCheckout({
         total: serverQuote.total,
         updated_at: new Date().toISOString(),
       };
+      // Attribute partner-originated orders + carry the test flag (columns added
+      // in migration 00050; cast since generated types may not include them yet).
+      if (partnerId) (orderUpdate as Record<string, unknown>).partner_id = partnerId;
+      if (isTest) (orderUpdate as Record<string, unknown>).is_test = true;
       if (resolvedScheduledFor) {
         // scheduled_for column may not exist in generated types yet — use cast
         (orderUpdate as Record<string, unknown>).scheduled_for = resolvedScheduledFor;
@@ -470,6 +480,8 @@ export async function runCheckout({
           cart_id: cart.id,
           order_total_cents: String(totalCents),
           ...(promoCodeId && { promo_code_id: promoCodeId }),
+          ...(partnerId && { partner_id: partnerId }),
+          ...(isTest && { is_test: 'true' }),
         },
       };
       if (stripeCustomerId) piParams.customer = stripeCustomerId;

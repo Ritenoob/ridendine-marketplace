@@ -23,3 +23,4 @@ export * from './team.repository';
 export * from './notification.repository';
 export * from './processor-run.repository';
 export * from './review.repository';
+export * from './partner.repository';

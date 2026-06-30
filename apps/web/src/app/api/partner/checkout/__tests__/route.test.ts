@@ -5,7 +5,7 @@
 import { POST } from '../route';
 
 const mockEvaluateRateLimit = jest.fn();
-const mockIsAuthorizedPartner = jest.fn();
+const mockResolvePartner = jest.fn();
 const mockMaterialize = jest.fn();
 const mockRunCheckout = jest.fn();
 const mockGetSystemActor = jest.fn();
@@ -30,7 +30,8 @@ jest.mock('@/lib/engine', () => ({
 }));
 
 jest.mock('@/lib/partner/auth', () => ({
-  isAuthorizedPartner: (...args: unknown[]) => mockIsAuthorizedPartner(...args),
+  resolvePartnerContext: (...args: unknown[]) => mockResolvePartner(...args),
+  partnerHasScope: (ctx: { scopes: string[] }, scope: string) => ctx.scopes.includes(scope),
 }));
 
 // Define the error class INSIDE the factory: jest.mock is hoisted above
@@ -87,7 +88,9 @@ describe('POST /api/partner/checkout', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockEvaluateRateLimit.mockResolvedValue({ allowed: true, remaining: 59, policy: 'partner_checkout' });
-    mockIsAuthorizedPartner.mockReturnValue(true);
+    mockResolvePartner.mockResolvedValue({
+      partnerId: 'p1', partnerName: 'Hoang Gia Pho', testMode: false, scopes: ['quote', 'checkout'], keyId: 'k1',
+    });
     mockGetSystemActor.mockReturnValue({ userId: 'system', role: 'system' });
     mockMaterialize.mockResolvedValue({
       customerId: 'cust-guest',
@@ -110,13 +113,35 @@ describe('POST /api/partner/checkout', () => {
   });
 
   it('rejects requests without a valid partner key', async () => {
-    mockIsAuthorizedPartner.mockReturnValue(false);
+    mockResolvePartner.mockResolvedValue(null);
     const res = await POST(buildRequest(VALID_BODY));
     const body = await res.json();
     expect(res.status).toBe(401);
     expect(body.code).toBe('UNAUTHORIZED');
     expect(mockMaterialize).not.toHaveBeenCalled();
     expect(mockRunCheckout).not.toHaveBeenCalled();
+  });
+
+  it('rejects a key without the checkout scope (403)', async () => {
+    mockResolvePartner.mockResolvedValue({
+      partnerId: 'p1', partnerName: 'X', testMode: false, scopes: ['quote'], keyId: 'k1',
+    });
+    const res = await POST(buildRequest(VALID_BODY, { 'x-api-key': 'k' }));
+    const body = await res.json();
+    expect(res.status).toBe(403);
+    expect(body.code).toBe('FORBIDDEN_SCOPE');
+    expect(mockMaterialize).not.toHaveBeenCalled();
+    expect(mockRunCheckout).not.toHaveBeenCalled();
+  });
+
+  it('passes partnerId and test_mode through to runCheckout', async () => {
+    mockResolvePartner.mockResolvedValue({
+      partnerId: 'p-sandbox', partnerName: 'Sandbox', testMode: true, scopes: ['quote', 'checkout'], keyId: 'k9',
+    });
+    await POST(buildRequest(VALID_BODY, { 'x-api-key': 'k' }));
+    const runArg = mockRunCheckout.mock.calls[0][0];
+    expect(runArg.partnerId).toBe('p-sandbox');
+    expect(runArg.isTest).toBe(true);
   });
 
   it('rejects an invalid body before materializing', async () => {
@@ -159,6 +184,8 @@ describe('POST /api/partner/checkout', () => {
     expect(runArg.input.deliveryAddressId).toBe('addr-1');
     expect(runArg.input.storefrontId).toBe(VALID_BODY.storefrontId);
     expect(runArg.input.tip).toBe(2);
+    expect(runArg.partnerId).toBe('p1');
+    expect(runArg.isTest).toBe(false);
     // The external order id rides on the request's Idempotency-Key header.
     expect(runArg.request.headers.get('Idempotency-Key')).toBe('ext-order-99');
   });

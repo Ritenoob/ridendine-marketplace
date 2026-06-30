@@ -2,55 +2,89 @@
  * @jest-environment node
  */
 
-import { isAuthorizedPartner } from '../auth';
+const mockResolveByHash = jest.fn();
+const mockTouch = jest.fn();
+
+jest.mock('@ridendine/db', () => ({
+  resolvePartnerByKeyHash: (...a: unknown[]) => mockResolveByHash(...a),
+  touchPartnerKey: (...a: unknown[]) => mockTouch(...a),
+}));
+
+import { resolvePartnerContext, partnerHasScope } from '../auth';
+
+const admin = {} as never;
+const KEY = 'rdk_live_' + 'a'.repeat(32);
 
 function reqWith(headers: Record<string, string>): Request {
-  return new Request('http://localhost/api/partner/checkout', {
-    method: 'POST',
-    headers,
-  });
+  return new Request('http://localhost/api/partner/checkout', { method: 'POST', headers });
 }
 
-describe('isAuthorizedPartner', () => {
+describe('resolvePartnerContext', () => {
   const ORIGINAL = process.env.PARTNER_API_KEY;
-  const KEY = 'a'.repeat(40);
-
-  afterEach(() => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockResolveByHash.mockResolvedValue(null);
     process.env.PARTNER_API_KEY = ORIGINAL;
   });
+  afterEach(() => { process.env.PARTNER_API_KEY = ORIGINAL; });
 
-  it('fails closed when PARTNER_API_KEY is unset', () => {
-    delete process.env.PARTNER_API_KEY;
-    expect(isAuthorizedPartner(reqWith({ 'x-api-key': KEY }))).toBe(false);
+  it('returns null when no key is present', async () => {
+    expect(await resolvePartnerContext(reqWith({}), admin)).toBeNull();
+    expect(mockResolveByHash).not.toHaveBeenCalled();
   });
 
-  it('fails closed when configured key is too weak (<16 chars)', () => {
-    process.env.PARTNER_API_KEY = 'short';
-    expect(isAuthorizedPartner(reqWith({ 'x-api-key': 'short' }))).toBe(false);
+  it('returns null for a too-short key without hitting the DB', async () => {
+    expect(await resolvePartnerContext(reqWith({ 'x-api-key': 'short' }), admin)).toBeNull();
+    expect(mockResolveByHash).not.toHaveBeenCalled();
   });
 
-  it('rejects a missing key header', () => {
+  it('resolves a DB-backed partner and stamps last_used', async () => {
+    mockResolveByHash.mockResolvedValue({
+      partnerId: 'p1', partnerName: 'Hoang Gia Pho', testMode: false, scopes: ['quote', 'checkout'], keyId: 'k1',
+    });
+    const ctx = await resolvePartnerContext(reqWith({ 'x-api-key': KEY }), admin);
+    expect(ctx).toMatchObject({ partnerId: 'p1', testMode: false, scopes: ['quote', 'checkout'] });
+    // key is sha256-hashed before lookup (never the raw key)
+    const passedHash = mockResolveByHash.mock.calls[0][1];
+    expect(passedHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(passedHash).not.toContain('rdk_live_');
+    expect(mockTouch).toHaveBeenCalledWith(admin, 'k1');
+  });
+
+  it('carries test_mode through from the partner', async () => {
+    mockResolveByHash.mockResolvedValue({
+      partnerId: 'p2', partnerName: 'Sandbox', testMode: true, scopes: ['quote', 'checkout'], keyId: 'k2',
+    });
+    const ctx = await resolvePartnerContext(reqWith({ 'x-api-key': KEY }), admin);
+    expect(ctx?.testMode).toBe(true);
+  });
+
+  it('falls back to the legacy env key (anonymous, non-test) when DB misses', async () => {
     process.env.PARTNER_API_KEY = KEY;
-    expect(isAuthorizedPartner(reqWith({}))).toBe(false);
+    const ctx = await resolvePartnerContext(reqWith({ 'x-api-key': KEY }), admin);
+    expect(ctx).toMatchObject({ partnerId: null, partnerName: 'legacy-env-key', testMode: false });
   });
 
-  it('rejects a wrong key', () => {
+  it('returns null when DB misses and the env key does not match', async () => {
     process.env.PARTNER_API_KEY = KEY;
-    expect(isAuthorizedPartner(reqWith({ 'x-api-key': 'b'.repeat(40) }))).toBe(false);
+    expect(await resolvePartnerContext(reqWith({ 'x-api-key': 'rdk_live_' + 'b'.repeat(32) }), admin)).toBeNull();
   });
 
-  it('rejects a key of different length', () => {
-    process.env.PARTNER_API_KEY = KEY;
-    expect(isAuthorizedPartner(reqWith({ 'x-api-key': 'a'.repeat(39) }))).toBe(false);
+  it('accepts the key via Authorization: Bearer', async () => {
+    mockResolveByHash.mockResolvedValue({
+      partnerId: 'p1', partnerName: 'X', testMode: false, scopes: ['quote'], keyId: 'k1',
+    });
+    const ctx = await resolvePartnerContext(reqWith({ authorization: `Bearer ${KEY}` }), admin);
+    expect(ctx?.partnerId).toBe('p1');
   });
+});
 
-  it('accepts the correct key via x-api-key', () => {
-    process.env.PARTNER_API_KEY = KEY;
-    expect(isAuthorizedPartner(reqWith({ 'x-api-key': KEY }))).toBe(true);
+describe('partnerHasScope', () => {
+  const base = { partnerId: 'p', partnerName: 'x', testMode: false, keyId: 'k' };
+  it('is true when the scope is present', () => {
+    expect(partnerHasScope({ ...base, scopes: ['quote', 'checkout'] }, 'checkout')).toBe(true);
   });
-
-  it('accepts the correct key via Authorization: Bearer', () => {
-    process.env.PARTNER_API_KEY = KEY;
-    expect(isAuthorizedPartner(reqWith({ authorization: `Bearer ${KEY}` }))).toBe(true);
+  it('is false when the scope is absent', () => {
+    expect(partnerHasScope({ ...base, scopes: ['quote'] }, 'checkout')).toBe(false);
   });
 });

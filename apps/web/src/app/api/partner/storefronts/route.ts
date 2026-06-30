@@ -9,8 +9,9 @@ import {
   RATE_LIMIT_POLICIES,
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
+import { createAdminClient, type SupabaseClient } from '@ridendine/db';
 import { errorResponse } from '@/lib/engine';
-import { isAuthorizedPartner } from '@/lib/partner/auth';
+import { resolvePartnerContext } from '@/lib/partner/auth';
 import { GET as storefrontsGet } from '@/app/api/storefronts/route';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +25,8 @@ export async function GET(request: Request): Promise<Response> {
   });
   if (!limit.allowed) return rateLimitPolicyResponse(limit);
 
-  if (!isAuthorizedPartner(request)) {
+  const adminClient = createAdminClient() as unknown as SupabaseClient;
+  if (!(await resolvePartnerContext(request, adminClient))) {
     return errorResponse('UNAUTHORIZED', 'Invalid or missing partner API key', 401);
   }
 

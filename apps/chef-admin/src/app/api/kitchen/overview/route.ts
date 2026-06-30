@@ -50,6 +50,8 @@ export async function GET(): Promise<Response> {
             'id, order_number, status, created_at, special_instructions, customer_id, estimated_ready_at, estimated_prep_minutes, prep_started_at, order_items ( quantity, special_instructions, menu_item:menu_items ( id, name ) )'
           )
           .eq('storefront_id', storefrontId)
+          // Keep partner test-mode orders out of the live kitchen queue.
+          .neq('is_test', true)
           .in('status', ACTIVE_ORDER_STATUSES),
 
         adminClient

@@ -49,7 +49,7 @@ function safeWebhookLog(err: unknown): string {
 async function getOrderPaymentSnapshot(admin: ReturnType<typeof createAdminClient>, orderId: string) {
   const { data, error } = await (admin as any)
     .from('orders')
-    .select('id, customer_id, subtotal, total, payment_status, engine_status')
+    .select('id, customer_id, subtotal, total, payment_status, engine_status, is_test')
     .eq('id', orderId)
     .maybeSingle();
 
@@ -61,6 +61,7 @@ async function getOrderPaymentSnapshot(admin: ReturnType<typeof createAdminClien
     total: number;
     payment_status: string;
     engine_status: string;
+    is_test: boolean | null;
   };
 }
 
@@ -192,6 +193,23 @@ export async function POST(request: Request): Promise<Response> {
             throw new Error(
               `Stripe amount mismatch for order ${orderId}: expected ${expectedAmountCents}, received ${paidAmountCents}`
             );
+          }
+
+          // Test-mode order (partner with test_mode): record the payment but keep
+          // it OUT of the kitchen queue, finance, loyalty, and payouts.
+          if (orderSnapshot.is_test) {
+            if (orderSnapshot.payment_status !== 'completed') {
+              await (admin as any)
+                .from('orders')
+                .update({
+                  payment_status: 'completed',
+                  payment_intent_id: paymentIntent.id,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', orderId);
+            }
+            await finalizeStripeWebhookSuccess(admin, event.id, orderId);
+            break;
           }
 
           if (orderSnapshot.payment_status !== 'completed') {
