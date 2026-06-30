@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HOÀNG GIA PHỞ — Checkout</title>
+  <!-- Stripe.js: required for the Payment Element -->
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 560px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin-top: 1.5rem; }
+    label { display:block; font-size:.85rem; margin:.5rem 0 .15rem; }
+    input { width:100%; padding:.5rem; border:1px solid #ccc; border-radius:6px; font-size:1rem; }
+    .row { display:flex; gap:.5rem; } .row > div { flex:1; }
+    button { margin-top:1rem; width:100%; padding:.7rem; border:0; border-radius:8px; background:#b71c1c; color:#fff; font-size:1rem; cursor:pointer; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .breakdown { background:#faf7f2; border:1px solid #eee; border-radius:8px; padding:.75rem 1rem; margin-top:1rem; font-size:.9rem; }
+    .breakdown div { display:flex; justify-content:space-between; padding:.15rem 0; }
+    .breakdown .total { font-weight:700; border-top:1px solid #ddd; margin-top:.3rem; padding-top:.4rem; }
+    .err { color:#b71c1c; font-size:.85rem; margin-top:.5rem; min-height:1.1em; }
+    .ok { color:#1b5e20; }
+    #cart button { width:auto; margin:.25rem .25rem 0 0; padding:.4rem .7rem; background:#333; }
+  </style>
+</head>
+<body>
+  <h1>HOÀNG GIA PHỞ — Checkout</h1>
+  <p style="font-size:.85rem;color:#666">Payments processed securely by RideNDine.</p>
+
+  <!-- ===== Demo cart. Replace with your real cart; just push {key, quantity}. ===== -->
+  <h2>Menu</h2>
+  <div id="cart">
+    <button data-key="beef-pho">+ Beef Pho ($32)</button>
+    <button data-key="chicken-pho">+ Chicken Pho ($30)</button>
+    <button data-key="bun-bo-hue">+ Bun Bo Hue ($34)</button>
+    <button data-key="bun-thit-xao">+ Bun Thit Xao ($28)</button>
+    <button data-key="bo-kho">+ Bo Kho ($36)</button>
+  </div>
+  <div id="cartSummary" style="margin-top:.5rem;font-size:.9rem;color:#444"></div>
+
+  <h2>Your details</h2>
+  <div class="row">
+    <div><label>First name</label><input id="firstName" /></div>
+    <div><label>Last name</label><input id="lastName" /></div>
+  </div>
+  <div class="row">
+    <div><label>Email</label><input id="email" type="email" /></div>
+    <div><label>Phone</label><input id="phone" type="tel" /></div>
+  </div>
+  <label>Address</label><input id="addressLine1" placeholder="Street address" />
+  <div class="row">
+    <div><label>City</label><input id="city" value="Hamilton" /></div>
+    <div><label>Province</label><input id="state" value="ON" /></div>
+    <div><label>Postal code</label><input id="postalCode" /></div>
+  </div>
+  <label>Tip (CAD)</label><input id="tip" type="number" min="0" step="0.01" value="0" />
+
+  <button id="reviewBtn">Review order &amp; total</button>
+  <div id="breakdown" class="breakdown" hidden></div>
+  <div id="reviewErr" class="err"></div>
+
+  <!-- Payment section, revealed after a successful checkout call -->
+  <div id="paySection" hidden>
+    <h2>Payment</h2>
+    <div id="payment-element"></div>
+    <button id="payBtn">Pay now</button>
+    <div id="payErr" class="err"></div>
+  </div>
+
+  <div id="result" class="err"></div>
+
+  <script>
+    // ===== CONFIG — set this to RideNDine's Stripe PUBLISHABLE key (pk_live_…). =====
+    // Publishable keys are safe to expose. Must belong to RideNDine's Stripe account.
+    const RIDENDINE_STRIPE_PUBLISHABLE_KEY = 'pk_live_REPLACE_ME';
+
+    const stripe = Stripe(RIDENDINE_STRIPE_PUBLISHABLE_KEY);
+    let elements = null;
+    // One idempotency key per checkout attempt; reused on retries so a network
+    // hiccup can't create a second order/charge.
+    let orderId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
+
+    // ---- cart state ----
+    const cart = new Map();
+    document.querySelectorAll('#cart button').forEach((b) => {
+      b.addEventListener('click', () => {
+        const key = b.dataset.key;
+        cart.set(key, (cart.get(key) || 0) + 1);
+        renderCart();
+      });
+    });
+    function renderCart() {
+      const lines = [...cart.entries()].map(([k, q]) => `${q}× ${k}`);
+      document.getElementById('cartSummary').textContent = lines.length ? lines.join(', ') : 'Cart empty';
+    }
+    renderCart();
+
+    function collectOrder() {
+      return {
+        items: [...cart.entries()].map(([key, quantity]) => ({ key, quantity })),
+        customer: {
+          email: val('email'), firstName: val('firstName'),
+          lastName: val('lastName'), phone: val('phone'),
+        },
+        deliveryAddress: {
+          addressLine1: val('addressLine1'), city: val('city'),
+          state: val('state'), postalCode: val('postalCode'),
+        },
+        tip: Number(val('tip')) || 0,
+      };
+    }
+    const val = (id) => document.getElementById(id).value.trim();
+    const money = (n) => '$' + Number(n).toFixed(2);
+
+    async function callPay(payload) {
+      const res = await fetch('/api/pay', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.code || 'Request failed');
+      return data;
+    }
+
+    // ---- Step 1: quote (always show RideNDine's authoritative total) ----
+    document.getElementById('reviewBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('reviewBtn');
+      const err = document.getElementById('reviewErr');
+      err.textContent = '';
+      if (cart.size === 0) { err.textContent = 'Add at least one item.'; return; }
+      btn.disabled = true; btn.textContent = 'Calculating…';
+      try {
+        const { data } = await callPay({ action: 'quote', ...collectOrder() });
+        const b = data.breakdown;
+        document.getElementById('breakdown').hidden = false;
+        document.getElementById('breakdown').innerHTML = `
+          <div><span>Subtotal</span><span>${money(b.subtotal)}</span></div>
+          <div><span>Delivery</span><span>${money(b.deliveryFee)}</span></div>
+          <div><span>Service fee</span><span>${money(b.serviceFee)}</span></div>
+          <div><span>HST</span><span>${money(b.tax)}</span></div>
+          <div><span>Tip</span><span>${money(b.tip)}</span></div>
+          ${b.discount ? `<div><span>Discount</span><span>-${money(b.discount)}</span></div>` : ''}
+          <div class="total"><span>Total</span><span>${money(b.total)}</span></div>`;
+        await startPayment();   // create the order + PaymentIntent, mount Stripe
+      } catch (e) {
+        err.textContent = e.message;
+      } finally {
+        btn.disabled = false; btn.textContent = 'Review order & total';
+      }
+    });
+
+    // ---- Step 2: checkout → clientSecret → mount Payment Element ----
+    async function startPayment() {
+      const { data } = await callPay({ action: 'checkout', idempotencyKey: orderId, ...collectOrder() });
+      if (!data.clientSecret) throw new Error('No client secret returned');
+      elements = stripe.elements({ clientSecret: data.clientSecret });
+      const paymentElement = elements.create('payment');
+      document.getElementById('payment-element').innerHTML = '';
+      paymentElement.mount('#payment-element');
+      document.getElementById('paySection').hidden = false;
+    }
+
+    // ---- Step 3: confirm payment ----
+    document.getElementById('payBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('payBtn');
+      const err = document.getElementById('payErr');
+      err.textContent = '';
+      if (!elements) { err.textContent = 'Please review your order first.'; return; }
+      btn.disabled = true; btn.textContent = 'Processing…';
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: window.location.origin + '/checkout.html?paid=1' },
+      });
+      // confirmPayment only returns on immediate error; success redirects away.
+      if (error) { err.textContent = error.message; btn.disabled = false; btn.textContent = 'Pay now'; }
+    });
+
+    // ---- On return from Stripe: show payment status ----
+    (async function showReturnStatus() {
+      const params = new URLSearchParams(window.location.search);
+      const cs = params.get('payment_intent_client_secret');
+      if (!cs) return;
+      const { paymentIntent } = await stripe.retrievePaymentIntent(cs);
+      const r = document.getElementById('result');
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        r.className = 'ok'; r.textContent = '✓ Payment received — your order is being prepared. Cảm ơn!';
+      } else if (paymentIntent) {
+        r.textContent = 'Payment status: ' + paymentIntent.status;
+      }
+    })();
+  </script>
+</body>
+</html>

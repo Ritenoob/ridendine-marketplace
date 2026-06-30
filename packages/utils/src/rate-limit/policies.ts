@@ -73,6 +73,16 @@ export const RATE_LIMIT_POLICIES = {
     failBehavior: 'fail_closed',
     risk: 'high',
   },
+  partnerCheckout: {
+    name: 'partner_checkout',
+    // Partners create orders server-to-server in batches; allow more headroom
+    // than the per-customer checkout limit but still fail closed on abuse.
+    maxRequests: 60,
+    windowSeconds: 60,
+    keyStrategy: 'composite',
+    failBehavior: 'fail_closed',
+    risk: 'high',
+  },
   publicRead: {
     name: 'public_read',
     maxRequests: 120,
