@@ -14,6 +14,7 @@ import {
 } from '@ridendine/utils';
 import { errorResponse, successResponse } from '@/lib/engine';
 import { resolvePartnerContext, partnerHasScope } from '@/lib/partner/auth';
+import { enforcePartnerRateLimit } from '@/lib/partner/rate-limit';
 import { buildPartnerQuote } from '@/lib/checkout/quote';
 
 export async function POST(request: Request): Promise<Response> {
@@ -34,6 +35,9 @@ export async function POST(request: Request): Promise<Response> {
   if (!partnerHasScope(partner, 'quote')) {
     return errorResponse('FORBIDDEN_SCOPE', 'This key is not permitted to request quotes', 403);
   }
+
+  const rateLimited = await enforcePartnerRateLimit(request, partner, 'POST:/api/partner/checkout/quote');
+  if (rateLimited) return rateLimited;
 
   let body: unknown;
   try {

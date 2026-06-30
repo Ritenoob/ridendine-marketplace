@@ -89,7 +89,7 @@ describe('POST /api/partner/checkout', () => {
     jest.clearAllMocks();
     mockEvaluateRateLimit.mockResolvedValue({ allowed: true, remaining: 59, policy: 'partner_checkout' });
     mockResolvePartner.mockResolvedValue({
-      partnerId: 'p1', partnerName: 'Hoang Gia Pho', testMode: false, scopes: ['quote', 'checkout'], keyId: 'k1',
+      partnerId: 'p1', partnerName: 'Hoang Gia Pho', testMode: false, scopes: ['quote', 'checkout'], keyId: 'k1', rateLimitPerMin: 120,
     });
     mockGetSystemActor.mockReturnValue({ userId: 'system', role: 'system' });
     mockMaterialize.mockResolvedValue({
@@ -110,6 +110,17 @@ describe('POST /api/partner/checkout', () => {
     const res = await POST(buildRequest(VALID_BODY, { 'x-api-key': 'k' }));
     expect(res.status).toBe(429);
     expect(mockMaterialize).not.toHaveBeenCalled();
+  });
+
+  it('returns 429 when the per-partner rate limit is exceeded', async () => {
+    // Pre-auth IP limit passes; the per-partner limit (2nd call) denies.
+    mockEvaluateRateLimit
+      .mockResolvedValueOnce({ allowed: true })
+      .mockResolvedValueOnce({ allowed: false });
+    const res = await POST(buildRequest(VALID_BODY, { 'x-api-key': 'k' }));
+    expect(res.status).toBe(429);
+    expect(mockMaterialize).not.toHaveBeenCalled();
+    expect(mockRunCheckout).not.toHaveBeenCalled();
   });
 
   it('rejects requests without a valid partner key', async () => {

@@ -20,6 +20,7 @@ export interface PartnerContext {
   testMode: boolean;
   scopes: string[];
   keyId: string | null;
+  rateLimitPerMin: number;
 }
 
 function extractKey(request: Request): string {
@@ -59,6 +60,7 @@ export async function resolvePartnerContext(
       testMode: resolved.testMode,
       scopes: resolved.scopes,
       keyId: resolved.keyId,
+      rateLimitPerMin: resolved.rateLimitPerMin,
     };
   }
 
@@ -71,6 +73,7 @@ export async function resolvePartnerContext(
       testMode: false,
       scopes: ['quote', 'checkout'],
       keyId: null,
+      rateLimitPerMin: 120,
     };
   }
 

@@ -16,6 +16,7 @@ import {
 } from '@ridendine/utils';
 import { errorResponse, getSystemActor } from '@/lib/engine';
 import { resolvePartnerContext, partnerHasScope } from '@/lib/partner/auth';
+import { enforcePartnerRateLimit } from '@/lib/partner/rate-limit';
 import { materializePartnerOrder, MaterializeError } from '@/lib/partner/materialize';
 import { runCheckout, type CheckoutRequestInput } from '@/lib/checkout/run-checkout';
 
@@ -37,6 +38,9 @@ export async function POST(request: Request): Promise<Response> {
   if (!partnerHasScope(partner, 'checkout')) {
     return errorResponse('FORBIDDEN_SCOPE', 'This key is not permitted to create orders', 403);
   }
+
+  const rateLimited = await enforcePartnerRateLimit(request, partner, 'POST:/api/partner/checkout');
+  if (rateLimited) return rateLimited;
 
   let body: unknown;
   try {
