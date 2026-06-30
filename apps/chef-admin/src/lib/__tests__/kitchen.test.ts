@@ -5,9 +5,12 @@ import {
   computePrepPlan,
   aggregatePrepBoard,
   computeKitchenLoad,
+  computeServiceMetrics,
   mapActiveOrdersToTickets,
   KITCHEN_TZ,
   type ActiveOrder,
+  type ClosedOrderForMetrics,
+  type PrepMenuItem,
 } from '../kitchen';
 
 // June 19 2026 is a Friday.
@@ -373,5 +376,55 @@ describe('mapActiveOrdersToTickets', () => {
     expect(t.items).toHaveLength(1);
     expect(t.items[0].name).toBe('Naan');
     expect(t.totalQty).toBe(3);
+  });
+});
+
+describe('computeServiceMetrics', () => {
+  const menu: PrepMenuItem[] = [
+    { id: 'm1', name: 'Pho', daily_limit: 10, daily_sold: 10, prep_time_minutes: 15, is_available: true, is_sold_out: false },
+    { id: 'm2', name: 'Spring Rolls', daily_limit: null, daily_sold: 0, prep_time_minutes: 5, is_available: true, is_sold_out: true },
+    { id: 'm3', name: 'Banh Mi', daily_limit: 20, daily_sold: 3, prep_time_minutes: 8, is_available: true, is_sold_out: false },
+  ];
+
+  const active: ActiveOrder[] = [
+    { id: 'a1', status: 'pending', estimated_prep_minutes: 20, order_items: [] },
+    { id: 'a2', status: 'preparing', estimated_prep_minutes: 20, order_items: [],
+      estimated_ready_at: new Date(FRIDAY_NOW.getTime() - 5 * 60000).toISOString() }, // late
+    { id: 'a3', status: 'accepted', estimated_prep_minutes: 20, order_items: [] },
+    { id: 'a4', status: 'ready_for_pickup', estimated_prep_minutes: 20, order_items: [] },
+  ];
+
+  it('counts active queue buckets and late tickets', () => {
+    const m = computeServiceMetrics(active, [], menu, FRIDAY_NOW, KITCHEN_TZ);
+    expect(m.activeCount).toBe(4);
+    expect(m.newWaiting).toBe(1);
+    expect(m.inPrep).toBe(2); // accepted + preparing
+    expect(m.ready).toBe(1);
+    expect(m.late).toBe(1);
+  });
+
+  it('sums today sales and averages actual prep time, ignoring older orders', () => {
+    const closed: ClosedOrderForMetrics[] = [
+      { total: 30, created_at: FRIDAY_NOW.toISOString(),
+        prep_started_at: new Date(FRIDAY_NOW.getTime() - 20 * 60000).toISOString(),
+        actual_ready_at: new Date(FRIDAY_NOW.getTime() - 10 * 60000).toISOString() }, // 10 min
+      { total: 20, created_at: FRIDAY_NOW.toISOString(),
+        prep_started_at: new Date(FRIDAY_NOW.getTime() - 30 * 60000).toISOString(),
+        actual_ready_at: new Date(FRIDAY_NOW.getTime() - 10 * 60000).toISOString() }, // 20 min
+      { total: 999, created_at: new Date(FRIDAY_NOW.getTime() - 40 * 60 * 60000).toISOString(),
+        prep_started_at: null, actual_ready_at: null }, // ~40h ago: not today
+    ];
+    const m = computeServiceMetrics(active, closed, menu, FRIDAY_NOW, KITCHEN_TZ);
+    expect(m.completedToday).toBe(2);
+    expect(m.salesToday).toBe(50);
+    expect(m.avgPrepMinutes).toBe(15); // (10 + 20) / 2
+  });
+
+  it('reports sold-out and at-limit menu items without inventing cost data', () => {
+    const m = computeServiceMetrics([], [], menu, FRIDAY_NOW, KITCHEN_TZ);
+    expect(m.soldOutItems).toEqual(['Spring Rolls']);
+    expect(m.atLimitItems).toEqual(['Pho']); // daily_sold 10 >= limit 10
+    expect(m).not.toHaveProperty('foodCost');
+    expect(m).not.toHaveProperty('laborCost');
   });
 });

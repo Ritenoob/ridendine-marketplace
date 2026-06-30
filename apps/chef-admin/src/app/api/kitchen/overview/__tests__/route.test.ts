@@ -121,9 +121,14 @@ describe('GET /api/kitchen/overview', () => {
           Promise.resolve({ data: [], error: null }),
           { gte: jest.fn().mockResolvedValue({ data: [], error: null }) }
         );
+        // Active query chains eq().neq('is_test').in(); historical chains
+        // eq().in().gte(). Support both off the same eq() builder.
         return {
           select: jest.fn(() => ({
-            eq: jest.fn(() => ({ in: jest.fn(() => inResult) })),
+            eq: jest.fn(() => ({
+              neq: jest.fn(() => ({ in: jest.fn(() => inResult) })),
+              in: jest.fn(() => inResult),
+            })),
           })),
         };
       },

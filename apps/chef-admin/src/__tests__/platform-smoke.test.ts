@@ -58,23 +58,35 @@ describe('chef-admin smoke wiring', () => {
     expect(src).toContain('Est. net earnings');
   });
 
-  it('orders list uses protected action payloads and empty state', () => {
-    const src = read('components/orders/orders-list.tsx');
-    // The protected action payloads now come from the shared kitchen
-    // workflow in @ridendine/utils; assert the wiring plus the shared
-    // module's action vocabulary.
+  it('kitchen queue uses protected action payloads (live workflow surface)', () => {
+    // Stage 1: the live accept/prep/ready workflow lives in Kitchen Command,
+    // not the Orders ledger. Assert the protected action wiring on the kitchen
+    // queue plus the shared module's action vocabulary.
+    const src = read('components/kitchen/kitchen-order-queue.tsx');
     expect(src).toContain('KITCHEN_NEXT_TRANSITION');
     expect(src).toContain('KITCHEN_REJECT_TRANSITION');
     expect(KITCHEN_NEXT_TRANSITION.pending.action).toBe('accept');
     expect(KITCHEN_NEXT_TRANSITION.accepted.action).toBe('start_preparing');
     expect(KITCHEN_NEXT_TRANSITION.preparing.action).toBe('mark_ready');
     expect(KITCHEN_REJECT_TRANSITION.action).toBe('reject');
-    expect(src).toContain('Kitchen workflow');
-    expect(src).toContain('Kitchen step');
-    expect(src).toContain('Next action');
-    expect(src).toContain('Ready for pickup');
-    expect(src).toContain('No ');
-    expect(src).toContain('orders');
+  });
+
+  it('orders page is a read-only ledger with filters and detail links', () => {
+    const ledger = read('components/orders/orders-ledger.tsx');
+    // Ledger = history/search/trace, not a live workflow board.
+    expect(ledger).toContain('Kitchen status');
+    expect(ledger).toContain('Payment status');
+    expect(ledger).toContain('Delivery status');
+    expect(ledger).toContain('Export CSV');
+    expect(ledger).toContain('/dashboard/orders/');
+    // The ledger must NOT carry the live kitchen workflow.
+    expect(ledger).not.toContain('Kitchen workflow');
+    expect(ledger).not.toContain('KITCHEN_NEXT_TRANSITION');
+
+    const page = read('app/dashboard/orders/page.tsx');
+    expect(page).toContain('OrdersLedger');
+    expect(page).toContain('Order Ledger');
+    expect(page).toContain('Kitchen Command');
   });
 
   it('sidebar includes business engine nav items', () => {

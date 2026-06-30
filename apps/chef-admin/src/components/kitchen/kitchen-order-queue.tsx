@@ -43,20 +43,112 @@ function sortTickets(tickets: KitchenTicket[]): KitchenTicket[] {
   });
 }
 
+// Forward progression of the public order lifecycle. Terminal statuses share
+// the top rank so a poll reporting them always wins.
+const STATUS_RANK: Record<string, number> = {
+  pending: 0,
+  accepted: 1,
+  preparing: 2,
+  ready_for_pickup: 3,
+  rejected: 9,
+  cancelled: 9,
+  expired: 9,
+  completed: 9,
+  delivered: 9,
+};
+
+function rank(status: string): number {
+  return STATUS_RANK[status] ?? 0;
+}
+
+function isTerminalStatus(status: string): boolean {
+  return rank(status) >= 9;
+}
+
+/**
+ * Merge a freshly hydrated ticket onto whatever is already in the queue,
+ * preserving the locally-confirmed status while an action is in flight or a
+ * confirmed optimistic transition is still ahead of the hydrated snapshot.
+ */
+function mergeHydrated(
+  prev: KitchenTicket,
+  hydrated: KitchenTicket,
+  inFlight: boolean,
+  confirmedStatus: string | undefined
+): KitchenTicket {
+  let status = hydrated.status;
+  if (inFlight) {
+    status = prev.status;
+  } else if (
+    confirmedStatus &&
+    !isTerminalStatus(hydrated.status) &&
+    rank(hydrated.status) < rank(confirmedStatus)
+  ) {
+    status = confirmedStatus;
+  }
+  return { ...hydrated, status };
+}
+
+/**
+ * Reconcile the 30s polling snapshot against local state. Reads in-flight and
+ * confirmed maps but never mutates them (the caller prunes confirmations).
+ */
 function reconcileQueue(
   prev: KitchenTicket[],
   incoming: KitchenTicket[],
-  inFlightIds: Set<string>
+  inFlightIds: Set<string>,
+  confirmedById: Map<string, string>
 ): KitchenTicket[] {
   const incomingById = new Map(incoming.map((t) => [t.id, t]));
-  const merged: KitchenTicket[] = prev
-    .filter((t) => incomingById.has(t.id))
-    .map((t) => (inFlightIds.has(t.id) ? t : incomingById.get(t.id)!));
+  const merged: KitchenTicket[] = [];
+
+  for (const t of prev) {
+    const inc = incomingById.get(t.id);
+    if (!inc) {
+      // Not in the latest poll yet — keep just-inserted/in-flight tickets the
+      // poll has not caught up to; otherwise it has genuinely left the board.
+      if (inFlightIds.has(t.id) || confirmedById.has(t.id)) merged.push(t);
+      continue;
+    }
+    if (inFlightIds.has(t.id)) {
+      // Action mid-flight: never let a poll overwrite the optimistic state.
+      merged.push(t);
+      continue;
+    }
+    const confirmed = confirmedById.get(t.id);
+    if (confirmed && !isTerminalStatus(inc.status) && rank(inc.status) < rank(confirmed)) {
+      // Stale poll behind our confirmed transition: keep local hydrated fields
+      // but hold the confirmed status.
+      merged.push({ ...inc, status: confirmed });
+      continue;
+    }
+    merged.push(inc);
+  }
+
   const existingIds = new Set(prev.map((t) => t.id));
   for (const t of incoming) {
     if (!existingIds.has(t.id)) merged.push(t);
   }
   return sortTickets(merged);
+}
+
+/** Build a minimal placeholder ticket from a realtime row (fallback only). */
+function thinTicketFromRealtime(order: RealtimeOrder): KitchenTicket {
+  return {
+    id: order.id,
+    orderNumber: order.order_number ?? order.id,
+    status: order.status,
+    createdAt: order.created_at ?? new Date().toISOString(),
+    prepStartedAt: null,
+    estimatedReadyAt: null,
+    estimatedPrepMinutes: null,
+    specialInstructions: null,
+    customerName: order.customer
+      ? `${order.customer.first_name ?? ''} ${order.customer.last_name ?? ''}`.trim() || null
+      : null,
+    items: [],
+    totalQty: 0,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -236,60 +328,98 @@ export function KitchenOrderQueue({ tickets, storefrontId }: KitchenOrderQueuePr
   const [realtimeStatus, setRealtimeStatus] = useState<LiveIndicatorStatus>('connecting');
   const inFlightIds = useRef<Set<string>>(new Set());
   const notifiedIds = useRef<Set<string>>(new Set());
+  const hydratingIds = useRef<Set<string>>(new Set());
+  // id -> status we have locally confirmed via a successful action, so a stale
+  // poll cannot revert the optimistic transition before the poll catches up.
+  const confirmedById = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
-    setQueue((prev) => reconcileQueue(prev, tickets, inFlightIds.current));
+    // Drop confirmations the poll has now caught up to (or passed / terminal).
+    for (const inc of tickets) {
+      const confirmed = confirmedById.current.get(inc.id);
+      if (confirmed && (isTerminalStatus(inc.status) || rank(inc.status) >= rank(confirmed))) {
+        confirmedById.current.delete(inc.id);
+      }
+    }
+    setQueue((prev) =>
+      reconcileQueue(prev, tickets, inFlightIds.current, confirmedById.current)
+    );
   }, [tickets]);
 
-  const handleInsert = useCallback((order: RealtimeOrder) => {
-    if (notifiedIds.current.has(order.id)) {
-      const enrichedName = order.customer
-        ? `${order.customer.first_name ?? ''} ${order.customer.last_name ?? ''}`.trim() || null
-        : null;
-      setQueue((prev) =>
-        sortTickets(
-          prev.map((t) =>
-            t.id === order.id
-              ? {
-                  ...t,
-                  orderNumber: order.order_number ?? t.orderNumber,
-                  status: order.status ?? t.status,
-                  customerName: enrichedName ?? t.customerName,
-                }
-              : t
-          )
-        )
-      );
-      return;
-    }
-    notifiedIds.current.add(order.id);
-    playNewOrderChime();
-    setNewCount((c) => c + 1);
-    const newTicket: KitchenTicket = {
-      id: order.id,
-      orderNumber: order.order_number ?? order.id,
-      status: order.status,
-      createdAt: order.created_at ?? new Date().toISOString(),
-      prepStartedAt: null,
-      estimatedReadyAt: null,
-      estimatedPrepMinutes: null,
-      specialInstructions: null,
-      customerName:
-        order.customer
-          ? `${order.customer.first_name ?? ''} ${order.customer.last_name ?? ''}`.trim() || null
-          : null,
-      items: [],
-      totalQty: 0,
-    };
-    setQueue((prev) => sortTickets([newTicket, ...prev]));
-  }, []);
+  // Fetch the fully hydrated ticket (items, customer, prep times) and upsert it.
+  // This is the core Stage 3 fix: realtime never adds a ticket with empty items.
+  const hydrateAndUpsert = useCallback(
+    async (id: string, fallback?: KitchenTicket) => {
+      if (hydratingIds.current.has(id)) return;
+      hydratingIds.current.add(id);
+      try {
+        // Two immediate attempts before falling back — covers a transient blip
+        // without depending on timers (keeps the fallback path deterministic).
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const res = await fetch(`/api/kitchen/tickets/${id}`);
+            if (res.ok) {
+              const json = await res.json();
+              const hydrated: KitchenTicket | undefined = json?.data?.ticket;
+              if (hydrated) {
+                setQueue((prev) => {
+                  const exists = prev.some((t) => t.id === hydrated.id);
+                  const next = exists
+                    ? prev.map((t) =>
+                        t.id === hydrated.id
+                          ? mergeHydrated(
+                              t,
+                              hydrated,
+                              inFlightIds.current.has(t.id),
+                              confirmedById.current.get(t.id)
+                            )
+                          : t
+                      )
+                    : [hydrated, ...prev];
+                  return sortTickets(next);
+                });
+                return;
+              }
+            }
+          } catch {
+            // retry once
+          }
+        }
+        // Hydration failed: surface the order with whatever the realtime row
+        // carried so it is at least visible; the 30s poll will hydrate it fully.
+        if (fallback) {
+          setQueue((prev) =>
+            prev.some((t) => t.id === id) ? prev : sortTickets([fallback, ...prev])
+          );
+        }
+      } finally {
+        hydratingIds.current.delete(id);
+      }
+    },
+    []
+  );
 
-  const handleUpdate = useCallback((order: RealtimeOrder) => {
-    if (inFlightIds.current.has(order.id)) return;
-    setQueue((prev) =>
-      sortTickets(prev.map((t) => (t.id === order.id ? { ...t, status: order.status } : t)))
-    );
-  }, []);
+  const handleInsert = useCallback(
+    (order: RealtimeOrder) => {
+      if (!notifiedIds.current.has(order.id)) {
+        notifiedIds.current.add(order.id);
+        playNewOrderChime();
+        setNewCount((c) => c + 1);
+      }
+      // Always (re)hydrate — covers both the initial INSERT and any duplicate
+      // or follow-up event for the same order.
+      void hydrateAndUpsert(order.id, thinTicketFromRealtime(order));
+    },
+    [hydrateAndUpsert]
+  );
+
+  const handleUpdate = useCallback(
+    (order: RealtimeOrder) => {
+      if (inFlightIds.current.has(order.id)) return;
+      void hydrateAndUpsert(order.id);
+    },
+    [hydrateAndUpsert]
+  );
 
   useStorefrontOrdersRealtime<RealtimeOrder>(storefrontId, {
     onInsert: handleInsert,
@@ -322,6 +452,8 @@ export function KitchenOrderQueue({ tickets, storefrontId }: KitchenOrderQueuePr
             setActionError(`Action failed: HTTP ${res.status}`);
           }
         } else {
+          // Confirm the transition so a stale poll cannot revert it.
+          confirmedById.current.set(ticket.id, nextStatus);
           setActionError(null);
         }
       } catch {

@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { createServerClient, getStorefrontByChefId } from '@ridendine/db';
-import { OrdersList } from '@/components/orders/orders-list';
+import { OrdersLedger } from '@/components/orders/orders-ledger';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,16 +70,21 @@ export default async function OrdersPage() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-            Kitchen Order Log
+            Order Ledger
           </p>
           <h1 className="mt-1 text-2xl font-bold text-text">Orders</h1>
           <p className="mt-1 text-textMuted">
-            Real customer orders with kitchen items, delivery context, payment status, and ops traceability.
+            Order history, customer &amp; payment context, delivery trace and exceptions. Run live
+            service from{' '}
+            <a href="/dashboard/kitchen" className="font-medium text-primary hover:underline">
+              Kitchen Command
+            </a>
+            .
           </p>
         </div>
       </div>
 
-      <OrdersList initialOrders={orders} storefrontId={storefront.id} />
+      <OrdersLedger initialOrders={orders} storefrontId={storefront.id} />
     </div>
   );
 }
