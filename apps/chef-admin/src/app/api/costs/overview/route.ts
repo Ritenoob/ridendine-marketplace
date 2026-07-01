@@ -6,6 +6,7 @@ import { createAdminClient, type SupabaseClient } from '@ridendine/db';
 import { computeLaborTotals, computeCostSummary, type TimeEntryLike } from '@ridendine/engine';
 import { getChefActorContext, errorResponse, successResponse } from '@/lib/engine';
 import { kitchenDateKey } from '@/lib/kitchen';
+import { menuItemFoodCostMap, sumOrderFoodCost, type OrderItemForFoodCost } from '@/lib/food-cost';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,7 @@ export async function GET() {
     const [ordersResult, entriesResult, wasteResult] = await Promise.all([
       admin
         .from('orders')
-        .select('total, created_at')
+        .select('total, created_at, order_items ( quantity, menu_item_id )')
         .eq('storefront_id', chefContext.storefrontId)
         .neq('is_test', true)
         .in('status', ['delivered', 'completed'])
@@ -62,11 +63,21 @@ export async function GET() {
       .filter((w) => w.created_at && kitchenDateKey(new Date(w.created_at)) === today)
       .reduce((s, w) => s + Number(w.cost_value ?? 0), 0);
 
-    // Food cost needs per-order recipe costing (recipe_cost_snapshots captured
-    // at order time); until that is wired we report null rather than guess.
+    // Food cost from active recipes (current-cost view of today's orders).
+    const costMap = await menuItemFoodCostMap(admin, chefContext.storefrontId);
+    const hasFoodCost = costMap.size > 0;
+    const foodCost = hasFoodCost
+      ? round2(
+          ordersToday.reduce(
+            (sum, o) => sum + sumOrderFoodCost(((o as { order_items?: OrderItemForFoodCost[] }).order_items ?? []), costMap),
+            0
+          )
+        )
+      : null;
+
     const summary = computeCostSummary({
       sales: salesToday,
-      foodCost: null,
+      foodCost,
       laborCost: entries.length > 0 ? round2(laborTotals.totalCost) : null,
       wasteValue: round2(wasteValue),
     });
@@ -77,7 +88,7 @@ export async function GET() {
       ...summary,
       laborHours: round2(laborTotals.totalHours),
       setup: {
-        foodCostAvailable: false,
+        foodCostAvailable: hasFoodCost,
         laborTracked: entries.length > 0,
       },
     });

@@ -18,6 +18,7 @@ import {
   successResponse,
 } from '@/lib/engine';
 import type { OrderRejectReason } from '@ridendine/types';
+import { syncKitchenState } from '@/lib/kitchen-sync';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -142,6 +143,7 @@ async function applyOrderAction(
       if (!result.success) {
         return errorResponse(result.error!.code, result.error!.message);
       }
+      await syncKitchenState(orderId);
       return successResponse(result.data);
     }
 
@@ -158,6 +160,7 @@ async function applyOrderAction(
       if (!result.success) {
         return errorResponse(result.error!.code, result.error!.message);
       }
+      await syncKitchenState(orderId);
       return successResponse(result.data);
     }
 
@@ -166,6 +169,7 @@ async function applyOrderAction(
       if (!result.success) {
         return errorResponse(result.error!.code, result.error!.message);
       }
+      await syncKitchenState(orderId);
       return successResponse(result.data);
     }
 
@@ -174,6 +178,7 @@ async function applyOrderAction(
       if (!result.success) {
         return errorResponse(result.error!.code, result.error!.message);
       }
+      await syncKitchenState(orderId);
       return successResponse(result.data);
     }
 

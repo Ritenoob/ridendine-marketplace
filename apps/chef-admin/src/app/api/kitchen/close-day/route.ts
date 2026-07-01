@@ -13,6 +13,7 @@ import {
 } from '@ridendine/utils';
 import { getChefActorContext, errorResponse, successResponse } from '@/lib/engine';
 import { kitchenDateKey } from '@/lib/kitchen';
+import { menuItemFoodCostMap, sumOrderFoodCost } from '@/lib/food-cost';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ interface OrderRow {
   prep_started_at: string | null;
   actual_ready_at: string | null;
   estimated_ready_at: string | null;
-  order_items: { quantity: number; menu_item: { name: string } | null }[];
+  order_items: { quantity: number; menu_item_id: string | null; menu_item: { name: string } | null }[];
 }
 
 /**
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
     const [ordersResult, entriesResult, wasteResult, menuResult] = await Promise.all([
       admin
         .from('orders')
-        .select('total, status, created_at, prep_started_at, actual_ready_at, estimated_ready_at, order_items ( quantity, menu_item:menu_items ( name ) )')
+        .select('total, status, created_at, prep_started_at, actual_ready_at, estimated_ready_at, order_items ( quantity, menu_item_id, menu_item:menu_items ( name ) )')
         .eq('storefront_id', storefrontId)
         .neq('is_test', true)
         .gte('created_at', from)
@@ -155,7 +156,14 @@ export async function POST(request: NextRequest) {
       .filter((m) => m.is_sold_out)
       .map((m) => m.name);
 
-    const primeCost = laborCost; // food cost not yet available; labour only.
+    // Food cost from active recipes (current-cost view of the day's orders).
+    const costMap = await menuItemFoodCostMap(admin, storefrontId);
+    const foodCost =
+      costMap.size > 0
+        ? round2(completed.reduce((sum, o) => sum + sumOrderFoodCost(o.order_items ?? [], costMap), 0))
+        : null;
+
+    const primeCost = round2((foodCost ?? 0) + laborCost);
 
     const row = {
       storefront_id: storefrontId,
@@ -163,6 +171,7 @@ export async function POST(request: NextRequest) {
       orders_completed: completed.length,
       gross_sales: round2(grossSales),
       net_sales: round2(grossSales),
+      food_cost: foodCost,
       labor_cost: laborCost,
       waste_value: wasteValue,
       prime_cost: primeCost,

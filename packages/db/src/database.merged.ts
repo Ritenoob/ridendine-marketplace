@@ -1076,6 +1076,40 @@ type MenuItemPackagingTable = {
   Relationships: [];
 };
 
+// ------------------------------------------------------------------
+// Migration 00054 — kitchen ticket internal state.
+// ------------------------------------------------------------------
+type KitchenStationsTable = {
+  Row: { id: string; storefront_id: string; name: string; sort_order: number; is_active: boolean; created_at: string; updated_at: string };
+  Insert: { id?: string; storefront_id: string; name: string; sort_order?: number; is_active?: boolean; created_at?: string; updated_at?: string };
+  Update: Partial<KitchenStationsTable['Insert']>;
+  Relationships: [];
+};
+type KitchenTicketsTable = {
+  Row: { id: string; storefront_id: string; order_id: string; queue_entry_id: string | null; kitchen_status: string; priority: number; station_id: string | null; started_at: string | null; packing_started_at: string | null; packed_at: string | null; ready_at: string | null; problem_reason: string | null; notes: string | null; metadata: Record<string, unknown>; created_at: string; updated_at: string };
+  Insert: { id?: string; storefront_id: string; order_id: string; queue_entry_id?: string | null; kitchen_status?: string; priority?: number; station_id?: string | null; started_at?: string | null; packing_started_at?: string | null; packed_at?: string | null; ready_at?: string | null; problem_reason?: string | null; notes?: string | null; metadata?: Record<string, unknown>; created_at?: string; updated_at?: string };
+  Update: Partial<KitchenTicketsTable['Insert']>;
+  Relationships: [];
+};
+type KitchenTicketItemsTable = {
+  Row: { id: string; ticket_id: string; order_item_id: string | null; menu_item_id: string | null; station_id: string | null; status: string; quantity: number; modifiers_snapshot: unknown; allergen_flags: string[]; special_instructions: string | null; started_at: string | null; completed_at: string | null; created_at: string; updated_at: string };
+  Insert: { id?: string; ticket_id: string; order_item_id?: string | null; menu_item_id?: string | null; station_id?: string | null; status?: string; quantity?: number; modifiers_snapshot?: unknown; allergen_flags?: string[]; special_instructions?: string | null; started_at?: string | null; completed_at?: string | null; created_at?: string; updated_at?: string };
+  Update: Partial<KitchenTicketItemsTable['Insert']>;
+  Relationships: [];
+};
+type KitchenTicketEventsTable = {
+  Row: { id: string; ticket_id: string; storefront_id: string; event_type: string; from_status: string | null; to_status: string | null; actor_user_id: string | null; detail: Record<string, unknown>; created_at: string };
+  Insert: { id?: string; ticket_id: string; storefront_id: string; event_type: string; from_status?: string | null; to_status?: string | null; actor_user_id?: string | null; detail?: Record<string, unknown>; created_at?: string };
+  Update: Partial<KitchenTicketEventsTable['Insert']>;
+  Relationships: [];
+};
+type OrderPackChecksTable = {
+  Row: { id: string; order_id: string; ticket_id: string | null; storefront_id: string; checked_items: unknown; bag_count: number; utensils_included: boolean; sauces_included: boolean; allergy_label_applied: boolean; sealed: boolean; photo_url: string | null; completed_by: string | null; completed_at: string | null; created_at: string; updated_at: string };
+  Insert: { id?: string; order_id: string; ticket_id?: string | null; storefront_id: string; checked_items?: unknown; bag_count?: number; utensils_included?: boolean; sauces_included?: boolean; allergy_label_applied?: boolean; sealed?: boolean; photo_url?: string | null; completed_by?: string | null; completed_at?: string | null; created_at?: string; updated_at?: string };
+  Update: Partial<OrderPackChecksTable['Insert']>;
+  Relationships: [];
+};
+
 type MergedTables = Omit<
   GenTables,
   | 'chef_storefronts'
@@ -1133,6 +1167,11 @@ type MergedTables = Omit<
   recipe_cost_snapshots: RecipeCostSnapshotsTable;
   packaging_items: PackagingItemsTable;
   menu_item_packaging: MenuItemPackagingTable;
+  kitchen_stations: KitchenStationsTable;
+  kitchen_tickets: KitchenTicketsTable;
+  kitchen_ticket_items: KitchenTicketItemsTable;
+  kitchen_ticket_events: KitchenTicketEventsTable;
+  order_pack_checks: OrderPackChecksTable;
 };
 
 export type Database = Omit<GeneratedDatabase, 'public'> & {
