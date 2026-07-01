@@ -51,6 +51,71 @@ export interface MenuItemCosting {
 
 export const DEFAULT_TARGET_FOOD_COST_PCT = 0.3;
 
+// ------------------------------------------------------------------
+// Day-level cost summary (Stage 11). Prime cost = food + labour. Ratios are
+// null (not zero) when there are no sales, so the UI never invents a number.
+// ------------------------------------------------------------------
+export interface CostSummaryInput {
+  sales: number;
+  foodCost?: number | null;
+  packagingCost?: number | null;
+  laborCost?: number | null;
+  wasteValue?: number | null;
+  refundLoss?: number | null;
+}
+
+export interface CostSummary {
+  sales: number;
+  foodCost: number | null;
+  packagingCost: number | null;
+  laborCost: number | null;
+  wasteValue: number | null;
+  refundLoss: number | null;
+  /** food + labour, or null when neither is known. */
+  primeCost: number | null;
+  foodCostPct: number | null;
+  laborCostPct: number | null;
+  primeCostPct: number | null;
+  /** sales − (food + packaging + labour), or null when inputs are unknown. */
+  contributionMargin: number | null;
+}
+
+function pct(part: number | null, whole: number): number | null {
+  if (part === null || whole <= 0) return null;
+  return Math.round((part / whole) * 10000) / 10000;
+}
+
+export function computeCostSummary(input: CostSummaryInput): CostSummary {
+  const sales = input.sales;
+  const foodCost = input.foodCost ?? null;
+  const packagingCost = input.packagingCost ?? null;
+  const laborCost = input.laborCost ?? null;
+  const wasteValue = input.wasteValue ?? null;
+  const refundLoss = input.refundLoss ?? null;
+
+  const primeCost =
+    foodCost === null && laborCost === null ? null : (foodCost ?? 0) + (laborCost ?? 0);
+
+  const contributionMargin =
+    foodCost === null && laborCost === null && packagingCost === null
+      ? null
+      : sales - ((foodCost ?? 0) + (packagingCost ?? 0) + (laborCost ?? 0));
+
+  return {
+    sales,
+    foodCost,
+    packagingCost,
+    laborCost,
+    wasteValue,
+    refundLoss,
+    primeCost,
+    foodCostPct: pct(foodCost, sales),
+    laborCostPct: pct(laborCost, sales),
+    primeCostPct: pct(primeCost, sales),
+    contributionMargin,
+  };
+}
+
 function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }

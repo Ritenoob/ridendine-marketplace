@@ -63,6 +63,26 @@ export const packChecklistSchema = z.object({
   photoUrl: z.string().url().max(2048).nullable().optional(),
 });
 
+// Stage 13 — service controls.
+export const serviceModeSchema = z.object({
+  state: z.enum(['open', 'paused', 'slow_mode', 'closed', 'overloaded']),
+  reason: z.string().max(300).nullable().optional(),
+  prepTimeBufferMinutes: z.number().int().min(0).max(240).optional(),
+  maxQueueSize: z.number().int().min(0).max(1000).optional(),
+});
+
+// Stage 12 — close of day.
+export const closeDaySchema = z.object({
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD')
+    .optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  reopen: z.boolean().optional(),
+});
+
 export type PackChecklistInput = z.infer<typeof packChecklistSchema>;
 export type KitchenStationInput = z.infer<typeof kitchenStationSchema>;
 export type UpdateKitchenTicketInput = z.infer<typeof updateKitchenTicketSchema>;
+export type ServiceModeInput = z.infer<typeof serviceModeSchema>;
+export type CloseDayInput = z.infer<typeof closeDaySchema>;

@@ -92,6 +92,20 @@ consumed and produced outputs are added back as prepared stock.
 rate). Staff/pay data is chef-scoped (RLS). Also creates
 `kitchen_station_assignments` (the table deferred from Stage 5).
 
+## Costs, close-of-day & service (Stages 11–13)
+
+| Method | Path | Body schema | Effect |
+|---|---|---|---|
+| GET | `/api/costs/overview` | — | Today's sales, labour cost, waste value, prime cost & ratios (food cost null until recipes wired) |
+| POST | `/api/kitchen/close-day` | `closeDaySchema` | Aggregate & upsert the day's summary; `{reopen:true}` reopens it |
+| GET | `/api/kitchen/daily-summary` | `?date=` | One day's summary + recent history |
+| POST | `/api/kitchen/service-mode` | `serviceModeSchema` | Set service state (open/paused/slow_mode/closed/overloaded); keeps `is_paused` in sync so the customer checkout guardrail still works |
+
+Cost math (`computeCostSummary`) returns **null, not zero**, for unknown food
+cost / no sales, so the Costs page (`/dashboard/costs`) shows real numbers or a
+"needs setup" card. Prime cost = food + labour (labour-only until recipe
+per-order costing exists).
+
 ## Recipes & cost (Stage 6 — schemas/engine ready; routes pending apply)
 
 Planned: `GET/POST /api/recipes`, `GET/PATCH /api/recipes/[id]`,

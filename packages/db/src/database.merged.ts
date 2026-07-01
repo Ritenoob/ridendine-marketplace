@@ -948,8 +948,85 @@ type KitchenStationAssignmentsTable = {
   Relationships: [];
 };
 
+// ------------------------------------------------------------------
+// Migration 00060 — close-of-day + service controls.
+// ------------------------------------------------------------------
+type KitchenDailySummariesTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    summary_date: string;
+    orders_completed: number;
+    gross_sales: number;
+    net_sales: number;
+    food_cost: number | null;
+    packaging_cost: number | null;
+    labor_cost: number | null;
+    waste_value: number | null;
+    refund_loss: number | null;
+    prime_cost: number | null;
+    avg_prep_minutes: number | null;
+    late_tickets: number;
+    top_sellers: unknown;
+    sold_out_items: unknown;
+    notes: string | null;
+    metadata: Record<string, unknown>;
+    closed_by: string | null;
+    closed_at: string;
+    reopened_at: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    summary_date: string;
+    orders_completed?: number;
+    gross_sales?: number;
+    net_sales?: number;
+    food_cost?: number | null;
+    packaging_cost?: number | null;
+    labor_cost?: number | null;
+    waste_value?: number | null;
+    refund_loss?: number | null;
+    prime_cost?: number | null;
+    avg_prep_minutes?: number | null;
+    late_tickets?: number;
+    top_sellers?: unknown;
+    sold_out_items?: unknown;
+    notes?: string | null;
+    metadata?: Record<string, unknown>;
+    closed_by?: string | null;
+    closed_at?: string;
+    reopened_at?: string | null;
+    created_at?: string;
+    updated_at?: string;
+  };
+  Update: Partial<KitchenDailySummariesTable['Insert']>;
+  Relationships: [];
+};
+
+type ChefStorefrontsExtended = Omit<GenTables['chef_storefronts'], 'Row' | 'Insert' | 'Update'> & {
+  Row: GenTables['chef_storefronts']['Row'] & {
+    service_state?: string;
+    service_state_reason?: string | null;
+    prep_time_buffer_minutes?: number;
+  };
+  Insert: GenTables['chef_storefronts']['Insert'] & {
+    service_state?: string;
+    service_state_reason?: string | null;
+    prep_time_buffer_minutes?: number;
+  };
+  Update: GenTables['chef_storefronts']['Update'] & {
+    service_state?: string;
+    service_state_reason?: string | null;
+    prep_time_buffer_minutes?: number;
+  };
+};
+
 type MergedTables = Omit<
   GenTables,
+  | 'chef_storefronts'
   | 'drivers'
   | 'chef_payouts'
   | 'driver_payouts'
@@ -994,6 +1071,8 @@ type MergedTables = Omit<
   labor_allocations: LaborAllocationsTable;
   labor_cost_snapshots: LaborCostSnapshotsTable;
   kitchen_station_assignments: KitchenStationAssignmentsTable;
+  kitchen_daily_summaries: KitchenDailySummariesTable;
+  chef_storefronts: ChefStorefrontsExtended;
 };
 
 export type Database = Omit<GeneratedDatabase, 'public'> & {

@@ -5,6 +5,7 @@ import {
   computePerPortionFoodCost,
   computePackagingCost,
   computeMenuItemCosting,
+  computeCostSummary,
   DEFAULT_TARGET_FOOD_COST_PCT,
 } from './costing.service';
 
@@ -73,5 +74,31 @@ describe('costing.service', () => {
     expect(result.foodCostPct).toBeNull();
     expect(result.marginWarning).toBe(false);
     expect(result.targetFoodCostPct).toBe(DEFAULT_TARGET_FOOD_COST_PCT);
+  });
+});
+
+describe('computeCostSummary', () => {
+  it('computes prime cost and ratios when data exists', () => {
+    const s = computeCostSummary({ sales: 1000, foodCost: 300, laborCost: 250, packagingCost: 50, wasteValue: 20 });
+    expect(s.primeCost).toBe(550);
+    expect(s.foodCostPct).toBe(0.3);
+    expect(s.laborCostPct).toBe(0.25);
+    expect(s.primeCostPct).toBe(0.55);
+    expect(s.contributionMargin).toBe(1000 - (300 + 50 + 250));
+  });
+
+  it('returns null (not zero) for unknown food/labour and zero sales', () => {
+    const s = computeCostSummary({ sales: 0 });
+    expect(s.primeCost).toBeNull();
+    expect(s.foodCostPct).toBeNull();
+    expect(s.laborCostPct).toBeNull();
+    expect(s.contributionMargin).toBeNull();
+  });
+
+  it('computes labour-only prime cost when food cost is unknown', () => {
+    const s = computeCostSummary({ sales: 800, laborCost: 200 });
+    expect(s.primeCost).toBe(200);
+    expect(s.laborCostPct).toBe(0.25);
+    expect(s.foodCostPct).toBeNull();
   });
 });

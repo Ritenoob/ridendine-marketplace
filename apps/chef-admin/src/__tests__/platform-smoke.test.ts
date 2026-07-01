@@ -128,6 +128,18 @@ describe('chef-admin smoke wiring', () => {
     expect(movement).toContain('/movement');
   });
 
+  it('costs page is wired to the costs overview API with a nav item', () => {
+    const sidebar = read('components/layout/sidebar.tsx');
+    expect(sidebar).toContain("href: '/dashboard/costs'");
+    expect(sidebar).toContain("label: 'Costs'");
+
+    const page = read('app/dashboard/costs/page.tsx');
+    expect(page).toContain('/api/costs/overview');
+    expect(page).toContain('Prime cost');
+    // No fabricated numbers: food cost shows a needs-setup card.
+    expect(page).toContain('foodCostAvailable');
+  });
+
   it('kitchen command page exists with all three sections and pause wiring', () => {
     const page = read('app/dashboard/kitchen/page.tsx');
     expect(page).toContain('Kitchen Command');
