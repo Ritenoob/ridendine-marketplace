@@ -77,6 +77,21 @@ against on-hand. Historical `recipe_cost_snapshots` are never touched.
 Completing a batch ties production to the Stage 7 inventory ledger: inputs are
 consumed and produced outputs are added back as prepared stock.
 
+## Labour (Stage 10)
+
+| Method | Path | Body schema | Effect |
+|---|---|---|---|
+| GET / POST | `/api/labor/staff` | `createStaffSchema` | List / add kitchen staff (role, station, hourly rate) |
+| GET / POST | `/api/labor/shifts` | `createShiftSchema` | List / schedule shifts |
+| POST | `/api/labor/clock-in` | `clockInSchema` | Open a time entry (snapshots the staff rate; blocks double clock-in) |
+| POST | `/api/labor/clock-out` | `clockOutSchema` | Close the open time entry (returns its cost) |
+| GET | `/api/labor/today` | — | Who's on the clock + today's hours and labour cost |
+| GET | `/api/labor/costs` | — | Labour cost, labour % of sales, sales per labour hour, labour per order (ratios are **null until data exists**) |
+
+`time_entries` are the source of truth for labour cost (hours × snapshotted
+rate). Staff/pay data is chef-scoped (RLS). Also creates
+`kitchen_station_assignments` (the table deferred from Stage 5).
+
 ## Recipes & cost (Stage 6 — schemas/engine ready; routes pending apply)
 
 Planned: `GET/POST /api/recipes`, `GET/PATCH /api/recipes/[id]`,

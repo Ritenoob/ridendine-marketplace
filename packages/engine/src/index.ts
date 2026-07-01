@@ -19,6 +19,7 @@ export * from './orchestrators/kitchen-ticket-state';
 export * from './orchestrators/inventory.engine';
 export * from './orchestrators/purchasing.engine';
 export * from './orchestrators/production.engine';
+export * from './orchestrators/labor.engine';
 export * from './orchestrators/payout-engine';
 
 // Phase 3 extractions

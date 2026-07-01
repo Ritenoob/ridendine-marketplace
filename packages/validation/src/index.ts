@@ -12,6 +12,7 @@ export * from './schemas/recipe';
 export * from './schemas/inventory';
 export * from './schemas/supplier';
 export * from './schemas/production';
+export * from './schemas/labor';
 export * from './schemas/driver';
 export * from './schemas/common';
 export * from './schemas/ops';

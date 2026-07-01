@@ -789,6 +789,165 @@ type ProductionBatchOutputsTable = {
   Relationships: [];
 };
 
+// ------------------------------------------------------------------
+// Migration 00059 — labour.
+// ------------------------------------------------------------------
+type KitchenStaffTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    user_id: string | null;
+    name: string;
+    role: string | null;
+    station_id: string | null;
+    hourly_rate: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    user_id?: string | null;
+    name: string;
+    role?: string | null;
+    station_id?: string | null;
+    hourly_rate?: number;
+    is_active?: boolean;
+    created_at?: string;
+    updated_at?: string;
+  };
+  Update: Partial<KitchenStaffTable['Insert']>;
+  Relationships: [];
+};
+
+type KitchenShiftsTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    staff_id: string;
+    scheduled_start: string;
+    scheduled_end: string;
+    role: string | null;
+    station_id: string | null;
+    notes: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    staff_id: string;
+    scheduled_start: string;
+    scheduled_end: string;
+    role?: string | null;
+    station_id?: string | null;
+    notes?: string | null;
+    created_at?: string;
+    updated_at?: string;
+  };
+  Update: Partial<KitchenShiftsTable['Insert']>;
+  Relationships: [];
+};
+
+type TimeEntriesTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    staff_id: string;
+    shift_id: string | null;
+    clock_in: string;
+    clock_out: string | null;
+    hourly_rate: number;
+    created_at: string;
+    updated_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    staff_id: string;
+    shift_id?: string | null;
+    clock_in?: string;
+    clock_out?: string | null;
+    hourly_rate?: number;
+    created_at?: string;
+    updated_at?: string;
+  };
+  Update: Partial<TimeEntriesTable['Insert']>;
+  Relationships: [];
+};
+
+type LaborAllocationsTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    time_entry_id: string | null;
+    target_type: string | null;
+    target_id: string | null;
+    amount: number;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    time_entry_id?: string | null;
+    target_type?: string | null;
+    target_id?: string | null;
+    amount?: number;
+    created_at?: string;
+  };
+  Update: Partial<LaborAllocationsTable['Insert']>;
+  Relationships: [];
+};
+
+type LaborCostSnapshotsTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    snapshot_date: string;
+    labor_cost: number;
+    labor_hours: number;
+    staff_count: number;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    snapshot_date: string;
+    labor_cost?: number;
+    labor_hours?: number;
+    staff_count?: number;
+    created_at?: string;
+  };
+  Update: Partial<LaborCostSnapshotsTable['Insert']>;
+  Relationships: [];
+};
+
+type KitchenStationAssignmentsTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    staff_id: string;
+    station_id: string;
+    shift_id: string | null;
+    assigned_at: string;
+    released_at: string | null;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    staff_id: string;
+    station_id: string;
+    shift_id?: string | null;
+    assigned_at?: string;
+    released_at?: string | null;
+    created_at?: string;
+  };
+  Update: Partial<KitchenStationAssignmentsTable['Insert']>;
+  Relationships: [];
+};
+
 type MergedTables = Omit<
   GenTables,
   | 'drivers'
@@ -829,6 +988,12 @@ type MergedTables = Omit<
   production_batches: ProductionBatchesTable;
   production_batch_inputs: ProductionBatchInputsTable;
   production_batch_outputs: ProductionBatchOutputsTable;
+  kitchen_staff: KitchenStaffTable;
+  kitchen_shifts: KitchenShiftsTable;
+  time_entries: TimeEntriesTable;
+  labor_allocations: LaborAllocationsTable;
+  labor_cost_snapshots: LaborCostSnapshotsTable;
+  kitchen_station_assignments: KitchenStationAssignmentsTable;
 };
 
 export type Database = Omit<GeneratedDatabase, 'public'> & {
