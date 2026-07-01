@@ -161,6 +161,17 @@ describe('chef-admin smoke wiring', () => {
     expect(read('components/kitchen/service-controls.tsx')).toContain('/api/kitchen/service-mode');
   });
 
+  it('recipe versioning + packaging management are wired', () => {
+    // Recipe detail page opens a version editor that posts to the version API.
+    expect(read('app/dashboard/recipes/[id]/page.tsx')).toContain('RecipeVersionModal');
+    expect(read('components/recipes/recipe-version-modal.tsx')).toContain('/version');
+    // Recipe list links into the detail/version screen.
+    expect(read('app/dashboard/recipes/page.tsx')).toContain('/dashboard/recipes/${r.id}');
+    // Packaging catalogue management.
+    expect(read('components/recipes/packaging-manager.tsx')).toContain('/api/packaging');
+    expect(read('app/dashboard/recipes/page.tsx')).toContain('PackagingManager');
+  });
+
   it('kitchen command page exists with all three sections and pause wiring', () => {
     const page = read('app/dashboard/kitchen/page.tsx');
     expect(page).toContain('Kitchen Command');

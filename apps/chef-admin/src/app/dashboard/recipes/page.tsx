@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Card, Badge, Button, EmptyState, Spinner } from '@ridendine/ui';
 import { BookOpen, Plus, RefreshCw } from 'lucide-react';
 import { RecipeBuilderModal, type MenuItemLite } from '@/components/recipes/recipe-builder-modal';
+import { PackagingManager } from '@/components/recipes/packaging-manager';
 
 interface Recipe {
   id: string;
@@ -72,20 +74,25 @@ export default function RecipesPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {recipes.map((r) => (
-            <Card key={r.id}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold text-text">{r.name}</p>
-                  <p className="mt-0.5 text-xs text-textMuted">
-                    {r.menu_item_id ? menuNameById.get(r.menu_item_id) ?? 'Linked menu item' : 'Not linked to a menu item'}
-                  </p>
+            <Link key={r.id} href={`/dashboard/recipes/${r.id}`} className="block rounded-xl focus-visible:outline-none focus-visible:shadow-focus">
+              <Card className="h-full transition-shadow hover:shadow-md">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-text">{r.name}</p>
+                    <p className="mt-0.5 text-xs text-textMuted">
+                      {r.menu_item_id ? menuNameById.get(r.menu_item_id) ?? 'Linked menu item' : 'Not linked to a menu item'}
+                    </p>
+                  </div>
+                  <Badge variant={r.is_active ? 'success' : 'default'}>{r.is_active ? 'Active' : 'Inactive'}</Badge>
                 </div>
-                <Badge variant={r.is_active ? 'success' : 'default'}>{r.is_active ? 'Active' : 'Inactive'}</Badge>
-              </div>
-            </Card>
+                <p className="mt-2 text-xs font-medium text-primary">View &amp; edit versions →</p>
+              </Card>
+            </Link>
           ))}
         </div>
       )}
+
+      <PackagingManager />
 
       {builderOpen && (
         <RecipeBuilderModal
