@@ -1,4 +1,8 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
+
+export function reviewsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('reviews');
+}
 
 // ==========================================
 // REVIEW REPOSITORY

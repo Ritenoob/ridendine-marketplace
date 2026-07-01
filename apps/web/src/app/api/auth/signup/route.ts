@@ -3,11 +3,7 @@ import { cookies } from 'next/headers';
 import { createServerClient, createCustomer } from '@ridendine/db';
 import { signupSchema } from '@ridendine/validation';
 import { handleApiError } from '@/lib/auth-helpers';
-import {
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-} from '@ridendine/utils';
+import { evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse } from '@ridendine/utils';
 
 export async function POST(request: Request) {
   const limit = await evaluateRateLimit({

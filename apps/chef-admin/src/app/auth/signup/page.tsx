@@ -94,7 +94,7 @@ export default function SignupPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {(error || validationError) && (
-          <div className="rounded-lg border border-danger/30 bg-dangerSoft p-3 text-sm text-danger">
+          <div className="border border-danger/30 bg-dangerSoft p-3 text-sm text-danger">
             {error || validationError}
           </div>
         )}
@@ -188,7 +188,7 @@ export default function SignupPage() {
           </label>
         </div>
 
-        <div className="flex items-start gap-2 rounded-lg border border-primary/15 bg-primarySoft p-3">
+        <div className="flex items-start gap-2 border border-primary/15 bg-primarySoft p-3">
           <input
             type="checkbox"
             id="chefDuties"

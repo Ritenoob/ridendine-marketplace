@@ -59,7 +59,7 @@ pnpm db:migrate
 # Seed development data
 pnpm db:seed
 
-# Reset database (caution: destroys data)
+# Reset local database and re-apply deterministic seed data (caution: destroys data)
 pnpm db:reset
 
 # Generate TypeScript types

@@ -1,4 +1,10 @@
-import { createAdminClient } from '@ridendine/db';
+import {
+  chefStorefrontsTable,
+  createAdminClient,
+  customersTable,
+  menuItemsTable,
+  ordersTable,
+} from '@ridendine/db';
 import {
   getChefActorContext,
   errorResponse,
@@ -45,19 +51,16 @@ export async function GET(): Promise<Response> {
       closedTodayResult,
     ] =
       await Promise.all([
-        adminClient
-          .from('chef_storefronts')
+        chefStorefrontsTable(adminClient)
           .select('is_paused, is_active, max_queue_size, average_prep_minutes')
           .eq('id', storefrontId)
           .single(),
 
-        adminClient
-          .from('menu_items')
+        menuItemsTable(adminClient)
           .select('id, name, daily_limit, daily_sold, prep_time_minutes, is_available, is_sold_out')
           .eq('storefront_id', storefrontId),
 
-        adminClient
-          .from('orders')
+        ordersTable(adminClient)
           .select(
             'id, order_number, status, created_at, special_instructions, customer_id, estimated_ready_at, estimated_prep_minutes, prep_started_at, order_items ( quantity, special_instructions, menu_item:menu_items ( id, name ) )'
           )
@@ -66,8 +69,7 @@ export async function GET(): Promise<Response> {
           .neq('is_test', true)
           .in('status', ACTIVE_ORDER_STATUSES),
 
-        adminClient
-          .from('orders')
+        ordersTable(adminClient)
           .select(
             'id, created_at, order_items ( quantity, menu_item:menu_items ( id ) )'
           )
@@ -105,8 +107,7 @@ export async function GET(): Promise<Response> {
     ];
     const { data: customers, error: customersError } =
       customerIds.length > 0
-        ? await adminClient
-            .from('customers')
+        ? await customersTable(adminClient)
             .select('id, first_name, last_name')
             .in('id', customerIds)
         : { data: [], error: null };

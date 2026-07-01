@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@ridendine/db';
+import { notificationsTable, createServerClient } from '@ridendine/db';
 import { createNotificationSchema, updateNotificationSchema } from '@ridendine/validation';
 import { getCustomerActorContext } from '@ridendine/engine/server';
 
@@ -14,8 +14,7 @@ export async function GET(): Promise<NextResponse> {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: notifications, error } = await supabase
-      .from('notifications')
+    const { data: notifications, error } = await notificationsTable(supabase)
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -59,8 +58,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     // Allow creating notifications for self or (if admin) for others
     const targetUserId = user_id || user.id;
 
-    const { data: notification, error } = await supabase
-      .from('notifications')
+    const { data: notification, error } = await notificationsTable(supabase)
       .insert({
         user_id: targetUserId,
         title,
@@ -109,8 +107,7 @@ export async function PATCH(request: Request) {
 
     if (notification_id) {
       // Mark specific notification as read
-      const { error } = await supabase
-        .from('notifications')
+      const { error } = await notificationsTable(supabase)
         .update({ read })
         .eq('id', notification_id)
         .eq('user_id', user.id);
@@ -118,8 +115,7 @@ export async function PATCH(request: Request) {
       if (error) throw error;
     } else {
       // Mark all as read
-      const { error } = await supabase
-        .from('notifications')
+      const { error } = await notificationsTable(supabase)
         .update({ read: true })
         .eq('user_id', user.id)
         .eq('read', false);

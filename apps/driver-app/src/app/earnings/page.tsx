@@ -4,6 +4,7 @@ import {
   createAdminClient,
   getDriverByUserId,
   getDeliveryHistory,
+  getDriverEarningsFinancialData,
 } from '@ridendine/db';
 import { DriverShell } from '@/components/layout/driver-shell';
 import EarningsView from './components/EarningsView';
@@ -54,60 +55,12 @@ export default async function EarningsPage() {
 
   const completedDeliveries = await getDeliveryHistory(supabase as any, driver.id, { limit: 20 });
 
-  const admin = createAdminClient() as unknown as {
-    from: (rel: string) => {
-      select: (cols: string) => {
-        eq: (c: string, v: string) => {
-          eq: (c2: string, v2: string) => {
-            maybeSingle: () => Promise<{
-              data: { balance_cents: number; currency?: string | null } | null;
-              error?: unknown;
-            }>;
-            order: (c3: string, opts?: { ascending?: boolean }) => Promise<{
-              data:
-                | Array<{
-                    id: string;
-                    amount_cents: number;
-                    fee_cents: number;
-                    status: string;
-                    requested_at: string | null;
-                  }>
-                | null;
-              error?: unknown;
-            }>;
-          };
-          maybeSingle: () => Promise<{
-            data: {
-              status?: string | null;
-              payouts_enabled?: boolean | null;
-              charges_enabled?: boolean | null;
-              onboarding_completed_at?: string | null;
-            } | null;
-            error?: unknown;
-          }>;
-        };
-      };
-    };
-  };
-  const [acctResult, pendingInstantResult, payoutAccountResult] = await Promise.all([
-    admin
-      .from('platform_accounts')
-      .select('balance_cents, currency')
-      .eq('account_type', 'driver_payable')
-      .eq('owner_id', driver.id)
-      .maybeSingle(),
-    admin
-      .from('instant_payout_requests')
-      .select('id, amount_cents, fee_cents, status, requested_at')
-      .eq('driver_id', driver.id)
-      .eq('status', 'pending')
-      .order('requested_at', { ascending: false }),
-    admin
-      .from('driver_payout_accounts')
-      .select('status, payouts_enabled, charges_enabled, onboarding_completed_at')
-      .eq('driver_id', driver.id)
-      .maybeSingle(),
-  ]);
+  const admin = createAdminClient();
+  const {
+    platformAccountResult: acctResult,
+    instantPayoutsResult: pendingInstantResult,
+    payoutAccountResult,
+  } = await getDriverEarningsFinancialData(admin as any, driver.id);
 
   if (acctResult.error || pendingInstantResult.error || payoutAccountResult.error) {
     return (
@@ -138,11 +91,11 @@ export default async function EarningsPage() {
         currency={normalizeCurrency(acct?.currency)}
         instantPayoutsEnabled={instantEnabled}
         pendingInstantPayoutRequests={(pendingInstantResult.data ?? []).map((request) => ({
-          id: request.id,
-          amountCents: request.amount_cents,
-          feeCents: request.fee_cents,
-          status: request.status,
-          requestedAt: request.requested_at,
+          id: request.id ?? '',
+          amountCents: Number(request.amount_cents ?? 0),
+          feeCents: Number(request.fee_cents ?? 0),
+          status: request.status ?? 'pending',
+          requestedAt: request.requested_at ?? null,
         }))}
         payoutAccountStatus={{
           connected: Boolean(payoutAccount),

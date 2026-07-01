@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import {
   createAdminClient,
+  getDriverById,
   updateDriver,
   type Driver,
   type SupabaseClient,
@@ -18,13 +19,9 @@ export async function GET() {
     }
 
     const adminClient = createAdminClient();
-    const { data: driver, error } = await adminClient
-      .from('drivers')
-      .select('*')
-      .eq('id', driverContext.driverId)
-      .single();
+    const driver = await getDriverById(adminClient as unknown as SupabaseClient, driverContext.driverId);
 
-    if (error || !driver) {
+    if (!driver) {
       return errorResponse('NOT_FOUND', 'Driver profile not found', 404);
     }
 

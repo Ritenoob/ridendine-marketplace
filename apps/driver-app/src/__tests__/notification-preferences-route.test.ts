@@ -14,6 +14,18 @@ jest.mock('@ridendine/db', () => ({
   createAdminClient: jest.fn(() => ({
     from: mockFrom,
   })),
+  getDriverNotificationPreferencesRow: jest.fn(() => mockMaybeSingle()),
+  upsertDriverNotificationPreferencesRow: jest.fn((_client, input) => {
+    mockUpsert(
+      {
+        driver_id: input.driverId,
+        preferences: input.preferences,
+        updated_at: input.updatedAt,
+      },
+      { onConflict: 'driver_id' }
+    );
+    return mockSingle();
+  }),
 }));
 
 jest.mock('@/lib/engine', () => ({

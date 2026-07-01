@@ -1,17 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import {
-  createServerClient,
-  getAddressesByCustomer,
-  createAddress,
-  updateAddress,
-  deleteAddress,
-  setDefaultAddress,
-} from '@ridendine/db';
-import {
-  createCustomerAddressSchema,
-  updateCustomerAddressSchema,
-} from '@ridendine/validation';
+import { customerAddressesTable, createServerClient, getAddressesByCustomer, createAddress, updateAddress, deleteAddress, setDefaultAddress } from '@ridendine/db';
+import { createCustomerAddressSchema, updateCustomerAddressSchema } from '@ridendine/validation';
 import { getCurrentCustomer, handleApiError } from '@/lib/auth-helpers';
 import { geocodeAddress, buildAddressString } from '@ridendine/engine';
 
@@ -112,8 +102,7 @@ export async function PATCH(request: Request) {
     const supabase = createServerClient(cookieStore);
 
     const customer = await getCurrentCustomer(supabase);
-    const { data: existingAddress } = await supabase
-      .from('customer_addresses')
+    const { data: existingAddress } = await customerAddressesTable(supabase)
       .select('id')
       .eq('id', addressId)
       .eq('customer_id', customer.id)
@@ -147,8 +136,7 @@ export async function PATCH(request: Request) {
       validated.postalCode !== undefined;
 
     if (addressFieldsChanged && validated.lat === undefined && validated.lng === undefined) {
-      const { data: current } = await supabase
-        .from('customer_addresses')
+      const { data: current } = await customerAddressesTable(supabase)
         .select('address_line1, city, state, postal_code, country')
         .eq('id', addressId)
         .single();
@@ -201,8 +189,7 @@ export async function DELETE(request: Request) {
     const supabase = createServerClient(cookieStore);
 
     const customer = await getCurrentCustomer(supabase);
-    const { data: existingAddress } = await supabase
-      .from('customer_addresses')
+    const { data: existingAddress } = await customerAddressesTable(supabase)
       .select('id')
       .eq('id', addressId)
       .eq('customer_id', customer.id)

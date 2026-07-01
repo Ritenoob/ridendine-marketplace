@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import { ordersTable, customersTable, createAdminClient } from '@ridendine/db';
 import { getChefActorContext, errorResponse, successResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -33,8 +33,7 @@ export async function GET(_request: NextRequest) {
     const { storefrontId } = chefContext;
     const adminClient = createAdminClient();
 
-    const { data: orders } = await adminClient
-      .from('orders')
+    const { data: orders } = await ordersTable(adminClient)
       .select('customer_id, total, created_at')
       .eq('storefront_id', storefrontId)
       .in('status', ['delivered', 'completed'])
@@ -79,8 +78,7 @@ export async function GET(_request: NextRequest) {
     const customerIds = Object.keys(byCustomer);
 
     // Fetch names in one query
-    const { data: profiles } = await adminClient
-      .from('customers')
+    const { data: profiles } = await customersTable(adminClient)
       .select('id, first_name, last_name')
       .in('id', customerIds);
 

@@ -6,6 +6,7 @@ import { PageHeader, EmptyState, StatusBadge } from '@ridendine/ui';
 import { FinanceSubnav } from '../_components/FinanceSubnav';
 import { FinanceAccessDenied } from '../_components/FinanceAccessDenied';
 import { FINANCE_PAGE_ROLES } from '../_lib/roles';
+import { PayoutPreviewActions } from './payout-preview-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +60,8 @@ export default async function FinancePayoutRunsPage() {
           title="Payout Runs"
           subtitle="Chef runs (weekly) and driver runs (daily). All lines are ledger-debited and traceable."
         />
+
+        <PayoutPreviewActions />
 
         {error ? (
           <EmptyState

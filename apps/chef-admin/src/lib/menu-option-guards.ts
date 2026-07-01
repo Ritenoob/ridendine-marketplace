@@ -1,4 +1,4 @@
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
+import { menuItemsTable, menuItemOptionsTable, menuItemOptionValuesTable, createAdminClient, type SupabaseClient } from '@ridendine/db';
 
 export function getChefAdminClient(): SupabaseClient {
   return createAdminClient() as unknown as SupabaseClient;
@@ -9,8 +9,7 @@ export async function verifyMenuItemOwnedByStorefront(
   menuItemId: string,
   storefrontId: string
 ): Promise<boolean> {
-  const { data } = await adminClient
-    .from('menu_items')
+  const { data } = await menuItemsTable(adminClient)
     .select('id')
     .eq('id', menuItemId)
     .eq('storefront_id', storefrontId)
@@ -24,8 +23,7 @@ export async function verifyOptionOwnedByMenuItem(
   optionId: string,
   menuItemId: string
 ): Promise<boolean> {
-  const { data } = await adminClient
-    .from('menu_item_options')
+  const { data } = await menuItemOptionsTable(adminClient)
     .select('id')
     .eq('id', optionId)
     .eq('menu_item_id', menuItemId)
@@ -39,8 +37,7 @@ export async function verifyValueOwnedByOption(
   valueId: string,
   optionId: string
 ): Promise<boolean> {
-  const { data } = await adminClient
-    .from('menu_item_option_values')
+  const { data } = await menuItemOptionValuesTable(adminClient)
     .select('id')
     .eq('id', valueId)
     .eq('option_id', optionId)

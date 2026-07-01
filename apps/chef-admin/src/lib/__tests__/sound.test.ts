@@ -45,9 +45,9 @@ describe('playNewOrderChime', () => {
     });
 
     let playChime: () => void;
-    jest.isolateModules(() => {
+    await jest.isolateModulesAsync(async () => {
       // Fresh module import so audioCtx starts null
-      ({ playNewOrderChime: playChime } = require('../sound') as { playNewOrderChime: () => void });
+      ({ playNewOrderChime: playChime } = await import('../sound'));
     });
 
     playChime!();
@@ -60,7 +60,7 @@ describe('playNewOrderChime', () => {
     expect(mockStop).toHaveBeenCalledTimes(2);
   });
 
-  it('does not throw when AudioContext is unavailable', () => {
+  it('does not throw when AudioContext is unavailable', async () => {
     Object.defineProperty(window, 'AudioContext', {
       value: undefined,
       writable: true,
@@ -68,8 +68,8 @@ describe('playNewOrderChime', () => {
     });
 
     let playChime: () => void;
-    jest.isolateModules(() => {
-      ({ playNewOrderChime: playChime } = require('../sound') as { playNewOrderChime: () => void });
+    await jest.isolateModulesAsync(async () => {
+      ({ playNewOrderChime: playChime } = await import('../sound'));
     });
 
     expect(() => playChime!()).not.toThrow();

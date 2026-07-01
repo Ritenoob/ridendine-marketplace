@@ -5,18 +5,9 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
-import {
-  getEngine,
-  getCustomerActorContext,
-  errorResponse,
-  successResponse,
-} from '@/lib/engine';
-import {
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-} from '@ridendine/utils';
+import { ordersTable, createAdminClient } from '@ridendine/db';
+import { getEngine, getCustomerActorContext, errorResponse, successResponse } from '@/lib/engine';
+import { evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse } from '@ridendine/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,8 +42,7 @@ export async function POST(request: NextRequest | Request, { params }: RoutePara
     const adminClient = createAdminClient();
 
     // Verify order exists and belongs to this customer
-    const { data: order } = await adminClient
-      .from('orders')
+    const { data: order } = await ordersTable(adminClient)
       .select('id, customer_id, engine_status')
       .eq('id', orderId)
       .eq('customer_id', customerContext.customerId)

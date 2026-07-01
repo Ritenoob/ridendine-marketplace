@@ -6,11 +6,7 @@
 
 import { checkoutSchema } from '@ridendine/validation';
 import { getCustomerActorContext, errorResponse } from '@/lib/engine';
-import {
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-} from '@ridendine/utils';
+import { evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse } from '@ridendine/utils';
 import { runCheckout, type CheckoutRequestInput } from '@/lib/checkout/run-checkout';
 
 export async function POST(request: Request): Promise<Response> {

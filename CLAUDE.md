@@ -1,73 +1,53 @@
-# CLAUDE.md - Ridendine Development Context
+# CLAUDE.md - RideNDine Agent Context
 
-## Project Overview
+RideNDine is a chef-first food delivery marketplace built as a pnpm/Turborepo monorepo with four Next.js apps backed by Supabase.
 
-Ridendine is a **chef-first food delivery marketplace** connecting home chefs with customers. Built as a pnpm/Turborepo monorepo with four Next.js applications backed by Supabase.
+Use this file as the Claude entrypoint. Codex and cross-agent context lives in `AGENTS.md`; modular Claude rules live in `.claude/rules/`.
 
-## Architecture
+## Required Reading
 
-### Apps
-- `apps/web` (port 3000) - Customer marketplace
-- `apps/chef-admin` (port 3001) - Chef dashboard
-- `apps/ops-admin` (port 3002) - Operations admin
-- `apps/driver-app` (port 3003) - Driver PWA
+- `AGENTS.md` - cross-agent operating contract.
+- `.claude/rules/ridendine-marketplace-project.md` - repo structure and command map.
+- `.claude/rules/ridendine-marketplace-live-testing.md` - live browser feedback requirements.
+- `.claude/rules/ridendine-marketplace-mcp-servers.md` - MCP/tool selection and health.
+- `docs/agent-tooling/LIVE_TESTING.md` - step-by-step live verification playbook.
 
-### Packages
-- `@ridendine/db` - Supabase clients and repositories
-- `@ridendine/ui` - Shared React components
-- `@ridendine/auth` - Authentication utilities
-- `@ridendine/types` - TypeScript types
-- `@ridendine/validation` - Zod schemas
-- `@ridendine/utils` - Utility functions
-- `@ridendine/config` - Shared configs (TS, Tailwind, ESLint)
-- `@ridendine/notifications` - Notification templates
-
-## Key Design Decisions
-
-1. **Chef-first** - `chef_storefronts` is the primary listing entity
-2. **No parallel models** - Single canonical schema for all domains
-3. **Package boundary** - All DB access through `@ridendine/db`
-4. **Type safety** - End-to-end TypeScript with Zod validation
-
-## Commands
+## Core Commands
 
 ```bash
-pnpm install          # Install all dependencies
-pnpm dev              # Run all apps
-pnpm dev:web          # Run customer app
-pnpm build            # Build all apps
-pnpm lint             # Lint all packages
-pnpm typecheck        # Type check all packages
-pnpm db:generate      # Generate Supabase types
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+pnpm agent:tools:doctor
+pnpm agent:chef-admin:live
 ```
 
-## Database
+For local alternate-port chef-admin testing:
 
-- PostgreSQL via Supabase
-- Row Level Security enabled
-- Migrations in `supabase/migrations/`
-- Seeds in `supabase/seeds/`
+```bash
+ALLOW_DEV_AUTOLOGIN=true NEXT_PUBLIC_CHEF_ADMIN_URL=http://127.0.0.1:3011 pnpm --filter @ridendine/chef-admin exec next dev -p 3011
+pnpm agent:chef-admin:live:local
+```
 
-## Order Flow
+## Non-Negotiables
 
-1. Customer browses → adds to cart → checkout
-2. Order created (pending)
-3. Chef accepts → prepares → marks ready
-4. Delivery created → driver assigned
-5. Driver picks up → delivers
-6. Customer reviews
+- Do not claim UI work is verified without browser evidence and clicked interactions.
+- Do not claim full authenticated E2E while local Supabase is failing to boot or seed.
+- Keep DB access routed through `@ridendine/db` repositories unless a documented exception exists.
+- Never commit real credentials or `.env.local`.
+- Do not auto-commit or push without explicit instruction.
 
-## File Conventions
+## Apps
 
-- Components: `src/components/[domain]/[component].tsx`
-- Pages: `src/app/[route]/page.tsx` (App Router)
-- API: `src/app/api/[route]/route.ts`
-- Repositories: `packages/db/src/repositories/[domain].repository.ts`
+- `apps/web` - customer marketplace, port `3000`.
+- `apps/chef-admin` - chef dashboard, port `3001`.
+- `apps/ops-admin` - operations admin, port `3002`.
+- `apps/driver-app` - driver PWA, port `3003`.
 
-## Documentation
+## Known Current Blockers
 
-For detailed platform information, see:
-- `docs/PLATFORM_OVERVIEW.md` - All 56 pages across 4 apps
-- `docs/ORDER_FLOW.md` - Order lifecycle and status workflow
-- `docs/DATABASE_SCHEMA.md` - All Supabase tables (~70 as of 2026-06)
-- `docs/APP_CONNECTIONS.md` - How apps connect and communicate
+- Local Supabase currently fails at migration `00049_review_pii_column_lockdown_and_rls_enforcement.sql` when it attempts RLS on extension-owned `public.spatial_ref_sys`.
+- Chef Admin Jest and lint are red in the current checkout; see `apps/chef-admin/E2E_EXPLORATION_REPORT_2026-06-30.md`.
+- `playwright-cli` may fail when system Chrome is missing. Prefer the repo script using bundled Playwright Chromium.

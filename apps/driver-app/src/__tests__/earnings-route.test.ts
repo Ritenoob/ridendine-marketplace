@@ -11,7 +11,30 @@ jest.mock('@ridendine/db', () => ({
     from: mockFrom,
   })),
   getDeliveryHistory: (...args: unknown[]) => mockGetDeliveryHistory(...args),
+  getDriverEarningsFinancialData: async (_client: unknown, driverId: string) => {
+    const [platformAccountResult, instantPayoutsResult, payoutAccountResult] = await Promise.all([
+      table('platform_accounts')
+        .select('balance_cents, currency')
+        .eq('account_type', 'driver_payable')
+        .eq('owner_id', driverId)
+        .maybeSingle(),
+      table('instant_payout_requests')
+        .select('id, amount_cents, fee_cents, status, requested_at')
+        .eq('driver_id', driverId)
+        .eq('status', 'pending')
+        .order('requested_at', { ascending: false }),
+      table('driver_payout_accounts')
+        .select('status, payouts_enabled, charges_enabled, onboarding_completed_at')
+        .eq('driver_id', driverId)
+        .maybeSingle(),
+    ]);
+    return { platformAccountResult, instantPayoutsResult, payoutAccountResult };
+  },
 }));
+
+function table(name: string) {
+  return mockFrom(name);
+}
 
 jest.mock('@/lib/engine', () => ({
   getDriverActorContext: (...args: unknown[]) => mockGetDriverActorContext(...args),

@@ -1,37 +1,10 @@
 import { cookies } from 'next/headers';
 import Link from 'next/link';
-import {
-  createServerClient,
-  getStorefrontByChefId,
-  getOrdersByStorefront,
-  getMenuItemsByStorefront,
-  getMenuCategoriesByStorefront,
-} from '@ridendine/db';
+import { chefPayoutAccountsTable, customersTable, chefProfilesTable, chefAvailabilityTable, ordersTable, createServerClient, getStorefrontByChefId, getOrdersByStorefront, getMenuItemsByStorefront, getMenuCategoriesByStorefront } from '@ridendine/db';
 import type { Tables } from '@ridendine/db';
 import { formatCurrency } from '@ridendine/utils';
 import { ORDER_STATUS_BADGE_CLASSES } from '@ridendine/ui';
-import {
-  AlertTriangle,
-  Banknote,
-  BellRing,
-  CalendarClock,
-  CheckCircle2,
-  ChefHat,
-  Clock,
-  DollarSign,
-  ExternalLink,
-  Eye,
-  Flame,
-  Image,
-  Package,
-  PackageX,
-  PauseCircle,
-  Plus,
-  ReceiptText,
-  Store,
-  TrendingUp,
-  Utensils,
-} from 'lucide-react';
+import { AlertTriangle, Banknote, BellRing, CalendarClock, CheckCircle2, ChefHat, Clock, DollarSign, ExternalLink, Eye, Flame, Image, Package, PackageX, PauseCircle, Plus, ReceiptText, Store, TrendingUp, Utensils } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -100,8 +73,7 @@ async function getChefContext(): Promise<{
     } = await supabase.auth.getUser();
     if (!user) return { chef: null, storefront: null };
 
-    const { data: chef, error } = await supabase
-      .from('chef_profiles')
+    const { data: chef, error } = await chefProfilesTable(supabase)
       .select('id, display_name, status, phone, bio')
       .eq('user_id', user.id)
       .single();
@@ -118,8 +90,7 @@ async function hasStripeAccount(chefId: string): Promise<boolean> {
   try {
     const cookieStore = await cookies();
     const supabase = createServerClient(cookieStore);
-    const { data } = await supabase
-      .from('chef_payout_accounts')
+    const { data } = await chefPayoutAccountsTable(supabase)
       .select('stripe_account_id')
       .eq('chef_id', chefId)
       .maybeSingle();
@@ -133,8 +104,7 @@ async function getAvailabilitySummary(storefrontId: string) {
   try {
     const cookieStore = await cookies();
     const supabase = createServerClient(cookieStore);
-    const { data } = await supabase
-      .from('chef_availability')
+    const { data } = await chefAvailabilityTable(supabase)
       .select('day_of_week, is_available')
       .eq('storefront_id', storefrontId);
     const rows = data ?? [];
@@ -167,8 +137,7 @@ async function getDashboardData(storefrontId: string) {
 
   // Open/working orders only — small set, filtered server-side.
   try {
-    const { data } = await supabase
-      .from('orders')
+    const { data } = await ordersTable(supabase)
       .select('*')
       .eq('storefront_id', storefrontId)
       .in('status', ACTIVE_ORDER_STATUSES)
@@ -183,8 +152,7 @@ async function getDashboardData(storefrontId: string) {
   type EarnedOrderRow = { total: number | null; created_at: string; payment_status: string | null };
   let earnedMonthOrders: EarnedOrderRow[] = [];
   try {
-    const { data } = await supabase
-      .from('orders')
+    const { data } = await ordersTable(supabase)
       .select('total, created_at, payment_status')
       .eq('storefront_id', storefrontId)
       .gte('created_at', monthStart.toISOString())
@@ -203,8 +171,7 @@ async function getDashboardData(storefrontId: string) {
   let weekRevenue = 0;
   let prevWeekRevenue = 0;
   try {
-    const { data: thisWeekData } = await supabase
-      .from('orders')
+    const { data: thisWeekData } = await ordersTable(supabase)
       .select('total')
       .eq('storefront_id', storefrontId)
       .in('status', EARNED_ORDER_STATUSES)
@@ -212,8 +179,7 @@ async function getDashboardData(storefrontId: string) {
     weekRevenue = ((thisWeekData ?? []) as SimpleOrderRow[]).reduce(
       (s, o) => s + Number(o.total || 0), 0
     );
-    const { data: prevWeekData } = await supabase
-      .from('orders')
+    const { data: prevWeekData } = await ordersTable(supabase)
       .select('total')
       .eq('storefront_id', storefrontId)
       .in('status', EARNED_ORDER_STATUSES)
@@ -230,8 +196,7 @@ async function getDashboardData(storefrontId: string) {
   // Order volume today (all statuses) — count only, no row transfer.
   let todayOrderCount = 0;
   try {
-    const { count } = await supabase
-      .from('orders')
+    const { count } = await ordersTable(supabase)
       .select('id', { count: 'exact', head: true })
       .eq('storefront_id', storefrontId)
       .gte('created_at', today.toISOString());
@@ -260,8 +225,7 @@ async function getDashboardData(storefrontId: string) {
   let customers: Array<{ id: string; first_name: string | null; last_name: string | null }> = [];
   if (customerIds.length > 0) {
     try {
-      const { data } = await supabase
-        .from('customers')
+      const { data } = await customersTable(supabase)
         .select('id, first_name, last_name')
         .in('id', customerIds);
       customers = data ?? [];

@@ -1,7 +1,12 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
 import type { Tables } from '../generated/database.types';
 
 export type ChefProfile = Tables<'chef_profiles'>;
+
+export function chefProfilesTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('chef_profiles');
+}
+
 export interface ChefStorefrontGovernanceSummary {
   id: string;
   name: string;

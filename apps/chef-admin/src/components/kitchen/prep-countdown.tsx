@@ -82,7 +82,10 @@ export function PrepCountdown({
   // Read once per mount - matchMedia is stable for the session lifetime.
   // Declared before any early return so hook call order is consistent.
   const reducedMotion = useMemo(
-    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () =>
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     []
   );
 

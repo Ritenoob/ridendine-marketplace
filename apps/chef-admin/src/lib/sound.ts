@@ -10,7 +10,6 @@ function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
   try {
     if (!audioCtx || audioCtx.state === 'closed') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const Ctor = (window as unknown as { AudioContext?: new () => AudioContext }).AudioContext;
       if (!Ctor) return null;
       audioCtx = new Ctor();

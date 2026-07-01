@@ -57,6 +57,16 @@ BEGIN
     WHERE n.nspname = 'public'
       AND c.relkind = 'r'          -- ordinary tables only
       AND NOT c.relrowsecurity     -- RLS not yet enabled
+      AND c.relowner = current_user::regrole
+      AND NOT EXISTS (
+        SELECT 1
+        FROM pg_depend d
+        JOIN pg_extension e ON e.oid = d.refobjid
+        WHERE d.classid = 'pg_class'::regclass
+          AND d.objid = c.oid
+          AND d.refclassid = 'pg_extension'::regclass
+          AND d.deptype = 'e'
+      )
   LOOP
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', r.relname);
     RAISE NOTICE 'Enabled RLS on public.%', r.relname;

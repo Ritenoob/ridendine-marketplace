@@ -4,23 +4,9 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import {
-  createAdminClient,
-  createStorefront,
-  updateStorefront,
-  type SupabaseClient,
-} from '@ridendine/db';
-import {
-  routeCreateStorefrontSchema,
-  routeUpdateStorefrontSchema,
-} from '@ridendine/validation';
-import {
-  getEngine,
-  getChefActorContext,
-  getChefBasicContext,
-  errorResponse,
-  successResponse,
-} from '@/lib/engine';
+import { chefStorefrontsTable, chefKitchensTable, createAdminClient, createStorefront, updateStorefront, type SupabaseClient } from '@ridendine/db';
+import { routeCreateStorefrontSchema, routeUpdateStorefrontSchema } from '@ridendine/validation';
+import { getEngine, getChefActorContext, getChefBasicContext, errorResponse, successResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,8 +24,7 @@ export async function GET() {
     const adminClient = createAdminClient();
 
     // Get storefront with kitchen info
-    const { data: storefront, error } = await adminClient
-      .from('chef_storefronts')
+    const { data: storefront, error } = await chefStorefrontsTable(adminClient)
       .select(`
         *,
         kitchen:chef_kitchens (
@@ -123,8 +108,7 @@ export async function POST(request: NextRequest) {
 
     // Check if chef already has a kitchen, or create one
     let kitchenId: string;
-    const { data: existingKitchen } = await adminClient
-      .from('chef_kitchens')
+    const { data: existingKitchen } = await chefKitchensTable(adminClient)
       .select('id')
       .eq('chef_id', chefContext.chefId)
       .single();
@@ -133,8 +117,7 @@ export async function POST(request: NextRequest) {
       kitchenId = existingKitchen.id;
     } else {
       // Create a placeholder kitchen (chef will update address later)
-      const { data: newKitchen, error: kitchenError } = await adminClient
-        .from('chef_kitchens')
+      const { data: newKitchen, error: kitchenError } = await chefKitchensTable(adminClient)
         .insert({
           chef_id: chefContext.chefId,
           name: name.trim(),
@@ -162,8 +145,7 @@ export async function POST(request: NextRequest) {
 
     // Check for slug uniqueness
     while (true) {
-      const { data: existingStorefront } = await adminClient
-        .from('chef_storefronts')
+      const { data: existingStorefront } = await chefStorefrontsTable(adminClient)
         .select('id')
         .eq('slug', slug)
         .single();

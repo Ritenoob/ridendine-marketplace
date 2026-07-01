@@ -353,6 +353,97 @@ describe('DriverDashboard — no active deliveries empty state', () => {
     expect(screen.getByText('Ridendine Kitchen')).toBeInTheDocument();
     expect(screen.getByText('$12.40')).toBeInTheDocument();
     expect(screen.getByText('2.8 km')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Accept' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Decline' })).toBeInTheDocument();
+  });
+
+  it('accepts a pending offer from the durable offer queue', async () => {
+    const location = window.location;
+    delete (window as any).location;
+    (window as any).location = { href: '' };
+
+    const offer = {
+      attemptId: 'attempt-1',
+      deliveryId: 'delivery-1',
+      pickupAddress: '1 King St W, Hamilton',
+      dropoffAddress: '100 Queen St E, Hamilton',
+      estimatedDistanceKm: 2.8,
+      estimatedRouteSeconds: 900,
+      estimatedPayout: 12.4,
+      customerTip: 3,
+      orderNumber: 'RD-100',
+      storefrontName: 'Ridendine Kitchen',
+      expiresAt: '2026-06-08T21:00:00.000Z',
+    };
+
+    global.fetch = jest.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes('/api/offers') && init?.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: { accepted: true } }),
+        } as Response);
+      }
+      if (url.includes('/api/offers')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: { offers: [offer] } }),
+        } as Response);
+      }
+      if (url.includes('/api/driver/shift')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: shiftSummary({
+              presenceStatus: 'online',
+              currentShiftId: 'shift-1',
+              isOnShift: true,
+              shiftStartedAt: '2026-06-08T18:15:00.000Z',
+            }),
+          }),
+        } as Response);
+      }
+      if (url.includes('/api/driver/readiness')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: readinessSummary({ presenceStatus: 'online' }) }),
+        } as Response);
+      }
+      if (url.includes('/api/driver/presence')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: { presence: { status: 'online' } } }),
+        } as Response);
+      }
+      if (url.includes('/api/earnings')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, data: { today: { count: 0, earnings: 0 } } }),
+        } as Response);
+      }
+      return Promise.resolve({ ok: false, json: async () => ({}) } as Response);
+    });
+
+    render(<DriverDashboard driver={mockDriver as any} activeDeliveries={[]} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Accept' }));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/offers',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            attemptId: 'attempt-1',
+            driverId: mockDriver.id,
+            action: 'accept',
+          }),
+        })
+      );
+    });
+    expect(window.location.href).toBe('/delivery/delivery-1');
+
+    window.location = location;
   });
 
   it('blocks ending a shift while an active delivery is in progress', async () => {

@@ -302,7 +302,9 @@ describe('DeliveryDetail workflow clarity', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Complete Delivery' }));
+    const dialog = screen.getByRole('dialog', { name: 'Complete Delivery' });
     expect(screen.getByRole('heading', { name: 'Complete Delivery' })).toBeInTheDocument();
+    expect(dialog).toHaveClass('max-h-[calc(100vh-2rem)]', 'overflow-y-auto');
     expect(screen.getByRole('button', { name: 'Complete' })).toBeDisabled();
 
     const input = container.querySelector('input[type="file"]') as HTMLInputElement;

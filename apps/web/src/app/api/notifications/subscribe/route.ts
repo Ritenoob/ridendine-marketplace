@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@ridendine/db';
+import { pushSubscriptionsTable, createServerClient } from '@ridendine/db';
 import { cookies } from 'next/headers';
 import { subscribeSchema, unsubscribeSchema } from '@ridendine/validation';
 import { getCurrentCustomer, handleApiError } from '@/lib/auth-helpers';
@@ -25,8 +25,7 @@ export async function POST(request: Request) {
     }
     const { subscription } = parsed.data;
 
-    const { error } = await supabase
-      .from('push_subscriptions')
+    const { error } = await pushSubscriptionsTable(supabase)
       .upsert({
         user_id: userId,
         endpoint: subscription.endpoint,
@@ -67,8 +66,7 @@ export async function DELETE(request: Request) {
     }
     const { endpoint } = parsed.data;
 
-    const { error } = await supabase
-      .from('push_subscriptions')
+    const { error } = await pushSubscriptionsTable(supabase)
       .delete()
       .eq('user_id', userId)
       .eq('endpoint', endpoint);

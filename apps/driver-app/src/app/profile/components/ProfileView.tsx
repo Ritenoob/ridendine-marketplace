@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Badge, Button, Card } from '@ridendine/ui';
-import { createBrowserClient } from '@ridendine/db';
+import { createBrowserClient, getDriverPayoutAccountStatus } from '@ridendine/db';
 import type { Driver } from '@ridendine/db';
 
 interface PayoutAccount {
@@ -125,11 +125,7 @@ export default function ProfileView({ driver }: ProfileViewProps) {
     const client = supabase;
 
     async function loadPayoutAccount() {
-      const { data } = await client
-        .from('driver_payout_accounts')
-        .select('id, stripe_account_id, status')
-        .eq('driver_id', driver.id)
-        .maybeSingle();
+      const { data } = await getDriverPayoutAccountStatus(client, driver.id);
       setPayoutAccount(data as PayoutAccount | null);
       setPayoutLoading(false);
     }

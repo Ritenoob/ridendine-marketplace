@@ -4,11 +4,7 @@
 // co-op can browse merchants with the single key it uses for checkout.
 // ==========================================
 
-import {
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-} from '@ridendine/utils';
+import { evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse } from '@ridendine/utils';
 import { createAdminClient, type SupabaseClient } from '@ridendine/db';
 import { errorResponse } from '@/lib/engine';
 import { resolvePartnerContext } from '@/lib/partner/auth';

@@ -1,7 +1,4 @@
-import {
-  buildCustomerOrderWorkflow,
-  customerOrderSupportHref,
-} from '../customer-order-workflow';
+import { buildCustomerOrderWorkflow, customerOrderSupportHref } from '../customer-order-workflow';
 
 describe('customer order workflow presentation', () => {
   it('presents an active preparing order with tracking and support context', () => {

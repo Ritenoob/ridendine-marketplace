@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card, Badge, Button } from '@ridendine/ui';
-import { createBrowserClient } from '@ridendine/db';
+import { reviewsTable, chefProfilesTable, chefStorefrontsTable, createBrowserClient } from '@ridendine/db';
 
 interface Review {
   id: string;
@@ -44,24 +44,21 @@ export default function ReviewsPage() {
       const { data: { user } } = await db.auth.getUser();
       if (!user) return;
 
-      const { data: chefProfile } = await db
-        .from('chef_profiles')
+      const { data: chefProfile } = await chefProfilesTable(db)
         .select('id')
         .eq('user_id', user.id)
         .single() as { data: { id: string } | null };
 
       if (!chefProfile) return;
 
-      const { data: storefront } = await db
-        .from('chef_storefronts')
+      const { data: storefront } = await chefStorefrontsTable(db)
         .select('id, average_rating, total_reviews')
         .eq('chef_id', chefProfile.id)
         .single() as { data: { id: string; average_rating: number | null; total_reviews: number | null } | null };
 
       if (!storefront) return;
 
-      const { data: reviewsData } = await db
-        .from('reviews')
+      const { data: reviewsData } = await reviewsTable(db)
         .select(`
           id,
           rating,
@@ -114,8 +111,7 @@ export default function ReviewsPage() {
 
     setSubmitting(true);
 
-    const { error } = await (supabase as any)
-      .from('reviews')
+    const { error } = await reviewsTable((supabase as any))
       .update({ chef_response: response })
       .eq('id', reviewId);
 

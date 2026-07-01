@@ -51,7 +51,7 @@ describe('chef-admin smoke wiring', () => {
     expect(src).toContain('Quick Tools');
     expect(src).toContain('Business Snapshot');
     expect(src).toContain('getMenuItemsByStorefront');
-    expect(src).toContain('chef_availability');
+    expect(src).toContain('chefAvailabilityTable');
     // Business Snapshot: week-over-week and net earnings
     expect(src).toContain('weekRevenue');
     expect(src).toContain('prevWeekRevenue');

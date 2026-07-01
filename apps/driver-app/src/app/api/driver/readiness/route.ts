@@ -1,7 +1,11 @@
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getDriverReadinessRawData,
+  type DriverReadinessPayoutAccountRow,
+  type DriverReadinessQueryResult,
+} from '@ridendine/db';
 import {
   summarizeDriverComplianceDocuments,
-  type DriverComplianceDocumentInput,
   type DriverOperationsSummary,
   type DriverPresenceStatus,
   type DriverStatus,
@@ -11,57 +15,12 @@ import { getDriverReadinessSignal } from '@/lib/driver-readiness';
 
 export const dynamic = 'force-dynamic';
 
-const ACTIVE_DELIVERY_STATUSES = [
-  'assigned',
-  'accepted',
-  'en_route_to_pickup',
-  'arrived_at_pickup',
-  'picked_up',
-  'en_route_to_dropoff',
-  'arrived_at_dropoff',
-  'en_route_to_customer',
-  'arrived_at_customer',
-] as const;
-
-type DriverReadinessRow = {
-  id: string;
-  status: string | null;
-  instant_payouts_enabled: boolean | null;
-};
-
-type DriverPresenceRow = {
-  status: string | null;
-  last_location_at: string | null;
-  last_location_update: string | null;
-};
-
-type DriverPayoutAccountRow = {
-  status: string | null;
-  payouts_enabled: boolean | null;
-  onboarding_completed_at: string | null;
-};
-
-type PlatformAccountRow = {
-  balance_cents: number | null;
-};
-
-type DriverDocumentRow = DriverComplianceDocumentInput & {
-  status: string | null;
-  document_type: string | null;
-  expires_at: string | null;
-};
-
-type QueryResult<T> = {
-  data: T | null;
-  error: { message?: string; code?: string } | null;
-};
-
-function queryError(...results: Array<QueryResult<unknown>>): string | null {
+function queryError(...results: Array<DriverReadinessQueryResult<unknown>>): string | null {
   const failed = results.find((result) => result.error && result.error.code !== 'PGRST116');
   return failed?.error?.message ?? null;
 }
 
-function isPayoutAccountReady(account: DriverPayoutAccountRow | null): boolean {
+function isPayoutAccountReady(account: DriverReadinessPayoutAccountRow | null): boolean {
   if (!account) return false;
 
   const status = account.status?.toLowerCase() ?? '';
@@ -85,56 +44,18 @@ export async function GET() {
     }
 
     const adminClient = createAdminClient();
-
-    const driverResult = (await adminClient
-      .from('drivers')
-      .select('id,status,instant_payouts_enabled')
-      .eq('id', driverContext.driverId)
-      .single()) as QueryResult<DriverReadinessRow>;
-
-    if (driverResult.error || !driverResult.data) {
-      return errorResponse('NOT_FOUND', 'Driver profile not found', 404);
-    }
-
-    const [
+    const {
+      driverResult,
       presenceResult,
       activeDeliveriesResult,
       payoutAccountResult,
       complianceDocumentsResult,
       platformAccountResult,
-    ] = (await Promise.all([
-      adminClient
-        .from('driver_presence')
-        .select('status,last_location_at,last_location_update')
-        .eq('driver_id', driverContext.driverId)
-        .maybeSingle(),
-      adminClient
-        .from('deliveries')
-        .select('id,status')
-        .eq('driver_id', driverContext.driverId)
-        .in('status', ACTIVE_DELIVERY_STATUSES),
-      adminClient
-        .from('driver_payout_accounts')
-        .select('id,status,payouts_enabled,onboarding_completed_at')
-        .eq('driver_id', driverContext.driverId)
-        .maybeSingle(),
-      adminClient
-        .from('driver_documents')
-        .select('id,status,document_type,expires_at')
-        .eq('driver_id', driverContext.driverId),
-      adminClient
-        .from('platform_accounts')
-        .select('balance_cents')
-        .eq('owner_id', driverContext.driverId)
-        .eq('account_type', 'driver_payable')
-        .maybeSingle(),
-    ])) as [
-      QueryResult<DriverPresenceRow>,
-      QueryResult<Array<{ id: string }>>,
-      QueryResult<DriverPayoutAccountRow>,
-      QueryResult<DriverDocumentRow[]>,
-      QueryResult<PlatformAccountRow>,
-    ];
+    } = await getDriverReadinessRawData(adminClient, driverContext.driverId);
+
+    if (driverResult.error || !driverResult.data) {
+      return errorResponse('NOT_FOUND', 'Driver profile not found', 404);
+    }
 
     const fetchError = queryError(
       presenceResult,

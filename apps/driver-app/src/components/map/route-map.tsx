@@ -1,31 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
-import type * as LeafletNS from 'leaflet';
 import { DEFAULT_SERVICE_REGION_CENTER } from '@ridendine/engine';
-
-// Dynamically import Leaflet components to avoid SSR issues
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Popup),
-  { ssr: false }
-);
-const Polyline = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Polyline),
-  { ssr: false }
-);
 
 interface RouteMapProps {
   pickupLat?: number | null;
@@ -39,6 +14,41 @@ interface RouteMapProps {
   className?: string;
 }
 
+interface RoutePoint {
+  label: string;
+  detail: string;
+  coordinate: string;
+  tone: 'pickup' | 'dropoff' | 'driver';
+}
+
+function hasCoordinate(lat?: number | null, lng?: number | null): lat is number {
+  return (
+    typeof lat === 'number' &&
+    Number.isFinite(lat) &&
+    typeof lng === 'number' &&
+    Number.isFinite(lng)
+  );
+}
+
+function formatCoordinate(lat?: number | null, lng?: number | null) {
+  if (!hasCoordinate(lat, lng)) return 'Location pending';
+  return `${lat.toFixed(5)}, ${lng!.toFixed(5)}`;
+}
+
+function RoutePin({ tone }: { tone: RoutePoint['tone'] }) {
+  const toneClass =
+    tone === 'pickup'
+      ? 'bg-success'
+      : tone === 'dropoff'
+        ? 'bg-danger'
+        : 'bg-info';
+
+  return (
+    <span className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${toneClass} text-white shadow-sm`}>
+      <span className="h-2.5 w-2.5 rounded-full bg-white" />
+    </span>
+  );
+}
 
 export function RouteMap({
   pickupLat,
@@ -51,144 +61,72 @@ export function RouteMap({
   driverLng,
   className,
 }: RouteMapProps) {
-  const [isMounted, setIsMounted] = useState(false);
-  const [L, setL] = useState<typeof LeafletNS | null>(null);
+  const points: RoutePoint[] = [
+    ...(hasCoordinate(driverLat, driverLng)
+      ? [
+          {
+            label: 'Driver',
+            detail: 'Current GPS fix',
+            coordinate: formatCoordinate(driverLat, driverLng),
+            tone: 'driver' as const,
+          },
+        ]
+      : []),
+    {
+      label: 'Pickup',
+      detail: pickupAddress || 'Restaurant address pending',
+      coordinate: formatCoordinate(pickupLat, pickupLng),
+      tone: 'pickup',
+    },
+    {
+      label: 'Dropoff',
+      detail: dropoffAddress || 'Customer address pending',
+      coordinate: formatCoordinate(dropoffLat, dropoffLng),
+      tone: 'dropoff',
+    },
+  ];
 
-  useEffect(() => {
-    setIsMounted(true);
-    // Import Leaflet only on client
-    import('leaflet').then((leaflet) => {
-      setL(leaflet.default);
-      // Fix default marker icons
-      delete (leaflet.default.Icon.Default.prototype as any)._getIconUrl;
-      leaflet.default.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-      });
-    });
-  }, []);
-
-  if (!isMounted || !L) {
-    return (
-      <div className={`bg-surfaceMuted rounded-lg flex items-center justify-center ${className}`}>
-        <span className="text-textMuted">Loading map...</span>
-      </div>
-    );
-  }
-
-  // Create custom icons
-  const pickupIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-  });
-
-  const dropoffIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-  });
-
-  const driverIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-  });
-
-  // Calculate center based on available coordinates
-  const getCenter = (): [number, number] => {
-    if (pickupLat && pickupLng) {
-      return [pickupLat, pickupLng];
-    }
-    if (dropoffLat && dropoffLng) {
-      return [dropoffLat, dropoffLng];
-    }
-    if (driverLat && driverLng) {
-      return [driverLat, driverLng];
-    }
-    return DEFAULT_SERVICE_REGION_CENTER;
-  };
-
-  const hasPickup = pickupLat && pickupLng;
-  const hasDropoff = dropoffLat && dropoffLng;
-  const hasDriver = driverLat && driverLng;
-
-  // Build route line
-  const routePoints: [number, number][] = [];
-  if (hasDriver) routePoints.push([driverLat!, driverLng!]);
-  if (hasPickup) routePoints.push([pickupLat!, pickupLng!]);
-  if (hasDropoff) routePoints.push([dropoffLat!, dropoffLng!]);
+  const center = hasCoordinate(pickupLat, pickupLng)
+    ? formatCoordinate(pickupLat, pickupLng)
+    : hasCoordinate(dropoffLat, dropoffLng)
+      ? formatCoordinate(dropoffLat, dropoffLng)
+      : formatCoordinate(DEFAULT_SERVICE_REGION_CENTER[0], DEFAULT_SERVICE_REGION_CENTER[1]);
 
   return (
-    <div className={className}>
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css"
-      />
-      <MapContainer
-        center={getCenter()}
-        zoom={14}
-        style={{ height: '100%', width: '100%', borderRadius: '0.5rem' }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+    <div
+      className={`relative overflow-hidden rounded-2xl border border-divider bg-surfaceMuted ${className ?? ''}`}
+      data-testid="route-map"
+      aria-label="Delivery route summary"
+    >
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(234,91,38,0.08)_0%,rgba(34,197,94,0.08)_52%,rgba(59,130,246,0.08)_100%)]" />
+      <div className="absolute inset-x-6 top-1/2 h-px bg-borderStrong" />
 
-        {hasPickup && (
-          <Marker position={[pickupLat!, pickupLng!]} icon={pickupIcon}>
-            <Popup>
-              <div className="text-sm">
-                <strong className="text-success">Pickup</strong>
-                <br />
-                {pickupAddress || 'Restaurant'}
+      <div className="relative flex h-full min-h-52 flex-col justify-between p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold text-textMuted">Route center</p>
+            <p className="mt-1 text-sm font-bold text-text">{center}</p>
+          </div>
+          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-textMuted shadow-sm">
+            {points.length} stops
+          </span>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          {points.map((point) => (
+            <div key={`${point.label}-${point.coordinate}`} className="rounded-xl border border-divider bg-white/95 p-3 shadow-sm">
+              <div className="flex items-center gap-2">
+                <RoutePin tone={point.tone} />
+                <div>
+                  <p className="text-sm font-bold text-text">{point.label}</p>
+                  <p className="text-xs text-textSubtle">{point.coordinate}</p>
+                </div>
               </div>
-            </Popup>
-          </Marker>
-        )}
-
-        {hasDropoff && (
-          <Marker position={[dropoffLat!, dropoffLng!]} icon={dropoffIcon}>
-            <Popup>
-              <div className="text-sm">
-                <strong className="text-danger">Dropoff</strong>
-                <br />
-                {dropoffAddress || 'Customer'}
-              </div>
-            </Popup>
-          </Marker>
-        )}
-
-        {hasDriver && (
-          <Marker position={[driverLat!, driverLng!]} icon={driverIcon}>
-            <Popup>
-              <div className="text-sm">
-                <strong className="text-info">Your Location</strong>
-              </div>
-            </Popup>
-          </Marker>
-        )}
-
-        {routePoints.length >= 2 && (
-          <Polyline
-            positions={routePoints}
-            color="#EA5B26"
-            weight={4}
-            opacity={0.8}
-            dashArray="10, 10"
-          />
-        )}
-      </MapContainer>
+              <p className="mt-3 line-clamp-2 text-sm text-textMuted">{point.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

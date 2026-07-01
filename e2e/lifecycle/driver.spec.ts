@@ -9,20 +9,28 @@
  *   - Seeded driver: mike.driver@ridendine.ca / password123 (status: approved)
  *   - Seeded delivery: de100000-0000-4000-8000-000000000001 in 'delivered' state (earnings baseline)
  *
- * Missing seed hooks needed for full green run:
- *   - A 'pending' delivery offer associated with the test driver account.
- *   - Auto-approval hook: if new-driver sign-up sets status='pending', a
- *     beforeEach fixture using the admin client should UPDATE drivers SET
- *     status='approved' WHERE email = newDriverEmail.
- *   - PROCESSOR_TOKEN env var for order/delivery state injection via API.
+ * Reset dependencies:
+ *   - scripts/e2e/reset-live-fixtures.mjs restores the pending RND-009 offer
+ *     associated with the seeded driver account.
+ *   - New-driver signup may still require an approval fixture if the route
+ *     stops auto-approving deterministic E2E accounts.
  */
 
 import * as path from 'path';
 import { expect, test } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 const STUB_PHOTO_PATH = path.join(__dirname, 'fixtures', 'stub-photo.png');
+const POSITIVE_DRIVER_DELIVERY_ID = 'b3b3b3b3-b3b3-b3b3-b3b3-b3b3b3b3b3b3';
 
-async function signInDriver(page: import('@playwright/test').Page) {
+async function becomesVisible(locator: Locator, timeout = 8_000) {
+  return locator
+    .waitFor({ state: 'visible', timeout })
+    .then(() => true)
+    .catch(() => false);
+}
+
+async function signInDriver(page: Page) {
   await page.goto('/auth/login');
   const result = await page.evaluate(async () => {
     const response = await fetch('/api/auth/login', {
@@ -47,6 +55,78 @@ async function signInDriver(page: import('@playwright/test').Page) {
   });
   await page.goto('/');
   await expect(page).not.toHaveURL(/\/auth\/login/);
+}
+
+async function closeMapsPopup(page: Page, action: () => Promise<void>) {
+  const popupPromise = page.waitForEvent('popup', { timeout: 2_000 }).catch(() => null);
+  await action();
+  const popup = await popupPromise;
+  await popup?.close().catch(() => {});
+}
+
+async function acceptPositiveOffer(page: Page) {
+  await page.goto('/');
+  const startShiftButton = page.getByRole('button', { name: /^start shift$/i }).first();
+  if (await becomesVisible(startShiftButton, 2_000)) {
+    await startShiftButton.click();
+    await expect(page.getByText(/online|on shift|available/i).first()).toBeVisible({ timeout: 15_000 });
+    await page.reload();
+  }
+
+  await expect(page.getByText(/pending offers|offer queue/i).first()).toBeVisible({ timeout: 30_000 });
+
+  const acceptButton = page.getByRole('button', { name: /^accept$/i }).first();
+
+  if (
+    (await becomesVisible(page.getByText(/order RND-009/i).first(), 30_000)) &&
+    (await becomesVisible(acceptButton, 30_000))
+  ) {
+    await acceptButton.click();
+    await expect(page).toHaveURL(new RegExp(`/delivery/${POSITIVE_DRIVER_DELIVERY_ID}`), {
+      timeout: 10_000,
+    });
+    return;
+  }
+
+  await page.goto(`/delivery/${POSITIVE_DRIVER_DELIVERY_ID}`);
+  await expect(page.getByText(/delivery work/i).first()).toBeVisible({ timeout: 15_000 });
+}
+
+async function advanceUntilVisibleAction(page: Page, targetName: RegExp): Promise<Locator> {
+  for (let step = 0; step < 5; step += 1) {
+    const target = page.getByRole('button', { name: targetName }).first();
+    if (await becomesVisible(target, 1_000)) return target;
+
+    const nextAction = page
+      .getByRole('button', {
+        name: /start navigation to pickup|arrived at restaurant|start navigation to customer|arrived at customer/i,
+      })
+      .first();
+    await expect(nextAction).toBeVisible({ timeout: 15_000 });
+    await closeMapsPopup(page, () => nextAction.click());
+    await expect(page.getByText(/current step/i).first()).toBeVisible({ timeout: 10_000 });
+  }
+
+  throw new Error(`Delivery action ${targetName} did not become visible`);
+}
+
+async function confirmPickupIfNeeded(page: Page) {
+  await page.goto(`/delivery/${POSITIVE_DRIVER_DELIVERY_ID}`);
+  if (await becomesVisible(page.getByRole('button', { name: /^complete delivery$/i }).first(), 1_000)) {
+    return;
+  }
+  if (await becomesVisible(page.getByRole('button', { name: /start navigation to customer/i }).first(), 1_000)) {
+    return;
+  }
+
+  const pickupButton = await advanceUntilVisibleAction(page, /^confirm pickup$/i);
+  await pickupButton.click();
+  await expect(page.getByRole('dialog', { name: /confirm pickup/i })).toBeVisible({ timeout: 5_000 });
+  await page.locator('input[type="file"]').setInputFiles(STUB_PHOTO_PATH);
+  await page.getByRole('dialog', { name: /confirm pickup/i }).getByRole('button', { name: /^confirm pickup$/i }).click();
+  await expect(page.getByText(/picked up|start navigation to customer|en route to customer/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
 }
 
 test.describe('driver lifecycle @lifecycle', () => {
@@ -93,47 +173,34 @@ test.describe('driver lifecycle @lifecycle', () => {
   test('driver can see and accept a delivery offer', async ({ page }) => {
     await signInDriver(page);
 
-    // Navigate to deliveries list — seeded ready_for_pickup order (RND-006 / assigned delivery pending)
-    await page.goto('/delivery');
-    // If no offer is present, skip — a real pending offer requires API injection
-    const offerCard = page.locator('[data-testid*="offer"], [class*="offer"], button:has-text("Accept")').first();
-    if (!(await offerCard.isVisible({ timeout: 5_000 }))) {
-      test.skip();
-    }
-    await page.getByRole('button', { name: /accept/i }).first().click();
-    await expect(page.getByText(/accepted|picking up|on the way|en route/i).first()).toBeVisible({ timeout: 5_000 });
+    await acceptPositiveOffer(page);
   });
 
   test('driver can confirm pickup with stub photo', async ({ page }) => {
     await signInDriver(page);
+    await acceptPositiveOffer(page);
 
-    // Navigate to active delivery — assumes accepted state from prior step
-    await page.goto('/delivery');
-    const pickupBtn = page.getByRole('button', { name: /confirm pickup|picked up/i }).first();
-    if (!(await pickupBtn.isVisible({ timeout: 5_000 }))) {
-      test.skip();
-    }
-    // Upload stub photo if file input present
-    const fileInput = page.locator('input[type="file"]');
-    if (await fileInput.isVisible()) {
-      await fileInput.setInputFiles(STUB_PHOTO_PATH);
-    }
+    await page.goto(`/delivery/${POSITIVE_DRIVER_DELIVERY_ID}`);
+    const pickupBtn = await advanceUntilVisibleAction(page, /^confirm pickup$/i);
     await pickupBtn.click();
-    await expect(page.getByText(/on the way|picked up|delivering/i).first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('dialog', { name: /confirm pickup/i })).toBeVisible({ timeout: 5_000 });
+    await page.locator('input[type="file"]').setInputFiles(STUB_PHOTO_PATH);
+    await page.getByRole('dialog', { name: /confirm pickup/i }).getByRole('button', { name: /^confirm pickup$/i }).click();
+    await expect(page.getByText(/picked up|start navigation to customer|en route to customer/i).first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('driver can confirm dropoff with stub photo and complete delivery', async ({ page }) => {
     await signInDriver(page);
+    await acceptPositiveOffer(page);
+    await confirmPickupIfNeeded(page);
 
-    await page.goto('/delivery');
-    const dropoffBtn = page.getByRole('button', { name: /confirm drop.?off|delivered|complete/i }).first();
-    if (!(await dropoffBtn.isVisible({ timeout: 5_000 }))) {
-      test.skip();
-    }
-    const fileInput = page.locator('input[type="file"]');
-    if (await fileInput.isVisible()) {
-      await fileInput.setInputFiles(STUB_PHOTO_PATH);
-    }
+    await page.goto(`/delivery/${POSITIVE_DRIVER_DELIVERY_ID}`);
+    const dropoffBtn = await advanceUntilVisibleAction(page, /^complete delivery$/i);
+    await dropoffBtn.click();
+    await expect(page.getByRole('dialog', { name: /complete delivery/i })).toBeVisible({ timeout: 5_000 });
+    await page.locator('input[type="file"]').setInputFiles(STUB_PHOTO_PATH);
     // Signature canvas — draw a squiggle if present
     const sigCanvas = page.locator('canvas[data-testid*="sig"], canvas').first();
     if (await sigCanvas.isVisible()) {
@@ -145,8 +212,11 @@ test.describe('driver lifecycle @lifecycle', () => {
         await page.mouse.up();
       }
     }
-    await dropoffBtn.click();
-    await expect(page.getByText(/delivered|complete|great job/i).first()).toBeVisible({ timeout: 5_000 });
+    await page.getByRole('dialog', { name: /complete delivery/i }).getByRole('button', { name: /^complete$/i }).click();
+    await expect(page).toHaveURL(/\/$/, { timeout: 15_000 });
+    await expect(page.getByText(/work dashboard|today's summary|driver command center/i).first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('driver earnings page shows updated balance', async ({ page }) => {

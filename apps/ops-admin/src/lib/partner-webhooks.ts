@@ -8,7 +8,19 @@
 // ==========================================
 
 import { createHmac } from 'crypto';
-import type { SupabaseClient } from '@ridendine/db';
+import {
+  insertPartnerWebhookDeliveries,
+  listDuePartnerWebhookDeliveries,
+  listExistingPartnerWebhookDomainEventIds,
+  listPartnerWebhookOrders,
+  listPartnerWebhookPartners,
+  listPartnerWebhookStatusEvents,
+  updatePartnerWebhookDelivery,
+  type PartnerWebhookDeliveryInsert,
+  type PartnerWebhookOrderRow,
+  type PartnerWebhookPartnerRow,
+  type SupabaseClient,
+} from '@ridendine/db';
 
 /** order status (new_status) -> partner-facing event name. Only these deliver. */
 const STATUS_EVENTS: Record<string, string> = {
@@ -31,27 +43,6 @@ function backoffMs(attempts: number): number {
   return Math.min(2 ** attempts, 32) * 60 * 1000;
 }
 
-interface PartnerRow {
-  id: string;
-  webhook_url: string | null;
-  webhook_secret: string | null;
-  is_active: boolean;
-}
-interface OrderRow {
-  id: string;
-  order_number: string | null;
-  partner_id: string | null;
-  status: string | null;
-  engine_status: string | null;
-  total: number | null;
-}
-interface StatusRow {
-  id: string;
-  order_id: string;
-  new_status: string;
-  created_at: string;
-}
-
 /**
  * Create pending delivery rows for new deliverable order events that belong to a
  * partner with a webhook_url. Idempotent: domain_event_id is unique.
@@ -61,47 +52,35 @@ export async function enqueuePartnerWebhooks(
   nowMs: number
 ): Promise<number> {
   const since = new Date(nowMs - ENQUEUE_WINDOW_MS).toISOString();
-  const { data: events } = await (admin as any)
-    .from('order_status_history')
-    .select('id, order_id, new_status, created_at')
-    .in('new_status', Object.keys(STATUS_EVENTS))
-    .gte('created_at', since)
-    .order('created_at', { ascending: true })
-    .limit(1000);
-
-  const eventRows = (events ?? []) as StatusRow[];
+  const eventRows = await listPartnerWebhookStatusEvents(
+    admin,
+    Object.keys(STATUS_EVENTS),
+    since,
+    1000
+  );
   if (eventRows.length === 0) return 0;
 
   const orderIds = Array.from(new Set(eventRows.map((e) => e.order_id)));
-  const { data: orders } = await (admin as any)
-    .from('orders')
-    .select('id, order_number, partner_id, status, engine_status, total')
-    .in('id', orderIds);
-  const orderById = new Map<string, OrderRow>(((orders ?? []) as OrderRow[]).map((o) => [o.id, o]));
+  const orders = await listPartnerWebhookOrders(admin, orderIds);
+  const orderById = new Map<string, PartnerWebhookOrderRow>(orders.map((o) => [o.id, o]));
 
   const partnerIds = Array.from(
-    new Set(((orders ?? []) as OrderRow[]).map((o) => o.partner_id).filter(Boolean) as string[])
+    new Set(orders.map((o) => o.partner_id).filter(Boolean) as string[])
   );
   if (partnerIds.length === 0) return 0;
-  const { data: partners } = await (admin as any)
-    .from('api_partners')
-    .select('id, webhook_url, webhook_secret, is_active')
-    .in('id', partnerIds);
-  const partnerById = new Map<string, PartnerRow>(
-    ((partners ?? []) as PartnerRow[])
+  const partners = await listPartnerWebhookPartners(admin, partnerIds);
+  const partnerById = new Map<string, PartnerWebhookPartnerRow>(
+    partners
       .filter((p) => p.is_active && p.webhook_url)
       .map((p) => [p.id, p])
   );
   if (partnerById.size === 0) return 0;
 
   // Skip events that already have a delivery row.
-  const { data: existing } = await (admin as any)
-    .from('partner_webhook_deliveries')
-    .select('domain_event_id')
-    .in('domain_event_id', eventRows.map((e) => e.id));
-  const seen = new Set(((existing ?? []) as { domain_event_id: string }[]).map((r) => r.domain_event_id));
+  const existing = await listExistingPartnerWebhookDomainEventIds(admin, eventRows.map((e) => e.id));
+  const seen = new Set(existing);
 
-  const toInsert: Record<string, unknown>[] = [];
+  const toInsert: PartnerWebhookDeliveryInsert[] = [];
   for (const ev of eventRows) {
     if (seen.has(ev.id)) continue;
     const partnerEvent = STATUS_EVENTS[ev.new_status];
@@ -132,9 +111,7 @@ export async function enqueuePartnerWebhooks(
     });
   }
 
-  if (toInsert.length > 0) {
-    await (admin as any).from('partner_webhook_deliveries').insert(toInsert);
-  }
+  await insertPartnerWebhookDeliveries(admin, toInsert);
   return toInsert.length;
 }
 
@@ -147,22 +124,7 @@ export async function deliverPartnerWebhooks(
   nowMs: number
 ): Promise<{ delivered: number; failed: number }> {
   const nowIso = new Date(nowMs).toISOString();
-  const { data: due } = await (admin as any)
-    .from('partner_webhook_deliveries')
-    .select('id, partner_id, event_type, payload, attempts, max_attempts, api_partners!inner(webhook_url, webhook_secret)')
-    .in('status', ['pending', 'failed'])
-    .lte('next_attempt_at', nowIso)
-    .order('next_attempt_at', { ascending: true })
-    .limit(DELIVER_BATCH);
-
-  const rows = (due ?? []) as Array<{
-    id: string;
-    event_type: string;
-    payload: Record<string, unknown>;
-    attempts: number;
-    max_attempts: number;
-    api_partners: { webhook_url: string | null; webhook_secret: string | null };
-  }>;
+  const rows = await listDuePartnerWebhookDeliveries(admin, nowIso, DELIVER_BATCH);
 
   let delivered = 0;
   let failed = 0;
@@ -199,30 +161,32 @@ export async function deliverPartnerWebhooks(
 
     if (ok) {
       delivered++;
-      await (admin as any)
-        .from('partner_webhook_deliveries')
-        .update({
+      await updatePartnerWebhookDelivery(
+        admin,
+        row.id,
+        {
           status: 'delivered',
           attempts: row.attempts + 1,
           response_code: responseCode,
           last_error: null,
           delivered_at: nowIso,
-        })
-        .eq('id', row.id);
+        }
+      );
     } else {
       failed++;
       const nextAttempts = row.attempts + 1;
       const dead = nextAttempts >= row.max_attempts;
-      await (admin as any)
-        .from('partner_webhook_deliveries')
-        .update({
+      await updatePartnerWebhookDelivery(
+        admin,
+        row.id,
+        {
           status: dead ? 'dead' : 'failed',
           attempts: nextAttempts,
           response_code: responseCode,
           last_error: errorMsg,
           next_attempt_at: new Date(nowMs + backoffMs(nextAttempts)).toISOString(),
-        })
-        .eq('id', row.id);
+        }
+      );
     }
   }
 

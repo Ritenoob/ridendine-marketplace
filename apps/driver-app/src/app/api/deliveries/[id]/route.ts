@@ -4,7 +4,12 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getDriverDeliveryDetail,
+  getPendingAssignmentAttemptForDriver,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { driverDeliveryPatchSchema } from '@ridendine/validation';
 import {
   getEngine,
@@ -37,45 +42,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const adminClient = createAdminClient() as unknown as SupabaseClient;
 
-    // Get delivery with related data
-    // FIXED: chef_kitchens uses address_line1/lat/lng, not address/lat/lng
-    const { data: delivery, error } = await adminClient
-      .from('deliveries')
-      .select(`
-        *,
-        orders!inner (
-          id,
-          order_number,
-          total,
-          tip,
-          special_instructions,
-          customer:customers (
-            first_name,
-            phone
-          ),
-          storefront:chef_storefronts (
-            name,
-            phone,
-            kitchen:chef_kitchens (
-              address,
-              address_line1,
-              address_line2,
-              city,
-              state,
-              postal_code,
-              lat,
-              lng,
-              phone
-            )
-          ),
-          items:order_items (
-            quantity,
-            menu_item:menu_items (name)
-          )
-        )
-      `)
-      .eq('id', deliveryId)
-      .single();
+    const { data: delivery, error } = await getDriverDeliveryDetail(adminClient, deliveryId);
 
     if (error || !delivery) {
       return errorResponse('NOT_FOUND', 'Delivery not found', 404);
@@ -98,13 +65,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get any active assignment attempt
-    const { data: activeAttempt } = await adminClient
-      .from('assignment_attempts')
-      .select('*')
-      .eq('delivery_id', deliveryId)
-      .eq('driver_id', driverContext.driverId)
-      .eq('response', 'pending')
-      .single();
+    const { data: activeAttempt } = await getPendingAssignmentAttemptForDriver(
+      adminClient,
+      deliveryId,
+      driverContext.driverId
+    );
 
     return successResponse({
       delivery,

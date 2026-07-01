@@ -1,7 +1,20 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
 import type { Tables } from '../generated/database.types';
 
 export type Customer = Tables<'customers'>;
+
+export function customersTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('customers');
+}
+
+export function favoritesTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('favorites');
+}
+
+export function loyaltyTransactionsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('loyalty_transactions');
+}
+
 export interface OpsCustomerListItem extends Customer {
   orders: { count: number }[] | null;
 }

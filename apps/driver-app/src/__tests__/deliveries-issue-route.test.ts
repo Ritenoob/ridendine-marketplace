@@ -9,7 +9,44 @@ const mockCreateAdminClient = jest.fn();
 
 jest.mock('@ridendine/db', () => ({
   createAdminClient: () => mockCreateAdminClient(),
+  createDriverDeliveryIssue: (
+    client: { from: (table: string) => any },
+    input: {
+      exceptionType: string;
+      severity: string;
+      orderId: string | null;
+      driverId: string;
+      deliveryId: string;
+      title: string;
+      description?: string | null;
+      internalNotes: Record<string, unknown>;
+    }
+  ) =>
+    table(client, 'order_exceptions')
+      .insert({
+        exception_type: input.exceptionType,
+        severity: input.severity,
+        status: 'open',
+        order_id: input.orderId,
+        driver_id: input.driverId,
+        delivery_id: input.deliveryId,
+        title: input.title,
+        description: input.description,
+        recommended_actions: ['Review delivery issue', 'Contact driver or customer if needed'],
+        internal_notes: JSON.stringify(input.internalNotes),
+      })
+      .select()
+      .single(),
+  getDriverDeliveryOrderRef: (client: { from: (table: string) => any }, deliveryId: string) =>
+    table(client, 'deliveries')
+      .select('id, order_id')
+      .eq('id', deliveryId)
+      .maybeSingle(),
 }));
+
+function table(client: { from: (table: string) => any }, name: string) {
+  return client.from(name);
+}
 
 jest.mock('@/lib/engine', () => ({
   getDriverActorContext: () => mockGetDriverActorContext(),

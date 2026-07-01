@@ -1,6 +1,11 @@
 import type { NextRequest } from 'next/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getDriverById,
+  getDriverPayablePlatformAccount,
+  listPendingInstantPayoutHolds,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { createCentralEngine } from '@ridendine/engine';
 import { getDriverActorContext, errorResponse, successResponse } from '@/lib/engine';
 
@@ -43,11 +48,7 @@ export async function POST(request: NextRequest) {
 
     const db = createAdminClient();
 
-    const { data: row } = await db
-      .from('drivers')
-      .select('instant_payouts_enabled')
-      .eq('id', ctx.driverId)
-      .single();
+    const row = await getDriverById(db as unknown as SupabaseClient, ctx.driverId);
 
     const instantOn = Boolean((row as { instant_payouts_enabled?: boolean } | null)?.instant_payouts_enabled);
     if (!instantOn) {
@@ -66,19 +67,16 @@ export async function POST(request: NextRequest) {
       return errorResponse('INVALID_AMOUNT', 'amountCents must be a positive integer', 400);
     }
 
-    const { data: acct } = await (db as SupabaseClient & { from: (t: string) => SupabaseClient['from'] })
-      .from('platform_accounts' as never)
-      .select('balance_cents, currency')
-      .eq('account_type', 'driver_payable')
-      .eq('owner_id', ctx.driverId)
-      .maybeSingle();
+    const { data: acct } = await getDriverPayablePlatformAccount(
+      db as unknown as SupabaseClient,
+      ctx.driverId
+    );
 
     const bal = Number((acct as { balance_cents?: number } | null)?.balance_cents ?? 0);
-    const { data: pendingRows, error: pendingError } = await (db as SupabaseClient & { from: (t: string) => SupabaseClient['from'] })
-      .from('instant_payout_requests' as never)
-      .select('amount_cents, fee_cents')
-      .eq('driver_id', ctx.driverId)
-      .eq('status', 'pending');
+    const { data: pendingRows, error: pendingError } = await listPendingInstantPayoutHolds(
+      db as unknown as SupabaseClient,
+      ctx.driverId
+    );
 
     if (pendingError) {
       return errorResponse('FINANCIAL_QUERY_ERROR', 'Could not verify pending instant payout requests', 500);

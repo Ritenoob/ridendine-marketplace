@@ -1,4 +1,8 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
+
+export function promoCodesTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('promo_codes');
+}
 
 export interface PromoCode {
   id: string;

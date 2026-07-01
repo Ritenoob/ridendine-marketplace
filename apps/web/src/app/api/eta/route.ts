@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import { customerAddressesTable, createAdminClient } from '@ridendine/db';
 import { OsrmProvider, EtaService } from '@ridendine/routing';
 import { getCustomerActorContext } from '@/lib/engine';
 
@@ -29,8 +29,7 @@ export async function GET(req: Request) {
 
   const db = createAdminClient() as any;
 
-  const { data: address, error: addressError } = await db
-    .from('customer_addresses')
+  const { data: address, error: addressError } = await customerAddressesTable(db)
     .select('id')
     .eq('id', addressId)
     .eq('customer_id', customerContext.customerId)

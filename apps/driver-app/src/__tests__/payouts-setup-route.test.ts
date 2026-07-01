@@ -22,7 +22,35 @@ const mockCreateServerClient = jest.fn(() => ({
 
 jest.mock('@ridendine/db', () => ({
   createServerClient: mockCreateServerClient,
+  getDriverPayoutAccountStatus: (client: { from: (table: string) => any }, driverId: string) =>
+    table(client, 'driver_payout_accounts')
+      .select('id, stripe_account_id, status, onboarding_completed_at')
+      .eq('driver_id', driverId)
+      .maybeSingle(),
+  getDriverPayoutSetupProfileByUserId: (client: { from: (table: string) => any }, userId: string) =>
+    table(client, 'drivers')
+      .select('id, first_name, last_name')
+      .eq('user_id', userId)
+      .single(),
+  getDriverPayoutStripeAccount: (client: { from: (table: string) => any }, driverId: string) =>
+    table(client, 'driver_payout_accounts')
+      .select('stripe_account_id')
+      .eq('driver_id', driverId)
+      .single(),
+  insertDriverPayoutAccount: (
+    client: { from: (table: string) => any },
+    input: { driverId: string; stripeAccountId: string; status?: string }
+  ) =>
+    table(client, 'driver_payout_accounts').insert({
+      driver_id: input.driverId,
+      stripe_account_id: input.stripeAccountId,
+      status: input.status ?? 'pending',
+    }),
 }));
+
+function table(client: { from: (table: string) => any }, name: string) {
+  return client.from(name);
+}
 
 jest.mock('@/lib/engine', () => ({
   getDriverActorContext: jest.fn().mockResolvedValue({

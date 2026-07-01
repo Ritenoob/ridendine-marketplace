@@ -1,5 +1,11 @@
 import { cookies } from 'next/headers';
-import { createServerClient, createAdminClient, getDriverByUserId } from '@ridendine/db';
+import {
+  createServerClient,
+  createAdminClient,
+  getDriverByUserId,
+  getDriverPayablePlatformAccount,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { DriverShell } from '@/components/layout/driver-shell';
 import SettingsClient from './settings-client';
 
@@ -29,23 +35,11 @@ export default async function DriverSettingsPage() {
     );
   }
 
-  const admin = createAdminClient() as unknown as {
-    from: (rel: string) => {
-      select: (cols: string) => {
-        eq: (c: string, v: string) => {
-          eq: (c2: string, v2: string) => {
-            maybeSingle: () => Promise<{ data: { balance_cents: number; currency?: string | null } | null }>;
-          };
-        };
-      };
-    };
-  };
-  const { data: acct } = await admin
-    .from('platform_accounts')
-    .select('balance_cents, currency')
-    .eq('account_type', 'driver_payable')
-    .eq('owner_id', driver.id)
-    .maybeSingle();
+  const admin = createAdminClient();
+  const { data: acct } = await getDriverPayablePlatformAccount(
+    admin as unknown as SupabaseClient,
+    driver.id
+  );
 
   return (
     <DriverShell

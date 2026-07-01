@@ -4,24 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Badge, Button } from '@ridendine/ui';
 // Menu item prices are dollars.
 import { formatCurrency } from '@ridendine/utils';
-import {
-  AlertTriangle,
-  BarChart3,
-  Camera,
-  ChefHat,
-  Clock,
-  Copy,
-  Edit3,
-  Eye,
-  EyeOff,
-  Gauge,
-  PackageCheck,
-  PackageX,
-  Plus,
-  Search,
-  Trash2,
-  Utensils,
-} from 'lucide-react';
+import { AlertTriangle, BarChart3, Camera, ChefHat, Clock, Copy, Edit3, Eye, EyeOff, Gauge, PackageCheck, PackageX, Plus, Search, Trash2, Utensils } from 'lucide-react';
 import { CategoryModal } from './category-modal';
 import { ItemModal } from './item-modal';
 

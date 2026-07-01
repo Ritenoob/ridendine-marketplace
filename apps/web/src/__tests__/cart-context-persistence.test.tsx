@@ -13,11 +13,7 @@ jest.mock('@ridendine/utils', () => ({
   formatCurrency: (value: number) => `$${value.toFixed(2)}`,
 }));
 
-import {
-  CartProvider,
-  useCart,
-  CART_STOREFRONT_STORAGE_KEY,
-} from '@/contexts/cart-context';
+import { CartProvider, useCart, CART_STOREFRONT_STORAGE_KEY } from '@/contexts/cart-context';
 
 function cartApiResponse(storefrontId: string) {
   return {

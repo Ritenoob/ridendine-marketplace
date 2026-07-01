@@ -1,12 +1,8 @@
+import { menuItemOptionValuesTable } from '@ridendine/db';
 import type { NextRequest } from 'next/server';
 import { updateMenuItemOptionValueSchema } from '@ridendine/validation';
 import { getChefActorContext, errorResponse, successResponse } from '@/lib/engine';
-import {
-  getChefAdminClient,
-  verifyMenuItemOwnedByStorefront,
-  verifyOptionOwnedByMenuItem,
-  verifyValueOwnedByOption,
-} from '@/lib/menu-option-guards';
+import { getChefAdminClient, verifyMenuItemOwnedByStorefront, verifyOptionOwnedByMenuItem, verifyValueOwnedByOption } from '@/lib/menu-option-guards';
 
 async function authorize(params: { id: string; optionId: string; valueId: string }) {
   const chefContext = await getChefActorContext();
@@ -43,8 +39,7 @@ export async function PATCH(
   if (validation.data.isAvailable !== undefined) patch.is_available = validation.data.isAvailable;
   if (validation.data.sortOrder !== undefined) patch.sort_order = validation.data.sortOrder;
 
-  const { data, error } = await (auth.adminClient as any)
-    .from('menu_item_option_values')
+  const { data, error } = await menuItemOptionValuesTable((auth.adminClient as any))
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq('id', params.valueId)
     .select()
@@ -61,8 +56,7 @@ export async function DELETE(
   const auth = await authorize(params);
   if (!auth.ok) return auth.response;
 
-  const { error } = await (auth.adminClient as any)
-    .from('menu_item_option_values')
+  const { error } = await menuItemOptionValuesTable((auth.adminClient as any))
     .delete()
     .eq('id', params.valueId);
 

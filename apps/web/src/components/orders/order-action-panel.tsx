@@ -1,10 +1,6 @@
 import Link from 'next/link';
 import { Card, buttonVariants } from '@ridendine/ui';
-import {
-  buildOrderSupportHref,
-  canReorderOrder,
-  canReviewOrder,
-} from '@/lib/order-support';
+import { buildOrderSupportHref, canReorderOrder, canReviewOrder } from '@/lib/order-support';
 
 interface OrderActionPanelProps {
   orderNumber: string;

@@ -3,11 +3,7 @@ import { cookies } from 'next/headers';
 import { createServerClient, getActiveStorefronts, searchStorefronts } from '@ridendine/db';
 import type { ChefAvailabilityRow } from '@ridendine/db';
 import { Badge, Card } from '@ridendine/ui';
-import {
-  hasActiveDiscoveryFilters,
-  isChefOpenNow,
-  normalizeStorefrontSort,
-} from '@/lib/discovery';
+import { hasActiveDiscoveryFilters, isChefOpenNow, normalizeStorefrontSort } from '@/lib/discovery';
 
 interface ChefsListProps {
   search?: string;

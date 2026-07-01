@@ -9,6 +9,50 @@ jest.mock('@ridendine/db', () => ({
   createAdminClient: jest.fn(() => ({
     from: mockFrom,
   })),
+  getDriverReadinessRawData: async (_client: unknown, driverId: string) => {
+    const [
+      driverResult,
+      presenceResult,
+      activeDeliveriesResult,
+      payoutAccountResult,
+      complianceDocumentsResult,
+      platformAccountResult,
+    ] = await Promise.all([
+      mockFrom('drivers')
+        .select('id,status,instant_payouts_enabled')
+        .eq('id', driverId)
+        .single(),
+      mockFrom('driver_presence')
+        .select('status,last_location_at,last_location_update')
+        .eq('driver_id', driverId)
+        .maybeSingle(),
+      mockFrom('deliveries')
+        .select('id,status')
+        .eq('driver_id', driverId)
+        .in('status', []),
+      mockFrom('driver_payout_accounts')
+        .select('id,status,payouts_enabled,onboarding_completed_at')
+        .eq('driver_id', driverId)
+        .maybeSingle(),
+      mockFrom('driver_documents')
+        .select('id,status,document_type,expires_at')
+        .eq('driver_id', driverId),
+      mockFrom('platform_accounts')
+        .select('balance_cents')
+        .eq('owner_id', driverId)
+        .eq('account_type', 'driver_payable')
+        .maybeSingle(),
+    ]);
+
+    return {
+      driverResult,
+      presenceResult,
+      activeDeliveriesResult,
+      payoutAccountResult,
+      complianceDocumentsResult,
+      platformAccountResult,
+    };
+  },
 }));
 
 jest.mock('@/lib/engine', () => ({

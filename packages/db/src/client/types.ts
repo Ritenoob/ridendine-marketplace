@@ -6,6 +6,13 @@ import type { Database } from '../database.merged';
 type TypedSupabaseClient = SupabaseJsClient<Database>;
 
 /**
+ * Loose query-builder return used only at explicit repository table-boundary
+ * helpers. This preserves previous app-level chaining behavior while removing
+ * raw table-name strings from application code.
+ */
+export type TableQueryBuilder = any;
+
+/**
  * The canonical Supabase client type for this codebase.
  *
  * Both @supabase/supabase-js (`createClient`) and @supabase/ssr

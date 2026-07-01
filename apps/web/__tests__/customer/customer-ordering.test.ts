@@ -50,11 +50,17 @@ describe('customer-ordering helpers (Phase 6)', () => {
       __dirname,
       '../../src/app/api/checkout/route.ts'
     );
-    const src = readFileSync(checkoutApi, 'utf8');
-    expect(src).toContain('validateCustomerCheckoutReadiness');
-    expect(src).toContain('evaluateCheckoutRisk');
-    expect(src).toContain('RATE_LIMIT_POLICIES.checkout');
-    expect(src).toContain("'RISK_BLOCKED'");
+    const runCheckout = join(
+      __dirname,
+      '../../src/lib/checkout/run-checkout.ts'
+    );
+    const routeSrc = readFileSync(checkoutApi, 'utf8');
+    const checkoutSrc = readFileSync(runCheckout, 'utf8');
+    expect(routeSrc).toContain('RATE_LIMIT_POLICIES.checkout');
+    expect(routeSrc).toContain('runCheckout');
+    expect(checkoutSrc).toContain('validateCustomerCheckoutReadiness');
+    expect(checkoutSrc).toContain('evaluateCheckoutRisk');
+    expect(checkoutSrc).toContain("'RISK_BLOCKED'");
   });
 
   it('checkout page does not use removed hardcoded fee fallback', () => {

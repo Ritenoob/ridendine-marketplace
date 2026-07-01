@@ -68,7 +68,7 @@ export class AuditLogger {
       action: entry.action,
       old_data: entry.beforeState,
       new_data: entry.afterState,
-      user_id: entry.actor.userId,
+      user_id: entry.actor.userId === 'system' ? null : entry.actor.userId,
       actor_role: entry.actor.role,
       reason: entry.reason,
       metadata: entry.metadata,

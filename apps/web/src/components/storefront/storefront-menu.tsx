@@ -3,15 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/contexts/cart-context';
-import {
-  filterStorefrontMenuItems,
-  formatMenuPrice,
-  getCartQuantityForMenuItem,
-  getDietaryTagOptions,
-  getMinimumOrderProgress,
-  groupMenuItemsByCategory,
-  type MinimumOrderProgress,
-} from '@/lib/storefront-menu';
+import { filterStorefrontMenuItems, formatMenuPrice, getCartQuantityForMenuItem, getDietaryTagOptions, getMinimumOrderProgress, groupMenuItemsByCategory, type MinimumOrderProgress } from '@/lib/storefront-menu';
 import { Badge, Button, Card, useToast } from '@ridendine/ui';
 
 interface MenuItem {

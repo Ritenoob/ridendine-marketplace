@@ -6,6 +6,37 @@ import { GET, POST } from '../app/api/offers/route';
 
 const respondToOffer = jest.fn();
 const mockFrom = jest.fn();
+const mockListPendingAssignmentOffersForDriver = jest.fn(
+  async (_client, driverId: string, nowIso: string) =>
+    mockFrom('assignment_attempts')
+      .select(`
+        id,
+        delivery_id,
+        expires_at,
+        delivery:deliveries (
+          id,
+          pickup_address,
+          pickup_lat,
+          pickup_lng,
+          dropoff_address,
+          dropoff_lat,
+          dropoff_lng,
+          distance_km,
+          route_to_dropoff_seconds,
+          driver_payout,
+          orders (
+            order_number,
+            total,
+            tip,
+            storefront:chef_storefronts (name)
+          )
+        )
+      `)
+      .eq('driver_id', driverId)
+      .eq('status', 'pending')
+      .gt('expires_at', nowIso)
+      .order('expires_at', { ascending: true })
+);
 let lastOfferSelect = '';
 
 jest.mock('@/lib/engine', () => ({
@@ -26,6 +57,8 @@ jest.mock('@ridendine/db', () => ({
   createAdminClient: jest.fn(() => ({
     from: mockFrom,
   })),
+  listPendingAssignmentOffersForDriver: (...args: unknown[]) =>
+    mockListPendingAssignmentOffersForDriver(...args),
 }));
 
 describe('GET /api/offers', () => {

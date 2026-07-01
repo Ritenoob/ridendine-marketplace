@@ -48,6 +48,14 @@ jest.mock('@ridendine/db', () => ({
       }),
     }),
   }),
+  getDriverPayoutAccountStatus: jest.fn().mockResolvedValue({
+    data: {
+      id: 'payout-1',
+      stripe_account_id: 'acct_123456789012',
+      status: 'active',
+    },
+    error: null,
+  }),
 }));
 
 jest.mock('@ridendine/ui', () => ({

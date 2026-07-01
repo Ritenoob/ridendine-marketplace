@@ -25,6 +25,7 @@ const mockSignInWithPassword = jest.fn();
 const mockSignOut = jest.fn();
 const mockFrom = jest.fn();
 const mockGetDriverByUserId = jest.fn();
+const mockGetActivePlatformUserByUserId = jest.fn();
 
 jest.mock('@ridendine/db', () => ({
   createServerClient: jest.fn(() => ({
@@ -35,6 +36,7 @@ jest.mock('@ridendine/db', () => ({
     from: mockFrom,
   })),
   getDriverByUserId: (...args: unknown[]) => mockGetDriverByUserId(...args),
+  getActivePlatformUserByUserId: (...args: unknown[]) => mockGetActivePlatformUserByUserId(...args),
 }));
 
 import { POST } from '../app/api/auth/login/route';
@@ -42,6 +44,7 @@ import { POST } from '../app/api/auth/login/route';
 describe('driver auth login route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetActivePlatformUserByUserId.mockResolvedValue(null);
   });
 
   it('allows an active super admin to sign in without a driver profile', async () => {
@@ -53,6 +56,11 @@ describe('driver auth login route', () => {
       error: null,
     });
     mockGetDriverByUserId.mockResolvedValue(null);
+    mockGetActivePlatformUserByUserId.mockResolvedValue({
+      user_id: 'user-super',
+      role: 'super_admin',
+      is_active: true,
+    });
     mockFrom.mockReturnValue({
       select: jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({

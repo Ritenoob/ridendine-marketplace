@@ -1,9 +1,4 @@
-import {
-  addCartItem,
-  createAdminClient,
-  createCart,
-  getCartByCustomer,
-} from '@ridendine/db';
+import { ordersTable, menuItemsTable, addCartItem, createAdminClient, createCart, getCartByCustomer } from '@ridendine/db';
 import { getCustomerActorContext, successResponse, errorResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -27,8 +22,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
     if (!customerContext) return errorResponse('UNAUTHORIZED', 'Not authenticated', 401);
 
     const adminClient = createAdminClient() as any;
-    const { data: order, error } = await adminClient
-      .from('orders')
+    const { data: order, error } = await ordersTable(adminClient)
       .select(`
         id,
         storefront_id,
@@ -47,13 +41,14 @@ export async function POST(_request: Request, { params }: RouteParams) {
     if (!order) return errorResponse('NOT_FOUND', 'Order not found', 404);
 
     const menuIds = (order.items ?? []).map((item: { menu_item_id: string }) => item.menu_item_id);
-    const { data: menuItems, error: menuError } = await adminClient
-      .from('menu_items')
+    const { data: menuItems, error: menuError } = await menuItemsTable(adminClient)
       .select('id, price, is_available, is_sold_out, storefront_id')
       .in('id', menuIds);
     if (menuError) return errorResponse('FETCH_ERROR', menuError.message, 500);
 
-    const menuById = new Map<string, MenuRow>((menuItems ?? []).map((item: MenuRow) => [item.id, item]));
+    const menuById = new Map<string, MenuRow>(
+      ((menuItems ?? []) as MenuRow[]).map((item) => [item.id, item])
+    );
     for (const orderItem of order.items ?? []) {
       const menuItem = menuById.get(orderItem.menu_item_id);
       if (!menuItem || !menuItem.is_available || menuItem.is_sold_out || menuItem.storefront_id !== order.storefront_id) {

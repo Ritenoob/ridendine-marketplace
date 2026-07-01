@@ -1,0 +1,4 @@
+interface:
+  display_name: "RideNDine Supabase Fixtures"
+  short_description: "Repair and verify local Supabase seed readiness."
+  default_prompt: "Check local Supabase migrations, seeds, and fixture readiness for RideNDine E2E."

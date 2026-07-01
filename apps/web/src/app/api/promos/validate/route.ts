@@ -1,8 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import { promoCodesTable, createAdminClient, createServerClient } from '@ridendine/db';
 import { getCurrentCustomer } from '@/lib/auth-helpers';
-import { createServerClient } from '@ridendine/db';
 import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
@@ -27,9 +26,8 @@ export async function GET(request: NextRequest) {
   const subtotal = subtotalParam ? parseFloat(subtotalParam) : 0;
   const adminClient = createAdminClient() as any;
 
-  const { data: promo } = await adminClient
-    .from('promo_codes')
-    .select('id, code, discount_type, discount_value, is_active, expires_at, max_uses, used_count, min_order_amount')
+  const { data: promo } = await promoCodesTable(adminClient)
+    .select('id, code, discount_type, discount_value, is_active, expires_at, usage_limit, usage_count, min_order_amount')
     .eq('code', code)
     .maybeSingle();
 

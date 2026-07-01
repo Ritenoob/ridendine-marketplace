@@ -4,10 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button, Input, Textarea, Card } from '@ridendine/ui';
 import { Header } from '@/components/layout/header';
-import {
-  getChefPortalLoginUrl,
-  getChefPortalSignupUrl,
-} from '@/lib/customer-ordering';
+import { getChefPortalLoginUrl, getChefPortalSignupUrl } from '@/lib/customer-ordering';
 
 export default function ChefSignupPage() {
   const chefPortalSignup = getChefPortalSignupUrl();

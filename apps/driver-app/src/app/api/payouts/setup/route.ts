@@ -1,6 +1,12 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@ridendine/db';
+import {
+  createServerClient,
+  getDriverPayoutAccountStatus,
+  getDriverPayoutSetupProfileByUserId,
+  getDriverPayoutStripeAccount,
+  insertDriverPayoutAccount,
+} from '@ridendine/db';
 import { getStripeClient } from '@ridendine/engine';
 import { getDriverActorContext } from '@/lib/engine';
 
@@ -17,21 +23,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: driver } = await supabase
-      .from('drivers')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
+    const { data: driver } = await getDriverPayoutSetupProfileByUserId(supabase, user.id);
 
     if (!driver) {
       return NextResponse.json({ error: 'Driver profile not found' }, { status: 404 });
     }
 
-    const { data: account } = await supabase
-      .from('driver_payout_accounts')
-      .select('id, stripe_account_id, status, onboarding_completed_at')
-      .eq('driver_id', driver.id)
-      .maybeSingle();
+    const { data: account } = await getDriverPayoutAccountStatus(supabase, driver.id);
 
     if (!account) {
       return NextResponse.json({ connected: false, status: 'not_started' });
@@ -76,22 +74,14 @@ export async function POST() {
     }
 
     // Get driver profile
-    const { data: driver } = await supabase
-      .from('drivers')
-      .select('id, first_name, last_name')
-      .eq('user_id', user.id)
-      .single();
+    const { data: driver } = await getDriverPayoutSetupProfileByUserId(supabase, user.id);
 
     if (!driver) {
       return NextResponse.json({ error: 'Driver profile not found' }, { status: 404 });
     }
 
     // Check for existing payout account
-    const { data: existingAccount } = await supabase
-      .from('driver_payout_accounts')
-      .select('stripe_account_id')
-      .eq('driver_id', driver.id)
-      .single();
+    const { data: existingAccount } = await getDriverPayoutStripeAccount(supabase, driver.id);
 
     let accountId: string;
 
@@ -123,13 +113,11 @@ export async function POST() {
       accountId = account.id;
 
       // Save to database
-      await supabase
-        .from('driver_payout_accounts')
-        .insert({
-          driver_id: driver.id,
-          stripe_account_id: accountId,
-          status: 'pending',
-        });
+      await insertDriverPayoutAccount(supabase, {
+        driverId: driver.id,
+        stripeAccountId: accountId,
+        status: 'pending',
+      });
     }
 
     const driverPublicBase =

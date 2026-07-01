@@ -27,6 +27,11 @@ const dbBoundaryPlugin = {
         },
       },
       create(context) {
+        const filename = context.getFilename();
+        if (/(^|[/\\])__tests__[/\\]|[./](?:test|spec)\.[cm]?[jt]sx?$/.test(filename)) {
+          return {};
+        }
+
         return {
           "CallExpression[callee.property.name='from'][arguments.0.type='Literal']"(
             node

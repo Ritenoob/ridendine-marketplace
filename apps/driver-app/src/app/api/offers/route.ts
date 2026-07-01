@@ -4,7 +4,7 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import { createAdminClient, listPendingAssignmentOffersForDriver } from '@ridendine/db';
 import {
   getEngine,
   getDriverActorContext,
@@ -85,32 +85,14 @@ export async function GET() {
     const adminClient = createAdminClient();
 
     // Get pending offers for this driver
-    const { data: offers, error } = await adminClient
-      .from('assignment_attempts')
-      .select(`
-        *,
-        delivery:deliveries (
-          id,
-          pickup_address,
-          dropoff_address,
-          distance_km,
-          route_to_dropoff_seconds,
-          driver_payout,
-          orders!inner (
-            order_number,
-            total,
-            tip,
-            storefront:chef_storefronts (name)
-          )
-        )
-      `)
-      .eq('driver_id', driverContext.driverId)
-      .eq('response', 'pending')
-      .gt('expires_at', new Date().toISOString())
-      .order('offered_at', { ascending: false });
+    const { data: offers, error } = await listPendingAssignmentOffersForDriver(
+      adminClient,
+      driverContext.driverId,
+      new Date().toISOString()
+    );
 
     if (error) {
-      return errorResponse('FETCH_ERROR', error.message);
+      return errorResponse('FETCH_ERROR', error.message ?? 'Could not load delivery offers');
     }
 
     return successResponse({

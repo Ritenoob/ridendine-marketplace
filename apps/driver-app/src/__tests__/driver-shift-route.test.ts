@@ -10,7 +10,49 @@ jest.mock('@ridendine/db', () => ({
   createAdminClient: jest.fn(() => ({
     from: mockFrom,
   })),
+  createDriverShift: (_client: unknown, driverId: string, timestamp: string) =>
+    mockFrom('driver_shifts')
+      .insert({
+        driver_id: driverId,
+        started_at: timestamp,
+        updated_at: timestamp,
+      })
+      .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
+      .single(),
+  endDriverShift: (_client: unknown, driverId: string, shiftId: string, timestamp: string) =>
+    mockFrom('driver_shifts')
+      .update({
+        ended_at: timestamp,
+        updated_at: timestamp,
+      })
+      .eq('id', shiftId)
+      .eq('driver_id', driverId)
+      .is('ended_at', null)
+      .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
+      .single(),
   getDeliveryHistory: (...args: unknown[]) => mockGetDeliveryHistory(...args),
+  getDriverShiftById: (_client: unknown, driverId: string, shiftId: string) =>
+    mockFrom('driver_shifts')
+      .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
+      .eq('id', shiftId)
+      .eq('driver_id', driverId)
+      .maybeSingle(),
+  getDriverShiftPresence: (_client: unknown, driverId: string) =>
+    mockFrom('driver_presence')
+      .select('status,current_shift_id,last_location_at,last_location_update')
+      .eq('driver_id', driverId)
+      .maybeSingle(),
+  listDriverShiftActiveDeliveries: (_client: unknown, driverId: string) =>
+    mockFrom('deliveries')
+      .select('id,status,updated_at,estimated_dropoff_at')
+      .eq('driver_id', driverId)
+      .in('status', expect.any(Array))
+      .order('updated_at', { ascending: false }),
+  upsertDriverShiftPresence: (_client: unknown, payload: Record<string, unknown>) =>
+    mockFrom('driver_presence')
+      .upsert(payload, { onConflict: 'driver_id' })
+      .select('status,current_shift_id,last_location_at,last_location_update')
+      .single(),
 }));
 
 jest.mock('@/lib/engine', () => ({

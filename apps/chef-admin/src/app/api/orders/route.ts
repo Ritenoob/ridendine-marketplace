@@ -3,15 +3,27 @@
 // Powered by Central Engine
 // ==========================================
 
-import { createAdminClient } from '@ridendine/db';
-import {
-  getEngine,
-  getChefActorContext,
-  errorResponse,
-  successResponse,
-} from '@/lib/engine';
+import { ordersTable, customersTable, customerAddressesTable, createAdminClient } from '@ridendine/db';
+import { getEngine, getChefActorContext, errorResponse, successResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
+
+interface OrderRow {
+  id: string;
+  customer_id: string | null;
+  delivery_address_id: string | null;
+  [key: string]: unknown;
+}
+
+interface CustomerRow {
+  id: string;
+  [key: string]: unknown;
+}
+
+interface AddressRow {
+  id: string;
+  [key: string]: unknown;
+}
 
 /**
  * GET /api/orders
@@ -27,8 +39,7 @@ export async function GET() {
     const adminClient = createAdminClient();
 
     // Get orders for this storefront with related data
-    const { data: orders, error } = await adminClient
-      .from('orders')
+    const { data: orders, error } = await ordersTable(adminClient)
       .select(`
         id,
         order_number,
@@ -70,33 +81,41 @@ export async function GET() {
       return errorResponse('FETCH_ERROR', error.message);
     }
 
+    const orderRows = (orders ?? []) as OrderRow[];
+
     // Enrich with customer data
-    const customerIds = [...new Set(orders.map((o) => o.customer_id).filter(Boolean))];
+    const customerIds = [
+      ...new Set(orderRows.map((o) => o.customer_id).filter((id): id is string => Boolean(id))),
+    ];
     const { data: customers } = customerIds.length > 0
-      ? await adminClient
-          .from('customers')
+      ? await customersTable(adminClient)
           .select('id, first_name, last_name, phone, email')
           .in('id', customerIds)
       : { data: [] };
 
     // Enrich with delivery address data
-    const addressIds = [...new Set(orders.map((o) => o.delivery_address_id).filter(Boolean))];
+    const addressIds = [
+      ...new Set(
+        orderRows.map((o) => o.delivery_address_id).filter((id): id is string => Boolean(id))
+      ),
+    ];
     const { data: addresses } = addressIds.length > 0
-      ? await adminClient
-          .from('customer_addresses')
+      ? await customerAddressesTable(adminClient)
           .select('id, address_line1, address_line2, city, state, postal_code, country')
           .in('id', addressIds)
       : { data: [] };
 
     // Get allowed actions for each order
     const engine = getEngine();
+    const customerRows = (customers ?? []) as CustomerRow[];
+    const addressRows = (addresses ?? []) as AddressRow[];
     const ordersWithDetails = await Promise.all(
-      orders.map(async (order) => {
+      orderRows.map(async (order) => {
         const allowedActions = await engine.orders.getAllowedActions(order.id, 'chef_user');
         return {
           ...order,
-          customer: customers?.find((c) => c.id === order.customer_id) || null,
-          address: addresses?.find((a) => a.id === order.delivery_address_id) || null,
+          customer: customerRows.find((c) => c.id === order.customer_id) || null,
+          address: addressRows.find((a) => a.id === order.delivery_address_id) || null,
           allowedActions,
         };
       })

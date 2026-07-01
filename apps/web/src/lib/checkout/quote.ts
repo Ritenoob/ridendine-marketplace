@@ -1,16 +1,6 @@
-import { getCartWithItems, type SupabaseClient } from '@ridendine/db';
+import { serviceAreasTable, promoCodesTable, menuItemsTable, menuItemOptionsTable, customerAddressesTable, chefKitchensTable, getCartWithItems, type SupabaseClient } from '@ridendine/db';
 import { roundMoney } from '@/lib/cart-summary';
-import {
-  BASE_DELIVERY_FEE,
-  buildAddressString,
-  calculateDeliveryFee,
-  createTaxConfigService,
-  estimateDistance,
-  geocodeAddress,
-  getSurgeMultiplier,
-  isWithinDeliveryZone,
-  type Coordinates,
-} from '@ridendine/engine';
+import { BASE_DELIVERY_FEE, buildAddressString, calculateDeliveryFee, createTaxConfigService, estimateDistance, geocodeAddress, getSurgeMultiplier, isWithinDeliveryZone, type Coordinates } from '@ridendine/engine';
 
 export interface CheckoutQuoteInput {
   adminClient: SupabaseClient;
@@ -172,8 +162,7 @@ function computeServerQuote(
 
 async function resolveServiceAreaSurge(adminClient: SupabaseClient): Promise<number> {
   try {
-    const { data } = await (adminClient as any)
-      .from('service_areas')
+    const { data } = await serviceAreasTable((adminClient as any))
       .select('id, surge_multiplier')
       .eq('is_active', true)
       .maybeSingle();
@@ -196,8 +185,7 @@ async function resolveDeliveryFeeByCoords(
   subtotalCents: number
 ): Promise<{ feeCents: number; distanceKm: number | null; surgeMultiplier: number }> {
   try {
-    const { data: kitchen } = await (adminClient as any)
-      .from('chef_kitchens')
+    const { data: kitchen } = await chefKitchensTable((adminClient as any))
       .select('lat, lng')
       .eq('storefront_id', storefrontId)
       .maybeSingle();
@@ -272,8 +260,7 @@ async function computeQuoteFromItems(input: {
 
   const menuItemIds = Array.from(new Set(lineItems.map((item) => item.menuItemId)));
 
-  const { data: menuItems, error: menuItemsError } = await adminClient
-    .from('menu_items')
+  const { data: menuItems, error: menuItemsError } = await menuItemsTable(adminClient)
     .select('id, storefront_id, price, is_available, is_sold_out')
     .in('id', menuItemIds);
 
@@ -285,8 +272,7 @@ async function computeQuoteFromItems(input: {
     (menuItems as MenuItemRow[]).map((item) => [item.id, item])
   );
 
-  const { data: optionRows, error: optionRowsError } = await (adminClient as any)
-    .from('menu_item_options')
+  const { data: optionRows, error: optionRowsError } = await menuItemOptionsTable((adminClient as any))
     .select(
       'id, menu_item_id, name, is_required, max_selections, sort_order, menu_item_option_values(id, option_id, name, price_adjustment, is_available, sort_order)'
     )
@@ -436,8 +422,7 @@ async function computeQuoteFromItems(input: {
   let promoDiscount = 0;
   let promoCodeId: string | null = null;
   if (promoCode) {
-    const { data: promo } = await adminClient
-      .from('promo_codes')
+    const { data: promo } = await promoCodesTable(adminClient)
       .select('*')
       .eq('code', promoCode.toUpperCase())
       .eq('is_active', true)
@@ -519,8 +504,7 @@ export async function buildCheckoutQuote(
     selectedOptions: (item.selected_options ?? []) as SelectedOptionInput[],
   }));
 
-  const { data: deliveryAddress } = await adminClient
-    .from('customer_addresses')
+  const { data: deliveryAddress } = await customerAddressesTable(adminClient)
     .select('lat, lng')
     .eq('id', deliveryAddressId)
     .eq('customer_id', customerId)

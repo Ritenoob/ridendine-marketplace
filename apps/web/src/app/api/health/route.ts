@@ -1,9 +1,5 @@
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
-import {
-  apiSuccess,
-  getRateLimitProviderStatus,
-  operationalHealthPayload,
-} from '@ridendine/utils';
+import { chefStorefrontsTable, createAdminClient, type SupabaseClient } from '@ridendine/db';
+import { apiSuccess, getRateLimitProviderStatus, operationalHealthPayload } from '@ridendine/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +8,7 @@ export async function GET(request: Request) {
   const rateLimitStatus = getRateLimitProviderStatus();
 
   const [dbProbe, stripeProbe] = await Promise.allSettled([
-    adminClient.from('chef_storefronts').select('id').limit(1),
+    chefStorefrontsTable(adminClient).select('id').limit(1),
     Promise.resolve(Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET)),
   ]);
 

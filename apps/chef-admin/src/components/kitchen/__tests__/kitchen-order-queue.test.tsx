@@ -5,6 +5,8 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useStorefrontOrdersRealtime } from '@/hooks/use-storefront-orders-realtime';
+import { playNewOrderChime } from '@/lib/sound';
 import { KitchenOrderQueue } from '../kitchen-order-queue';
 import type { KitchenTicket } from '@/lib/kitchen';
 
@@ -172,12 +174,8 @@ describe('KitchenOrderQueue', () => {
   });
 
   it('hydrates a new realtime ticket via the ticket endpoint so items are never empty', async () => {
-    const { playNewOrderChime } = require('@/lib/sound') as { playNewOrderChime: jest.Mock };
-    const { useStorefrontOrdersRealtime } = require('@/hooks/use-storefront-orders-realtime') as {
-      useStorefrontOrdersRealtime: jest.Mock;
-    };
     let capturedOnInsert: ((o: unknown) => void) | null = null;
-    useStorefrontOrdersRealtime.mockImplementation(
+    jest.mocked(useStorefrontOrdersRealtime).mockImplementation(
       (_id: string, callbacks: { onInsert: (o: unknown) => void }) => {
         capturedOnInsert = callbacks.onInsert;
       }
@@ -209,7 +207,6 @@ describe('KitchenOrderQueue', () => {
         customer: null,
       });
     });
-
     // The queue hydrates the ticket from the server before showing full data.
     await waitFor(() =>
       expect(global.fetch).toHaveBeenCalledWith('/api/kitchen/tickets/ord-new')
@@ -222,11 +219,8 @@ describe('KitchenOrderQueue', () => {
   });
 
   it('resets the new-order badge count when clicked', async () => {
-    const { useStorefrontOrdersRealtime } = require('@/hooks/use-storefront-orders-realtime') as {
-      useStorefrontOrdersRealtime: jest.Mock;
-    };
     let capturedOnInsert: ((o: unknown) => void) | null = null;
-    useStorefrontOrdersRealtime.mockImplementation(
+    jest.mocked(useStorefrontOrdersRealtime).mockImplementation(
       (_id: string, callbacks: { onInsert: (o: unknown) => void }) => {
         capturedOnInsert = callbacks.onInsert;
       }

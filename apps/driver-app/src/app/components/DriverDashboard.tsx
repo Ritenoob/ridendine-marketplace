@@ -247,6 +247,8 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
   const [pendingOffers, setPendingOffers] = useState<DashboardOffer[]>([]);
   const [offersLoading, setOffersLoading] = useState(true);
   const [offersError, setOffersError] = useState<string | null>(null);
+  const [offerActionError, setOfferActionError] = useState<string | null>(null);
+  const [respondingOfferId, setRespondingOfferId] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const dashboardRequestIdRef = useRef(0);
 
@@ -377,6 +379,42 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
       setStatusError('Unable to update your shift right now. Please try again.');
     } finally {
       setIsTogglingStatus(false);
+    }
+  };
+
+  const respondToOffer = async (offer: DashboardOffer, action: 'accept' | 'decline') => {
+    setRespondingOfferId(offer.attemptId);
+    setOfferActionError(null);
+
+    try {
+      const response = await fetch('/api/offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          attemptId: offer.attemptId,
+          driverId: driver.id,
+          action,
+          ...(action === 'decline' ? { reason: 'busy' } : {}),
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          payload?.error?.message ?? payload?.message ?? 'Unable to respond to this offer'
+        );
+      }
+
+      if (action === 'accept') {
+        window.location.href = `/delivery/${offer.deliveryId}`;
+        return;
+      }
+
+      setPendingOffers((current) => current.filter((item) => item.attemptId !== offer.attemptId));
+    } catch (error) {
+      setOfferActionError(error instanceof Error ? error.message : 'Unable to respond to this offer');
+    } finally {
+      setRespondingOfferId(null);
     }
   };
 
@@ -835,6 +873,11 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
 
             {!offersLoading && !offersError && pendingOffers.length > 0 && (
               <div className="mt-4 space-y-3">
+                {offerActionError && (
+                  <p className="rounded-lg border border-danger/30 bg-dangerSoft px-3 py-2 text-sm text-danger">
+                    {offerActionError}
+                  </p>
+                )}
                 {pendingOffers.map((offer) => (
                   <div key={offer.attemptId} className="rounded-xl border border-divider p-4">
                     <div className="flex items-start justify-between gap-3">
@@ -867,6 +910,24 @@ export default function DriverDashboard({ driver, activeDeliveries }: DriverDash
                     <div className="mt-3 space-y-1 text-sm text-textMuted">
                       <p><span className="font-semibold text-text">Pickup:</span> {offer.pickupAddress || 'Pickup pending'}</p>
                       <p><span className="font-semibold text-text">Dropoff:</span> {offer.dropoffAddress || 'Dropoff pending'}</p>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void respondToOffer(offer, 'decline')}
+                        disabled={respondingOfferId !== null}
+                        className="rounded-xl border border-divider px-4 py-2 text-sm font-semibold text-textMuted disabled:opacity-60"
+                      >
+                        {respondingOfferId === offer.attemptId ? 'Responding...' : 'Decline'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void respondToOffer(offer, 'accept')}
+                        disabled={respondingOfferId !== null}
+                        className="rounded-xl bg-success px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                      >
+                        {respondingOfferId === offer.attemptId ? 'Accepting...' : 'Accept'}
+                      </button>
                     </div>
                   </div>
                 ))}

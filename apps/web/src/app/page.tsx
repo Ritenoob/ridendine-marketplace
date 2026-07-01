@@ -5,7 +5,7 @@ import { Header } from '@/components/layout/header';
 import { FeaturedChefs } from '@/components/home/featured-chefs';
 import { ScrollRevealSection } from '@/components/home/scroll-reveal-section';
 import { CustomerMarketplaceHero } from '@/components/home/customer-marketplace-hero';
-import { createAdminClient } from '@ridendine/db';
+import { chefStorefrontsTable, menuItemsTable, createAdminClient } from '@ridendine/db';
 
 // Opt out of static generation due to auth context requirements
 export const dynamic = 'force-dynamic';
@@ -15,13 +15,11 @@ async function fetchHomeStats(): Promise<{ activeChefs: number; liveMenuItems: n
     const admin = createAdminClient();
 
     const [chefsRes, menuRes] = await Promise.all([
-      admin
-        .from('chef_storefronts')
+      chefStorefrontsTable(admin)
         .select('id, chef_profiles!inner(status)', { count: 'exact', head: true })
         .eq('is_active', true)
         .eq('chef_profiles.status', 'approved'),
-      admin
-        .from('menu_items')
+      menuItemsTable(admin)
         .select('id', { count: 'exact', head: true })
         .eq('is_available', true)
         .eq('is_sold_out', false),

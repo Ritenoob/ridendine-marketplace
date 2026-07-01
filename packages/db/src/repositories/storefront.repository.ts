@@ -1,7 +1,19 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
 import type { Tables } from '../generated/database.types';
 
 export type ChefStorefront = Tables<'chef_storefronts'>;
+
+export function chefStorefrontsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('chef_storefronts');
+}
+
+export function chefKitchensTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('chef_kitchens');
+}
+
+export function chefAvailabilityTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('chef_availability');
+}
 
 export interface ChefAvailabilityRow {
   day_of_week: number;

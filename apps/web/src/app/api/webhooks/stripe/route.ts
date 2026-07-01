@@ -6,24 +6,10 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import type Stripe from 'stripe';
-import { clearCart, createAdminClient } from '@ridendine/db';
-import {
-  createLoyaltyService,
-  getStripeClient,
-  claimStripeWebhookEventForProcessing,
-  finalizeStripeWebhookSuccess,
-  finalizeStripeWebhookFailure,
-  handleStripeFinanceWebhook,
-} from '@ridendine/engine';
+import { ordersTable, clearCart, createAdminClient } from '@ridendine/db';
+import { createLoyaltyService, getStripeClient, claimStripeWebhookEventForProcessing, finalizeStripeWebhookSuccess, finalizeStripeWebhookFailure, handleStripeFinanceWebhook } from '@ridendine/engine';
 import { getEngine, getSystemActor } from '@/lib/engine';
-import {
-  evaluateRateLimit,
-  getCorrelationId,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-  redactSensitiveForLog,
-  withCorrelationId,
-} from '@ridendine/utils';
+import { evaluateRateLimit, getCorrelationId, RATE_LIMIT_POLICIES, rateLimitPolicyResponse, redactSensitiveForLog, withCorrelationId } from '@ridendine/utils';
 
 function getWebhookSecret() {
   if (!process.env.STRIPE_WEBHOOK_SECRET) {
@@ -47,14 +33,13 @@ function safeWebhookLog(err: unknown): string {
 }
 
 async function getOrderPaymentSnapshot(admin: ReturnType<typeof createAdminClient>, orderId: string) {
-  const { data, error } = await (admin as any)
-    .from('orders')
+  const { data, error } = await ordersTable((admin as any))
     .select('id, customer_id, subtotal, total, payment_status, engine_status, is_test')
     .eq('id', orderId)
     .maybeSingle();
 
   if (error || !data) return null;
-  return data as {
+  return data as unknown as {
     id: string;
     customer_id: string;
     subtotal: number;
@@ -199,8 +184,7 @@ export async function POST(request: Request): Promise<Response> {
           // it OUT of the kitchen queue, finance, loyalty, and payouts.
           if (orderSnapshot.is_test) {
             if (orderSnapshot.payment_status !== 'completed') {
-              await (admin as any)
-                .from('orders')
+              await ordersTable((admin as any))
                 .update({
                   payment_status: 'completed',
                   payment_intent_id: paymentIntent.id,
@@ -225,8 +209,7 @@ export async function POST(request: Request): Promise<Response> {
               );
             }
 
-            await (admin as any)
-              .from('orders')
+            await ordersTable((admin as any))
               .update({
                 payment_status: 'completed',
                 payment_intent_id: paymentIntent.id,
@@ -247,8 +230,7 @@ export async function POST(request: Request): Promise<Response> {
               );
               // Recovery: payment succeeded so directly advance to pending.
               // The .eq guard makes this idempotent and safe against concurrent cancellations.
-              const { error: fallbackError } = await (admin as any)
-                .from('orders')
+              const { error: fallbackError } = await ordersTable((admin as any))
                 .update({
                   engine_status: 'pending',
                   status: 'pending',

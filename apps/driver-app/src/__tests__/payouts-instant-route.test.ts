@@ -12,6 +12,16 @@ jest.mock('@ridendine/db', () => ({
   createAdminClient: jest.fn(() => ({
     from: mockFrom,
   })),
+  getDriverById: jest.fn(async () => {
+    const result = await mockFrom('drivers').select().eq().maybeSingle();
+    return result.data;
+  }),
+  getDriverPayablePlatformAccount: jest.fn(() =>
+    mockFrom('platform_accounts').select().eq().maybeSingle()
+  ),
+  listPendingInstantPayoutHolds: jest.fn(() =>
+    mockFrom('instant_payout_requests').select().eq().order()
+  ),
 }));
 
 jest.mock('@ridendine/engine', () => ({

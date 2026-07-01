@@ -4,7 +4,16 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getDeliveryContextForDriverLocation,
+  getDeliveryEtaSnapshotForDriverLocation,
+  getDeliveryOwnerForDriverLocation,
+  getOrderPublicStageForDriverLocation,
+  insertDeliveryTrackingLocation,
+  insertDriverLocation,
+  upsertDriverCurrentLocation,
+} from '@ridendine/db';
 import { locationUpdateSchema } from '@ridendine/validation';
 import {
   evaluateRateLimit,
@@ -119,11 +128,10 @@ export async function POST(request: NextRequest) {
     const adminClient = createAdminClient();
 
     if (deliveryId) {
-      const { data: dCheck, error: dErr } = await adminClient
-        .from('deliveries')
-        .select('id, driver_id')
-        .eq('id', deliveryId)
-        .maybeSingle();
+      const { data: dCheck, error: dErr } = await getDeliveryOwnerForDriverLocation(
+        adminClient,
+        deliveryId
+      );
 
       if (dErr || !dCheck || dCheck.driver_id !== driverId) {
         return errorResponse('FORBIDDEN', 'Delivery is not assigned to this driver', 403);
@@ -133,68 +141,49 @@ export async function POST(request: NextRequest) {
     const engine = getEngine();
 
     const locationTimestamp = new Date().toISOString();
-    await adminClient
-      .from('driver_presence')
-      .upsert(
-        {
-          driver_id: driverId,
-          current_lat: lat,
-          current_lng: lng,
-          last_location_lat: lat,
-          last_location_lng: lng,
-          last_location_update: locationTimestamp,
-          last_location_at: locationTimestamp,
-          last_updated_at: locationTimestamp,
-          updated_at: locationTimestamp,
-        },
-        {
-          onConflict: 'driver_id',
-        }
-      );
-
-    await adminClient.from('driver_locations').insert({
-      driver_id: driverId,
+    await upsertDriverCurrentLocation(adminClient, {
+      driverId,
       lat,
       lng,
       accuracy: accuracy ?? null,
       heading: heading ?? null,
       speed: speed ?? null,
-      recorded_at: locationTimestamp,
+      recordedAt: locationTimestamp,
+    });
+    await insertDriverLocation(adminClient, {
+      driverId,
+      lat,
+      lng,
+      accuracy: accuracy ?? null,
+      heading: heading ?? null,
+      speed: speed ?? null,
+      recordedAt: locationTimestamp,
     });
 
     if (deliveryId) {
-      const { data: delivery } = await adminClient
-        .from('deliveries')
-        .select('id, driver_id, status, order_id')
-        .eq('id', deliveryId)
-        .single();
+      const { data: delivery } = await getDeliveryContextForDriverLocation(adminClient, deliveryId);
 
       if (delivery && delivery.driver_id === driverId) {
-        if (ACTIVE_DELIVERY.has(delivery.status)) {
-          await adminClient.from('delivery_tracking_events').insert({
-            delivery_id: deliveryId,
-            driver_id: driverId,
+        const deliveryStatus = delivery.status ?? '';
+        if (ACTIVE_DELIVERY.has(deliveryStatus)) {
+          await insertDeliveryTrackingLocation(adminClient, {
+            deliveryId,
+            driverId,
             lat,
             lng,
             accuracy: accuracy ?? null,
-            recorded_at: locationTimestamp,
+            recordedAt: locationTimestamp,
           });
         }
 
-        if (delivery.order_id && CUSTOMER_LEG.has(delivery.status)) {
+        if (delivery.order_id && CUSTOMER_LEG.has(deliveryStatus)) {
           const refreshed = await engine.eta.refreshFromDriverPing(deliveryId, { lat, lng });
+          const orderId = delivery.order_id;
 
-          const { data: snapRaw, error: snapError } = await adminClient
-            .from('deliveries')
-            .select('eta_pickup_at, route_to_dropoff_polyline')
-            .eq('id', deliveryId)
-            .maybeSingle();
-
-          const { data: ordRaw, error: ordError } = await adminClient
-            .from('orders')
-            .select('public_stage')
-            .eq('id', delivery.order_id)
-            .maybeSingle();
+          const { data: snapRaw, error: snapError } =
+            await getDeliveryEtaSnapshotForDriverLocation(adminClient, deliveryId);
+          const { data: ordRaw, error: ordError } =
+            await getOrderPublicStageForDriverLocation(adminClient, orderId);
 
           // Stale-data guard: only broadcast the ETA enrichment when the
           // refresh queries actually returned rows. On a query error or a
@@ -203,19 +192,13 @@ export async function POST(request: NextRequest) {
           // enrichment broadcast entirely. The location ping itself has
           // already been persisted above.
           if (!snapError && snapRaw && !ordError && ordRaw) {
-            const snap = snapRaw as {
-              eta_pickup_at?: string | null;
-              route_to_dropoff_polyline?: string | null;
-            };
-            const ord = ordRaw as { public_stage?: string };
-
-            await engine.events.broadcastPublic(delivery.order_id as string, {
-              public_stage: ord.public_stage ?? 'on_the_way',
-              eta_pickup_at: snap.eta_pickup_at ?? null,
+            await engine.events.broadcastPublic(orderId, {
+              public_stage: ordRaw.public_stage ?? 'on_the_way',
+              eta_pickup_at: snapRaw.eta_pickup_at ?? null,
               eta_dropoff_at: refreshed.etaDropoffAt.toISOString(),
               route_progress_pct: refreshed.progressPct,
               route_remaining_seconds: refreshed.remainingSeconds,
-              route_to_dropoff_polyline: snap.route_to_dropoff_polyline ?? null,
+              route_to_dropoff_polyline: snapRaw.route_to_dropoff_polyline ?? null,
             });
           } else {
             console.error(

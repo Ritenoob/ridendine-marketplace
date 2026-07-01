@@ -4,18 +4,9 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
-import {
-  getEngine,
-  getCustomerActorContext,
-  errorResponse,
-  successResponse,
-} from '@/lib/engine';
-import {
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-} from '@ridendine/utils';
+import { ordersTable, orderStatusHistoryTable, createAdminClient, type SupabaseClient } from '@ridendine/db';
+import { getEngine, getCustomerActorContext, errorResponse, successResponse } from '@/lib/engine';
+import { evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse } from '@ridendine/utils';
 import { customerOrderActionSchema } from '@ridendine/validation';
 
 export const dynamic = 'force-dynamic';
@@ -71,8 +62,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const adminClient = createAdminClient() as unknown as SupabaseClient;
 
     // Get order with related data - verify customer owns it
-    const { data: order, error } = await adminClient
-      .from('orders')
+    const { data: order, error } = await ordersTable(adminClient)
       .select(`
         *,
         items:order_items (
@@ -148,8 +138,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const allowedActions = await engine.orders.getAllowedActions(orderId, 'customer');
 
     // Get order timeline/history
-    const { data: timeline } = await adminClient
-      .from('order_status_history')
+    const { data: timeline } = await orderStatusHistoryTable(adminClient)
       .select('*')
       .eq('order_id', orderId)
       .order('created_at', { ascending: true });
@@ -197,8 +186,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const adminClient = createAdminClient();
 
     // Verify customer owns this order
-    const { data: order } = await adminClient
-      .from('orders')
+    const { data: order } = await ordersTable(adminClient)
       .select('id, customer_id, status')
       .eq('id', orderId)
       .single();

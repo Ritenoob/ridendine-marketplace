@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { createServerClient } from '@ridendine/db';
+import { ordersTable, createServerClient } from '@ridendine/db';
 import { Button, Card } from '@ridendine/ui';
 import { Header } from '@/components/layout/header';
 import { LiveOrderTracker } from '@/components/tracking/live-order-tracker';
@@ -59,8 +59,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
     redirect('/auth/login');
   }
 
-  const { data: order, error } = await supabase
-    .from('orders')
+  const { data: order, error } = await ordersTable(supabase)
     .select(`
       *,
       chef_storefronts (

@@ -4,7 +4,7 @@
 // POST /api/loyalty — redeem points
 // ==========================================
 
-import { createAdminClient } from '@ridendine/db';
+import { loyaltyTransactionsTable, createAdminClient } from '@ridendine/db';
 import { createLoyaltyService } from '@ridendine/engine';
 import { getCustomerActorContext, errorResponse, successResponse } from '@/lib/engine';
 
@@ -23,8 +23,7 @@ export async function GET(): Promise<Response> {
     const balance = await loyaltyService.getBalance(ctx.customerId);
 
     // Fetch recent transactions via admin client
-    const { data: transactions } = await adminClient
-      .from('loyalty_transactions')
+    const { data: transactions } = await loyaltyTransactionsTable(adminClient)
       .select('id, points, type, description, order_id, created_at')
       .eq('loyalty_account_id', (await loyaltyService.getOrCreateAccount(ctx.customerId)).id)
       .order('created_at', { ascending: false })

@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { createAdminClient, createServerClient } from '@ridendine/db';
+import { favoritesTable, customersTable, createAdminClient, createServerClient } from '@ridendine/db';
 import { cookies } from 'next/headers';
 import { isUuid } from '@ridendine/utils';
 import { addFavoriteSchema } from '@ridendine/validation';
@@ -14,11 +14,10 @@ export async function GET() {
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
   const adminClient = createAdminClient() as any;
-  const { data: customer } = await adminClient.from('customers').select('id').eq('user_id', user.id).single();
+  const { data: customer } = await customersTable(adminClient).select('id').eq('user_id', user.id).single();
   if (!customer) return Response.json({ error: 'Customer not found' }, { status: 404 });
 
-  const { data: favorites, error } = await adminClient
-    .from('favorites')
+  const { data: favorites, error } = await favoritesTable(adminClient)
     .select(`
       id, created_at,
       storefront:chef_storefronts(id, slug, name, cuisine_types, average_rating, total_reviews, logo_url, cover_image_url)
@@ -52,23 +51,22 @@ export async function POST(request: NextRequest) {
   }
 
   const adminClient = createAdminClient() as any;
-  const { data: customer } = await adminClient.from('customers').select('id').eq('user_id', user.id).single();
+  const { data: customer } = await customersTable(adminClient).select('id').eq('user_id', user.id).single();
   if (!customer) return Response.json({ error: 'Customer not found' }, { status: 404 });
 
   // Toggle: if already favorited, remove. If not, add.
-  const { data: existing } = await adminClient
-    .from('favorites')
+  const { data: existing } = await favoritesTable(adminClient)
     .select('id')
     .eq('customer_id', customer.id)
     .eq('storefront_id', storefrontId)
     .single();
 
   if (existing) {
-    await adminClient.from('favorites').delete().eq('id', existing.id);
+    await favoritesTable(adminClient).delete().eq('id', existing.id);
     return Response.json({ success: true, action: 'removed' });
   }
 
-  const { error } = await adminClient.from('favorites').insert({
+  const { error } = await favoritesTable(adminClient).insert({
     customer_id: customer.id,
     storefront_id: storefrontId,
   });

@@ -1,4 +1,4 @@
-import { createAdminClient } from '@ridendine/db';
+import { ordersTable, createAdminClient } from '@ridendine/db';
 import { getCustomerActorContext, successResponse, errorResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -13,8 +13,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const customerContext = await getCustomerActorContext();
     if (!customerContext) return errorResponse('UNAUTHORIZED', 'Not authenticated', 401);
 
-    const { data: order, error } = await createAdminClient()
-      .from('orders')
+    const { data: order, error } = await ordersTable(createAdminClient())
       .select('id, order_number, payment_status, payment_intent_id, total, engine_status, status')
       .eq('id', id)
       .eq('customer_id', customerContext.customerId)

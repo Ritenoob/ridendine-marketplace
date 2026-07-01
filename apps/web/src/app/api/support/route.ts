@@ -1,17 +1,9 @@
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import {
-  createAdminClient,
-  createSupportTicket,
-  type SupabaseClient,
-} from '@ridendine/db';
+import { createAdminClient, createSupportTicket, type SupabaseClient } from '@ridendine/db';
 import { supportRequestSchema } from '@ridendine/validation';
-import {
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-} from '@ridendine/utils';
+import { evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse } from '@ridendine/utils';
 import { getCustomerActorContext } from '@ridendine/engine/server';
 
 function buildDescription(

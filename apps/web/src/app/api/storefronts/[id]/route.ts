@@ -1,4 +1,4 @@
-import { createAdminClient, getStorefrontBySlug } from '@ridendine/db';
+import { chefStorefrontsTable, createAdminClient, getStorefrontBySlug } from '@ridendine/db';
 import { successResponse, errorResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -41,8 +41,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const storefront =
       (await getStorefrontBySlug(client, id)) ??
       (
-        await client
-          .from('chef_storefronts')
+        await chefStorefrontsTable(client)
           .select(`
             *,
             chef_profiles!inner (

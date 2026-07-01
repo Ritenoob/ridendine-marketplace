@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card, Badge, Button } from '@ridendine/ui';
-import { createBrowserClient } from '@ridendine/db';
+import { chefPayoutsTable, chefPayoutAccountsTable, chefProfilesTable, chefStorefrontsTable, ordersTable, createBrowserClient } from '@ridendine/db';
 
 interface Payout {
   id: string;
@@ -45,8 +45,7 @@ export default function PayoutsPage() {
       if (!user) return;
 
       // Get chef profile
-      const { data: chefProfile } = await db
-        .from('chef_profiles')
+      const { data: chefProfile } = await chefProfilesTable(db)
         .select('id')
         .eq('user_id', user.id)
         .single() as { data: { id: string } | null };
@@ -54,8 +53,7 @@ export default function PayoutsPage() {
       if (!chefProfile) return;
 
       // Get payout account
-      const { data: payoutAccount } = await db
-        .from('chef_payout_accounts')
+      const { data: payoutAccount } = await chefPayoutAccountsTable(db)
         .select('*')
         .eq('chef_id', chefProfile.id)
         .single() as { data: PayoutAccount | null };
@@ -63,8 +61,7 @@ export default function PayoutsPage() {
       setAccount(payoutAccount);
 
       // Get payouts
-      const { data: payoutsData } = await db
-        .from('chef_payouts')
+      const { data: payoutsData } = await chefPayoutsTable(db)
         .select('*')
         .eq('chef_id', chefProfile.id)
         .order('created_at', { ascending: false }) as { data: Payout[] | null };
@@ -74,16 +71,14 @@ export default function PayoutsPage() {
       }
 
       // Get storefront for balance calculation
-      const { data: storefront } = await db
-        .from('chef_storefronts')
+      const { data: storefront } = await chefStorefrontsTable(db)
         .select('id')
         .eq('chef_id', chefProfile.id)
         .single() as { data: { id: string } | null };
 
       if (storefront) {
         // Calculate pending and available balance from completed orders
-        const { data: orders } = await db
-          .from('orders')
+        const { data: orders } = await ordersTable(db)
           .select('total, status, created_at')
           .eq('storefront_id', storefront.id)
           .in('status', ['delivered', 'completed']);

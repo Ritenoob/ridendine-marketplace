@@ -61,6 +61,12 @@ describe('AuditLogger', () => {
     });
 
     expect(opsClient.insert).toHaveBeenCalledWith(expect.objectContaining({ actor_type: 'admin' }));
-    expect(systemClient.insert).toHaveBeenCalledWith(expect.objectContaining({ actor_type: 'system' }));
+    expect(systemClient.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actor_type: 'system',
+        actor_id: null,
+        user_id: null,
+      })
+    );
   });
 });

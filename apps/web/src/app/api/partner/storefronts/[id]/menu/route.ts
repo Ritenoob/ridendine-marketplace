@@ -3,11 +3,7 @@
 // Same data as the public GET /api/storefronts/{id}/menu, behind the partner key.
 // ==========================================
 
-import {
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-} from '@ridendine/utils';
+import { evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse } from '@ridendine/utils';
 import { createAdminClient, type SupabaseClient } from '@ridendine/db';
 import { errorResponse } from '@/lib/engine';
 import { resolvePartnerContext } from '@/lib/partner/auth';

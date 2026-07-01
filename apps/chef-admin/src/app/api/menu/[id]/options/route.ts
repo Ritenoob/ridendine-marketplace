@@ -1,10 +1,8 @@
+import { menuItemOptionsTable, menuItemOptionValuesTable } from '@ridendine/db';
 import type { NextRequest } from 'next/server';
 import { createMenuItemOptionSchema } from '@ridendine/validation';
 import { getChefActorContext, errorResponse, successResponse } from '@/lib/engine';
-import {
-  getChefAdminClient,
-  verifyMenuItemOwnedByStorefront,
-} from '@/lib/menu-option-guards';
+import { getChefAdminClient, verifyMenuItemOwnedByStorefront } from '@/lib/menu-option-guards';
 
 export async function GET(
   _request: NextRequest,
@@ -21,8 +19,7 @@ export async function GET(
   );
   if (!ownsItem) return errorResponse('NOT_FOUND', 'Menu item not found', 404);
 
-  const { data, error } = await (adminClient as any)
-    .from('menu_item_options')
+  const { data, error } = await menuItemOptionsTable((adminClient as any))
     .select('*, menu_item_option_values(*)')
     .eq('menu_item_id', params.id)
     .order('sort_order', { ascending: true });
@@ -56,8 +53,7 @@ export async function POST(
   if (!ownsItem) return errorResponse('NOT_FOUND', 'Menu item not found', 404);
 
   const { values, ...optionInput } = validation.data;
-  const { data: option, error: optionError } = await (adminClient as any)
-    .from('menu_item_options')
+  const { data: option, error: optionError } = await menuItemOptionsTable((adminClient as any))
     .insert({
       menu_item_id: params.id,
       name: optionInput.name,
@@ -72,8 +68,7 @@ export async function POST(
     return errorResponse('INTERNAL_ERROR', 'Failed to create menu option', 500);
   }
 
-  const { data: insertedValues, error: valuesError } = await (adminClient as any)
-    .from('menu_item_option_values')
+  const { data: insertedValues, error: valuesError } = await menuItemOptionValuesTable((adminClient as any))
     .insert(
       values.map((value) => ({
         option_id: option.id,
@@ -86,7 +81,7 @@ export async function POST(
     .select();
 
   if (valuesError) {
-    await (adminClient as any).from('menu_item_options').delete().eq('id', option.id);
+    await menuItemOptionsTable((adminClient as any)).delete().eq('id', option.id);
     return errorResponse('INTERNAL_ERROR', 'Failed to create menu option values', 500);
   }
 

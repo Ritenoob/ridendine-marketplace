@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import { ordersTable, createAdminClient } from '@ridendine/db';
 import { getChefActorContext, errorResponse, successResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
@@ -68,8 +68,7 @@ export async function GET(request: NextRequest) {
     const buckets = window === 'weeks' ? buildWeeklyBuckets(now) : buildMonthlyBuckets(now);
     const rangeStart = buckets[0]!.start;
 
-    const { data: orders } = await adminClient
-      .from('orders')
+    const { data: orders } = await ordersTable(adminClient)
       .select('total, created_at, customer_id')
       .eq('storefront_id', storefrontId)
       .in('status', ['delivered', 'completed'])

@@ -4,7 +4,9 @@ import {
   createAdminClient,
   createServerClient,
   getDeliveryById,
+  getDriverDeliveryOrderDetail,
   getDriverByUserId,
+  getPendingAssignmentAttemptRefForDriver,
   type SupabaseClient,
 } from '@ridendine/db';
 import { isApprovedDriver } from '@/lib/driver-eligibility';
@@ -69,13 +71,11 @@ export default async function ActiveDeliveryPage({ params }: PageProps) {
   const assignedToMe = delivery.driver_id === driver.id;
   let hasPendingOffer = false;
   if (!assignedToMe) {
-    const { data: attempt } = await admin
-      .from('assignment_attempts')
-      .select('id')
-      .eq('delivery_id', id)
-      .eq('driver_id', driver.id)
-      .eq('response', 'pending')
-      .maybeSingle();
+    const { data: attempt } = await getPendingAssignmentAttemptRefForDriver(
+      admin as unknown as SupabaseClient,
+      id,
+      driver.id
+    );
     hasPendingOffer = !!attempt;
   }
 
@@ -90,11 +90,10 @@ export default async function ActiveDeliveryPage({ params }: PageProps) {
     );
   }
 
-  const { data: order } = await admin
-    .from('orders')
-    .select('*, customer_addresses(*)')
-    .eq('id', delivery.order_id)
-    .single();
+  const { data: order } = await getDriverDeliveryOrderDetail(
+    admin as unknown as SupabaseClient,
+    delivery.order_id
+  );
 
   const orderRow = (order as DeliveryOrderRow | null) ?? null;
 

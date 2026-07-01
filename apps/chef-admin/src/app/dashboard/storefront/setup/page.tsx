@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createServerClient, getStorefrontByChefId, type SupabaseClient } from '@ridendine/db';
+import { chefProfilesTable, createServerClient, getStorefrontByChefId, type SupabaseClient } from '@ridendine/db';
 import { EmptyState } from '@ridendine/ui';
 import { StorefrontSetupForm } from '@/components/storefront/storefront-setup-form';
 
@@ -17,8 +17,7 @@ async function getSetupContext() {
 
     if (!user) return { isAuthenticated: false, hasChefProfile: false, chefStatus: null, storefront: null };
 
-    const { data: chefProfile, error } = await supabase
-      .from('chef_profiles')
+    const { data: chefProfile, error } = await chefProfilesTable(supabase)
       .select('id, status')
       .eq('user_id', user.id)
       .single();

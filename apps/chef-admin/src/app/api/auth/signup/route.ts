@@ -1,18 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import {
-  createServerClient,
-  createAdminClient,
-  createChefProfile,
-  getChefByUserId,
-  type SupabaseClient,
-} from '@ridendine/db';
+import { createServerClient, createAdminClient, createChefProfile, getChefByUserId, type SupabaseClient } from '@ridendine/db';
 import { signupSchema } from '@ridendine/validation';
-import {
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-} from '@ridendine/utils';
+import { evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse } from '@ridendine/utils';
 
 function getErrorResponse(error: unknown) {
   if (error instanceof Error) {

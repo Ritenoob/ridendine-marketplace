@@ -113,7 +113,7 @@ const OPS_ADMIN_ROUTES: RouteCheck[] = [
   { path: '/dashboard/orders', requiresAuth: true },
   { path: '/dashboard/chefs', requiresAuth: true },
   { path: '/dashboard/drivers', requiresAuth: true },
-  { path: '/dashboard/payouts', requiresAuth: true },
+  { path: '/dashboard/finance/payouts', requiresAuth: true },
   { path: '/dashboard/finance', requiresAuth: true },
 ];
 

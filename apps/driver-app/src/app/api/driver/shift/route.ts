@@ -1,4 +1,19 @@
-import { createAdminClient, getDeliveryHistory, type SupabaseClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  createDriverShift,
+  endDriverShift,
+  getDeliveryHistory,
+  getDriverShiftById,
+  getDriverShiftPresence,
+  listDriverShiftActiveDeliveries,
+  upsertDriverShiftPresence,
+  type DriverShiftActiveDeliveryRow,
+  type DriverShiftPresencePatch,
+  type DriverShiftPresenceRow,
+  type DriverShiftQueryResult,
+  type DriverShiftRow,
+  type SupabaseClient,
+} from '@ridendine/db';
 import type {
   DriverPresenceStatus,
   DriverShiftActiveDeliverySummary,
@@ -8,58 +23,18 @@ import { getDriverActorContext, errorResponse, successResponse } from '@/lib/eng
 
 export const dynamic = 'force-dynamic';
 
-const ACTIVE_DELIVERY_STATUSES = [
-  'assigned',
-  'accepted',
-  'en_route_to_pickup',
-  'arrived_at_pickup',
-  'picked_up',
-  'en_route_to_dropoff',
-  'arrived_at_dropoff',
-  'en_route_to_customer',
-  'arrived_at_customer',
-] as const;
-
-type QueryResult<T> = {
-  data: T | null;
-  error: { message?: string; code?: string } | null;
-};
-
-type DriverPresenceRow = {
-  status?: string | null;
-  current_shift_id?: string | null;
-  last_location_at?: string | null;
-  last_location_update?: string | null;
-};
-
-type DriverShiftRow = {
-  id?: string | null;
-  started_at?: string | null;
-  ended_at?: string | null;
-  total_deliveries?: number | string | null;
-  total_earnings?: number | string | null;
-  total_distance_km?: number | string | null;
-};
-
-type ActiveDeliveryRow = {
-  id?: string | null;
-  status?: string | null;
-  updated_at?: string | null;
-  estimated_dropoff_at?: string | null;
-};
-
 type DeliveryHistoryRow = {
   actual_dropoff_at?: string | null;
   driver_payout?: number | string | null;
 };
 
 type ShiftSummaryOverrides = {
-  presence?: DriverPresenceRow | null;
+  presence?: DriverShiftPresenceRow | null;
   shift?: DriverShiftRow | null;
   currentShiftId?: string | null;
 };
 
-function queryError(...results: Array<QueryResult<unknown>>): string | null {
+function queryError(...results: Array<DriverShiftQueryResult<unknown>>): string | null {
   const failed = results.find((result) => result.error && result.error.code !== 'PGRST116');
   return failed?.error?.message ?? null;
 }
@@ -88,7 +63,7 @@ function summarizeTodayDeliveries(deliveries: readonly DeliveryHistoryRow[], now
   };
 }
 
-function mapActiveDelivery(row: ActiveDeliveryRow): DriverShiftActiveDeliverySummary {
+function mapActiveDelivery(row: DriverShiftActiveDeliveryRow): DriverShiftActiveDeliverySummary {
   return {
     id: row.id ?? '',
     status: row.status ?? 'unknown',
@@ -107,22 +82,13 @@ async function buildDriverShiftSummary(
 
   const [presenceResult, activeDeliveriesResult, deliveryHistory] = await Promise.all([
     hasPresenceOverride
-      ? Promise.resolve({ data: overrides.presence ?? null, error: null } satisfies QueryResult<DriverPresenceRow>)
-      : adminClient
-          .from('driver_presence')
-          .select('status,current_shift_id,last_location_at,last_location_update')
-          .eq('driver_id', driverId)
-          .maybeSingle(),
-    adminClient
-      .from('deliveries')
-      .select('id,status,updated_at,estimated_dropoff_at')
-      .eq('driver_id', driverId)
-      .in('status', ACTIVE_DELIVERY_STATUSES)
-      .order('updated_at', { ascending: false }),
+      ? Promise.resolve({ data: overrides.presence ?? null, error: null } satisfies DriverShiftQueryResult<DriverShiftPresenceRow>)
+      : getDriverShiftPresence(adminClient as unknown as SupabaseClient, driverId),
+    listDriverShiftActiveDeliveries(adminClient as unknown as SupabaseClient, driverId),
     getDeliveryHistory(adminClient as unknown as SupabaseClient, driverId, { limit: 1000 }),
   ]) as [
-    QueryResult<DriverPresenceRow>,
-    QueryResult<ActiveDeliveryRow[]>,
+    DriverShiftQueryResult<DriverShiftPresenceRow>,
+    DriverShiftQueryResult<DriverShiftActiveDeliveryRow[]>,
     DeliveryHistoryRow[],
   ];
 
@@ -133,15 +99,10 @@ async function buildDriverShiftSummary(
       : presence?.current_shift_id ?? null;
   const lookupShiftId = presence?.current_shift_id ?? summaryShiftId;
   const shiftResult = hasShiftOverride
-    ? ({ data: overrides.shift ?? null, error: null } satisfies QueryResult<DriverShiftRow>)
+    ? ({ data: overrides.shift ?? null, error: null } satisfies DriverShiftQueryResult<DriverShiftRow>)
     : lookupShiftId
-      ? (await adminClient
-          .from('driver_shifts')
-          .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
-          .eq('id', lookupShiftId)
-          .eq('driver_id', driverId)
-          .maybeSingle()) as QueryResult<DriverShiftRow>
-      : ({ data: null, error: null } satisfies QueryResult<DriverShiftRow>);
+      ? await getDriverShiftById(adminClient as unknown as SupabaseClient, driverId, lookupShiftId)
+      : ({ data: null, error: null } satisfies DriverShiftQueryResult<DriverShiftRow>);
 
   const fetchError = queryError(presenceResult, activeDeliveriesResult, shiftResult);
   if (fetchError) {
@@ -182,24 +143,13 @@ function buildPresencePatch(
   status: DriverPresenceStatus,
   currentShiftId: string | null,
   timestamp: string
-) {
+): DriverShiftPresencePatch {
   return {
     driver_id: driverId,
     status,
     current_shift_id: currentShiftId,
     updated_at: timestamp,
   };
-}
-
-async function upsertPresence(
-  adminClient: any,
-  payload: ReturnType<typeof buildPresencePatch>
-): Promise<QueryResult<DriverPresenceRow>> {
-  return adminClient
-    .from('driver_presence')
-    .upsert(payload, { onConflict: 'driver_id' })
-    .select('status,current_shift_id,last_location_at,last_location_update')
-    .single();
 }
 
 export async function GET() {
@@ -234,11 +184,10 @@ export async function POST() {
     }
 
     const adminClient = createAdminClient();
-    const presenceResult = (await adminClient
-      .from('driver_presence')
-      .select('status,current_shift_id,last_location_at,last_location_update')
-      .eq('driver_id', driverContext.driverId)
-      .maybeSingle()) as QueryResult<DriverPresenceRow>;
+    const presenceResult = await getDriverShiftPresence(
+      adminClient as unknown as SupabaseClient,
+      driverContext.driverId
+    );
 
     if (presenceResult.error && presenceResult.error.code !== 'PGRST116') {
       return errorResponse(
@@ -250,12 +199,11 @@ export async function POST() {
 
     const existingShiftId = presenceResult.data?.current_shift_id ?? null;
     if (existingShiftId) {
-      const existingShiftResult = (await adminClient
-        .from('driver_shifts')
-        .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
-        .eq('id', existingShiftId)
-        .eq('driver_id', driverContext.driverId)
-        .maybeSingle()) as QueryResult<DriverShiftRow>;
+      const existingShiftResult = await getDriverShiftById(
+        adminClient as unknown as SupabaseClient,
+        driverContext.driverId,
+        existingShiftId
+      );
 
       if (existingShiftResult.error && existingShiftResult.error.code !== 'PGRST116') {
         return errorResponse(
@@ -284,15 +232,11 @@ export async function POST() {
     }
 
     const timestamp = new Date().toISOString();
-    const shiftResult = (await adminClient
-      .from('driver_shifts')
-      .insert({
-        driver_id: driverContext.driverId,
-        started_at: timestamp,
-        updated_at: timestamp,
-      })
-      .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
-      .single()) as QueryResult<DriverShiftRow>;
+    const shiftResult = await createDriverShift(
+      adminClient as unknown as SupabaseClient,
+      driverContext.driverId,
+      timestamp
+    );
 
     if (shiftResult.error || !shiftResult.data?.id) {
       return errorResponse(
@@ -308,7 +252,10 @@ export async function POST() {
       shiftResult.data.id,
       timestamp
     );
-    const upsertResult = await upsertPresence(adminClient, presencePatch);
+    const upsertResult = await upsertDriverShiftPresence(
+      adminClient as unknown as SupabaseClient,
+      presencePatch
+    );
     if (upsertResult.error) {
       return errorResponse(
         'SHIFT_START_ERROR',
@@ -350,12 +297,10 @@ export async function DELETE() {
     }
 
     const adminClient = createAdminClient();
-    const activeDeliveriesResult = (await adminClient
-      .from('deliveries')
-      .select('id,status,updated_at,estimated_dropoff_at')
-      .eq('driver_id', driverContext.driverId)
-      .in('status', ACTIVE_DELIVERY_STATUSES)
-      .order('updated_at', { ascending: false })) as QueryResult<ActiveDeliveryRow[]>;
+    const activeDeliveriesResult = await listDriverShiftActiveDeliveries(
+      adminClient as unknown as SupabaseClient,
+      driverContext.driverId
+    );
 
     if (activeDeliveriesResult.error) {
       return errorResponse(
@@ -373,11 +318,10 @@ export async function DELETE() {
       );
     }
 
-    const presenceResult = (await adminClient
-      .from('driver_presence')
-      .select('status,current_shift_id,last_location_at,last_location_update')
-      .eq('driver_id', driverContext.driverId)
-      .maybeSingle()) as QueryResult<DriverPresenceRow>;
+    const presenceResult = await getDriverShiftPresence(
+      adminClient as unknown as SupabaseClient,
+      driverContext.driverId
+    );
 
     if (presenceResult.error && presenceResult.error.code !== 'PGRST116') {
       return errorResponse(
@@ -389,13 +333,12 @@ export async function DELETE() {
 
     const currentShiftId = presenceResult.data?.current_shift_id ?? null;
     const currentShiftResult = currentShiftId
-      ? (await adminClient
-          .from('driver_shifts')
-          .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
-          .eq('id', currentShiftId)
-          .eq('driver_id', driverContext.driverId)
-          .maybeSingle()) as QueryResult<DriverShiftRow>
-      : ({ data: null, error: null } satisfies QueryResult<DriverShiftRow>);
+      ? await getDriverShiftById(
+          adminClient as unknown as SupabaseClient,
+          driverContext.driverId,
+          currentShiftId
+        )
+      : ({ data: null, error: null } satisfies DriverShiftQueryResult<DriverShiftRow>);
 
     if (currentShiftResult.error && currentShiftResult.error.code !== 'PGRST116') {
       return errorResponse(
@@ -408,18 +351,13 @@ export async function DELETE() {
     const timestamp = new Date().toISOString();
     const shift = currentShiftResult.data;
     const endedShiftResult = currentShiftId && shift && !shift.ended_at
-      ? (await adminClient
-          .from('driver_shifts')
-          .update({
-            ended_at: timestamp,
-            updated_at: timestamp,
-          })
-          .eq('id', currentShiftId)
-          .eq('driver_id', driverContext.driverId)
-          .is('ended_at', null)
-          .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
-          .single()) as QueryResult<DriverShiftRow>
-      : ({ data: shift, error: null } satisfies QueryResult<DriverShiftRow>);
+      ? await endDriverShift(
+          adminClient as unknown as SupabaseClient,
+          driverContext.driverId,
+          currentShiftId,
+          timestamp
+        )
+      : ({ data: shift, error: null } satisfies DriverShiftQueryResult<DriverShiftRow>);
 
     if (endedShiftResult.error) {
       return errorResponse(
@@ -430,7 +368,10 @@ export async function DELETE() {
     }
 
     const presencePatch = buildPresencePatch(driverContext.driverId, 'offline', null, timestamp);
-    const upsertResult = await upsertPresence(adminClient, presencePatch);
+    const upsertResult = await upsertDriverShiftPresence(
+      adminClient as unknown as SupabaseClient,
+      presencePatch
+    );
     if (upsertResult.error) {
       return errorResponse(
         'SHIFT_END_ERROR',

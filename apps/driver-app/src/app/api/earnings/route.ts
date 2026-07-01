@@ -1,39 +1,12 @@
-import { createAdminClient, getDeliveryHistory, type SupabaseClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getDeliveryHistory,
+  getDriverEarningsFinancialData,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { getDriverActorContext, errorResponse, successResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
-
-type PlatformAccountRow = {
-  balance_cents?: number | null;
-  currency?: string | null;
-};
-
-type InstantPayoutRequestRow = {
-  id?: string;
-  amount_cents?: number | null;
-  fee_cents?: number | null;
-  status?: string | null;
-  requested_at?: string | null;
-};
-
-type DriverPayoutAccountRow = {
-  status?: string | null;
-  payouts_enabled?: boolean | null;
-  charges_enabled?: boolean | null;
-  onboarding_completed_at?: string | null;
-};
-
-type QueryableAdminClient = SupabaseClient & {
-  from: (table: string) => {
-    select: (columns: string) => {
-      eq: (column: string, value: string) => {
-        eq: (column: string, value: string) => unknown;
-        maybeSingle: () => Promise<{ data: unknown; error: unknown }>;
-        order: (column: string, options?: { ascending?: boolean }) => Promise<{ data: unknown; error: unknown }>;
-      };
-    };
-  };
-};
 
 function normalizeCurrency(currency?: string | null): string {
   const normalized = currency?.trim().toUpperCase();
@@ -63,30 +36,18 @@ export async function GET() {
     }
     );
 
-    const queryableAdmin = adminClient as unknown as QueryableAdminClient;
-    const [platformAccountResult, instantPayoutsResult, payoutAccountResult] = await Promise.all([
-      queryableAdmin
-        .from('platform_accounts')
-        .select('balance_cents, currency')
-        .eq('account_type', 'driver_payable')
-        .eq('owner_id', driverContext.driverId)
-        .maybeSingle(),
-      queryableAdmin
-        .from('instant_payout_requests')
-        .select('id, amount_cents, fee_cents, status, requested_at')
-        .eq('driver_id', driverContext.driverId)
-        .eq('status', 'pending')
-        .order('requested_at', { ascending: false }),
-      queryableAdmin
-        .from('driver_payout_accounts')
-        .select('status, payouts_enabled, charges_enabled, onboarding_completed_at')
-        .eq('driver_id', driverContext.driverId)
-        .maybeSingle(),
-    ]);
+    const {
+      platformAccountResult,
+      instantPayoutsResult,
+      payoutAccountResult,
+    } = await getDriverEarningsFinancialData(
+      adminClient as unknown as SupabaseClient,
+      driverContext.driverId
+    );
 
-    const platformAccount = platformAccountResult.data as PlatformAccountRow | null;
-    const pendingInstantPayoutRows = (instantPayoutsResult.data ?? []) as InstantPayoutRequestRow[];
-    const payoutAccount = payoutAccountResult.data as DriverPayoutAccountRow | null;
+    const platformAccount = platformAccountResult.data;
+    const pendingInstantPayoutRows = instantPayoutsResult.data ?? [];
+    const payoutAccount = payoutAccountResult.data;
 
     if (platformAccountResult.error || instantPayoutsResult.error || payoutAccountResult.error) {
       return errorResponse(

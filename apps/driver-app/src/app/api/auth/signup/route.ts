@@ -5,6 +5,7 @@ import {
   createAdminClient,
   getDriverByUserId,
   createDriver,
+  createDriverPresence,
   type SupabaseClient,
 } from '@ridendine/db';
 import {
@@ -13,12 +14,6 @@ import {
   rateLimitPolicyResponse,
 } from '@ridendine/utils';
 import { signupSchema } from '@ridendine/validation';
-
-async function createDriverPresence(adminClient: SupabaseClient, driverId: string) {
-  await (adminClient as any)
-    .from('driver_presence')
-    .insert({ driver_id: driverId, status: 'offline' });
-}
 
 async function createAuthUser({
   supabase,

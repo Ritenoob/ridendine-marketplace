@@ -1,12 +1,7 @@
 import type { SupabaseClient } from '@ridendine/db';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import {
-  createAdminClient,
-  createServerClient,
-  getCustomerByUserId,
-  getSupportTicketForCustomer,
-} from '@ridendine/db';
+import { createAdminClient, createServerClient, getCustomerByUserId, getSupportTicketForCustomer } from '@ridendine/db';
 
 export const dynamic = 'force-dynamic';
 

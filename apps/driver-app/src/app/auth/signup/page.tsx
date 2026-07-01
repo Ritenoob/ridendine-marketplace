@@ -118,7 +118,7 @@ export default function DriverSignupPage() {
           <h2 className="text-xl font-semibold text-text text-center mb-6">Become a Driver</h2>
 
           {error && (
-            <div className="mb-4 rounded-lg border border-danger/30 bg-dangerSoft p-3 text-sm text-danger">
+            <div className="mb-4 border border-danger/30 bg-dangerSoft p-3 text-sm text-danger">
               {error}
             </div>
           )}
@@ -233,7 +233,7 @@ export default function DriverSignupPage() {
               </label>
             </div>
 
-            <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warningSoft p-3">
+            <div className="flex items-start gap-2 border border-warning/30 bg-warningSoft p-3">
               <input
                 type="checkbox"
                 id="driverDuties"

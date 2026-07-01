@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { Badge, Card } from '@ridendine/ui';
-import { createServerClient } from '@ridendine/db';
+import { chefProfilesTable, chefStorefrontsTable, ordersTable, createServerClient } from '@ridendine/db';
 import { formatCurrency } from '@ridendine/utils';
 
 export const dynamic = 'force-dynamic';
@@ -82,24 +82,21 @@ async function getChefOrder(orderId: string): Promise<OrderDetail | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: chefProfile } = await supabase
-    .from('chef_profiles')
+  const { data: chefProfile } = await chefProfilesTable(supabase)
     .select('id')
     .eq('user_id', user.id)
     .single();
 
   if (!chefProfile) return null;
 
-  const { data: storefront } = await supabase
-    .from('chef_storefronts')
+  const { data: storefront } = await chefStorefrontsTable(supabase)
     .select('id')
     .eq('chef_id', chefProfile.id)
     .single();
 
   if (!storefront) return null;
 
-  const { data, error } = await supabase
-    .from('orders')
+  const { data, error } = await ordersTable(supabase)
     .select(`
       *,
       customer:customers (

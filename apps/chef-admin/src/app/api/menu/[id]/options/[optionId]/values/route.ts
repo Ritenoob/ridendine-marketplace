@@ -1,11 +1,8 @@
+import { menuItemOptionValuesTable } from '@ridendine/db';
 import type { NextRequest } from 'next/server';
 import { createMenuItemOptionValueSchema } from '@ridendine/validation';
 import { getChefActorContext, errorResponse, successResponse } from '@/lib/engine';
-import {
-  getChefAdminClient,
-  verifyMenuItemOwnedByStorefront,
-  verifyOptionOwnedByMenuItem,
-} from '@/lib/menu-option-guards';
+import { getChefAdminClient, verifyMenuItemOwnedByStorefront, verifyOptionOwnedByMenuItem } from '@/lib/menu-option-guards';
 
 export async function POST(
   request: NextRequest,
@@ -26,8 +23,7 @@ export async function POST(
   const ownsOption = await verifyOptionOwnedByMenuItem(adminClient, params.optionId, params.id);
   if (!ownsOption) return errorResponse('NOT_FOUND', 'Menu option not found', 404);
 
-  const { data, error } = await (adminClient as any)
-    .from('menu_item_option_values')
+  const { data, error } = await menuItemOptionValuesTable((adminClient as any))
     .insert({
       option_id: params.optionId,
       name: validation.data.name,

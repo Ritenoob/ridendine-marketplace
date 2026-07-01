@@ -4,7 +4,12 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getActiveDeliveriesForDriver,
+  getDriverPresence,
+  upsertDriverPresence,
+} from '@ridendine/db';
 import { presencePatchSchema } from '@ridendine/validation';
 import {
   getEngine,
@@ -28,14 +33,14 @@ export async function GET() {
 
     const adminClient = createAdminClient();
 
-    const { data: presence, error } = await adminClient
-      .from('driver_presence')
-      .select('*')
-      .eq('driver_id', driverContext.driverId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      return errorResponse('FETCH_ERROR', error.message);
+    let presence;
+    try {
+      presence = await getDriverPresence(adminClient, driverContext.driverId);
+    } catch (error) {
+      return errorResponse(
+        'FETCH_ERROR',
+        error instanceof Error ? error.message : 'Could not load driver presence'
+      );
     }
 
     return successResponse({
@@ -84,24 +89,14 @@ export async function PATCH(request: NextRequest) {
     const adminClient = createAdminClient();
     const engine = getEngine();
 
-    // Upsert presence record
-    const { data: presence, error } = await adminClient
-      .from('driver_presence')
-      .upsert(
-        {
-          driver_id: driverContext.driverId,
-          status,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'driver_id',
-        }
-      )
-      .select()
-      .single();
-
-    if (error) {
-      return errorResponse('UPDATE_ERROR', error.message);
+    let presence;
+    try {
+      presence = await upsertDriverPresence(adminClient, driverContext.driverId, { status });
+    } catch (error) {
+      return errorResponse(
+        'UPDATE_ERROR',
+        error instanceof Error ? error.message : 'Could not update driver presence'
+      );
     }
 
     // Log status change via audit
@@ -125,12 +120,10 @@ export async function PATCH(request: NextRequest) {
 
     // If going offline with active delivery, emit warning
     if (status === 'offline') {
-      const { data: activeDelivery } = await adminClient
-        .from('deliveries')
-        .select('id, status')
-        .eq('driver_id', driverContext.driverId)
-        .in('status', ['assigned', 'en_route_to_pickup', 'arrived_at_pickup', 'picked_up', 'en_route_to_dropoff', 'arrived_at_dropoff'])
-        .maybeSingle();
+      const activeDelivery = (await getActiveDeliveriesForDriver(
+        adminClient,
+        driverContext.driverId
+      ))[0];
 
       if (activeDelivery) {
         // Create exception for ops to handle

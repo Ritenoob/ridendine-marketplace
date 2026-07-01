@@ -18,6 +18,8 @@
 
 import { expect, test } from '@playwright/test';
 
+import { hasUsableStripeTestCredentials } from './stripe-credentials';
+
 const STRIPE_CARD = '4242 4242 4242 4242';
 const SEED_STOREFRONT_SLUG = 'every-bite-yum';
 const SEED_ITEM_1 = 'Classic Smash Burger';
@@ -120,7 +122,7 @@ test.describe('customer lifecycle @lifecycle', () => {
   });
 
   test('checkout with Stripe test card creates a confirmed order', async ({ page }) => {
-    if (!process.env.STRIPE_SECRET_KEY) {
+    if (!hasUsableStripeTestCredentials()) {
       test.skip();
     }
     await signInCustomer(page);
@@ -148,7 +150,7 @@ test.describe('customer lifecycle @lifecycle', () => {
   });
 
   test('account orders page shows a placed order in pending/placed stage', async ({ page }) => {
-    if (!process.env.STRIPE_SECRET_KEY) {
+    if (!hasUsableStripeTestCredentials()) {
       test.skip();
     }
     await signInCustomer(page);
@@ -160,7 +162,7 @@ test.describe('customer lifecycle @lifecycle', () => {
   });
 
   test('order tracking page shows delivered after state advances via API', async ({ page }) => {
-    if (!process.env.STRIPE_SECRET_KEY) {
+    if (!hasUsableStripeTestCredentials()) {
       test.skip();
     }
     // This test relies on the checkout test having placed an order.

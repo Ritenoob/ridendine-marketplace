@@ -1,8 +1,25 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
 import type { Tables } from '../generated/database.types';
 
 export type Order = Tables<'orders'>;
 export type OrderItem = Tables<'order_items'>;
+
+export function ordersTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('orders');
+}
+
+export function orderItemsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('order_items');
+}
+
+export function orderStatusHistoryTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('order_status_history');
+}
+
+export function checkoutIdempotencyKeysTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('checkout_idempotency_keys');
+}
+
 export interface OpsOrderListItem extends Order {
   customers: {
     first_name: string;

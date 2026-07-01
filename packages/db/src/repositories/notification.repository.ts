@@ -1,4 +1,12 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
+
+export function notificationsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('notifications');
+}
+
+export function pushSubscriptionsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('push_subscriptions');
+}
 
 // ==========================================
 // NOTIFICATION REPOSITORY

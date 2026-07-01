@@ -39,6 +39,8 @@
  */
 
 import { expect, test } from '@playwright/test';
+
+import { hasUsableStripeTestCredentials } from './stripe-credentials';
 import type { Page } from '@playwright/test';
 
 // ── Seed fixture IDs (supabase/seeds/seed.sql) ────────────────────────────────
@@ -352,7 +354,7 @@ test.describe('ops negative paths @lifecycle @negative', () => {
   });
 
   test('ops can approve a pending refund case (Stripe-gated)', async ({ page }) => {
-    if (!process.env.STRIPE_SECRET_KEY) {
+    if (!hasUsableStripeTestCredentials()) {
       // Approving triggers a real Stripe refund — keep this gate.
       test.skip();
     }

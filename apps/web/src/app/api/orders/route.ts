@@ -3,12 +3,8 @@
 // Powered by Central Engine
 // ==========================================
 
-import { createAdminClient } from '@ridendine/db';
-import {
-  getCustomerActorContext,
-  errorResponse,
-  successResponse,
-} from '@/lib/engine';
+import { ordersTable, createAdminClient } from '@ridendine/db';
+import { getCustomerActorContext, errorResponse, successResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,8 +22,7 @@ export async function GET() {
     const adminClient = createAdminClient();
 
     // Get orders for this customer with related data
-    const { data: orders, error } = await adminClient
-      .from('orders')
+    const { data: orders, error } = await ordersTable(adminClient)
       .select(`
         id,
         order_number,

@@ -1,7 +1,11 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
 import type { Tables } from '../generated/database.types';
 
 export type CustomerAddress = Tables<'customer_addresses'>;
+
+export function customerAddressesTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('customer_addresses');
+}
 
 export async function getAddressesByCustomer(
   client: SupabaseClient,

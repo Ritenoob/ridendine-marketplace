@@ -1,14 +1,7 @@
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import { reviewsTable, ordersTable, orderItemsTable, createAdminClient } from '@ridendine/db';
 import { getChefActorContext, errorResponse, successResponse } from '@/lib/engine';
-import {
-  getPeriodDateRange,
-  calculateComparison,
-  findPeakHour,
-  calculateRepeatCustomerRate,
-  formatHourRange,
-  type Period,
-} from './utils';
+import { getPeriodDateRange, calculateComparison, findPeakHour, calculateRepeatCustomerRate, formatHourRange, type Period } from './utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,8 +31,7 @@ async function fetchOrders(
   start: Date,
   end: Date
 ): Promise<OrderRow[]> {
-  const { data } = await adminClient
-    .from('orders')
+  const { data } = await ordersTable(adminClient)
     .select('id, total, status, created_at, customer_id')
     .eq('storefront_id', storefrontId)
     .gte('created_at', start.toISOString())
@@ -52,8 +44,7 @@ async function fetchOrderItems(
   orderIds: string[]
 ): Promise<OrderItemRow[]> {
   if (orderIds.length === 0) return [];
-  const { data } = await adminClient
-    .from('order_items')
+  const { data } = await orderItemsTable(adminClient)
     .select('quantity, unit_price, menu_items (name)')
     .in('order_id', orderIds);
   return (data ?? []) as OrderItemRow[];
@@ -63,8 +54,7 @@ async function fetchReviews(
   adminClient: ReturnType<typeof createAdminClient>,
   storefrontId: string
 ): Promise<ReviewRow[]> {
-  const { data } = await adminClient
-    .from('reviews')
+  const { data } = await reviewsTable(adminClient)
     .select('rating')
     .eq('storefront_id', storefrontId);
   return (data ?? []) as ReviewRow[];

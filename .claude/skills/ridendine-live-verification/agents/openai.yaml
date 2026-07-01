@@ -1,0 +1,4 @@
+interface:
+  display_name: "RideNDine Live Verification"
+  short_description: "Run browser E2E feedback loops for RideNDine apps."
+  default_prompt: "Verify the changed RideNDine flow live with browser evidence and produce feedback artifacts."

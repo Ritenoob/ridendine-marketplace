@@ -1,4 +1,4 @@
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
+import { createAdminClient, probeDriversRead, type SupabaseClient } from '@ridendine/db';
 import {
   apiSuccess,
   getRateLimitProviderStatus,
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const adminClient = createAdminClient() as unknown as SupabaseClient;
   const rateLimitStatus = getRateLimitProviderStatus();
-  const dbProbe = await adminClient.from('drivers').select('id').limit(1);
+  const dbProbe = await probeDriversRead(adminClient);
   const envReady = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY

@@ -4,19 +4,9 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
-import {
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-} from '@ridendine/utils';
-import {
-  getEngine,
-  getChefActorContext,
-  verifyChefOwnsOrder,
-  errorResponse,
-  successResponse,
-} from '@/lib/engine';
+import { ordersTable, createAdminClient } from '@ridendine/db';
+import { evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse } from '@ridendine/utils';
+import { getEngine, getChefActorContext, verifyChefOwnsOrder, errorResponse, successResponse } from '@/lib/engine';
 import type { OrderRejectReason } from '@ridendine/types';
 import { syncKitchenState } from '@/lib/kitchen-sync';
 
@@ -42,8 +32,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     const adminClient = createAdminClient();
 
     // Get order with related data
-    const { data: order, error } = await adminClient
-      .from('orders')
+    const { data: order, error } = await ordersTable(adminClient)
       .select(`
         *,
         customer:customers (

@@ -1,5 +1,9 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
 import type { PlatformRuleSet } from '@ridendine/types';
+
+export function serviceAreasTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('service_areas');
+}
 
 type PlatformSettingsRow = {
   id: string;

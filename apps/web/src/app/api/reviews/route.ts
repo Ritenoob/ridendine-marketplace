@@ -5,7 +5,7 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient, createServerClient } from '@ridendine/db';
+import { reviewsTable, ordersTable, customersTable, chefStorefrontsTable, createAdminClient, createServerClient } from '@ridendine/db';
 import { cookies } from 'next/headers';
 import { checkRateLimit, getClientIp, isUuid, rateLimitResponse } from '@ridendine/utils';
 import { createReviewSchema } from '@ridendine/validation';
@@ -62,8 +62,7 @@ export async function POST(request: NextRequest) {
     const existing = await getExistingReview(adminClient, orderId);
     if (existing) return Response.json({ error: 'Already reviewed' }, { status: 409 });
 
-    const { data: review, error } = await adminClient
-      .from('reviews')
+    const { data: review, error } = await reviewsTable(adminClient)
       .insert({
         order_id: orderId,
         customer_id: customer.id,
@@ -99,8 +98,7 @@ export async function GET(request: NextRequest) {
 
   const adminClient = createAdminClient() as any;
 
-  const { data: reviews, error } = await adminClient
-    .from('reviews')
+  const { data: reviews, error } = await reviewsTable(adminClient)
     .select(`
       id, rating, comment, created_at,
       customer:customers(first_name, last_name)
@@ -121,8 +119,7 @@ async function getCustomerByUserId(
   adminClient: any,
   userId: string
 ) {
-  const { data } = await adminClient
-    .from('customers')
+  const { data } = await customersTable(adminClient)
     .select('id')
     .eq('user_id', userId)
     .single();
@@ -133,8 +130,7 @@ async function getOrderById(
   adminClient: any,
   orderId: string
 ) {
-  const { data } = await adminClient
-    .from('orders')
+  const { data } = await ordersTable(adminClient)
     .select('id, customer_id, storefront_id, status')
     .eq('id', orderId)
     .single();
@@ -145,8 +141,7 @@ async function getExistingReview(
   adminClient: any,
   orderId: string
 ) {
-  const { data } = await adminClient
-    .from('reviews')
+  const { data } = await reviewsTable(adminClient)
     .select('id')
     .eq('order_id', orderId)
     .single();
@@ -157,8 +152,7 @@ async function updateStorefrontRating(
   adminClient: any,
   storefrontId: string
 ) {
-  const { data: allReviews } = await adminClient
-    .from('reviews')
+  const { data: allReviews } = await reviewsTable(adminClient)
     .select('rating')
     .eq('storefront_id', storefrontId)
     .eq('is_visible', true);
@@ -166,8 +160,7 @@ async function updateStorefrontRating(
   if (!allReviews || allReviews.length === 0) return;
 
   const avg = allReviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / allReviews.length;
-  await adminClient
-    .from('chef_storefronts')
+  await chefStorefrontsTable(adminClient)
     .update({
       average_rating: Math.round(avg * 10) / 10,
       total_reviews: allReviews.length,

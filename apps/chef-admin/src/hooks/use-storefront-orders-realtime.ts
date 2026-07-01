@@ -1,11 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
-import {
-  chefStorefrontOrdersChannel,
-  createBrowserClient,
-  parseOrdersRealtimeRow,
-} from '@ridendine/db';
+import { chefStorefrontOrdersChannel, createBrowserClient, parseOrdersRealtimeRow } from '@ridendine/db';
 import type { LiveIndicatorStatus } from '@ridendine/ui';
 
 export interface RealtimeOrderCallbacks<T extends { id: string }> {

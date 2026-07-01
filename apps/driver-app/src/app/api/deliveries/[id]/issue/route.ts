@@ -1,5 +1,10 @@
 import type { NextRequest } from 'next/server';
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  createDriverDeliveryIssue,
+  getDriverDeliveryOrderRef,
+  type SupabaseClient,
+} from '@ridendine/db';
 import { driverDeliveryIssueSchema } from '@ridendine/validation';
 import {
   getDriverActorContext,
@@ -44,36 +49,26 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   }
 
   const adminClient = createAdminClient() as unknown as SupabaseClient;
-  const { data: delivery } = await adminClient
-    .from('deliveries')
-    .select('id, order_id')
-    .eq('id', deliveryId)
-    .maybeSingle();
+  const { data: delivery } = await getDriverDeliveryOrderRef(adminClient, deliveryId);
   if (!delivery) {
     return errorResponse('NOT_FOUND', 'Delivery not found', 404);
   }
 
   const label = ISSUE_LABELS[validation.data.issueType];
-  const { data: issue, error } = await (adminClient as any)
-    .from('order_exceptions')
-    .insert({
-      exception_type: `delivery_${validation.data.issueType}`,
-      severity: validation.data.issueType === 'driver_emergency' ? 'high' : 'medium',
-      status: 'open',
-      order_id: delivery.order_id,
-      driver_id: driverContext.driverId,
-      delivery_id: deliveryId,
-      title: `Driver reported: ${label}`,
-      description: validation.data.notes,
-      recommended_actions: ['Review delivery issue', 'Contact driver or customer if needed'],
-      internal_notes: JSON.stringify({
-        reportedBy: 'driver',
-        lat: validation.data.lat ?? null,
-        lng: validation.data.lng ?? null,
-      }),
-    })
-    .select()
-    .single();
+  const { data: issue, error } = await createDriverDeliveryIssue(adminClient, {
+    exceptionType: `delivery_${validation.data.issueType}`,
+    severity: validation.data.issueType === 'driver_emergency' ? 'high' : 'medium',
+    orderId: delivery.order_id,
+    driverId: driverContext.driverId,
+    deliveryId,
+    title: `Driver reported: ${label}`,
+    description: validation.data.notes,
+    internalNotes: {
+      reportedBy: 'driver',
+      lat: validation.data.lat ?? null,
+      lng: validation.data.lng ?? null,
+    },
+  });
 
   if (error) {
     return errorResponse('INTERNAL_ERROR', 'Failed to report delivery issue', 500);

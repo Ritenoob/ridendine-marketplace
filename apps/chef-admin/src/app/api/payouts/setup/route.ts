@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@ridendine/db';
+import { chefPayoutAccountsTable, chefProfilesTable, createServerClient } from '@ridendine/db';
 import { getStripeClient } from '@ridendine/engine';
 import { getChefActorContext } from '@/lib/engine';
 
@@ -18,8 +18,7 @@ export async function POST() {
     }
 
     // Get chef profile
-    const { data: chefProfile } = await supabase
-      .from('chef_profiles')
+    const { data: chefProfile } = await chefProfilesTable(supabase)
       .select('id, display_name')
       .eq('user_id', user.id)
       .single();
@@ -29,8 +28,7 @@ export async function POST() {
     }
 
     // Check for existing payout account
-    const { data: existingAccount } = await supabase
-      .from('chef_payout_accounts')
+    const { data: existingAccount } = await chefPayoutAccountsTable(supabase)
       .select('stripe_account_id')
       .eq('chef_id', chefProfile.id)
       .single();
@@ -66,8 +64,7 @@ export async function POST() {
       accountId = account.id;
 
       // Save to database
-      await supabase
-        .from('chef_payout_accounts')
+      await chefPayoutAccountsTable(supabase)
         .insert({
           chef_id: chefProfile.id,
           stripe_account_id: accountId,

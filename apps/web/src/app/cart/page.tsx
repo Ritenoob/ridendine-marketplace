@@ -6,14 +6,7 @@ import Link from 'next/link';
 import { Header } from '@/components/layout/header';
 import { Button, Card, EmptyState } from '@ridendine/ui';
 import { useCart } from '@/contexts/cart-context';
-import {
-  CART_FEE_DISCLOSURE,
-  calculateCartItemCount,
-  calculateCartLineTotal,
-  calculateCartSubtotal,
-  checkoutHrefForStorefront,
-  formatCartCurrency,
-} from '@/lib/cart-summary';
+import { CART_FEE_DISCLOSURE, calculateCartItemCount, calculateCartLineTotal, calculateCartSubtotal, checkoutHrefForStorefront, formatCartCurrency } from '@/lib/cart-summary';
 
 export default function CartPage() {
   const searchParams = useSearchParams();

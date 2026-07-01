@@ -7,11 +7,7 @@
 
 import { createAdminClient, type SupabaseClient } from '@ridendine/db';
 import { partnerCheckoutSchema } from '@ridendine/validation';
-import {
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-} from '@ridendine/utils';
+import { evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse } from '@ridendine/utils';
 import { errorResponse, successResponse } from '@/lib/engine';
 import { resolvePartnerContext, partnerHasScope } from '@/lib/partner/auth';
 import { enforcePartnerRateLimit } from '@/lib/partner/rate-limit';

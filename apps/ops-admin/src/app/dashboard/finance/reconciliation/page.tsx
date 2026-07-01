@@ -5,6 +5,7 @@ import { PageHeader, StatusBadge, EmptyState } from '@ridendine/ui';
 import { FinanceSubnav } from '../_components/FinanceSubnav';
 import { FinanceAccessDenied } from '../_components/FinanceAccessDenied';
 import { FINANCE_PAGE_ROLES } from '../_lib/roles';
+import { ReconciliationRunActions } from './reconciliation-run-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,8 @@ export default async function FinanceReconciliationPage() {
           title="Stripe Reconciliation"
           subtitle="Daily job matches stripe_events_processed to ledger. Unmatched rows require review."
         />
+
+        <ReconciliationRunActions />
 
         {unmatched.length > 0 && (
           <div className="flex items-center justify-between rounded-lg border border-warning/40 bg-warningSoft px-4 py-3">

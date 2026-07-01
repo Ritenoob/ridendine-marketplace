@@ -983,7 +983,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
             role="dialog"
             aria-modal="true"
             aria-labelledby="pickup-modal-title"
-            className="w-full max-w-md rounded-2xl bg-white p-6"
+            className="max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6"
           >
             <h2 id="pickup-modal-title" className="text-xl font-bold text-text">Confirm Pickup</h2>
             <p className="mt-1 text-sm text-textMuted">Take a photo of the order to confirm pickup</p>
@@ -1046,7 +1046,7 @@ export default function DeliveryDetail({ delivery, order }: DeliveryDetailProps)
             role="dialog"
             aria-modal="true"
             aria-labelledby="completion-modal-title"
-            className="w-full max-w-md rounded-xl bg-white p-6"
+            className="max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-white p-6"
           >
             <h2 id="completion-modal-title" className="text-xl font-bold text-text">Complete Delivery</h2>
             <p className="mt-1 text-sm text-textMuted">

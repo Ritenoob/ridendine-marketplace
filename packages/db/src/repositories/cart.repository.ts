@@ -1,8 +1,12 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
 import type { Tables } from '../generated/database.types';
 
 export type Cart = Tables<'carts'>;
 export type CartItem = Tables<'cart_items'>;
+
+export function cartItemsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('cart_items');
+}
 
 export type CartItemWithMenuItem = Omit<CartItem, 'selected_options'> & {
   // Stored as JSONB; consumers (e.g. apps/web checkout quote) narrow it to

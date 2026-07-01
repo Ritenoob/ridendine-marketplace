@@ -1,0 +1,23 @@
+{
+  "name": "ridendine-agent-kit",
+  "version": "0.1.0",
+  "description": "RideNDine repo-local agent kit for live verification, Supabase fixture checks, and project operating rules.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Ridendine Agent Kit",
+    "shortDescription": "Run RideNDine live verification and fixture workflows.",
+    "longDescription": "RideNDine Agent Kit packages repo-specific guidance for browser feedback, Supabase fixture readiness, MCP/tool health, and agent operating rules.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "live-browser-verification",
+      "supabase-fixture-readiness",
+      "agent-tool-health"
+    ],
+    "defaultPrompt": "Verify the RideNDine change live, collect browser/API feedback, and report artifact paths."
+  },
+  "mcpServers": "./.mcp.json"
+}

@@ -20,6 +20,15 @@
 
 import { expect, test } from '@playwright/test';
 
+import { hasUsableStripeTestCredentials } from './stripe-credentials';
+
+async function becomesVisible(locator: import('@playwright/test').Locator, timeout = 8_000) {
+  return locator
+    .waitFor({ state: 'visible', timeout })
+    .then(() => true)
+    .catch(() => false);
+}
+
 async function signInOps(page: import('@playwright/test').Page) {
   await page.goto('/auth/login');
   const result = await page.evaluate(async () => {
@@ -60,62 +69,52 @@ test.describe('ops lifecycle @lifecycle', () => {
 
   test('ops can drill into an order and see full details', async ({ page }) => {
     await page.goto('/dashboard/orders');
-    const viewBtn = page.locator('table a', { hasText: /^View$/ }).first();
-    if (!(await viewBtn.isVisible({ timeout: 8_000 }))) {
+    const orderRow = page.locator('tr', { hasText: 'RND-006' }).first();
+    if (!(await becomesVisible(orderRow, 8_000))) {
       test.skip();
     }
+    const viewBtn = orderRow.getByRole('link', { name: /^View$/ });
     await viewBtn.click();
     // Order detail page should render status and items
     await expect(page.getByText(/order|status|item/i).first()).toBeVisible({ timeout: 8_000 });
   });
 
-  test('ops can force-assign a driver to a stuck order', async ({ page }) => {
-    // Navigate to the ready_for_pickup seeded order (RND-006)
-    await page.goto('/dashboard/orders');
-    // Try to find the ready_for_pickup row
-    const stuckRow = page.getByText(/ready_for_pickup|RND-006/i).first();
-    if (!(await stuckRow.isVisible({ timeout: 5_000 }))) {
-      test.skip();
-    }
-    await stuckRow.click();
-    // Force-assign / dispatch action
-    const assignBtn = page.getByRole('button', { name: /assign driver|force.?assign|dispatch/i }).first();
-    if (!(await assignBtn.isVisible({ timeout: 5_000 }))) {
+  test('ops can reassign a driver on a stuck delivery', async ({ page }) => {
+    await page.goto('/dashboard/deliveries/de100000-0000-4000-8000-000000000006');
+    await expect(page.getByText(/Delivery Intervention Console/i)).toBeVisible({ timeout: 10_000 });
+
+    const assignBtn = page.getByRole('button', { name: /manual reassign|manual assign/i }).first();
+    if (!(await becomesVisible(assignBtn, 8_000))) {
       test.skip();
     }
     await assignBtn.click();
-    // Driver selector
-    const driverOption = page.getByRole('option').first().or(
-      page.getByText(/mike chen|sarah kim/i).first()
-    );
-    if (await driverOption.isVisible({ timeout: 3_000 })) {
-      await driverOption.click();
-    }
-    const confirmBtn = page.getByRole('button', { name: /confirm|assign|save/i }).last();
+    await page.locator('select').selectOption({ label: 'Sarah Kim' });
+    await page.getByPlaceholder(/required reason/i).fill('E2E manual dispatch verification');
+    const confirmBtn = page.getByRole('button', { name: /submit|confirm/i }).last();
     await confirmBtn.click();
-    await expect(page.getByText(/assigned|driver assigned|success/i).first()).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText(/Sarah Kim/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('ops can approve a pending chef', async ({ page }) => {
     await page.goto('/dashboard/chefs');
     await expect(page).toHaveURL(/\/dashboard\/chefs/);
     // Pending chefs section
-    const pendingChef = page.getByText(/pending|awaiting approval/i).first();
-    if (!(await pendingChef.isVisible({ timeout: 5_000 }))) {
+    const pendingChef = page.locator('tr', { hasText: 'Pending Chef' }).first();
+    if (!(await becomesVisible(pendingChef, 8_000))) {
       // All seed chefs are approved — skip until a pending_approval chef is seeded
       test.skip();
     }
-    const approveBtn = page.getByRole('button', { name: /approve/i }).first();
+    const approveBtn = pendingChef.locator('button[title="Approve"]').first();
     await approveBtn.click();
-    await expect(page.getByText(/approved|success/i).first()).toBeVisible({ timeout: 5_000 });
+    await expect(pendingChef.getByText(/approved/i).first()).toBeVisible({ timeout: 8_000 });
   });
 
   test('ops can process a refund on a completed order', async ({ page }) => {
-    if (!process.env.STRIPE_SECRET_KEY) {
+    if (!hasUsableStripeTestCredentials()) {
       test.skip();
     }
-    await page.goto('/dashboard/refunds');
-    await expect(page).toHaveURL(/\/dashboard\/refunds/);
+    await page.goto('/dashboard/finance/refunds');
+    await expect(page).toHaveURL(/\/dashboard\/finance\/refunds/);
     const refundBtn = page.getByRole('button', { name: /issue refund|refund|process/i }).first();
     if (!(await refundBtn.isVisible({ timeout: 5_000 }))) {
       test.skip();
@@ -125,11 +124,11 @@ test.describe('ops lifecycle @lifecycle', () => {
   });
 
   test('ops can run payout preview', async ({ page }) => {
-    await page.goto('/dashboard/payouts');
-    await expect(page).toHaveURL(/\/dashboard\/payouts/);
+    await page.goto('/dashboard/finance/payouts');
+    await expect(page).toHaveURL(/\/dashboard\/finance\/payouts/);
     // Preview button
     const previewBtn = page.getByRole('button', { name: /preview|run preview|calculate/i }).first();
-    if (!(await previewBtn.isVisible({ timeout: 5_000 }))) {
+    if (!(await becomesVisible(previewBtn, 8_000))) {
       test.skip();
     }
     await previewBtn.click();
@@ -137,13 +136,10 @@ test.describe('ops lifecycle @lifecycle', () => {
   });
 
   test('ops reconciliation runs cleanly with zero discrepancies', async ({ page }) => {
-    await page.goto('/dashboard/finance');
-    if (!(await page.isVisible('text=/reconcil/i'))) {
-      // Also try the reconciliation direct route
-      await page.goto('/dashboard/analytics');
-    }
+    await page.goto('/dashboard/finance/reconciliation');
+    await expect(page).toHaveURL(/\/dashboard\/finance\/reconciliation/);
     const reconBtn = page.getByRole('button', { name: /reconcil|run reconcil/i }).first();
-    if (!(await reconBtn.isVisible({ timeout: 5_000 }))) {
+    if (!(await becomesVisible(reconBtn, 8_000))) {
       test.skip();
     }
     await reconBtn.click();

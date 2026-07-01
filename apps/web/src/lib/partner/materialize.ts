@@ -6,20 +6,9 @@
 // merchant of record; partner customers are guest customers (user_id = null).
 // ==========================================
 
-import {
-  createAddress,
-  createCart,
-  getCartByCustomer,
-  clearCart,
-  createCustomer,
-  type SupabaseClient,
-} from '@ridendine/db';
+import { menuItemsTable, customersTable, cartItemsTable, createAddress, createCart, getCartByCustomer, clearCart, createCustomer, type SupabaseClient } from '@ridendine/db';
 import { geocodeAddress, buildAddressString } from '@ridendine/engine';
-import type {
-  PartnerCustomerInput,
-  PartnerDeliveryAddressInput,
-  PartnerCheckoutItemInput,
-} from '@ridendine/validation';
+import type { PartnerCustomerInput, PartnerDeliveryAddressInput, PartnerCheckoutItemInput } from '@ridendine/validation';
 
 export class MaterializeError extends Error {
   constructor(
@@ -47,8 +36,7 @@ async function findOrCreatePartnerCustomer(
   admin: SupabaseClient,
   customer: PartnerCustomerInput
 ): Promise<string> {
-  const { data: existing } = await (admin as any)
-    .from('customers')
+  const { data: existing } = await customersTable((admin as any))
     .select('id')
     .eq('email', customer.email)
     .is('user_id', null)
@@ -125,8 +113,7 @@ async function replacePartnerCart(
   items: PartnerCheckoutItemInput[]
 ): Promise<string> {
   const menuItemIds = Array.from(new Set(items.map((i) => i.menuItemId)));
-  const { data: menuRows, error: menuError } = await (admin as any)
-    .from('menu_items')
+  const { data: menuRows, error: menuError } = await menuItemsTable((admin as any))
     .select('id, price, storefront_id')
     .in('id', menuItemIds);
 
@@ -177,7 +164,7 @@ async function replacePartnerCart(
     })),
   }));
 
-  const { error: insertError } = await (admin as any).from('cart_items').insert(rows);
+  const { error: insertError } = await cartItemsTable((admin as any)).insert(rows);
   if (insertError) {
     throw new MaterializeError('INTERNAL_ERROR', 'Failed to build cart', 500);
   }

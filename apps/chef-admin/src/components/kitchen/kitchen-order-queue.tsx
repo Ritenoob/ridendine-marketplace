@@ -157,12 +157,12 @@ function thinTicketFromRealtime(order: RealtimeOrder): KitchenTicket {
 
 type ColumnKey = 'new' | 'preparing' | 'ready';
 
-const COLUMNS: { key: ColumnKey; label: string; statuses: string[]; accent: string; headerBg: string; countBg: string }[] = [
+const COLUMNS: { key: ColumnKey; label: string; statuses: string[]; cardTone: string; headerBg: string; countBg: string }[] = [
   {
     key: 'new',
     label: 'New Orders',
     statuses: ['pending'],
-    accent: 'border-l-warning',
+    cardTone: 'border-warning/30 bg-warningSoft',
     headerBg: 'bg-warningSoft',
     countBg: 'bg-warning text-white',
   },
@@ -170,7 +170,7 @@ const COLUMNS: { key: ColumnKey; label: string; statuses: string[]; accent: stri
     key: 'preparing',
     label: 'Preparing',
     statuses: ['accepted', 'preparing'],
-    accent: 'border-l-info',
+    cardTone: 'border-info/30 bg-infoSoft',
     headerBg: 'bg-infoSoft',
     countBg: 'bg-info text-white',
   },
@@ -178,7 +178,7 @@ const COLUMNS: { key: ColumnKey; label: string; statuses: string[]; accent: stri
     key: 'ready',
     label: 'Ready',
     statuses: ['ready_for_pickup'],
-    accent: 'border-l-success',
+    cardTone: 'border-success/30 bg-successSoft',
     headerBg: 'bg-successSoft',
     countBg: 'bg-success text-white',
   },
@@ -190,18 +190,16 @@ const COLUMNS: { key: ColumnKey; label: string; statuses: string[]; accent: stri
 
 interface TicketCardProps {
   ticket: KitchenTicket;
-  accent: string;
+  cardTone: string;
   isInFlight: boolean;
   onAction: (ticket: KitchenTicket, action: string, nextStatus: string) => void;
 }
 
-function TicketCard({ ticket, accent, isInFlight, onAction }: TicketCardProps) {
+function TicketCard({ ticket, cardTone, isInFlight, onAction }: TicketCardProps) {
   const nextTransition = (KITCHEN_NEXT_TRANSITION as Record<string, KitchenTransition | undefined>)[ticket.status];
 
   return (
-    <div
-      className={`rounded-xl bg-white shadow-sm border border-border border-l-4 ${accent} flex flex-col gap-3 p-4`}
-    >
+    <div className={`rounded-xl border ${cardTone} shadow-sm flex flex-col gap-3 p-4`}>
       {/* Order number + countdown */}
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -301,7 +299,7 @@ function KDSColumn({ col, tickets, inFlightIds, onAction }: KDSColumnProps) {
             <TicketCard
               key={ticket.id}
               ticket={ticket}
-              accent={col.accent}
+              cardTone={col.cardTone}
               isInFlight={inFlightIds.current?.has(ticket.id) ?? false}
               onAction={onAction}
             />
@@ -327,6 +325,7 @@ export function KitchenOrderQueue({ tickets, storefrontId }: KitchenOrderQueuePr
   const [actionError, setActionError] = useState<string | null>(null);
   const [realtimeStatus, setRealtimeStatus] = useState<LiveIndicatorStatus>('connecting');
   const inFlightIds = useRef<Set<string>>(new Set());
+  const localStatusById = useRef<Map<string, string>>(new Map());
   const notifiedIds = useRef<Set<string>>(new Set());
   const hydratingIds = useRef<Set<string>>(new Set());
   // id -> status we have locally confirmed via a successful action, so a stale
@@ -431,6 +430,7 @@ export function KitchenOrderQueue({ tickets, storefrontId }: KitchenOrderQueuePr
     async (ticket: KitchenTicket, action: string, nextStatus: string) => {
       if (inFlightIds.current.has(ticket.id)) return;
       inFlightIds.current.add(ticket.id);
+      localStatusById.current.set(ticket.id, nextStatus);
       setQueue((prev) =>
         sortTickets(prev.map((t) => (t.id === ticket.id ? { ...t, status: nextStatus } : t)))
       );
@@ -441,6 +441,7 @@ export function KitchenOrderQueue({ tickets, storefrontId }: KitchenOrderQueuePr
           body: JSON.stringify({ action, status: nextStatus }),
         });
         if (!res.ok) {
+          localStatusById.current.delete(ticket.id);
           setQueue((prev) =>
             sortTickets(prev.map((t) => (t.id === ticket.id ? { ...t, status: ticket.status } : t)))
           );
@@ -457,6 +458,7 @@ export function KitchenOrderQueue({ tickets, storefrontId }: KitchenOrderQueuePr
           setActionError(null);
         }
       } catch {
+        localStatusById.current.delete(ticket.id);
         setQueue((prev) =>
           sortTickets(prev.map((t) => (t.id === ticket.id ? { ...t, status: ticket.status } : t)))
         );

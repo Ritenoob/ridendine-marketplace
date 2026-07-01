@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { createBrowserClient, customerNotificationsChannel } from '@ridendine/db';
+import { notificationsTable, createBrowserClient, customerNotificationsChannel } from '@ridendine/db';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 interface Notification {
@@ -84,8 +84,7 @@ export function NotificationBell() {
       }
 
       const dbg = db as any;
-      const { data } = await dbg
-        .from('notifications')
+      const { data } = await notificationsTable(dbg)
         .select('id, title, body, message, type, user_id, created_at, is_read, data')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -158,7 +157,7 @@ export function NotificationBell() {
 
   const markAsRead = async (notificationId: string) => {
     if (!supabase) return;
-    await (supabase as any).from('notifications').update({ is_read: true }).eq('id', notificationId);
+    await notificationsTable((supabase as any)).update({ is_read: true }).eq('id', notificationId);
 
     setNotifications((prev) =>
       prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
@@ -172,8 +171,7 @@ export function NotificationBell() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    await (supabase as any)
-      .from('notifications')
+    await notificationsTable((supabase as any))
       .update({ is_read: true })
       .eq('user_id', user.id)
       .eq('is_read', false);

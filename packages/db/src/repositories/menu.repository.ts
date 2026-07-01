@@ -1,8 +1,20 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
 import type { Tables } from '../generated/database.types';
 
 export type MenuItem = Tables<'menu_items'>;
 export type MenuCategory = Tables<'menu_categories'>;
+
+export function menuItemsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('menu_items');
+}
+
+export function menuItemOptionsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('menu_item_options');
+}
+
+export function menuItemOptionValuesTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('menu_item_option_values');
+}
 
 export interface MenuCategorySummary extends MenuCategory {
   items: MenuItem[];

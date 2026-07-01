@@ -56,7 +56,7 @@ export function ChefsFilters() {
 
   return (
     <Card>
-      <h3 className="font-semibold text-text">Filters</h3>
+      <h2 className="font-semibold text-text">Filters</h2>
 
       <div className="mt-4">
         <Input
@@ -98,7 +98,7 @@ export function ChefsFilters() {
       </div>
 
       <div className="mt-6">
-        <h4 className="text-sm font-medium text-text">Cuisine Type</h4>
+        <h3 className="text-sm font-medium text-text">Cuisine Type</h3>
         <div className="mt-2 space-y-2">
           {cuisineTypes.map((cuisine) => (
             <label key={cuisine} className="flex cursor-pointer items-center gap-2">
@@ -115,7 +115,7 @@ export function ChefsFilters() {
       </div>
 
       <div className="mt-6">
-        <h4 className="text-sm font-medium text-text">Rating</h4>
+        <h3 className="text-sm font-medium text-text">Rating</h3>
         <div className="mt-2 space-y-2">
           {[4.5, 4.0, 3.5].map((rating) => (
             <label key={rating} className="flex cursor-pointer items-center gap-2">

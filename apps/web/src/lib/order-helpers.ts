@@ -1,11 +1,7 @@
 // Re-export from engine package for centralized business logic
 // All values are in cents to avoid floating point issues
 
-import {
-  BASE_DELIVERY_FEE,
-  SERVICE_FEE_PERCENT,
-  HST_RATE,
-} from '@ridendine/engine';
+import { BASE_DELIVERY_FEE, SERVICE_FEE_PERCENT, HST_RATE } from '@ridendine/engine';
 
 export function generateOrderNumber(): string {
   const timestamp = Date.now().toString(36).toUpperCase();

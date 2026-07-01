@@ -1,4 +1,12 @@
-import type { SupabaseClient } from '../client/types';
+import type { SupabaseClient, TableQueryBuilder } from '../client/types';
+
+export function chefPayoutAccountsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('chef_payout_accounts');
+}
+
+export function chefPayoutsTable(client: SupabaseClient): TableQueryBuilder {
+  return client.from('chef_payouts');
+}
 
 export interface PendingRefundSummary {
   id: string;

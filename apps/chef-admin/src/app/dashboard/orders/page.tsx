@@ -1,5 +1,10 @@
 import { cookies } from 'next/headers';
-import { createServerClient, getStorefrontByChefId } from '@ridendine/db';
+import {
+  chefProfilesTable,
+  createServerClient,
+  getStorefrontByChefId,
+  ordersTable,
+} from '@ridendine/db';
 import { OrdersLedger } from '@/components/orders/orders-ledger';
 
 export const dynamic = 'force-dynamic';
@@ -11,8 +16,7 @@ async function getChefStorefront() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const result: any = await supabase
-    .from('chef_profiles')
+  const result: any = await chefProfilesTable(supabase)
     .select('id')
     .eq('user_id', user.id)
     .single();
@@ -26,8 +30,7 @@ async function getOrdersWithCustomers(storefrontId: string) {
   const cookieStore = await cookies();
   const supabase = createServerClient(cookieStore);
 
-  const { data, error } = await supabase
-    .from('orders')
+  const { data, error } = await ordersTable(supabase)
     .select(`
       *,
       customer:customers (

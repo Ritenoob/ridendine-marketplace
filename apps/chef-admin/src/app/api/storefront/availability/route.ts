@@ -4,12 +4,8 @@
 // ==========================================
 
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
-import {
-  getChefActorContext,
-  errorResponse,
-  successResponse,
-} from '@/lib/engine';
+import { chefAvailabilityTable, createAdminClient } from '@ridendine/db';
+import { getChefActorContext, errorResponse, successResponse } from '@/lib/engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +16,11 @@ interface SlotInput {
   start_time: string;
   end_time: string;
   is_available: boolean;
+}
+
+interface AvailabilityRow {
+  day_of_week: number;
+  [key: string]: unknown;
 }
 
 function normalizeTime(t: string): string | null {
@@ -62,8 +63,7 @@ export async function GET() {
     }
 
     const admin = createAdminClient();
-    const { data, error } = await admin
-      .from('chef_availability')
+    const { data, error } = await chefAvailabilityTable(admin)
       .select('id, day_of_week, start_time, end_time, is_available')
       .eq('storefront_id', chefContext.storefrontId)
       .order('day_of_week', { ascending: true });
@@ -74,7 +74,7 @@ export async function GET() {
     }
 
     return successResponse({
-      slots: (data ?? []).map((row) => ({
+      slots: ((data ?? []) as AvailabilityRow[]).map((row) => ({
         ...row,
         dayLabel: DAY_LABELS[row.day_of_week] ?? String(row.day_of_week),
       })),
@@ -105,8 +105,7 @@ export async function PUT(request: NextRequest) {
     const admin = createAdminClient();
     const storefrontId = chefContext.storefrontId;
 
-    const { error: delErr } = await admin
-      .from('chef_availability')
+    const { error: delErr } = await chefAvailabilityTable(admin)
       .delete()
       .eq('storefront_id', storefrontId);
 
@@ -123,7 +122,7 @@ export async function PUT(request: NextRequest) {
       is_available: Boolean(s.is_available),
     }));
 
-    const { error: insErr } = await admin.from('chef_availability').insert(rows);
+    const { error: insErr } = await chefAvailabilityTable(admin).insert(rows);
     if (insErr) {
       console.error('availability insert', insErr);
       return errorResponse('INTERNAL_ERROR', 'Failed to save availability', 500);

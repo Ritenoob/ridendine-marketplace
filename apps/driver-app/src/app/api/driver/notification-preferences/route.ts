@@ -1,5 +1,10 @@
 import type { NextRequest } from 'next/server';
-import { createAdminClient } from '@ridendine/db';
+import {
+  createAdminClient,
+  getDriverNotificationPreferencesRow,
+  upsertDriverNotificationPreferencesRow,
+  type DriverNotificationPreferencesQueryResult,
+} from '@ridendine/db';
 import {
   driverNotificationEvents,
   driverNotificationPreferencesPatchSchema,
@@ -10,16 +15,7 @@ import { getDriverActorContext, errorResponse, successResponse } from '@/lib/eng
 
 export const dynamic = 'force-dynamic';
 
-type PreferenceRow = {
-  preferences: unknown;
-};
-
-type QueryResult<T> = {
-  data: T | null;
-  error: { message?: string; code?: string } | null;
-};
-
-function isMissingPreferenceTableError(error: QueryResult<unknown>['error']) {
+function isMissingPreferenceTableError(error: DriverNotificationPreferencesQueryResult<unknown>['error']) {
   const code = error?.code ?? '';
   const message = (error?.message ?? '').toLowerCase();
 
@@ -37,24 +33,6 @@ function buildDefaultPreferences(): DriverNotificationPreferencesInput {
   ) as DriverNotificationPreferencesInput;
 }
 
-function getPreferenceTable(client: unknown) {
-  return (client as { from: (table: string) => unknown }).from('driver_notification_preferences') as {
-    select: (columns: string) => {
-      eq: (column: string, value: string) => {
-        maybeSingle: () => Promise<QueryResult<PreferenceRow>>;
-      };
-    };
-    upsert: (
-      values: Record<string, unknown>,
-      options: { onConflict: string }
-    ) => {
-      select: (columns: string) => {
-        single: () => Promise<QueryResult<PreferenceRow>>;
-      };
-    };
-  };
-}
-
 export async function GET() {
   try {
     const driverContext = await getDriverActorContext({ requireApproved: false });
@@ -63,10 +41,7 @@ export async function GET() {
     }
 
     const client = createAdminClient();
-    const result = (await getPreferenceTable(client)
-      .select('preferences')
-      .eq('driver_id', driverContext.driverId)
-      .maybeSingle()) as QueryResult<PreferenceRow>;
+    const result = await getDriverNotificationPreferencesRow(client, driverContext.driverId);
 
     if (result.error && result.error.code !== 'PGRST116') {
       if (isMissingPreferenceTableError(result.error)) {
@@ -115,17 +90,11 @@ export async function PATCH(request: NextRequest) {
       return errorResponse('VALIDATION_ERROR', 'Preferences include unknown or invalid notification keys', 400);
     }
 
-    const result = (await getPreferenceTable(createAdminClient())
-      .upsert(
-        {
-          driver_id: driverContext.driverId,
-          preferences: parsed.data.preferences,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'driver_id' }
-      )
-      .select('preferences')
-      .single()) as QueryResult<PreferenceRow>;
+    const result = await upsertDriverNotificationPreferencesRow(createAdminClient(), {
+      driverId: driverContext.driverId,
+      preferences: parsed.data.preferences,
+      updatedAt: new Date().toISOString(),
+    });
 
     if (result.error) {
       return errorResponse('PREFERENCES_SAVE_ERROR', result.error.message ?? 'Could not save preferences', 500);

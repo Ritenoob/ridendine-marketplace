@@ -5,11 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuthContext } from '@ridendine/auth';
 import { Header } from '@/components/layout/header';
-import {
-  type FavoriteApiRow,
-  type FavoriteStorefrontCard,
-  mapFavoriteStorefront,
-} from '@/lib/storefront-trust';
+import { type FavoriteApiRow, type FavoriteStorefrontCard, mapFavoriteStorefront } from '@/lib/storefront-trust';
 import { Button, Card, EmptyState, Spinner } from '@ridendine/ui';
 
 interface FavoritesResponse {

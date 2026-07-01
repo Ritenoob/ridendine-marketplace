@@ -1,9 +1,5 @@
 import { cookies } from 'next/headers';
-import {
-  createServerClient,
-  getStorefrontByChefId,
-  getStorefrontMenu,
-} from '@ridendine/db';
+import { chefProfilesTable, createServerClient, getStorefrontByChefId, getStorefrontMenu } from '@ridendine/db';
 import { MenuList } from '@/components/menu/menu-list';
 
 export const dynamic = 'force-dynamic';
@@ -15,8 +11,7 @@ async function getChefStorefront() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: chefProfile }: any = await supabase
-    .from('chef_profiles')
+  const { data: chefProfile }: any = await chefProfilesTable(supabase)
     .select('id')
     .eq('user_id', user.id)
     .single();

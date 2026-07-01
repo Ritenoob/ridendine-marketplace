@@ -299,6 +299,141 @@ export interface DriverNameRef {
   last_name: string | null;
 }
 
+export type DriverShiftQueryResult<T> = {
+  data: T | null;
+  error: { message?: string; code?: string } | null;
+};
+
+export type DriverShiftPresenceRow = {
+  status?: string | null;
+  current_shift_id?: string | null;
+  last_location_at?: string | null;
+  last_location_update?: string | null;
+};
+
+export type DriverShiftRow = {
+  id?: string | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  total_deliveries?: number | string | null;
+  total_earnings?: number | string | null;
+  total_distance_km?: number | string | null;
+};
+
+export type DriverShiftActiveDeliveryRow = {
+  id?: string | null;
+  status?: string | null;
+  updated_at?: string | null;
+  estimated_dropoff_at?: string | null;
+};
+
+export type DriverShiftPresencePatch = {
+  driver_id: string;
+  status: string;
+  current_shift_id: string | null;
+  updated_at: string;
+};
+
+export const DRIVER_SHIFT_ACTIVE_DELIVERY_STATUSES = [
+  'assigned',
+  'accepted',
+  'en_route_to_pickup',
+  'arrived_at_pickup',
+  'picked_up',
+  'en_route_to_dropoff',
+  'arrived_at_dropoff',
+  'en_route_to_customer',
+  'arrived_at_customer',
+] as const;
+
+export async function getDriverShiftPresence(
+  client: SupabaseClient,
+  driverId: string
+): Promise<DriverShiftQueryResult<DriverShiftPresenceRow>> {
+  const result = await client
+    .from('driver_presence')
+    .select('status,current_shift_id,last_location_at,last_location_update')
+    .eq('driver_id', driverId)
+    .maybeSingle();
+  return result as unknown as DriverShiftQueryResult<DriverShiftPresenceRow>;
+}
+
+export async function listDriverShiftActiveDeliveries(
+  client: SupabaseClient,
+  driverId: string
+): Promise<DriverShiftQueryResult<DriverShiftActiveDeliveryRow[]>> {
+  const result = await client
+    .from('deliveries')
+    .select('id,status,updated_at,estimated_dropoff_at')
+    .eq('driver_id', driverId)
+    .in('status', DRIVER_SHIFT_ACTIVE_DELIVERY_STATUSES as unknown as string[])
+    .order('updated_at', { ascending: false });
+  return result as unknown as DriverShiftQueryResult<DriverShiftActiveDeliveryRow[]>;
+}
+
+export async function getDriverShiftById(
+  client: SupabaseClient,
+  driverId: string,
+  shiftId: string
+): Promise<DriverShiftQueryResult<DriverShiftRow>> {
+  const result = await client
+    .from('driver_shifts')
+    .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
+    .eq('id', shiftId)
+    .eq('driver_id', driverId)
+    .maybeSingle();
+  return result as unknown as DriverShiftQueryResult<DriverShiftRow>;
+}
+
+export async function createDriverShift(
+  client: SupabaseClient,
+  driverId: string,
+  timestamp: string
+): Promise<DriverShiftQueryResult<DriverShiftRow>> {
+  const result = await client
+    .from('driver_shifts')
+    .insert({
+      driver_id: driverId,
+      started_at: timestamp,
+      updated_at: timestamp,
+    })
+    .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
+    .single();
+  return result as unknown as DriverShiftQueryResult<DriverShiftRow>;
+}
+
+export async function endDriverShift(
+  client: SupabaseClient,
+  driverId: string,
+  shiftId: string,
+  timestamp: string
+): Promise<DriverShiftQueryResult<DriverShiftRow>> {
+  const result = await client
+    .from('driver_shifts')
+    .update({
+      ended_at: timestamp,
+      updated_at: timestamp,
+    })
+    .eq('id', shiftId)
+    .eq('driver_id', driverId)
+    .is('ended_at', null)
+    .select('id,started_at,ended_at,total_deliveries,total_earnings,total_distance_km')
+    .single();
+  return result as unknown as DriverShiftQueryResult<DriverShiftRow>;
+}
+
+export async function upsertDriverShiftPresence(
+  client: SupabaseClient,
+  payload: DriverShiftPresencePatch
+): Promise<DriverShiftQueryResult<DriverShiftPresenceRow>> {
+  const result = await client
+    .from('driver_presence')
+    .upsert(payload, { onConflict: 'driver_id' })
+    .select('status,current_shift_id,last_location_at,last_location_update')
+    .single();
+  return result as unknown as DriverShiftQueryResult<DriverShiftPresenceRow>;
+}
+
 /** `id, first_name, last_name` for the given driver ids. */
 export async function listDriverNameRefs(
   client: SupabaseClient,
@@ -326,6 +461,12 @@ export async function getDriverNameRef(
 
   if (error) throw error;
   return (data as { first_name: string | null; last_name: string | null } | null) ?? null;
+}
+
+/** Minimal read probe for app health checks. */
+export async function probeDriversRead(client: SupabaseClient): Promise<{ error: { message?: string } | null }> {
+  const { error } = await client.from('drivers').select('id').limit(1);
+  return { error };
 }
 
 export interface DriverDocumentRow {

@@ -36,6 +36,7 @@ const APPROVED_GUARDS = [
   'getChefActorContext',
   'getDriverActorContext',
   'validateEngineProcessorHeaders',
+  'resolvePartnerContext',
   'verifyStripeWebhook',
   'getCurrentCustomer',
   'auth.getUser',

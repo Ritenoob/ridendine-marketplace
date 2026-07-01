@@ -67,6 +67,29 @@ const mockFrom = jest.fn((table: string) => {
 });
 
 jest.mock('@ridendine/db', () => ({
+  ordersTable: jest.fn((client) => client.from('orders')),
+  orderItemsTable: jest.fn((client) => client.from('order_items')),
+  orderStatusHistoryTable: jest.fn((client) => client.from('order_status_history')),
+  checkoutIdempotencyKeysTable: jest.fn((client) => client.from('checkout_idempotency_keys')),
+  menuItemsTable: jest.fn((client) => client.from('menu_items')),
+  menuItemOptionsTable: jest.fn((client) => client.from('menu_item_options')),
+  menuItemOptionValuesTable: jest.fn((client) => client.from('menu_item_option_values')),
+  chefStorefrontsTable: jest.fn((client) => client.from('chef_storefronts')),
+  chefKitchensTable: jest.fn((client) => client.from('chef_kitchens')),
+  chefAvailabilityTable: jest.fn((client) => client.from('chef_availability')),
+  chefProfilesTable: jest.fn((client) => client.from('chef_profiles')),
+  customersTable: jest.fn((client) => client.from('customers')),
+  customerAddressesTable: jest.fn((client) => client.from('customer_addresses')),
+  favoritesTable: jest.fn((client) => client.from('favorites')),
+  loyaltyTransactionsTable: jest.fn((client) => client.from('loyalty_transactions')),
+  cartItemsTable: jest.fn((client) => client.from('cart_items')),
+  chefPayoutAccountsTable: jest.fn((client) => client.from('chef_payout_accounts')),
+  chefPayoutsTable: jest.fn((client) => client.from('chef_payouts')),
+  notificationsTable: jest.fn((client) => client.from('notifications')),
+  pushSubscriptionsTable: jest.fn((client) => client.from('push_subscriptions')),
+  reviewsTable: jest.fn((client) => client.from('reviews')),
+  promoCodesTable: jest.fn((client) => client.from('promo_codes')),
+  serviceAreasTable: jest.fn((client) => client.from('service_areas')),
   createAdminClient: jest.fn(() => ({
     from: mockFrom,
   })),
@@ -90,13 +113,15 @@ jest.mock('@/lib/engine', () => ({
 }));
 
 // Must import AFTER all jest.mock() calls
+import { createAdminClient } from '@ridendine/db';
+import { errorResponse, getChefActorContext, successResponse } from '@/lib/engine';
 import { GET } from '../route';
 
 describe('GET /api/kitchen/overview', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Re-wire mockFrom after clearAllMocks resets call counts but keeps impl
-    (require('@ridendine/db').createAdminClient as jest.Mock).mockReturnValue({
+    jest.mocked(createAdminClient).mockReturnValue({
       from: (table: string) => {
         if (table === 'customers') {
           return { select: jest.fn(() => ({ in: jest.fn().mockResolvedValue({ data: [], error: null }) })) };
@@ -133,16 +158,16 @@ describe('GET /api/kitchen/overview', () => {
         };
       },
     });
-    (require('@/lib/engine').getChefActorContext as jest.Mock).mockResolvedValue({
+    jest.mocked(getChefActorContext).mockResolvedValue({
       storefrontId: 'sf-1',
       chefId: 'chef-1',
       userId: 'user-1',
     });
-    (require('@/lib/engine').successResponse as jest.Mock).mockImplementation(
+    jest.mocked(successResponse).mockImplementation(
       (data: unknown) =>
         new Response(JSON.stringify({ success: true, data }), { status: 200 })
     );
-    (require('@/lib/engine').errorResponse as jest.Mock).mockImplementation(
+    jest.mocked(errorResponse).mockImplementation(
       (code: string, msg: string, status = 400) =>
         new Response(JSON.stringify({ error: msg }), { status })
     );
@@ -165,7 +190,7 @@ describe('GET /api/kitchen/overview', () => {
   });
 
   it('returns 401 when chef context is missing', async () => {
-    (require('@/lib/engine').getChefActorContext as jest.Mock).mockResolvedValue(null);
+    jest.mocked(getChefActorContext).mockResolvedValue(null);
     const res = await GET();
     expect(res.status).toBe(401);
   });

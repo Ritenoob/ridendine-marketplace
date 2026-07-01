@@ -31,6 +31,29 @@ const mockSignOut = jest.fn();
 const mockGetChefByUserId = jest.fn();
 
 jest.mock('@ridendine/db', () => ({
+  ordersTable: jest.fn((client) => client.from('orders')),
+  orderItemsTable: jest.fn((client) => client.from('order_items')),
+  orderStatusHistoryTable: jest.fn((client) => client.from('order_status_history')),
+  checkoutIdempotencyKeysTable: jest.fn((client) => client.from('checkout_idempotency_keys')),
+  menuItemsTable: jest.fn((client) => client.from('menu_items')),
+  menuItemOptionsTable: jest.fn((client) => client.from('menu_item_options')),
+  menuItemOptionValuesTable: jest.fn((client) => client.from('menu_item_option_values')),
+  chefStorefrontsTable: jest.fn((client) => client.from('chef_storefronts')),
+  chefKitchensTable: jest.fn((client) => client.from('chef_kitchens')),
+  chefAvailabilityTable: jest.fn((client) => client.from('chef_availability')),
+  chefProfilesTable: jest.fn((client) => client.from('chef_profiles')),
+  customersTable: jest.fn((client) => client.from('customers')),
+  customerAddressesTable: jest.fn((client) => client.from('customer_addresses')),
+  favoritesTable: jest.fn((client) => client.from('favorites')),
+  loyaltyTransactionsTable: jest.fn((client) => client.from('loyalty_transactions')),
+  cartItemsTable: jest.fn((client) => client.from('cart_items')),
+  chefPayoutAccountsTable: jest.fn((client) => client.from('chef_payout_accounts')),
+  chefPayoutsTable: jest.fn((client) => client.from('chef_payouts')),
+  notificationsTable: jest.fn((client) => client.from('notifications')),
+  pushSubscriptionsTable: jest.fn((client) => client.from('push_subscriptions')),
+  reviewsTable: jest.fn((client) => client.from('reviews')),
+  promoCodesTable: jest.fn((client) => client.from('promo_codes')),
+  serviceAreasTable: jest.fn((client) => client.from('service_areas')),
   createServerClient: jest.fn(() => ({
     auth: {
       signInWithPassword: mockSignInWithPassword,

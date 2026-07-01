@@ -7,11 +7,7 @@
 // ==========================================
 
 import { createHash, timingSafeEqual } from 'crypto';
-import {
-  resolvePartnerByKeyHash,
-  touchPartnerKey,
-  type SupabaseClient,
-} from '@ridendine/db';
+import { resolvePartnerByKeyHash, touchPartnerKey, type SupabaseClient } from '@ridendine/db';
 
 export interface PartnerContext {
   /** null for the legacy env-key fallback (no per-partner identity). */

@@ -1,14 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import {
-  createServerClient,
-  getCartByCustomer,
-  getCartWithItems,
-  createCart,
-  addCartItem,
-  updateCartItem,
-  deleteCartItem,
-} from '@ridendine/db';
+import { cartItemsTable, menuItemsTable, createServerClient, getCartByCustomer, getCartWithItems, createCart, addCartItem, updateCartItem, deleteCartItem } from '@ridendine/db';
 import { addToCartSchema, updateCartItemSchema } from '@ridendine/validation';
 import { getCurrentCustomer, handleApiError } from '@/lib/auth-helpers';
 import { getEngine } from '@/lib/engine';
@@ -70,8 +62,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       });
     }
 
-    const { data: menuItem } = await supabase
-      .from('menu_items')
+    const { data: menuItem } = await menuItemsTable(supabase)
       .select('*')
       .eq('id', validated.menuItemId)
       .single();
@@ -137,8 +128,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     const supabase = createServerClient(cookieStore);
 
     const customer = await getCurrentCustomer(supabase);
-    const { data: existingCartItem } = await supabase
-      .from('cart_items')
+    const { data: existingCartItem } = await cartItemsTable(supabase)
       .select('id, carts!inner(customer_id)')
       .eq('id', itemId)
       .eq('carts.customer_id', customer.id)
@@ -190,8 +180,7 @@ export async function DELETE(request: Request): Promise<NextResponse> {
     const supabase = createServerClient(cookieStore);
 
     const customer = await getCurrentCustomer(supabase);
-    const { data: existingCartItem } = await supabase
-      .from('cart_items')
+    const { data: existingCartItem } = await cartItemsTable(supabase)
       .select('id, carts!inner(customer_id)')
       .eq('id', itemId)
       .eq('carts.customer_id', customer.id)

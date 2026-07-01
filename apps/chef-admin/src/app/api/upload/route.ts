@@ -4,17 +4,11 @@
 // Supports: menu item images, profile images, storefront images
 // ==========================================
 
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@ridendine/db';
 import { getChefActorContext } from '@/lib/engine';
-import {
-  canonicalImageExtensionForMime,
-  evaluateRateLimit,
-  RATE_LIMIT_POLICIES,
-  rateLimitPolicyResponse,
-  redactSensitiveForLog,
-} from '@ridendine/utils';
+import { canonicalImageExtensionForMime, evaluateRateLimit, RATE_LIMIT_POLICIES, rateLimitPolicyResponse, redactSensitiveForLog } from '@ridendine/utils';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB

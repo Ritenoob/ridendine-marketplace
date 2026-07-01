@@ -7,13 +7,8 @@
 // routes; this function trusts (actor, customerId, input).
 // ==========================================
 
-import { createAdminClient, type SupabaseClient } from '@ridendine/db';
-import {
-  getStripeClient,
-  evaluateCheckoutRisk,
-  assertStripeConfigured,
-  getOrCreateStripeCustomer,
-} from '@ridendine/engine';
+import { ordersTable, customersTable, checkoutIdempotencyKeysTable, createAdminClient, type SupabaseClient } from '@ridendine/db';
+import { getStripeClient, evaluateCheckoutRisk, assertStripeConfigured, getOrCreateStripeCustomer } from '@ridendine/engine';
 import type { ActorContext } from '@ridendine/types';
 import { getEngine, errorResponse, successResponse } from '@/lib/engine';
 import { createHash } from 'crypto';
@@ -120,8 +115,7 @@ async function reclaimStaleIdempotencyRow(
   rowId: string
 ): Promise<IdempotencyRow | null> {
   const staleBefore = new Date(Date.now() - IDEMPOTENCY_PROCESSING_STALE_MS).toISOString();
-  const result = await (adminClient as any)
-    .from('checkout_idempotency_keys')
+  const result = await checkoutIdempotencyKeysTable((adminClient as any))
     .update({
       status: 'processing',
       last_error: null,
@@ -142,8 +136,7 @@ async function markIdempotencyRecordFailed(
   rowId: string,
   lastError: string
 ): Promise<void> {
-  await (adminClient as any)
-    .from('checkout_idempotency_keys')
+  await checkoutIdempotencyKeysTable((adminClient as any))
     .update({
       status: 'failed',
       last_error: lastError.slice(0, 500),
@@ -162,8 +155,7 @@ async function upsertCheckoutIdempotencyRecord(
 ) {
   const idemClient = adminClient as any;
 
-  const existingResult = await idemClient
-    .from('checkout_idempotency_keys')
+  const existingResult = await checkoutIdempotencyKeysTable(idemClient)
     .select(IDEMPOTENCY_COLUMNS)
     .eq('customer_id', params.customerId)
     .eq('idempotency_key', params.idempotencyKey)
@@ -174,8 +166,7 @@ async function upsertCheckoutIdempotencyRecord(
     return { row: existing as IdempotencyRow, created: false };
   }
 
-  const insertResult = await idemClient
-    .from('checkout_idempotency_keys')
+  const insertResult = await checkoutIdempotencyKeysTable(idemClient)
     .insert({
       customer_id: params.customerId,
       idempotency_key: params.idempotencyKey,
@@ -186,8 +177,7 @@ async function upsertCheckoutIdempotencyRecord(
     .single();
 
   if (insertResult.error?.code === '23505') {
-    const retryResult = await idemClient
-      .from('checkout_idempotency_keys')
+    const retryResult = await checkoutIdempotencyKeysTable(idemClient)
       .select(IDEMPOTENCY_COLUMNS)
       .eq('customer_id', params.customerId)
       .eq('idempotency_key', params.idempotencyKey)
@@ -439,8 +429,7 @@ export async function runCheckout({
         orderUpdate.status = 'scheduled';
       }
 
-      const { error: syncTotalError } = await (adminClient as any)
-        .from('orders')
+      const { error: syncTotalError } = await ordersTable((adminClient as any))
         .update(orderUpdate)
         .eq('id', order.id);
 
@@ -456,8 +445,7 @@ export async function runCheckout({
       const totalCents = Math.round(serverQuote.total * 100);
 
       // Resolve Stripe customer for saved payment method support
-      const customerRecord = await (adminClient as any)
-        .from('customers')
+      const customerRecord = await customersTable((adminClient as any))
         .select('email, first_name, last_name')
         .eq('id', customerId)
         .maybeSingle();
@@ -519,13 +507,12 @@ export async function runCheckout({
         },
       };
 
-      await (adminClient as any)
-        .from('checkout_idempotency_keys')
+      await checkoutIdempotencyKeysTable((adminClient as any))
         .update({
           status: 'completed',
           order_id: order.id,
           payment_intent_id: paymentIntent.id,
-          response_payload: responsePayload,
+          response_payload: responsePayload as never,
           last_error: null,
           updated_at: new Date().toISOString(),
         })
