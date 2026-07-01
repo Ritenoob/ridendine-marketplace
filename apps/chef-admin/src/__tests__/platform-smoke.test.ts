@@ -112,6 +112,22 @@ describe('chef-admin smoke wiring', () => {
     expect(src).toContain("label: 'Kitchen'");
   });
 
+  it('inventory page is wired to the inventory APIs with a nav item', () => {
+    const sidebar = read('components/layout/sidebar.tsx');
+    expect(sidebar).toContain("href: '/dashboard/inventory'");
+    expect(sidebar).toContain("label: 'Inventory'");
+
+    const page = read('app/dashboard/inventory/page.tsx');
+    expect(page).toContain('/api/inventory');
+    expect(page).toContain('/api/inventory/alerts');
+    // Real data only: an empty state, not fabricated rows.
+    expect(page).toContain('EmptyState');
+
+    const movement = read('components/inventory/stock-movement-modal.tsx');
+    expect(movement).toContain('/api/inventory/waste');
+    expect(movement).toContain('/movement');
+  });
+
   it('kitchen command page exists with all three sections and pause wiring', () => {
     const page = read('app/dashboard/kitchen/page.tsx');
     expect(page).toContain('Kitchen Command');
