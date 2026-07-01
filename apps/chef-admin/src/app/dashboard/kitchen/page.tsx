@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { KitchenOrderQueue } from '@/components/kitchen/kitchen-order-queue';
 import { KitchenCommandHeader } from '@/components/kitchen/kitchen-command-header';
+import { ServiceControls } from '@/components/kitchen/service-controls';
 import type { KitchenTicket, ServiceMetrics } from '@/lib/kitchen';
 
 // ============================================================
@@ -320,6 +321,9 @@ export default function KitchenPage() {
           onClick={togglePause}
         />
       </div>
+
+      {/* Service state + close-of-day */}
+      <ServiceControls />
 
       {/* Command metrics header (real data only) */}
       <KitchenCommandHeader metrics={metrics} load={load} />

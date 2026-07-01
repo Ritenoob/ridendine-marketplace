@@ -140,6 +140,27 @@ describe('chef-admin smoke wiring', () => {
     expect(page).toContain('foodCostAvailable');
   });
 
+  it('kitchen-os UIs (recipes, labour, production, suppliers) are wired with nav items', () => {
+    const sidebar = read('components/layout/sidebar.tsx');
+    for (const [href, label] of [
+      ['/dashboard/recipes', 'Recipes'],
+      ['/dashboard/labor', 'Labour'],
+      ['/dashboard/production', 'Production'],
+      ['/dashboard/suppliers', 'Suppliers'],
+    ] as const) {
+      expect(sidebar).toContain(`href: '${href}'`);
+      expect(sidebar).toContain(`label: '${label}'`);
+    }
+
+    expect(read('app/dashboard/recipes/page.tsx')).toContain('/api/recipes');
+    // Recipe builder shows a live cost preview from the pure engine.
+    expect(read('components/recipes/recipe-builder-modal.tsx')).toContain('computeMenuItemCosting');
+    expect(read('app/dashboard/labor/page.tsx')).toContain('/api/labor/clock-');
+    expect(read('app/dashboard/production/page.tsx')).toContain('/api/production/prep-tasks');
+    expect(read('app/dashboard/suppliers/page.tsx')).toContain('/api/purchase-orders');
+    expect(read('components/kitchen/service-controls.tsx')).toContain('/api/kitchen/service-mode');
+  });
+
   it('kitchen command page exists with all three sections and pause wiring', () => {
     const page = read('app/dashboard/kitchen/page.tsx');
     expect(page).toContain('Kitchen Command');

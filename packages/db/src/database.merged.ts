@@ -1024,6 +1024,58 @@ type ChefStorefrontsExtended = Omit<GenTables['chef_storefronts'], 'Row' | 'Inse
   };
 };
 
+// ------------------------------------------------------------------
+// Migration 00055 — recipes & costing.
+// ------------------------------------------------------------------
+type RecipesTable = {
+  Row: { id: string; storefront_id: string; menu_item_id: string | null; name: string; is_active: boolean; created_at: string; updated_at: string };
+  Insert: { id?: string; storefront_id: string; menu_item_id?: string | null; name: string; is_active?: boolean; created_at?: string; updated_at?: string };
+  Update: Partial<RecipesTable['Insert']>;
+  Relationships: [];
+};
+type RecipeVersionsTable = {
+  Row: { id: string; recipe_id: string; version: number; batch_yield: number; portion_size: string | null; waste_factor: number; notes: string | null; is_active: boolean; created_at: string; updated_at: string };
+  Insert: { id?: string; recipe_id: string; version?: number; batch_yield?: number; portion_size?: string | null; waste_factor?: number; notes?: string | null; is_active?: boolean; created_at?: string; updated_at?: string };
+  Update: Partial<RecipeVersionsTable['Insert']>;
+  Relationships: [];
+};
+type RecipeIngredientsTable = {
+  Row: { id: string; recipe_version_id: string; inventory_item_id: string | null; name: string; quantity: number; unit: string; cost_per_unit: number; waste_factor: number; sort_order: number; created_at: string };
+  Insert: { id?: string; recipe_version_id: string; inventory_item_id?: string | null; name: string; quantity?: number; unit?: string; cost_per_unit?: number; waste_factor?: number; sort_order?: number; created_at?: string };
+  Update: Partial<RecipeIngredientsTable['Insert']>;
+  Relationships: [];
+};
+type RecipeStepsTable = {
+  Row: { id: string; recipe_version_id: string; step_number: number; instruction: string; station: string | null; duration_minutes: number | null; phase: string; created_at: string };
+  Insert: { id?: string; recipe_version_id: string; step_number: number; instruction: string; station?: string | null; duration_minutes?: number | null; phase?: string; created_at?: string };
+  Update: Partial<RecipeStepsTable['Insert']>;
+  Relationships: [];
+};
+type MenuItemRecipeVersionsTable = {
+  Row: { id: string; menu_item_id: string; recipe_version_id: string; is_active: boolean; created_at: string };
+  Insert: { id?: string; menu_item_id: string; recipe_version_id: string; is_active?: boolean; created_at?: string };
+  Update: Partial<MenuItemRecipeVersionsTable['Insert']>;
+  Relationships: [];
+};
+type RecipeCostSnapshotsTable = {
+  Row: { id: string; recipe_version_id: string; menu_item_id: string | null; ingredient_cost: number; packaging_cost: number; total_cost: number; food_cost_pct: number | null; sell_price: number | null; snapshot_reason: string | null; created_at: string };
+  Insert: { id?: string; recipe_version_id: string; menu_item_id?: string | null; ingredient_cost: number; packaging_cost?: number; total_cost: number; food_cost_pct?: number | null; sell_price?: number | null; snapshot_reason?: string | null; created_at?: string };
+  Update: Partial<RecipeCostSnapshotsTable['Insert']>;
+  Relationships: [];
+};
+type PackagingItemsTable = {
+  Row: { id: string; storefront_id: string; name: string; unit: string | null; cost_per_unit: number; is_active: boolean; created_at: string; updated_at: string };
+  Insert: { id?: string; storefront_id: string; name: string; unit?: string | null; cost_per_unit?: number; is_active?: boolean; created_at?: string; updated_at?: string };
+  Update: Partial<PackagingItemsTable['Insert']>;
+  Relationships: [];
+};
+type MenuItemPackagingTable = {
+  Row: { id: string; menu_item_id: string; packaging_item_id: string; quantity: number; created_at: string };
+  Insert: { id?: string; menu_item_id: string; packaging_item_id: string; quantity?: number; created_at?: string };
+  Update: Partial<MenuItemPackagingTable['Insert']>;
+  Relationships: [];
+};
+
 type MergedTables = Omit<
   GenTables,
   | 'chef_storefronts'
@@ -1073,6 +1125,14 @@ type MergedTables = Omit<
   kitchen_station_assignments: KitchenStationAssignmentsTable;
   kitchen_daily_summaries: KitchenDailySummariesTable;
   chef_storefronts: ChefStorefrontsExtended;
+  recipes: RecipesTable;
+  recipe_versions: RecipeVersionsTable;
+  recipe_ingredients: RecipeIngredientsTable;
+  recipe_steps: RecipeStepsTable;
+  menu_item_recipe_versions: MenuItemRecipeVersionsTable;
+  recipe_cost_snapshots: RecipeCostSnapshotsTable;
+  packaging_items: PackagingItemsTable;
+  menu_item_packaging: MenuItemPackagingTable;
 };
 
 export type Database = Omit<GeneratedDatabase, 'public'> & {
