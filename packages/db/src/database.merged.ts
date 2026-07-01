@@ -637,6 +637,158 @@ type SupplierPriceHistoryTable = {
   Relationships: [];
 };
 
+// ------------------------------------------------------------------
+// Migration 00058 — production planning.
+// ------------------------------------------------------------------
+type PrepTasksTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    menu_item_id: string | null;
+    station_id: string | null;
+    title: string;
+    target_quantity: number | null;
+    completed_quantity: number;
+    status: string;
+    plan_date: string;
+    assigned_to: string | null;
+    notes: string | null;
+    created_by: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    menu_item_id?: string | null;
+    station_id?: string | null;
+    title: string;
+    target_quantity?: number | null;
+    completed_quantity?: number;
+    status?: string;
+    plan_date: string;
+    assigned_to?: string | null;
+    notes?: string | null;
+    created_by?: string | null;
+    created_at?: string;
+    updated_at?: string;
+  };
+  Update: Partial<PrepTasksTable['Insert']>;
+  Relationships: [];
+};
+
+type PrepTaskEventsTable = {
+  Row: {
+    id: string;
+    prep_task_id: string;
+    storefront_id: string;
+    event_type: string;
+    from_status: string | null;
+    to_status: string | null;
+    actor_user_id: string | null;
+    detail: Record<string, unknown>;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    prep_task_id: string;
+    storefront_id: string;
+    event_type: string;
+    from_status?: string | null;
+    to_status?: string | null;
+    actor_user_id?: string | null;
+    detail?: Record<string, unknown>;
+    created_at?: string;
+  };
+  Update: Partial<PrepTaskEventsTable['Insert']>;
+  Relationships: [];
+};
+
+type ProductionBatchesTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    recipe_version_id: string | null;
+    menu_item_id: string | null;
+    name: string;
+    planned_yield: number | null;
+    actual_yield: number | null;
+    waste_quantity: number;
+    status: string;
+    plan_date: string | null;
+    started_at: string | null;
+    completed_at: string | null;
+    notes: string | null;
+    created_by: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    recipe_version_id?: string | null;
+    menu_item_id?: string | null;
+    name: string;
+    planned_yield?: number | null;
+    actual_yield?: number | null;
+    waste_quantity?: number;
+    status?: string;
+    plan_date?: string | null;
+    started_at?: string | null;
+    completed_at?: string | null;
+    notes?: string | null;
+    created_by?: string | null;
+    created_at?: string;
+    updated_at?: string;
+  };
+  Update: Partial<ProductionBatchesTable['Insert']>;
+  Relationships: [];
+};
+
+type ProductionBatchInputsTable = {
+  Row: {
+    id: string;
+    batch_id: string;
+    inventory_item_id: string | null;
+    quantity: number;
+    unit: string | null;
+    consumed: boolean;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    batch_id: string;
+    inventory_item_id?: string | null;
+    quantity?: number;
+    unit?: string | null;
+    consumed?: boolean;
+    created_at?: string;
+  };
+  Update: Partial<ProductionBatchInputsTable['Insert']>;
+  Relationships: [];
+};
+
+type ProductionBatchOutputsTable = {
+  Row: {
+    id: string;
+    batch_id: string;
+    inventory_item_id: string | null;
+    menu_item_id: string | null;
+    quantity: number;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    batch_id: string;
+    inventory_item_id?: string | null;
+    menu_item_id?: string | null;
+    quantity?: number;
+    created_at?: string;
+  };
+  Update: Partial<ProductionBatchOutputsTable['Insert']>;
+  Relationships: [];
+};
+
 type MergedTables = Omit<
   GenTables,
   | 'drivers'
@@ -672,6 +824,11 @@ type MergedTables = Omit<
   purchase_order_lines: PurchaseOrderLinesTable;
   receiving_batches: ReceivingBatchesTable;
   supplier_price_history: SupplierPriceHistoryTable;
+  prep_tasks: PrepTasksTable;
+  prep_task_events: PrepTaskEventsTable;
+  production_batches: ProductionBatchesTable;
+  production_batch_inputs: ProductionBatchInputsTable;
+  production_batch_outputs: ProductionBatchOutputsTable;
 };
 
 export type Database = Omit<GeneratedDatabase, 'public'> & {

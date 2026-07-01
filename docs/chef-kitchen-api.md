@@ -61,6 +61,22 @@ Pack conversion: suppliers sell in packs; `receivedBaseQuantity` and
 `costPerBaseUnit` convert to base units, `blendedUnitCost` weights new stock
 against on-hand. Historical `recipe_cost_snapshots` are never touched.
 
+## Production planning (Stage 9)
+
+| Method | Path | Body schema | Effect |
+|---|---|---|---|
+| GET | `/api/production/plan` | — | Today's + tomorrow's persistent prep tasks, progress rollups, open batches |
+| POST | `/api/production/prep-tasks` | `createPrepTaskSchema` | Add a prep task |
+| PATCH | `/api/production/prep-tasks/[id]` | `updatePrepTaskSchema` | **Persist** prep progress/status (survives refresh, shared across devices) |
+| POST | `/api/production/forecast` | `forecastSchema` | Generate prep tasks from historical same-weekday demand (skips items already planned) |
+| POST | `/api/production/batches` | `createProductionBatchSchema` | Plan a batch with inputs |
+| PATCH | `/api/production/batches/[id]` | `updateProductionBatchSchema` | Rename / start / cancel |
+| POST | `/api/production/batches/[id]/complete` | `completeBatchSchema` | **Consume inputs** (`consume_batch` movements) + **produce outputs** (`receive` movements) + record actual yield/waste |
+| POST | `/api/production/batches/[id]/waste` | `batchWasteSchema` | Record overproduction waste on the batch |
+
+Completing a batch ties production to the Stage 7 inventory ledger: inputs are
+consumed and produced outputs are added back as prepared stock.
+
 ## Recipes & cost (Stage 6 — schemas/engine ready; routes pending apply)
 
 Planned: `GET/POST /api/recipes`, `GET/PATCH /api/recipes/[id]`,
