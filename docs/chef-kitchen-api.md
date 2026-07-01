@@ -42,6 +42,25 @@ it: `receive`/`return` → `+`, `consume_order`/`consume_batch`/`waste` → `-`.
 `adjustment`/`count_correction`/`transfer` instead take an explicit
 `signedQuantity`.
 
+## Suppliers & purchasing (Stage 8)
+
+| Method | Path | Body schema | Effect |
+|---|---|---|---|
+| GET | `/api/suppliers` | — | List suppliers |
+| POST | `/api/suppliers` | `createSupplierSchema` | Create supplier |
+| GET | `/api/suppliers/[id]` | — | Supplier + catalogue items |
+| PATCH | `/api/suppliers/[id]` | `updateSupplierSchema` | Update supplier |
+| POST | `/api/suppliers/[id]/items` | `supplierItemSchema` | Add catalogue item + seed price history |
+| GET | `/api/purchase-orders` | — | List purchase orders |
+| POST | `/api/purchase-orders` | `createPurchaseOrderSchema` | Create a draft PO with lines (total computed) |
+| GET | `/api/purchase-orders/[id]` | — | PO + lines |
+| PATCH | `/api/purchase-orders/[id]` | `updatePurchaseOrderSchema` | Edit draft / submit / cancel |
+| POST | `/api/purchase-orders/[id]/receive` | `receivePurchaseOrderSchema` | **Receive stock** → inventory `receive` movement + blended cost + supplier price history; closes PO when complete |
+
+Pack conversion: suppliers sell in packs; `receivedBaseQuantity` and
+`costPerBaseUnit` convert to base units, `blendedUnitCost` weights new stock
+against on-hand. Historical `recipe_cost_snapshots` are never touched.
+
 ## Recipes & cost (Stage 6 — schemas/engine ready; routes pending apply)
 
 Planned: `GET/POST /api/recipes`, `GET/PATCH /api/recipes/[id]`,

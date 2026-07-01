@@ -462,6 +462,181 @@ type InventoryAlertsTable = {
   Relationships: [];
 };
 
+// ------------------------------------------------------------------
+// Migration 00057 — suppliers & receiving.
+// ------------------------------------------------------------------
+type SuppliersTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    name: string;
+    contact_name: string | null;
+    email: string | null;
+    phone: string | null;
+    notes: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    name: string;
+    contact_name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    notes?: string | null;
+    is_active?: boolean;
+    created_at?: string;
+    updated_at?: string;
+  };
+  Update: Partial<SuppliersTable['Insert']>;
+  Relationships: [];
+};
+
+type SupplierItemsTable = {
+  Row: {
+    id: string;
+    supplier_id: string;
+    storefront_id: string;
+    inventory_item_id: string | null;
+    supplier_sku: string | null;
+    name: string;
+    pack_size: number;
+    pack_unit: string | null;
+    unit_cost: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+  Insert: {
+    id?: string;
+    supplier_id: string;
+    storefront_id: string;
+    inventory_item_id?: string | null;
+    supplier_sku?: string | null;
+    name: string;
+    pack_size?: number;
+    pack_unit?: string | null;
+    unit_cost?: number;
+    is_active?: boolean;
+    created_at?: string;
+    updated_at?: string;
+  };
+  Update: Partial<SupplierItemsTable['Insert']>;
+  Relationships: [];
+};
+
+type PurchaseOrdersTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    supplier_id: string | null;
+    status: string;
+    reference: string | null;
+    notes: string | null;
+    total_cost: number;
+    expected_at: string | null;
+    submitted_at: string | null;
+    received_at: string | null;
+    created_by: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    supplier_id?: string | null;
+    status?: string;
+    reference?: string | null;
+    notes?: string | null;
+    total_cost?: number;
+    expected_at?: string | null;
+    submitted_at?: string | null;
+    received_at?: string | null;
+    created_by?: string | null;
+    created_at?: string;
+    updated_at?: string;
+  };
+  Update: Partial<PurchaseOrdersTable['Insert']>;
+  Relationships: [];
+};
+
+type PurchaseOrderLinesTable = {
+  Row: {
+    id: string;
+    purchase_order_id: string;
+    supplier_item_id: string | null;
+    inventory_item_id: string | null;
+    description: string | null;
+    quantity: number;
+    pack_size: number;
+    unit_cost: number;
+    received_quantity: number;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    purchase_order_id: string;
+    supplier_item_id?: string | null;
+    inventory_item_id?: string | null;
+    description?: string | null;
+    quantity?: number;
+    pack_size?: number;
+    unit_cost?: number;
+    received_quantity?: number;
+    created_at?: string;
+  };
+  Update: Partial<PurchaseOrderLinesTable['Insert']>;
+  Relationships: [];
+};
+
+type ReceivingBatchesTable = {
+  Row: {
+    id: string;
+    storefront_id: string;
+    purchase_order_id: string | null;
+    received_by: string | null;
+    note: string | null;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    storefront_id: string;
+    purchase_order_id?: string | null;
+    received_by?: string | null;
+    note?: string | null;
+    created_at?: string;
+  };
+  Update: Partial<ReceivingBatchesTable['Insert']>;
+  Relationships: [];
+};
+
+type SupplierPriceHistoryTable = {
+  Row: {
+    id: string;
+    supplier_item_id: string;
+    storefront_id: string;
+    unit_cost: number;
+    pack_size: number | null;
+    source: string;
+    effective_at: string;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    supplier_item_id: string;
+    storefront_id: string;
+    unit_cost: number;
+    pack_size?: number | null;
+    source?: string;
+    effective_at?: string;
+    created_at?: string;
+  };
+  Update: Partial<SupplierPriceHistoryTable['Insert']>;
+  Relationships: [];
+};
+
 type MergedTables = Omit<
   GenTables,
   | 'drivers'
@@ -491,6 +666,12 @@ type MergedTables = Omit<
   inventory_count_lines: InventoryCountLinesTable;
   inventory_waste_events: InventoryWasteEventsTable;
   inventory_alerts: InventoryAlertsTable;
+  suppliers: SuppliersTable;
+  supplier_items: SupplierItemsTable;
+  purchase_orders: PurchaseOrdersTable;
+  purchase_order_lines: PurchaseOrderLinesTable;
+  receiving_batches: ReceivingBatchesTable;
+  supplier_price_history: SupplierPriceHistoryTable;
 };
 
 export type Database = Omit<GeneratedDatabase, 'public'> & {

@@ -10,6 +10,7 @@ export * from './schemas/order';
 export * from './schemas/kitchen';
 export * from './schemas/recipe';
 export * from './schemas/inventory';
+export * from './schemas/supplier';
 export * from './schemas/driver';
 export * from './schemas/common';
 export * from './schemas/ops';
